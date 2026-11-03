@@ -1,0 +1,81 @@
+.review-pane { max-width: 800px; padding-bottom: 34px; }
+.review-pane h2 { margin-bottom: 12px; }
+.review-intro, .review-hint { color: #637b83; font-size: 13px; line-height: 1.7; }
+.review-form { margin: 24px 0; padding: 18px; display: grid; gap: 13px; background: #fff; border: 1px solid #d7e4e4; border-radius: 6px; }
+.review-form label { display: grid; gap: 6px; font-size: 12px; font-weight: 700; color: #355b65; }
+.review-form select { width: 100%; padding: 10px; color: #223e4d; background: #fff; border: 1px solid #bacfd1; border-radius: 4px; font: inherit; font-weight: 400; }
+.review-source { color: #526d77; font-size: 12px; overflow-wrap: anywhere; }
+.review-form > button, .review-detail-head button { justify-self: start; border: 0; border-radius: 4px; padding: 10px 15px; background: #296d71; color: white; font-size: 12px; font-weight: 700; }
+.review-history { margin-bottom: 20px; color: #2a4a5a; font-size: 12px; }
+.review-history > div { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.review-history button { padding: 7px 10px; background: #f6faf9; color: #286b6d; border: 1px solid #c2d5d6; border-radius: 4px; font-size: 11px; }
+.review-history button.selected { background: #d4eae6; border-color: #78b4ae; }
+.review-detail { border-top: 1px solid #d9e4e5; padding-top: 18px; }
+.review-detail-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.review-detail-head strong { display: block; color: #1c4251; font-size: 16px; }
+.review-detail-head small { display: block; margin-top: 4px; color: #80959a; font-size: 11px; }
+.review-detail-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+.review-detail-head .review-jump { background: #f4faf9; color: #286b6d; border: 1px solid #a9cac8; }
+.review-run-status { border-left: 3px solid #63a69d; background: #e9f4f1; padding: 10px 12px; color: #2a6a65; font-size: 12px; }
+.finding-card { margin-top: 14px; padding: 16px; background: white; border: 1px solid #d8e5e5; border-radius: 6px; box-shadow: 0 2px 8px #22435b0a; }
+.finding-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.finding-head strong { color: #193e4f; font-size: 14px; line-height: 1.5; }
+.finding-head span { flex: none; color: #8b5d1c; background: #fff0d4; padding: 4px 7px; border-radius: 3px; font-size: 10px; }
+.finding-card p { color: #405a66; font-size: 12px; line-height: 1.75; }
+.finding-evidence { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 14px 0; }
+.finding-evidence small { width: 100%; color: #66818a; font-size: 11px; }
+.finding-evidence button { padding: 6px 8px; background: #f4faf9; border: 1px solid #bbd2d1; border-radius: 4px; color: #2c6d6c; font-size: 10px; overflow-wrap: anywhere; text-align: left; }
+.finding-card summary { color: #306f70; cursor: pointer; font-size: 12px; }
+.review-usage { color: #70878c; font-size: 11px; line-height: 1.6; }
+.cross-formula-pane { margin-top: 26px; padding-top: 18px; border-top: 1px solid #d9e4e5; }
+.cross-formula-pane h3 { margin: 0 0 7px; color: #1c4251; font-size: 16px; }
+.formula-search { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.formula-search select, .formula-search input, .formula-check-form input, .formula-check-form select { min-width: 0; padding: 8px; border: 1px solid #bacfd1; border-radius: 4px; background: #fff; color: #223e4d; font: inherit; }
+.formula-search select { max-width: 190px; }
+.formula-search input { flex: 1 1 160px; }
+.cross-formula-pane button { padding: 7px 10px; border: 1px solid #a9cac8; border-radius: 4px; background: #f4faf9; color: #286b6d; cursor: pointer; font: inherit; font-size: 11px; }
+.cross-formula-pane button:disabled { cursor: not-allowed; opacity: .5; }
+.formula-matches { max-height: 180px; overflow: auto; display: grid; gap: 5px; margin-bottom: 12px; }
+.formula-matches button { text-align: left; line-height: 1.5; }
+.formula-links { display: grid; gap: 7px; margin: 13px 0; color: #355b65; font-size: 11px; }
+.formula-links > div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 9px; background: #fff; border: 1px solid #d8e5e5; border-radius: 4px; }
+.formula-links small { width: 100%; color: #70878c; line-height: 1.5; }
+.formula-sources { display: grid; gap: 7px; font-size: 11px; color: #405a66; }
+.formula-sources > div { display: grid; gap: 5px; padding: 9px; border: 1px solid #d8e5e5; border-radius: 4px; background: #fff; overflow-wrap: anywhere; }
+.formula-sources > div button { justify-self: start; }
+.formula-check-form { display: grid; gap: 10px; margin-top: 15px; }
+.formula-check-form label { display: grid; gap: 5px; color: #355b65; font-size: 11px; font-weight: 700; }
+.formula-check-form input { width: 100%; box-sizing: border-box; font-weight: 400; }
+.formula-assumption { display: grid; grid-template-columns: minmax(0, 1fr) 130px; gap: 8px; }
+.formula-check-form > button { justify-self: start; background: #296d71; color: #fff; }
+.formula-checks { margin-top: 20px; display: grid; gap: 9px; font-size: 12px; color: #355b65; }
+.formula-checks article { display: grid; gap: 7px; padding: 12px; background: #fff; border: 1px solid #d8e5e5; border-radius: 5px; overflow-wrap: anywhere; }
+.formula-checks article p { margin: 0; }
+.formula-checks article pre { margin: 0; padding: 8px; overflow: auto; background: #f4f7f6; font-size: 11px; }
+.formula-checks article > div { display: flex; flex-wrap: wrap; gap: 5px; }
+.experiment-audit { margin-top: 27px; border-top: 1px solid #d9e4e5; padding-top: 18px; }
+.experiment-audit h3 { margin: 0 0 7px; color: #1c4251; font-size: 16px; }
+.experiment-audit > button, .experiment-sources button { padding: 8px 10px; border: 1px solid #a9cac8; border-radius: 4px; background: #f4faf9; color: #286b6d; cursor: pointer; font: inherit; font-size: 11px; }
+.experiment-result { margin-top: 12px; padding: 12px; border: 1px solid #d8e5e5; border-radius: 5px; background: #fff; color: #355b65; font-size: 11px; }
+.experiment-result strong { font-size: 12px; }
+.experiment-result table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10px; }
+.experiment-result th, .experiment-result td { padding: 6px 4px; border-bottom: 1px solid #dce8e7; text-align: left; }
+.experiment-result th { color: #234d58; }
+.experiment-result p { color: #637b83; line-height: 1.6; }
+.experiment-sources { display: flex; flex-wrap: wrap; gap: 6px; }
+.algorithm-audit { margin-top: 27px; border-top: 1px solid #d9e4e5; padding-top: 18px; }
+.algorithm-audit h3 { margin: 0 0 7px; color: #1c4251; font-size: 16px; }
+.algorithm-audit > button, .algorithm-check button { padding: 8px 10px; border: 1px solid #a9cac8; border-radius: 4px; background: #f4faf9; color: #286b6d; cursor: pointer; font: inherit; font-size: 11px; }
+.algorithm-result { margin-top: 12px; padding: 12px; border: 1px solid #d8e5e5; border-radius: 5px; background: #fff; color: #355b65; font-size: 11px; }
+.algorithm-result strong { font-size: 12px; }
+.algorithm-check { display: grid; gap: 6px; padding: 9px 0; border-bottom: 1px solid #dce8e7; }
+.algorithm-check button { justify-self: start; overflow-wrap: anywhere; text-align: left; }
+.algorithm-result p { color: #637b83; line-height: 1.6; }
+.deep-verification { margin-top: 13px; border-top: 1px solid #e1ebeb; padding-top: 12px; }
+.deep-verification > button, .deep-verification-result button { padding: 7px 9px; border: 1px solid #a9cac8; border-radius: 4px; background: #f4faf9; color: #286b6d; cursor: pointer; font: inherit; font-size: 11px; }
+.deep-verification > button:disabled { opacity: .5; cursor: not-allowed; }
+.deep-verification-result { margin-top: 10px; padding: 11px; border-radius: 4px; background: #f6faf9; color: #355b65; font-size: 11px; }
+.deep-verification-result strong { color: #234d58; }
+.deep-verification-result p { margin: 8px 0; font-size: 11px; }
+.deep-verification-result small { display: block; line-height: 1.6; }
+.deep-verification-result > div { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }

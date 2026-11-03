@@ -1,0 +1,136 @@
+{
+  "fixture_version": 1,
+  "description": "Metadata-only diagnostic snapshot. It contains no PDF and no paper excerpts.",
+  "paper": {
+    "title": "Self-Attention with Relative Position Representations",
+    "authors": [
+      "Peter Shaw",
+      "Jakob Uszkoreit",
+      "Ashish Vaswani"
+    ],
+    "source_url": "https://aclanthology.org/N18-2074/",
+    "doi": "10.18653/v1/N18-2074",
+    "sha256": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+    "pdf_included": false
+  },
+  "parse_snapshot": {
+    "historical_snapshot_prefix": "c1c08dc5e672",
+    "page_count": 5,
+    "total_evidence_blocks": 99,
+    "total_extracted_characters": 18377,
+    "selected_blocks": 25,
+    "selected_characters_after_per_block_900_character_limit": 9552,
+    "character_coverage_ratio": 0.5198,
+    "reproducibility_note": "The selector is deterministic for an ordered block list, but exact Evidence IDs are not stable across a new parse because the prefix comes from a random snapshot UUID."
+  },
+  "evidence_record_schema_example": {
+    "id": "ev_<snapshot-prefix>_<page-index>_<block-index>",
+    "document_id": "<pdf-sha256>",
+    "page_index": 0,
+    "excerpt": "<omitted from public fixture>",
+    "bbox": [
+      0.0,
+      0.0,
+      100.0,
+      20.0
+    ],
+    "precision": "block"
+  },
+  "historical_selected_evidence_ids": [
+    "ev_c1c08dc5e672_0_7",
+    "ev_c1c08dc5e672_0_12",
+    "ev_c1c08dc5e672_0_6",
+    "ev_c1c08dc5e672_0_8",
+    "ev_c1c08dc5e672_0_11",
+    "ev_c1c08dc5e672_1_9",
+    "ev_c1c08dc5e672_1_15",
+    "ev_c1c08dc5e672_1_21",
+    "ev_c1c08dc5e672_1_19",
+    "ev_c1c08dc5e672_1_13",
+    "ev_c1c08dc5e672_2_18",
+    "ev_c1c08dc5e672_2_24",
+    "ev_c1c08dc5e672_2_16",
+    "ev_c1c08dc5e672_2_19",
+    "ev_c1c08dc5e672_2_28",
+    "ev_c1c08dc5e672_3_4",
+    "ev_c1c08dc5e672_3_2",
+    "ev_c1c08dc5e672_3_10",
+    "ev_c1c08dc5e672_3_9",
+    "ev_c1c08dc5e672_3_1",
+    "ev_c1c08dc5e672_4_0",
+    "ev_c1c08dc5e672_4_5",
+    "ev_c1c08dc5e672_4_10",
+    "ev_c1c08dc5e672_4_14",
+    "ev_c1c08dc5e672_4_16"
+  ],
+  "diagnostically_important_omissions": [
+    {
+      "historical_evidence_id": "ev_c1c08dc5e672_2_20",
+      "section": "3.2 Relative Position Representations",
+      "topic": "generalization to sequence lengths not seen during training"
+    },
+    {
+      "historical_evidence_id": "ev_c1c08dc5e672_3_5",
+      "section": "4.1 Experimental Setup",
+      "topic": "Base and Big model edge-representation sharing configuration"
+    },
+    {
+      "historical_evidence_id": "ev_c1c08dc5e672_4_3",
+      "section": "4.3 Model Variations",
+      "topic": "Table 3 numeric ablation rows"
+    }
+  ],
+  "sanitized_saved_finding": {
+    "title": "The scope of overall self-attention space complexity requires clarification",
+    "evidence_level": "source_located",
+    "verification_status": "needs_independent_verification",
+    "reviewer_decision": "pending",
+    "evidence_ids": [
+      "ev_c1c08dc5e672_2_28",
+      "ev_c1c08dc5e672_2_18",
+      "ev_c1c08dc5e672_2_24"
+    ],
+    "concern": "Omitted from this public fixture; see the fixed report template and workflow documentation for structure."
+  },
+  "challenge_state_schema": {
+    "index": 0,
+    "verdict": "supported | not_supported | uncertain",
+    "support_assessment": "<model text>",
+    "counterargument": "<model text>"
+  },
+  "deep_challenge_state_schema": {
+    "verdict": "supported_clarification | not_supported | uncertain",
+    "support_assessment": "<model text>",
+    "rebuttal": "<model text>",
+    "missing_checks": "<model text>",
+    "evidence_ids": [
+      "ev_<snapshot-prefix>_<page-index>_<block-index>"
+    ],
+    "scope": {
+      "selected_blocks": 0,
+      "total_blocks": 0
+    },
+    "limitation": "Expanded-source model countercheck; not an independent programmatic proof of a mathematical or experimental fact."
+  },
+  "historical_model_usage": {
+    "final_review_run": [
+      {
+        "stage": "propose",
+        "requested_model": "gpt-6.1-sol",
+        "input_tokens": 7261,
+        "output_tokens": 357,
+        "duration_ms": 17322,
+        "cost_usd": null
+      },
+      {
+        "stage": "challenge",
+        "requested_model": "gpt-6.1-sol",
+        "input_tokens": 7497,
+        "output_tokens": 410,
+        "duration_ms": 12958,
+        "cost_usd": null
+      }
+    ],
+    "warning": "The database did not preserve the original prompts, original model responses, generation parameters, or provider-returned model identity. They cannot be reconstructed from this fixture."
+  }
+}

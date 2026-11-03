@@ -1,0 +1,27 @@
+.draft-pane { max-width: 800px; padding-bottom: 40px; }
+.draft-pane h2 { margin-bottom: 10px; }
+.draft-intro { color: #637b83; font-size: 12px; line-height: 1.7; }
+.draft-controls { display: grid; gap: 10px; margin: 20px 0; padding: 17px; background: #fff; border: 1px solid #d7e4e4; border-radius: 6px; }
+.draft-controls label { display: grid; gap: 5px; color: #355b65; font-size: 11px; font-weight: 700; }
+.draft-controls select { padding: 9px; border: 1px solid #bacfd1; border-radius: 4px; background: #fff; color: #223e4d; font: inherit; font-weight: 400; }
+.draft-controls > button, .draft-editor-head button { justify-self: start; padding: 9px 13px; border: 0; border-radius: 4px; background: #296d71; color: white; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
+.draft-controls button:disabled, .draft-editor-head button:disabled { opacity: .5; cursor: not-allowed; }
+.draft-list { margin: 16px 0; color: #2a4a5a; font-size: 11px; }
+.draft-list > div { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.draft-list button, .draft-evidence button { padding: 7px 9px; border: 1px solid #c2d5d6; border-radius: 4px; background: #f6faf9; color: #286b6d; font: inherit; font-size: 10px; cursor: pointer; }
+.draft-list button.selected { background: #d4eae6; border-color: #78b4ae; }
+.draft-editor { border-top: 1px solid #d9e4e5; padding-top: 17px; }
+.draft-editor-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 9px; color: #1c4251; font-size: 13px; }
+.draft-editor textarea { box-sizing: border-box; width: 100%; min-height: 290px; padding: 12px; border: 1px solid #bacfd1; border-radius: 5px; background: #fff; color: #223e4d; line-height: 1.55; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; resize: vertical; }
+.draft-export { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 11px 0; color: #526d77; font-size: 11px; }
+.draft-export a { padding: 7px 10px; border: 1px solid #a9cac8; border-radius: 4px; color: #286b6d; background: #f4faf9; text-decoration: none; font-weight: 700; }
+.draft-usage { display: block; color: #70878c; font-size: 10px; }
+.draft-evidence { margin: 17px 0; color: #355b65; font-size: 11px; }
+.draft-evidence > div { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.draft-preview { margin-top: 20px; padding: 14px; border: 1px solid #d8e5e5; border-radius: 5px; background: #fff; color: #223e4d; font-size: 12px; }
+.draft-preview > strong { display: block; padding-bottom: 9px; border-bottom: 1px solid #e1ebeb; color: #355b65; }
+.draft-preview .markdown-body { overflow-x: auto; line-height: 1.7; overflow-wrap: anywhere; }
+.draft-preview .markdown-body table { border-collapse: collapse; min-width: 100%; font-size: 10px; }
+.draft-preview .markdown-body th, .draft-preview .markdown-body td { padding: 5px; border: 1px solid #dce8e7; }
+.draft-preview .katex-display { overflow-x: auto; overflow-y: hidden; }
+.draft-notice { color: #2a6a65; font-size: 11px; }
