@@ -71,7 +71,9 @@ def assess_parse_quality(bundle: dict) -> dict:
                       "status": item["status"], "issues": ["expression_and_context_unverified"]}
                      for item in bundle["formulas"]],
         "figures": [{"id": item["id"], "page_index": item["page_index"],
-                     "status": item["status"], "issues": ["visual_content_unparsed"]}
+                     "status": item["status"],
+                     "issues": ["visual_content_unparsed"] +
+                               ([] if item.get("visual_bbox") else ["visual_region_unlocated"])}
                     for item in bundle["figures"]],
         "references": {"candidate_count": len(bundle["references"]), "status": "unverified"},
         "limitations": bundle["limitations"],

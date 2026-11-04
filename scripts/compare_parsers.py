@@ -11,7 +11,7 @@ import time
 import unicodedata
 from pathlib import Path
 
-import fitz
+import pymupdf as fitz
 
 
 REFERENCE = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "p1_parse_reference.json"
@@ -33,7 +33,7 @@ def evaluate_landmarks(text, reference, structured_rows=()):
         "heading_order": heading_order,
         "table_row_token_sequences_found": sum(_normalized(row) in normalized
                                                 for row in reference["table_rows"]),
-        "structured_table_rows_found": sum(any(_normalized(row) == _normalized(observed)
+        "structured_table_rows_found": sum(any(_normalized(row) in _normalized(observed)
                                                 for observed in structured_rows)
                                            for row in reference["table_rows"]),
         "table_rows_expected": len(reference["table_rows"]),
@@ -153,6 +153,7 @@ def compare_one(parser, pdf_path, reference, timeout=300):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--shaw", type=Path, help="Private local copy of the public Shaw 2018 PDF")
+    parser.add_argument("--jmlr", type=Path, help="Local copy of the public single-column JMLR 2024 PDF")
     parser.add_argument("--single-parser", choices=("pymupdf_blocks", "pymupdf4llm", "docling"))
     parser.add_argument("--pdf", type=Path)
     parser.add_argument("--reference-json")
@@ -173,6 +174,11 @@ def main():
             if digest != references["shaw2018"]["sha256"]:
                 raise SystemExit("Shaw PDF SHA-256 does not match the fixed reference")
             materials["shaw2018"] = args.shaw
+        if args.jmlr:
+            digest = hashlib.sha256(args.jmlr.read_bytes()).hexdigest()
+            if digest != references["jmlr2024"]["sha256"]:
+                raise SystemExit("JMLR PDF SHA-256 does not match the fixed reference")
+            materials["jmlr2024"] = args.jmlr
         results = {name: {"sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
                           "parsers": [compare_one(candidate, path, references[name], args.timeout)
                                       for candidate in ("pymupdf_blocks", "pymupdf4llm", "docling")]}

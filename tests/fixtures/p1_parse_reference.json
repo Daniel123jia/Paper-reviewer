@@ -17,6 +17,28 @@
     "equations": ["(1)", "(2)", "(3)", "(4)", "(5)"],
     "figure_captions": ["Figure 1"]
   },
+  "jmlr2024": {
+    "source_url": "https://www.jmlr.org/papers/volume25/24-0404/24-0404.pdf",
+    "sha256": "4ddf0066146f0644ba87d2462e9f73d3d72537d1daffb8d6ccc50840ff6c7dea",
+    "page_count": 10,
+    "headings": [
+      "1. Introduction",
+      "2. The Keras Domain Packages API",
+      "3. Training, Serving, and Deployment",
+      "4. Pretrained models on Kaggle Models",
+      "5. Performance",
+      "6. Related Work",
+      "7. Future Work",
+      "8. Conclusions",
+      "References"
+    ],
+    "table_rows": [
+      "Keras 2 (TF) 386.93 3,187.09",
+      "Keras 3 (TF) 355.25 762.67 232.52"
+    ],
+    "equations": [],
+    "figure_captions": []
+  },
   "single_column": {
     "page_count": 2,
     "headings": ["1 Introduction", "2 Method", "3 Results", "References"],

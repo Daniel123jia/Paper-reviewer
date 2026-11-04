@@ -39,6 +39,7 @@ def test_quality_report_does_not_claim_accuracy_without_human_reference():
     assert "row_alignment_unverified" in report["tables"][0]["issues"]
     assert report["formulas"][0]["status"] == "transcription_unverified"
     assert report["figures"][0]["status"] == "visual_unreviewed"
+    assert "visual_region_unlocated" in report["figures"][0]["issues"]
     assert "section_order_unverified" in report["sections"][2]["issues"]
     assert "section_body_boundaries_unverified" in report["sections"][0]["issues"]
     assert report["inventory_completeness"] == "unverified"

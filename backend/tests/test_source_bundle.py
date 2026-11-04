@@ -63,3 +63,27 @@ def test_bundle_keeps_legacy_evidence_and_marks_unverified_structure(tmp_path):
     assert bundle["tables"][0]["status"] == "missing_structure"
     assert bundle["tables"][0]["caption_evidence_id"] == "ev6"
     assert all(key in bundle for key in ("tables", "references", "limitations"))
+
+
+def test_raster_figure_keeps_visual_coordinates_without_claiming_visual_review(tmp_path):
+    pdf_path = tmp_path / "figure.pdf"
+    pdf = fitz.open()
+    page = pdf.new_page(width=400, height=400)
+    pixels = fitz.Pixmap(fitz.csRGB, fitz.IRect(0, 0, 10, 10), False)
+    pixels.clear_with(255)
+    page.insert_image(fitz.Rect(50, 50, 150, 150), pixmap=pixels)
+    page.insert_text((50, 180), "Figure 1: White square")
+    pdf.save(pdf_path)
+    pdf.close()
+    document = {"id": "figure", "filename": "figure.pdf", "sha256": "hash",
+                "snapshot_id": "snap", "page_count": 1, "sections": "[]",
+                "pages": json.dumps([{"page_index": 0, "width": 400, "height": 400,
+                                      "rotation": 0, "needs_ocr": False}])}
+    rows = [{"id": "caption", "document_id": "figure", "page_index": 0,
+             "excerpt": "Figure 1: White square", "bbox": json.dumps([50, 165, 200, 185]),
+             "precision": "block"}]
+
+    figure = build_source_bundle(document, rows, pdf_path)["figures"][0]
+
+    assert figure["visual_bbox"] == [50.0, 50.0, 150.0, 150.0]
+    assert figure["status"] == "visual_unreviewed"

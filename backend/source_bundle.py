@@ -55,6 +55,19 @@ def build_source_bundle(document, evidence_rows, pdf_path: Path) -> dict:
     tables = []
     matched_caption_ids = set()
     with fitz.open(pdf_path) as pdf:
+        for figure in figures:
+            page = pdf[figure["page_index"]]
+            image_boxes = [rect for image in page.get_images(full=True)
+                           for rect in page.get_image_rects(image[0])]
+            caption_box = next(block["bbox"] for block in body
+                               if block["evidence_id"] == figure["caption_evidence_id"])
+            candidates = [rect for rect in image_boxes if rect.y1 <= caption_box[3] + 40]
+            if candidates:
+                closest = min(candidates, key=lambda rect: abs(rect.y1 - caption_box[1]))
+                figure["visual_bbox"] = list(closest)
+                figure["visual_link_status"] = "candidate"
+            else:
+                figure["visual_link_status"] = "missing_or_vector"
         for page_index, page in enumerate(pdf):
             page_blocks = body_by_page.get(page_index, [])
             for table_index, table in enumerate(page.find_tables().tables):

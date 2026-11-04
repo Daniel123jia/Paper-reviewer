@@ -3,6 +3,10 @@ name: P1 parser comparison
 on:
   push:
     branches: [codex/p1-structured-pdf-quality]
+    paths:
+      - .github/workflows/p1-parser-comparison.yml
+      - scripts/compare_parsers.py
+      - tests/fixtures/p1_parse_reference.json
   workflow_dispatch:
 
 permissions:
@@ -23,8 +27,10 @@ jobs:
         run: |
           curl -fsSL https://arxiv.org/pdf/1803.02155 -o "$RUNNER_TEMP/shaw2018.pdf"
           echo '8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b  '"$RUNNER_TEMP/shaw2018.pdf" | sha256sum --check
+          curl -fsSL https://www.jmlr.org/papers/volume25/24-0404/24-0404.pdf -o "$RUNNER_TEMP/jmlr2024.pdf"
+          echo '4ddf0066146f0644ba87d2462e9f73d3d72537d1daffb8d6ccc50840ff6c7dea  '"$RUNNER_TEMP/jmlr2024.pdf" | sha256sum --check
       - name: Compare three parsers without storing PDF or extracted text
-        run: python scripts/compare_parsers.py --shaw "$RUNNER_TEMP/shaw2018.pdf" --timeout 600 > "$RUNNER_TEMP/p1-parser-summary.json"
+        run: python scripts/compare_parsers.py --shaw "$RUNNER_TEMP/shaw2018.pdf" --jmlr "$RUNNER_TEMP/jmlr2024.pdf" --timeout 600 > "$RUNNER_TEMP/p1-parser-summary.json"
       - uses: actions/upload-artifact@v4
         with:
           name: p1-parser-summary

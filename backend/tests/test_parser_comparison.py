@@ -1,3 +1,6 @@
+import json
+import subprocess
+import sys
 from pathlib import Path
 
 from scripts.compare_parsers import evaluate_landmarks, make_single_column_pdf
@@ -16,6 +19,7 @@ def test_landmark_evaluation_detects_wrong_reading_order():
     assert evaluate_landmarks(correct, reference)["table_row_token_sequences_found"] == 1
     assert evaluate_landmarks(correct, reference)["structured_table_rows_found"] == 0
     assert evaluate_landmarks(correct, reference, ["Yes Yes 25.8"])["structured_table_rows_found"] == 1
+    assert evaluate_landmarks(correct, reference, ["Yes Yes 25.8 additional column"])["structured_table_rows_found"] == 1
 
 
 def test_second_layout_fixture_is_a_real_single_column_pdf(tmp_path):
@@ -31,3 +35,11 @@ def test_second_layout_fixture_is_a_real_single_column_pdf(tmp_path):
         assert "Figure 1" in first
         assert "E = mc2 (1)" in first
         assert "References" in pdf[1].get_text()
+
+
+def test_comparison_cli_prints_only_json_summary():
+    script = Path(__file__).resolve().parents[2] / "scripts" / "compare_parsers.py"
+    completed = subprocess.run([sys.executable, str(script), "--timeout", "20"],
+                               text=True, capture_output=True, check=True)
+    summary = json.loads(completed.stdout)
+    assert "single_column" in summary["materials"]
