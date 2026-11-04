@@ -43,7 +43,7 @@ def _pdf():
 def _fake_completion(messages):
     system = messages[0]["content"]
     user = messages[1]["content"]
-    source_id = None if "contribution-normalizer/v1" in system else re.search(r"\[(ru_[^\]]+)\]", user).group(1)
+    source_id = None if "contribution-normalizer/" in system else re.search(r"\[(ru_[^\]]+)\]", user).group(1)
     if "paper-type-planner/v1" in system:
         payload = {"paper_type": "AI algorithm research", "research_domain": "AI",
                    "methodological_paradigm": "empirical", "applicable_review_dimensions": ["method"],
@@ -56,7 +56,7 @@ def _fake_completion(messages):
                    "experimental_setup": [], "datasets_and_metrics": [], "main_results": [],
                    "author_claimed_contributions": [], "conclusions": [],
                    "author_stated_limitations": [], "unresolved_source_gaps": ["table not checked"]}
-    elif "contribution-normalizer/v1" in system:
+    elif "contribution-normalizer/" in system:
         data = json.loads(user)
         payload = {"contribution_groups": [list(range(len(data["contributions"])))],
                    "claim_groups": [list(range(len(data["claims"])))], "global_support": []}

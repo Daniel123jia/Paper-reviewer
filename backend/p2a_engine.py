@@ -19,7 +19,7 @@ VERSIONS = {"paper-type-planner": "paper-type-planner/v1",
             "paper-understanding": "paper-understanding/v1",
             "contribution-evidence-mapper": "contribution-evidence-mapper/v2",
             "source-consistency": "source-consistency/v1",
-            "contribution-normalizer": "contribution-normalizer/v1"}
+            "contribution-normalizer": "contribution-normalizer/v2"}
 RESULT_METADATA = {"document_id", "source_bundle_id", "review_run_id", "prompt_version",
                    "schema_version", "model_identifier", "input_coverage", "execution_status",
                    "evidence_refs"}
@@ -244,7 +244,7 @@ def _invoke(stage: str, user_text: str, bundle: dict, run_id: str, included_unit
 
 
 def _aux_json(stage, payload, requested_model, model_call, traces, on_trace):
-    system = (PROMPTS / f"{stage}.v1.txt").read_text(encoding="utf-8")
+    system = (PROMPTS / f"{stage}.{VERSIONS[stage].split('/')[-1]}.txt").read_text(encoding="utf-8")
     for attempt in range(2):
         started = time.perf_counter()
         reply = None
@@ -381,9 +381,18 @@ def _merge_claim_maps(partials, profile, bundle, run_id, quality, requested_mode
                            "evidence_ref_ids": item.evidence_ref_ids})
     profile_facts = [fact.model_dump() for field in ("method_components", "experimental_setup",
                      "main_results", "author_claimed_contributions") for fact in getattr(profile, field)]
+    local_gaps = [{"claim_index": claim_index[(part_index, gap.claim_id)],
+                   "part_index": part_index, "status": gap.status, "description": gap.description}
+                  for part_index, mapping in enumerate(partials) for gap in mapping.evidence_gaps]
+    local_relations = [{"claim_index": claim_index[(part_index, relation.claim_id)],
+                        "part_index": part_index, "evidence_ref_id": relation.evidence_ref_id,
+                        "relation": relation.relation, "explanation": relation.explanation}
+                       for part_index, mapping in enumerate(partials)
+                       for relation in mapping.support_relations]
     grouping = _aux_json("contribution-normalizer",
                          {"contributions": contributions, "claims": claims,
-                          "profile_facts": profile_facts},
+                          "profile_facts": profile_facts, "evidence_gaps": local_gaps,
+                          "support_relations": local_relations},
                          requested_model, model_call, traces, on_trace)
 
     def partition(groups, count, label):
@@ -466,14 +475,41 @@ def _merge_claim_maps(partials, profile, bundle, run_id, quality, requested_mode
                 payload["support_relations"].append({"claim_id": claim_id, "evidence_ref_id": ref,
                                                      "relation": "unverified",
                                                      "explanation": "N2 global source lead; verify direct support."})
+    resolved = set()
+    for decision in grouping.get("resolved_gaps", []):
+        gap_index, evidence_ref_id = decision.get("gap_index"), decision.get("evidence_ref_id")
+        if not isinstance(gap_index, int) or not 0 <= gap_index < len(local_gaps):
+            continue
+        gap = local_gaps[gap_index]
+        claim_id = merged_claim_ids.get(gap["claim_index"])
+        if gap["status"] != "support_not_found" or claim_id is None:
+            continue
+        if any(relation["part_index"] != gap["part_index"] and
+               merged_claim_ids.get(relation["claim_index"]) == claim_id and
+               relation["evidence_ref_id"] == evidence_ref_id and
+               relation["relation"] == "direct_source" for relation in local_relations):
+            resolved.add(gap_index)
+    deduplicated = {}
+    for index, gap in enumerate(local_gaps):
+        if index in resolved:
+            continue
+        claim_id = merged_claim_ids.get(gap["claim_index"])
+        if claim_id is None:
+            continue
+        key = (claim_id, re.sub(r"\W+", " ", gap["description"].casefold()).strip())
+        if key not in deduplicated:
+            deduplicated[key] = {"claim_id": claim_id, "status": "source_unverified",
+                                 "description": gap["description"]}
+    payload["evidence_gaps"].extend(deduplicated.values())
     for claim in payload["claims"]:
+        if any(gap["claim_id"] == claim["id"] for gap in payload["evidence_gaps"]):
+            continue
         related = [item for item in payload["support_relations"] if item["claim_id"] == claim["id"]]
         if any(item["relation"] != "unverified" for item in related):
             continue
-        if related:
-            status, description = "source_unverified", "Global evidence exists but requires source verification."
-        else:
-            status, description = "support_not_found", "Support was not found in the supplied full Source Bundle or N2 facts; verify the PDF before concluding absence."
+        status = "source_unverified" if related else "support_not_found"
+        description = ("Global evidence exists but requires source verification." if related else
+                       "No support lead was found in the supplied Source Bundle or N2 facts; verify the PDF before concluding absence.")
         payload["evidence_gaps"].append({"claim_id": claim["id"], "status": status,
                                          "description": description})
     result = ClaimEvidenceMap.model_validate({**_with_references(payload, bundle),

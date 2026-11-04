@@ -278,7 +278,8 @@ def test_global_merge_unifies_paraphrases_and_removes_fragment_only_gap():
             data = json.loads(user)
             assert len(data["contributions"]) == 3
             return _reply({"contribution_groups": [[0, 1, 2]],
-                           "claim_groups": [[0, 1]], "global_support": []})
+                           "claim_groups": [[0, 1]], "global_support": [],
+                           "resolved_gaps": [{"gap_index": 0, "evidence_ref_id": "ru2"}]})
         if stage == "contribution-evidence-mapper":
             local_id = "ru1" if "[ru1]" in user else "ru2"
             supported = local_id == "ru2"
@@ -303,6 +304,53 @@ def test_global_merge_unifies_paraphrases_and_removes_fragment_only_gap():
     assert mapping.support_relations[0].claim_id == mapping.claims[0].id
     validate_source_references(profile, bundle)
     validate_source_references(mapping, bundle)
+
+
+def _merged_gap_case(gaps_by_part, relations_by_part, resolved_gaps=None):
+    bundle = _bundle()
+
+    def model_call(stage, system, user):
+        if stage == "contribution-normalizer":
+            data = json.loads(user)
+            assert len(data["evidence_gaps"]) == sum(len(gaps) for gaps in gaps_by_part)
+            return _reply({"contribution_groups": [[0, 1, 2]],
+                           "claim_groups": [[0, 1]], "global_support": [],
+                           "resolved_gaps": resolved_gaps or []})
+        if stage == "contribution-evidence-mapper":
+            index = 0 if "[ru1]" in user else 1
+            ref = f"ru{index + 1}"
+            return _reply({"contributions": [{"id": "c1", "title": "Method",
+                "description": "Method", "evidence_ref_ids": [ref]}],
+                "claims": [{"id": "cl1", "contribution_id": "c1",
+                            "statement": "Claim", "evidence_ref_ids": [ref]}],
+                "support_relations": [{"claim_id": "cl1", "evidence_ref_id": ref,
+                    "relation": "direct_source", "explanation": "Text supports the claim"}]
+                    if relations_by_part[index] else [],
+                "evidence_gaps": [{"claim_id": "cl1", **gap} for gap in gaps_by_part[index]]})
+        return _reply({"paper-type-planner": PLAN, "paper-understanding": PROFILE}[stage])
+
+    _, _, mapping, _ = run_p2a(bundle, "gap-run", model_call, "model", chunk_chars=60)
+    validate_source_references(mapping, bundle)
+    return mapping
+
+
+def test_direct_text_support_does_not_erase_unverified_formula_gap():
+    mapping = _merged_gap_case(
+        [[{"description": "Equation 4 transcription remains unverified",
+           "status": "source_unverified"}], []],
+        [False, True])
+    assert len(mapping.support_relations) == 1
+    assert [(gap.status, gap.description) for gap in mapping.evidence_gaps] == [
+        ("source_unverified", "Equation 4 transcription remains unverified")]
+
+
+def test_duplicate_unresolved_gap_is_kept_once_after_claim_merge():
+    gap = {"description": "Table 2 row alignment needs PDF verification",
+           "status": "source_unverified"}
+    mapping = _merged_gap_case([[gap], [gap]], [False, False])
+    assert len(mapping.claims) == 1
+    assert [(item.status, item.description) for item in mapping.evidence_gaps] == [
+        ("source_unverified", gap["description"])]
 
 
 def test_distinct_contributions_remain_distinct_after_global_grouping():
