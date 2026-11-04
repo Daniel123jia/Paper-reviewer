@@ -9,14 +9,14 @@ from backend.p2a_schema import StrictModel
 from backend.p2b_schema import CandidateSourceRef, IssueCandidate
 
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "1.1"
 RelationKind = Literal["exact_duplicate", "semantic_duplicate", "related_but_distinct",
                        "distinct", "uncertain_relation"]
 Impact = Literal["major_candidate", "minor_candidate", "undetermined"]
 
 
 class OriginalCandidateInventory(StrictModel):
-    schema_version: Literal["1.0"] = SCHEMA_VERSION
+    schema_version: Literal["1.1"] = SCHEMA_VERSION
     document_id: str
     snapshot_id: str
     pdf_sha256: str | None
@@ -125,7 +125,8 @@ class ContributionCoverage(StrictModel):
 class FocusCoverage(StrictModel):
     focus_id: str
     dimension_id: str
-    status: Literal["reported_inspected", "reported_partial", "coverage_gap", "not_applicable"]
+    status: Literal["reported_inspected", "reported_partial", "mapping_uncertain",
+                    "coverage_gap", "not_applicable"]
     explanation: str
 
 
@@ -172,7 +173,7 @@ class VerificationTask(StrictModel):
 
 
 class CandidateConsolidationResult(StrictModel):
-    schema_version: Literal["1.0"] = SCHEMA_VERSION
+    schema_version: Literal["1.1"] = SCHEMA_VERSION
     document_id: str
     snapshot_id: str
     pdf_sha256: str | None

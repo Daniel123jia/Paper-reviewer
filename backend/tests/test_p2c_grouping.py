@@ -52,6 +52,35 @@ def test_four_dimensions_same_question_merge_without_evidence_loss():
     assert merged.verification_status == "unverified"
 
 
+def test_central_question_summarizes_common_doubt_across_dimensions():
+    inventory, mapping = case(("D1", "D2"))
+    inventory.candidates[0].title = "Method claim"
+    inventory.candidates[0].suspected_problem = "The method claim may lack support"
+    inventory.candidates[0].verification_questions = ["Is the method claim supported by the formula?"]
+    inventory.candidates[1].title = "Method claim"
+    inventory.candidates[1].suspected_problem = "The method claim may lack support"
+    inventory.candidates[1].verification_questions = ["Is the method claim supported by the experiment?"]
+    ids = sorted(item.issue_id for item in inventory.candidates)
+    central = "Do the formula and experiment together support the method claim?"
+    issues, _ = consolidate_from_relations(inventory, mapping, relations(ids),
+        [{"issue_ids": ids, "rationale": "same method claim", "central_question": central}])
+    assert issues[0].central_question == central
+    assert issues[0].central_question != issues[0].verification_questions[0]
+    assert set(issues[0].verification_questions) == {
+        "Is the method claim supported by the formula?",
+        "Is the method claim supported by the experiment?"}
+
+
+def test_unsupported_central_question_falls_back_to_original_questions():
+    inventory, mapping = case(("D1", "D2"))
+    ids = sorted(item.issue_id for item in inventory.candidates)
+    issues, _ = consolidate_from_relations(inventory, mapping, relations(ids),
+        [{"issue_ids": ids, "rationale": "same concern",
+          "central_question": "Does a novel BLEU 99 result prove the claim?"}])
+    assert "BLEU 99" not in issues[0].central_question
+    assert all(question in issues[0].central_question for question in issues[0].verification_questions)
+
+
 def test_related_efficiency_math_and_gpu_measurement_remain_distinct():
     inventory, mapping = case(("D1", "D2"))
     ids = sorted(item.issue_id for item in inventory.candidates)
@@ -109,7 +138,8 @@ def test_model_pair_and_reconciliation_contract():
                         "shared_verification_need": "one source check"}]}
         else:
             content = {"groups": [{"issue_ids": sorted(item.issue_id for item in inventory.candidates),
-                                    "rationale": "one verification check"}]}
+                                    "rationale": "one verification check",
+                                    "central_question": "Do these concerns need the same source check?"}]}
         return {"content": json.dumps(content), "model_identifier": "mock",
                 "input_tokens": 100, "output_tokens": 20, "duration_ms": 3}
     outcome = run_semantic_grouping(inventory, mapping, model, "mock")
@@ -131,7 +161,8 @@ def test_multiple_pair_batches_account_for_every_original_pair():
                 "shared_verification_need": "one test"} for a, b in payload["pairs"]]}
         else:
             content = {"groups": [{"issue_ids": sorted(payload["candidates"]),
-                                    "rationale": "one question"}]}
+                                    "rationale": "one question",
+                                    "central_question": "Do these concerns need the same source check?"}]}
         return {"content": json.dumps(content), "model_identifier": "mock",
                 "input_tokens": 100, "output_tokens": 50, "duration_ms": 1}
     outcome = run_semantic_grouping(inventory, mapping, model, "mock", max_pairs_per_call=2)

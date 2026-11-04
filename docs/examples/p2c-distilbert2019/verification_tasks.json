@@ -2,7 +2,7 @@
   {
     "verification_task_id": "verify_3a45a00a08fbc07fcdd4",
     "consolidated_issue_id": "consolidated_c9750ce2c32914386e93",
-    "central_question": "Do the original PDF and experiment-specific code specify the loss coefficients, training temperature, reductions, and any temperature-dependent scaling?",
+    "central_question": "Do the original source and experiment-specific code and configurations uniquely specify the reported triple objective, including loss coefficients, training temperature and scaling, contributing token positions, hidden-state pairing, reductions, and coefficient handling in the ablations?",
     "related_claim_ids": [
       "claim_7bcad7997d656581",
       "claim_cc3f6207a3c8e47a",
@@ -106,7 +106,7 @@
   {
     "verification_task_id": "verify_8519b1fe2056683370b9",
     "consolidated_issue_id": "consolidated_2fc7365d65828d021acd",
-    "central_question": "What values and metric order does the original PDF show for DistilBERT (D)?",
+    "central_question": "What EM and F1 scores do the original prose and Table 2 report for DistilBERT with adaptation-stage distillation under the same evaluation configuration, and do the reconciled scores support the reported improvement over DistilBERT and the 'within three points' gap to BERT?",
     "related_claim_ids": [
       "claim_d15f98a55bba3ef7",
       "claim_4263e8efb6d8eecd"
@@ -196,7 +196,7 @@
   {
     "verification_task_id": "verify_636263b3fa88f2815a22",
     "consolidated_issue_id": "consolidated_74d31eae282a7e352cfb",
-    "central_question": "What cost boundary do the authors intend: incremental student distillation given an available teacher, or total teacher-plus-student pretraining?",
+    "central_question": "Does the reported training-resource evidence support the lower-pretraining-cost claim under an explicit accounting boundary for teacher pretraining and teacher computation, with a relevant comparison controlling data exposure and target performance?",
     "related_claim_ids": [
       "claim_a43f23cbeb41a5e9"
     ],
@@ -290,7 +290,7 @@
   {
     "verification_task_id": "verify_641fb5ebefc3284a239f",
     "consolidated_issue_id": "consolidated_8e8e2b5dcfc41219ae35",
-    "central_question": "Does the original Table 4 confirm the extracted single-component-removal configurations, and are additional relevant comparisons provided elsewhere?",
+    "central_question": "Does Table 4 or other available material compare the full objective with an otherwise matched, teacher-initialized student trained with masked language modeling alone, removing both distillation losses, and thereby establish their combined contribution rather than only conditional component benefits?",
     "related_claim_ids": [
       "claim_416e38c43588f4f0",
       "claim_99d4c1fba0a1e81c",

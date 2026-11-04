@@ -1,19 +1,19 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
   "snapshot_id": "886cadb1a7084f458f387ce3b2315574",
   "pdf_sha256": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
   "source_bundle_id": "sb_8086e2e5e139_886cadb1a7084f458f387ce3b2315574_v1",
   "understanding_run_id": "848033e148ae4ff18b46f78a172f94d9",
   "professional_review_run_id": "8c3a5a5e783c4366bbe965f4cdad6a28",
-  "consolidation_run_id": "a25219c4ffe5415c807f61beacd4126a",
+  "consolidation_run_id": "6982b7e180034271ab3fdd8e57e22c21",
   "prompt_versions": [
     "candidate-semantic-grouping/v1",
-    "candidate-group-reconciliation/v1"
+    "candidate-group-reconciliation/v2"
   ],
   "model_identifier": "gpt-6.1-sol",
   "inventory": {
-    "schema_version": "1.0",
+    "schema_version": "1.1",
     "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
     "snapshot_id": "886cadb1a7084f458f387ce3b2315574",
     "pdf_sha256": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
@@ -912,393 +912,393 @@
       "left_issue_id": "candidate_411d89d947fb55ec",
       "right_issue_id": "candidate_44ae8c725a2e4956",
       "relation": "distinct",
-      "rationale": "The first questions whether matched training and selection procedures isolate the cause of BLEU gains; the second questions whether throughput and memory evidence substantiate practical efficiency. Training-comparison records would not resolve the efficiency measurement gaps.",
+      "rationale": "The first questions whether BLEU gains isolate the position representation; the second questions the empirical scope of implementation efficiency. Matched translation training records would not establish memory or runtime tradeoffs.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_411d89d947fb55ec",
       "right_issue_id": "candidate_4e6dea2fd90f07da",
       "relation": "distinct",
-      "rationale": "Baseline comparability concerns experimental attribution of translation gains, whereas storage-bound scope concerns which tensors and sharing assumptions enter the asymptotic analysis. These require independent verification.",
+      "rationale": "Baseline comparability concerns experimental attribution of BLEU gains, whereas the storage concern requires accounting for attention tensors and representation sharing in the stated asymptotic bound.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_411d89d947fb55ec",
       "right_issue_id": "candidate_549cf495fe3bd6f9",
       "relation": "distinct",
-      "rationale": "Matching absolute-position and relative-position runs tests attribution of reported BLEU gains. Establishing unseen-length generalization requires training and evaluation length distributions and an extrapolation evaluation; matched ordinary translation runs would not resolve that question.",
+      "rationale": "Matching absolute and relative training conditions addresses attribution of ordinary translation gains. Testing unseen-length generalization requires training-length limits and evaluation outside those limits.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_411d89d947fb55ec",
       "right_issue_id": "candidate_633aeca7f9bd479d",
       "relation": "distinct",
-      "rationale": "The first concerns confounding in baseline comparisons; the second concerns whether length-independent labels justify a performance generalization claim. Baseline configuration checks and length-extrapolation evidence answer different questions.",
+      "rationale": "The first concerns confounding in baseline comparisons; the second concerns whether length-independent labels support a claim of predictive performance at unseen lengths. Their decisive evidence differs.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_411d89d947fb55ec",
       "right_issue_id": "candidate_7000f7ac462a95b7",
       "relation": "related_but_distinct",
-      "rationale": "Both concern the reported BLEU comparisons and overlap on whether scoring was identical across conditions. However, baseline matching requires training and checkpoint records, while pipeline reproducibility requires the exact scorer, tokenization, case handling, and reconstruction procedure. Identical scoring can remain underspecified for reproduction.",
-      "shared_verification_need": "Check whether baseline and relative-position outputs used identical scoring procedures and references; separate checks remain necessary for training comparability and exact scoring reproducibility."
+      "rationale": "Both concern interpreting reported BLEU gains and overlap on consistent evaluation. However, baseline matching requires paired training and selection records, while scoring reproducibility requires the exact scorer and text-processing pipeline. An identical but undocumented scoring pipeline could satisfy internal comparability without resolving reproducibility.",
+      "shared_verification_need": "Check whether baseline and relative-position outputs used identical scoring, reference processing, and decoding settings; additional training records and scoring specifications remain independently necessary."
     },
     {
       "left_issue_id": "candidate_411d89d947fb55ec",
       "right_issue_id": "candidate_94105da03d98236b",
       "relation": "distinct",
-      "rationale": "The baseline concern asks whether experimental controls support attribution of translation gains. The efficiency concern asks what the throughput comparison measures and how practical cost scales. These involve different comparisons and evidence.",
+      "rationale": "The first asks whether translation-quality comparisons are controlled; the second asks whether a throughput comparison and broader efficiency evidence substantiate implementation cost claims. Their comparison baselines serve different scientific questions.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_411d89d947fb55ec",
       "right_issue_id": "candidate_b869e41b9495ceea",
       "relation": "distinct",
-      "rationale": "The first requires matched baseline training and evaluation records; the second requires an evaluation outside the training-length range. Verifying either would leave the other unresolved.",
+      "rationale": "Controlling the reported absolute-versus-relative BLEU comparison does not test performance under a deliberate sequence-length shift, which is the second candidate's concern.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_411d89d947fb55ec",
       "right_issue_id": "candidate_d0595236a2c0a091",
       "relation": "distinct",
-      "rationale": "Experimental attribution of BLEU gains differs from interpreting and supporting the claim that clipping enables unseen-length generalization. The latter needs contextual qualification and length-specific evidence rather than ordinary baseline-matching records.",
+      "rationale": "Baseline matching concerns causal attribution of measured gains. The generalization boundary concerns the meaning and evidence for extrapolation beyond training lengths, requiring different textual and experimental checks.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_411d89d947fb55ec",
       "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
       "relation": "semantic_duplicate",
-      "rationale": "Both question whether each absolute-position baseline and corresponding relative-position model used matched training, checkpoint selection, and evaluation procedures so that BLEU differences can be attributed to position representations. Their differences in listed settings and impact assessments do not change the substantially shared verification task.",
-      "shared_verification_need": "Inspect baseline-specific configurations and run records for each base and big comparison, including training budget, optimization, batching, checkpoint policy, decoding, and seed or repeated-run information."
+      "rationale": "Both question whether each absolute-position baseline and relative-position model used matched training, checkpoint selection, decoding, and evaluation conditions so that BLEU differences can be attributed to position representations. Their differing impact assessments do not change the verification task.",
+      "shared_verification_need": "Inspect paired baseline and relative-position configurations and result provenance, including update budgets, optimization, seeds, checkpoint selection or averaging, data handling, and decoding/evaluation settings."
     },
     {
       "left_issue_id": "candidate_411d89d947fb55ec",
       "right_issue_id": "candidate_ea97b96233a7aa53",
       "relation": "related_but_distinct",
-      "rationale": "Both concern controlled position-representation comparisons, but the first addresses absolute-only versus relative-only BLEU gains, while the second requires tracing and verifying a combined relative-plus-sinusoidal condition. Matching the two single-representation runs would not establish the combined-condition result.",
-      "shared_verification_need": "Inspect experimental configurations and checkpoint and decoding policies for the relevant position-representation conditions; the combined condition additionally requires its own identifiable result."
+      "rationale": "Both require controlled position-representation comparisons, but they concern different contrasts: absolute versus relative representations, and combined representations versus the single-representation conditions. Verifying the former does not establish the combined condition or its no-benefit result.",
+      "shared_verification_need": "Inspect training, checkpoint, and evaluation settings across position-representation conditions; the combined-condition scores and provenance require a separate check."
     },
     {
       "left_issue_id": "candidate_44ae8c725a2e4956",
       "right_issue_id": "candidate_4e6dea2fd90f07da",
       "relation": "related_but_distinct",
-      "rationale": "Both address efficiency and tensor storage, but the first primarily questions the coverage and comparability of practical cost measurements, while the second questions the tensor scope and sharing assumptions of an asymptotic storage bound. Runtime and peak-memory benchmarks alone would not settle the mathematical accounting.",
-      "shared_verification_need": "Inspect which tensors are materialized and how head and batch sharing affect storage; practical efficiency measurements and a complete asymptotic accounting remain separate verification needs."
+      "rationale": "Both address storage and implementation efficiency, with overlap in tensor accounting. The first primarily asks whether practical throughput, memory, and other cost measurements support the efficiency claim; the second asks whether the theoretical storage bound includes attention matrices and the applicable sharing assumptions. Neither verification alone resolves both.",
+      "shared_verification_need": "Inspect which tensors the implementation materializes and how head and sequence sharing affect storage; practical cost measurements and the scope of the theoretical bound still require separate verification."
     },
     {
       "left_issue_id": "candidate_44ae8c725a2e4956",
       "right_issue_id": "candidate_549cf495fe3bd6f9",
       "relation": "distinct",
-      "rationale": "Practical implementation efficiency requires cost measurements and a defined comparison setup. Unseen-length generalization requires length distributions and performance under length shift. Neither verification resolves the other.",
+      "rationale": "Implementation cost evidence and predictive generalization to unseen sequence lengths are different questions. Runtime or memory measurements do not establish length-extrapolation quality.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_44ae8c725a2e4956",
       "right_issue_id": "candidate_633aeca7f9bd479d",
       "relation": "distinct",
-      "rationale": "The first concerns empirical support for an efficiency claim; the second concerns whether representational applicability at new lengths supports predictive performance there. They require independent cost and extrapolation evidence.",
+      "rationale": "The first concerns practical efficiency evidence; the second concerns whether structural length independence supports a predictive generalization claim. They require cost benchmarks and length-shifted performance evidence, respectively.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_44ae8c725a2e4956",
       "right_issue_id": "candidate_7000f7ac462a95b7",
       "relation": "distinct",
-      "rationale": "Efficiency measurement coverage and exact BLEU scoring reproducibility concern different quantities and procedures. A scoring command would not establish memory or runtime costs, and cost benchmarks would not identify the scoring pipeline.",
+      "rationale": "The efficiency concern requires implementation benchmarks and cost accounting. The BLEU protocol concern requires scorer, tokenization, case, and reconstruction specifications. Recovering one protocol would not resolve the other.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_44ae8c725a2e4956",
       "right_issue_id": "candidate_94105da03d98236b",
       "relation": "semantic_duplicate",
-      "rationale": "Both question whether the single reported throughput result, with an insufficiently specified comparison and limited memory and scaling measurements, substantiates the broader practical efficiency claim. Their differing emphasis on inference cost, full training overhead, and alternative implementations elaborates substantially the same verification need.",
-      "shared_verification_need": "Identify the exact throughput baseline and measurement scope, verify matched execution settings, and inspect memory and runtime measurements across relevant sequence lengths, batch sizes, and sharing configurations."
+      "rationale": "Both question whether the single reported 7% throughput decrease adequately substantiates practical efficiency, given uncertain comparison conditions and missing memory, runtime, and scaling evidence. Their additional examples of desirable measurements refine the same central verification need.",
+      "shared_verification_need": "Identify the precise throughput baseline and measurement scope, verify matched benchmarking conditions, and inspect available memory, wall-clock, and scaling measurements alongside implementation tensor accounting."
     },
     {
       "left_issue_id": "candidate_44ae8c725a2e4956",
       "right_issue_id": "candidate_b869e41b9495ceea",
       "relation": "distinct",
-      "rationale": "The efficiency concern asks for practical cost evidence, while the generalization concern asks for performance on sequence lengths outside the training range. These are independent scientific questions.",
+      "rationale": "The first asks about practical computation and memory costs; the second asks whether clipping supports performance on unseen sequence lengths. These require independent benchmarks and generalization experiments.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_44ae8c725a2e4956",
       "right_issue_id": "candidate_d0595236a2c0a091",
       "relation": "distinct",
-      "rationale": "The first questions the empirical breadth of implementation efficiency evidence. The second questions the boundary between a structural property of clipping and a predictive generalization claim. Cost measurements and claim-context or extrapolation checks do not resolve each other.",
+      "rationale": "The practical efficiency claim and the distinction between representational applicability and predictive length extrapolation concern different properties and different supporting evidence.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_44ae8c725a2e4956",
       "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
       "relation": "distinct",
-      "rationale": "Although both mention comparison settings, one concerns fair measurement of implementation costs and the other concerns fair attribution of BLEU gains. They require different baseline records and measured outcomes.",
+      "rationale": "Although both mention matched comparison conditions, one concerns runtime and memory evidence while the other concerns attribution of BLEU improvements. A controlled efficiency benchmark would not establish matched translation training histories.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_44ae8c725a2e4956",
       "right_issue_id": "candidate_ea97b96233a7aa53",
       "relation": "distinct",
-      "rationale": "Practical efficiency evidence does not establish whether a combined-position translation condition was evaluated under matched controls. Conversely, tracing that condition would not substantiate runtime or memory claims.",
+      "rationale": "Efficiency measurements do not determine whether a combined absolute-plus-relative condition was evaluated or whether it improved translation quality. The latter requires identifiable combined-condition results and controls.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_4e6dea2fd90f07da",
       "right_issue_id": "candidate_549cf495fe3bd6f9",
       "relation": "distinct",
-      "rationale": "The storage concern asks whether attention matrices and head-sharing assumptions are correctly included in a complexity bound. The generalization concern asks whether performance was evaluated beyond training lengths. Dependence on sequence length does not make their scientific questions or verification tasks equivalent.",
+      "rationale": "The storage candidate questions asymptotic tensor accounting and sharing assumptions. The generalization candidate questions predictive evidence outside training-length ranges. Their common reference to sequence length does not make their verification tasks equivalent.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_4e6dea2fd90f07da",
       "right_issue_id": "candidate_633aeca7f9bd479d",
       "relation": "distinct",
-      "rationale": "The first questions tensor accounting and sharing assumptions in a storage bound; the second questions whether clipping supports unseen-length predictive generalization. Memory accounting would not resolve the need for length-extrapolation evidence or clarification of the generalization claim.",
+      "rationale": "The first questions which tensors and sharing configurations the storage bound covers; the second questions whether length-independent representations establish predictive generalization to unseen lengths. Memory accounting would not resolve the generalization claim.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_4e6dea2fd90f07da",
       "right_issue_id": "candidate_7000f7ac462a95b7",
       "relation": "distinct",
-      "rationale": "Storage-bound scope requires identifying retained attention tensors and head-sharing configurations. BLEU reproducibility requires identifying scoring, tokenization, case handling, and decoded-text processing. These are independent verification tasks.",
+      "rationale": "Storage-bound scope requires tensor and implementation accounting, while BLEU reproducibility requires identification of scoring and text-processing procedures. These are independent verification tasks.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_4e6dea2fd90f07da",
       "right_issue_id": "candidate_94105da03d98236b",
       "relation": "related_but_distinct",
-      "rationale": "Both concern implementation efficiency and overlap on whether storage terms match materialized tensors. However, the first specifically questions the completeness and sharing assumptions of an asymptotic storage bound, while the second primarily questions the baseline, coverage, and configuration scope of measured runtime evidence. Correct tensor accounting would not resolve the runtime comparison.",
-      "shared_verification_need": "Inspect the implementation's materialized tensors and head-sharing configuration to determine what the stated storage terms cover; runtime baselines and measurement scope require additional verification."
+      "rationale": "Both concern computational cost and overlap on whether the storage formula matches materialized tensors. However, the first targets asymptotic memory accounting, whereas the second also requires the runtime baseline, measurement boundaries, and empirical scaling evidence. Resolving the storage formula would not resolve the runtime concern.",
+      "shared_verification_need": "Check which tensors are materialized and how head sharing affects the stated storage terms."
     },
     {
       "left_issue_id": "candidate_4e6dea2fd90f07da",
       "right_issue_id": "candidate_b869e41b9495ceea",
       "relation": "distinct",
-      "rationale": "The first concerns asymptotic memory accounting; the second concerns empirical evidence for generalization beyond training sequence lengths. Although both mention sequence length, they question different properties and require independent evidence.",
+      "rationale": "The storage concern asks about tensor accounting and sharing assumptions; the generalization concern asks for evaluation beyond training sequence lengths. Neither verification resolves the other.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_4e6dea2fd90f07da",
       "right_issue_id": "candidate_d0595236a2c0a091",
       "relation": "distinct",
-      "rationale": "Determining whether the storage formula includes attention matrices and appropriate sharing factors does not determine whether the unseen-length wording denotes representational applicability or demonstrated predictive performance.",
+      "rationale": "The first questions the scope of an asymptotic storage bound, while the second questions whether clipping supports a claim about unseen-length predictive performance. They require different evidence.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_4e6dea2fd90f07da",
       "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
       "relation": "distinct",
-      "rationale": "The first questions storage complexity accounting; the second questions whether baseline and relative-position training and evaluation conditions were matched. Resolving either leaves the other unanswered.",
+      "rationale": "Verifying memory complexity requires tensor accounting; verifying attribution of BLEU gains requires matched baseline training and evaluation configurations. The scientific questions and evidence are independent.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_4e6dea2fd90f07da",
       "right_issue_id": "candidate_ea97b96233a7aa53",
       "relation": "distinct",
-      "rationale": "The storage-bound concern requires tensor and sharing analysis, whereas the combination concern requires tracing a matched relative-plus-sinusoidal experimental condition and its results.",
+      "rationale": "Storage-bound scope and evidence for a combined relative-plus-absolute position control concern different claims. Inspecting memory accounting would not establish the combined condition's configuration or results.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_549cf495fe3bd6f9",
       "right_issue_id": "candidate_633aeca7f9bd479d",
       "relation": "semantic_duplicate",
-      "rationale": "Both question whether the unseen-length generalization statement is supported beyond length-independent representations and a clipping-distance ablation. One emphasizes evaluation scope and the other contribution scope, but checking claim wording, training and test length ranges, and any dedicated extrapolation results would substantially resolve both.",
-      "shared_verification_need": "Check the complete claim context and any evaluation on lengths outside the training range, distinguishing representational applicability from maintained translation performance."
+      "rationale": "Both question whether the unseen-length generalization statement is supported beyond representational invariance and the clipping-distance ablation. One emphasizes evaluation coverage and the other contribution scope, but checking the intended claim and any length-extrapolation evaluation would substantially resolve both.",
+      "shared_verification_need": "Inspect the statement in context and locate training-length limits, evaluation-length distributions, and performance results outside the training-length range."
     },
     {
       "left_issue_id": "candidate_549cf495fe3bd6f9",
       "right_issue_id": "candidate_7000f7ac462a95b7",
       "relation": "distinct",
-      "rationale": "The first asks whether an unseen-length evaluation supports a generalization claim; the second asks whether the BLEU pipeline is sufficiently specified for reproduction. A fully specified scorer would not establish length extrapolation, and a length-shifted evaluation would not necessarily specify the scorer.",
+      "rationale": "The first asks whether unseen-length generalization was evaluated; the second asks how reported BLEU scores were computed. Recovering the scoring pipeline does not establish a length-shifted evaluation.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_549cf495fe3bd6f9",
       "right_issue_id": "candidate_94105da03d98236b",
       "relation": "distinct",
-      "rationale": "Predictive generalization to unseen lengths and the empirical scope of runtime efficiency are separate claims. They require length-distribution and translation-performance evidence versus timing baselines, measurement coverage, and resource measurements.",
+      "rationale": "Evidence for unseen-length predictive generalization and evidence for practical computational efficiency address separate claims. Length-distribution checks would not determine the runtime baseline or measurement scope.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_549cf495fe3bd6f9",
       "right_issue_id": "candidate_b869e41b9495ceea",
       "relation": "exact_duplicate",
-      "rationale": "Both identify the same local evidence gap: varying clipping distance on the stated development set does not directly test performance at sequence lengths unseen during training. Both ask for training and evaluation length distributions, a dedicated length-shifted evaluation, and clarification of whether the claim is architectural or empirical. Their impact assessments do not change this identity.",
-      "shared_verification_need": "Inspect the full paper for a dedicated unseen-length evaluation, its training and test length ranges, and any qualification of the generalization statement as an architectural property."
+      "rationale": "Both identify the same unresolved question: whether clipping's asserted unseen-length generalization has direct evaluation support rather than only a clipping-distance ablation on the ordinary development set. Their verification tasks are effectively the same.",
+      "shared_verification_need": "Check the complete paper for a deliberately length-shifted evaluation, training and test length distributions, and clarification of whether the generalization statement is architectural or empirical."
     },
     {
       "left_issue_id": "candidate_549cf495fe3bd6f9",
       "right_issue_id": "candidate_d0595236a2c0a091",
       "relation": "semantic_duplicate",
-      "rationale": "Both question the same gap between length-independent clipped representations and evidence of predictive generalization. The latter emphasizes the wording's structural-versus-performance ambiguity, while the former emphasizes missing direct evaluation; the same contextual and experimental checks would substantially resolve both.",
-      "shared_verification_need": "Determine the intended meaning of the unseen-length claim and inspect any training-length limits, evaluation length distributions, and extrapolation-specific performance results."
+      "rationale": "Both question the evidential boundary between length-independent relation representations and demonstrated performance at unseen lengths. The difference between emphasis on missing evaluation and emphasis on claim wording does not create an independent scientific question.",
+      "shared_verification_need": "Determine the contextual meaning of the generalization statement and whether results explicitly test predictive performance outside the training-length range."
     },
     {
       "left_issue_id": "candidate_549cf495fe3bd6f9",
       "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
-      "relation": "related_but_distinct",
-      "rationale": "Both concern what the translation experiments establish, but they target different claims. One requires an evaluation outside the training-length range; the other requires matched baseline and relative-position training and evaluation conditions. A matched ordinary-length comparison would not establish extrapolation.",
+      "relation": "distinct",
+      "rationale": "The first concerns evidence for length extrapolation; the second concerns whether ordinary translation gains are attributable to position representations under matched training conditions. Baseline matching alone would not establish unseen-length performance.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_549cf495fe3bd6f9",
       "right_issue_id": "candidate_ea97b96233a7aa53",
-      "relation": "related_but_distinct",
-      "rationale": "Both question the experimental support for an architectural claim, but one seeks an unseen-length evaluation and the other a traceable combined-position control. These are separate experimental conditions, and verifying one would not resolve the other.",
+      "relation": "distinct",
+      "rationale": "A length-extrapolation evaluation and a combined-position control test different hypotheses. Locating or verifying either experiment would not resolve the other concern.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_633aeca7f9bd479d",
       "right_issue_id": "candidate_7000f7ac462a95b7",
       "relation": "distinct",
-      "rationale": "The generalization concern requires interpreting the unseen-length claim and locating extrapolation evidence. The BLEU concern requires recovering the exact scoring pipeline. These verification needs are independent.",
+      "rationale": "The first asks whether structural applicability supports a predictive generalization claim; the second asks whether BLEU scoring procedures are reproducible. They require independent evidence.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_633aeca7f9bd479d",
       "right_issue_id": "candidate_94105da03d98236b",
       "relation": "distinct",
-      "rationale": "The first questions whether representational applicability establishes predictive length extrapolation; the second questions whether limited runtime measurements substantiate efficiency. Neither claim's verification would resolve the other.",
+      "rationale": "The generalization claim requires interpretation and length-extrapolation evidence, whereas the efficiency claim requires defined runtime comparisons and cost measurements. Neither task resolves the other.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_633aeca7f9bd479d",
       "right_issue_id": "candidate_b869e41b9495ceea",
       "relation": "semantic_duplicate",
-      "rationale": "Both question whether the clipping ablation supports the stated unseen-length generalization advantage. Their differing emphasis on contribution boundaries versus experimental controls does not change the central need to inspect claim meaning and evidence from lengths outside training.",
-      "shared_verification_need": "Check the claim's contextual meaning and locate any dedicated evaluation beyond training lengths, including length distributions and performance results distinct from the clipping-distance ablation."
+      "rationale": "Both question whether clipping and length-independent labels justify unseen-length performance claims when the supplied experiment varies clipping distance rather than evaluation length. Their different framing leads to substantially the same verification need.",
+      "shared_verification_need": "Check whether the full paper distinguishes representational applicability from predictive extrapolation and supplies an evaluation beyond training lengths."
     },
     {
       "left_issue_id": "candidate_633aeca7f9bd479d",
       "right_issue_id": "candidate_d0595236a2c0a091",
       "relation": "exact_duplicate",
-      "rationale": "Both explicitly question the same distinction between assigning existing relative-position labels at new lengths and preserving translation performance beyond training lengths. Both require checking the original wording and any dedicated extrapolation evidence or qualification; their different impact labels do not alter the verification task.",
-      "shared_verification_need": "Inspect the original generalization wording and any training-length limits, out-of-range evaluation results, or qualifications that distinguish representational applicability from predictive extrapolation."
+      "rationale": "Both explicitly question the same possible conflation between assigning relative-position labels at unseen lengths and maintaining translation performance there. Both require checking the statement's intended meaning and any supporting length-extrapolation experiment.",
+      "shared_verification_need": "Inspect the original wording and qualifications, then verify training-length limits and results for evaluation sequences outside those limits."
     },
     {
       "left_issue_id": "candidate_633aeca7f9bd479d",
       "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
-      "relation": "related_but_distinct",
-      "rationale": "Both concern attribution and scope of architectural benefits in translation experiments. However, unseen-length generalization requires length-extrapolation evidence, while baseline reliability requires matching training, checkpoint, and evaluation procedures for the reported BLEU gains. These checks are independent.",
+      "relation": "distinct",
+      "rationale": "The first concerns the scope of the unseen-length generalization claim; the second concerns confounding in baseline comparisons for reported BLEU gains. Matched training records do not establish extrapolation beyond training lengths.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_633aeca7f9bd479d",
       "right_issue_id": "candidate_ea97b96233a7aa53",
-      "relation": "related_but_distinct",
-      "rationale": "Both question evidence supporting a claimed property of position representations, but the properties differ: unseen-length predictive generalization versus no additional benefit from combining relative and sinusoidal encodings. They require separate experimental comparisons.",
+      "relation": "distinct",
+      "rationale": "The first questions evidence for unseen-length performance, while the second questions traceability and matching of a combined-position experiment. These test separate architectural claims and require separate experimental evidence.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_7000f7ac462a95b7",
       "right_issue_id": "candidate_94105da03d98236b",
       "relation": "distinct",
-      "rationale": "The first questions reproducibility of BLEU scoring; the second questions the comparison baseline and measurement scope supporting implementation efficiency. Scoring configurations and runtime or memory measurements require independent verification.",
+      "rationale": "The first questions reproducibility of BLEU scoring; the second questions the baseline, measurement scope, and configuration coverage of efficiency evidence. Scoring configurations and runtime or memory measurements require independent verification.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_7000f7ac462a95b7",
       "right_issue_id": "candidate_b869e41b9495ceea",
       "relation": "distinct",
-      "rationale": "Recovering the BLEU pipeline addresses score reproducibility, whereas checking training and test length distributions and length-shifted results addresses unseen-length generalization. Either question can be resolved without resolving the other.",
+      "rationale": "Recovering the BLEU processing pipeline addresses score reproducibility, whereas identifying evaluation beyond training lengths addresses length generalization. A specified scorer would not establish a length-extrapolation test, and such a test would not uniquely specify the scorer.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_7000f7ac462a95b7",
       "right_issue_id": "candidate_d0595236a2c0a091",
       "relation": "distinct",
-      "rationale": "The scoring concern asks how reported BLEU values were computed. The generalization concern asks whether clipping supports only representational applicability or also predictive performance at unseen lengths. These require different evidence.",
+      "rationale": "The scoring concern asks how numerical BLEU results were produced. The generalization concern asks whether clipping supports only representational applicability or also predictive performance at unseen lengths. They require different evidence.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_7000f7ac462a95b7",
       "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
       "relation": "related_but_distinct",
-      "rationale": "Both concern interpretation of the reported BLEU gains and overlap on identical evaluation processing across conditions. However, specifying a reproducible scorer does not establish matched training and checkpoint procedures, and matched comparisons need not fully document the scorer.",
-      "shared_verification_need": "Check whether baseline and relative-position outputs used identical scoring inputs, references, decoding settings, and evaluation processing."
+      "rationale": "Both concern interpretation of the reported BLEU gains and overlap on identical evaluation processing across models. However, specifying a reproducible scoring pipeline does not establish matched training and checkpoint procedures, while establishing matched conditions does not necessarily recover the exact scorer and text processing.",
+      "shared_verification_need": "Check whether baseline and relative-position outputs used identical decoding, text processing, scoring, and references; scorer reproducibility and training-condition matching also require separate checks."
     },
     {
       "left_issue_id": "candidate_7000f7ac462a95b7",
       "right_issue_id": "candidate_ea97b96233a7aa53",
       "relation": "related_but_distinct",
-      "rationale": "Both involve the translation evaluation record, but one asks for the exact BLEU pipeline and the other asks for a traceable, matched combined-position experiment. Identifying the combined condition would not by itself recover scoring details, and documenting scoring would not establish that control.",
-      "shared_verification_need": "Inspect evaluation configurations for the reported position-representation conditions, including consistent decoding and scoring."
+      "rationale": "Both concern the translation evaluation record, but the first asks how scores were computed and the second asks whether an identifiable, matched combined-position experiment supports the no-benefit conclusion. Recovering either the scoring pipeline or the combined-condition result alone would not resolve both.",
+      "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_94105da03d98236b",
       "right_issue_id": "candidate_b869e41b9495ceea",
       "relation": "distinct",
-      "rationale": "Implementation efficiency requires runtime, memory, and baseline evidence. Unseen-length generalization requires training-length boundaries and predictive results outside those boundaries. Sequence length is relevant to both but does not make their verification tasks equivalent.",
+      "rationale": "Efficiency evidence concerns runtime, memory, and implementation comparisons. Unseen-length generalization concerns predictive performance outside the training length range. Varying sequence length for cost measurements would not establish predictive generalization.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_94105da03d98236b",
       "right_issue_id": "candidate_d0595236a2c0a091",
       "relation": "distinct",
-      "rationale": "The efficiency concern examines implementation costs and measurement scope. The generalization concern examines the meaning and support of a claim about clipping and unseen lengths. Neither verification resolves the other.",
+      "rationale": "The efficiency candidate requires implementation and performance-measurement evidence. The clipping candidate requires clarification of the generalization claim and evidence about predictive performance at unseen lengths. Neither verification resolves the other.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_94105da03d98236b",
       "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
       "relation": "distinct",
-      "rationale": "The efficiency candidate asks what the throughput comparison measures and how costs scale. The baseline-matching candidate asks whether BLEU improvements isolate the position representation. Their respective runtime and translation-quality comparisons require independent evidence.",
+      "rationale": "The efficiency candidate questions the comparator and scope of cost measurements; the baseline-matching candidate questions whether translation-quality gains isolate position representations. Identifying a runtime baseline would not establish matched BLEU experiment conditions.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_94105da03d98236b",
       "right_issue_id": "candidate_ea97b96233a7aa53",
       "relation": "distinct",
-      "rationale": "Evidence for practical implementation efficiency differs from evidence for the absence of a translation-quality benefit from combining position representations. Runtime measurements cannot establish the combined-position control or its scores.",
+      "rationale": "Runtime and memory evidence for the implementation addresses a different claim from the translation-quality effect of combining absolute and relative positions. Each requires its own comparison and measurements.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_b869e41b9495ceea",
       "right_issue_id": "candidate_d0595236a2c0a091",
       "relation": "semantic_duplicate",
-      "rationale": "Both question whether the claim that clipping enables unseen-length generalization has evidence beyond structural applicability and an ordinary clipping-distance ablation. The second emphasizes the claim's interpretation, but both require substantially the same inspection of wording, training and evaluation lengths, and extrapolation results.",
-      "shared_verification_need": "Inspect the complete claim context and any evaluation beyond training lengths to determine whether generalization means representational applicability or demonstrated predictive performance, and whether the evidence supports that meaning."
+      "rationale": "Both question whether the clipping-based unseen-length claim has support beyond structural applicability and an aggregate clipping-distance ablation. One emphasizes the missing direct experiment and the other the boundary of the wording, but both require substantially the same inspection of claim intent and length-extrapolation evidence.",
+      "shared_verification_need": "Inspect the complete generalization language and any training-length limits, evaluation length distributions, and results outside the training range to determine whether the statement asserts structural applicability or supported predictive generalization."
     },
     {
       "left_issue_id": "candidate_b869e41b9495ceea",
       "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
-      "relation": "distinct",
-      "rationale": "The first asks whether unseen-length performance was directly tested. The second asks whether absolute and relative models were matched sufficiently to attribute aggregate BLEU gains to position representations. Matched baseline records do not establish length extrapolation.",
+      "relation": "related_but_distinct",
+      "rationale": "Both concern the adequacy of translation experiments, but one asks whether unseen-length performance was tested and the other whether ordinary absolute-versus-relative comparisons control training and evaluation conditions. Matched baseline records would not establish length extrapolation.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_b869e41b9495ceea",
       "right_issue_id": "candidate_ea97b96233a7aa53",
-      "relation": "distinct",
-      "rationale": "A length-shifted evaluation tests the claimed generalization property of clipping. A combined-position control tests whether absolute encodings add translation-quality benefits to relative representations. These are separate experimental questions.",
+      "relation": "related_but_distinct",
+      "rationale": "Both question whether a stated architectural advantage has a directly traceable experiment. However, an evaluation outside training lengths and a combined-position control test different claims and require independent experimental evidence.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_d0595236a2c0a091",
       "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
-      "relation": "distinct",
-      "rationale": "Clarifying the structural versus predictive meaning of unseen-length generalization requires claim context and length-specific evidence. Establishing attribution of BLEU gains requires matched baseline training and evaluation records. Neither task resolves the other.",
+      "relation": "related_but_distinct",
+      "rationale": "Both concern what translation results justify, but the first addresses the distinction between structural length invariance and predictive extrapolation, while the second addresses attribution of BLEU gains under matched conditions. Their central verification needs are independent.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_d0595236a2c0a091",
       "right_issue_id": "candidate_ea97b96233a7aa53",
-      "relation": "distinct",
-      "rationale": "The first questions the boundary of the unseen-length generalization claim; the second questions the traceability and matching of a combined-position experiment. They address separate architectural claims with different required controls.",
+      "relation": "related_but_distinct",
+      "rationale": "Both examine whether claims about position representations exceed the supplied experimental support. The unseen-length claim requires interpretation and length-extrapolation evidence; the combination claim requires an identifiable combined-position result and matched controls. One check would not resolve both.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_e9f93ba5fdcc8f8a",
       "right_issue_id": "candidate_ea97b96233a7aa53",
       "relation": "related_but_distinct",
-      "rationale": "Both require controlled comparisons among position representations. However, matching absolute-only and relative-only models establishes attribution of their BLEU difference, while locating and matching a combined-position condition establishes the separate no-further-benefit claim. One comparison can be verified while the other remains unresolved.",
-      "shared_verification_need": "Inspect condition-specific training, checkpoint, decoding, and evaluation records to establish that the relevant position-representation comparisons are matched."
+      "rationale": "Both require controlled comparisons of position representations and overlap on training and evaluation configuration checks. However, matching absolute-only and relative-only baselines does not identify or validate the combined-position condition, and a valid combined-condition experiment does not establish matching for every reported baseline comparison.",
+      "shared_verification_need": "Inspect condition-specific training, checkpoint, and evaluation records for matched comparisons; separately establish the combined-position result and the matching of each absolute-versus-relative baseline pair."
     }
   ],
   "consolidated_issues": [
     {
       "consolidated_issue_id": "consolidated_9825c343099d3753e676",
       "title": "The supplied evidence does not fully establish comparability of the baseline and relative-position runs",
-      "central_question": "Were the absolute-position and relative-position runs paired with exactly the same number of updates, random seeds, checkpoint selection, and decoding settings?",
+      "central_question": "Were each absolute-position baseline and its corresponding relative-position model trained, selected, decoded, and evaluated under matched conditions so that the reported BLEU differences can be attributed to the position representations?",
       "observed_facts": [
         "The authors state that they generated baseline results to isolate the impact of relative position representations from other changes to the library and experimental configuration. The reported model settings nevertheless differ between base and big configurations: the base model is trained for 100,000 steps without checkpoint averaging on K40 GPUs, whereas the big model is trained for 300,000 steps with the last 20 checkpoints averaged on P100 GPUs. The supplied units do not give complete, separate baseline training and checkpoint-selection details.",
         "The authors state that they generated sinusoidal-position baseline results to isolate relative position representations from changes to the underlying library and experimental configuration. They report base and big model configurations, including different training durations, hardware, dropout settings, clipping distances, and checkpoint averaging procedures for the proposed models."
@@ -1392,13 +1392,13 @@
       },
       "potential_impact": "undetermined",
       "impact_rationale": "Original impact assessments differ; P3 must assess severity",
-      "consolidation_rationale": "Both question whether matched absolute-position and relative-position training, checkpoint, and evaluation procedures support attribution of the reported BLEU gains. The pairwise evidence identifies substantially the same verification work: inspecting condition-specific configurations and run records.",
+      "consolidation_rationale": "Both question whether the reported BLEU gains isolate the effect of relative position representations. The pairwise evidence identifies them as semantic duplicates requiring the same inspection of paired training configurations, checkpoint policies, evaluation settings, and result provenance.",
       "verification_status": "unverified"
     },
     {
       "consolidated_issue_id": "consolidated_105a91210515bf8f5b82",
       "title": "The measured efficiency evidence is narrower than the broad implementation claim",
-      "central_question": "Does the full paper report peak memory, wall-clock time, inference throughput, or scaling measurements for the relative-position implementation?",
+      "central_question": "What baseline and measurement scope underlie the reported 7% decrease in steps per second, and do matched runtime, memory, and scaling measurements substantiate the claimed practical efficiency of the relative-position implementation?",
       "observed_facts": [
         "The authors describe an efficient tensor-reshaping implementation and report a 7% decrease in training steps per second while retaining the same model and batch sizes on P100 GPUs as Vaswani et al. They also give asymptotic storage-complexity expressions for relative-position representations.",
         "The authors describe a tensor-reshaping implementation for the relative-position terms and state that the same approach applies to the output computation. For the machine translation experiments, they report a 7% decrease in steps per second while retaining the same model and batch sizes on P100 GPUs as Vaswani et al. (2017). They also state asymptotic storage changes from O(bhndz) to O(bhndz + n²da), with relative representations shared across heads and sequences."
@@ -1484,7 +1484,7 @@
       },
       "potential_impact": "undetermined",
       "impact_rationale": "Original candidates agree; severity remains unverified",
-      "consolidation_rationale": "Both question whether the reported throughput comparison and limited resource measurements substantiate the practical efficiency claim. Identifying the comparison baseline, measurement scope, execution settings, and runtime and memory coverage would substantially resolve both.",
+      "consolidation_rationale": "Both question whether the reported 7% decrease in steps per second substantiates the practical efficiency claim. Their shared verification requires identifying the comparator and measurement scope, checking matched benchmark conditions, and inspecting available runtime, memory, and scaling evidence. The separate question about the theoretical storage bound remains outside this group.",
       "verification_status": "unverified"
     },
     {
@@ -1561,13 +1561,13 @@
       },
       "potential_impact": "minor_candidate",
       "impact_rationale": "Original candidates agree; severity remains unverified",
-      "consolidation_rationale": "This asks which tensors and head-sharing assumptions are included in the stated asymptotic storage bound. It remains separate from practical efficiency measurement because verifying runtime comparisons and benchmark coverage would not resolve the completeness of the mathematical storage accounting.",
+      "consolidation_rationale": "This candidate questions the tensor scope and sharing assumptions of the stated asymptotic storage bound. Although related to practical efficiency, resolving the theoretical accounting requires a distinct check of which tensors the bound includes and how head sharing changes it.",
       "verification_status": "unverified"
     },
     {
       "consolidated_issue_id": "consolidated_e3eac49834cebb136759",
       "title": "The claim about generalization to unseen sequence lengths is presented without a corresponding evaluation in the supplied evidence",
-      "central_question": "Does another supplied or omitted experiment evaluate test sequences longer than those seen during training?",
+      "central_question": "Does the claim that clipping enables generalization to unseen sequence lengths refer to representations remaining defined or to maintained predictive performance, and does the complete paper provide training-length limits and evaluation outside those limits to support the latter interpretation?",
       "observed_facts": [
         "The authors state that relative position representations are invariant to total sequence length and that clipping the maximum distance enables generalization to sequence lengths not seen during training. The supplied experiments vary the clipping distance on the WMT English-to-German newstest2013 development set, but the reported setup does not state that training and evaluation use deliberately different sequence-length ranges.",
         "The authors state that their relative position representations are invariant to total sequence length and that clipping enables generalization to sequence lengths unseen during training. The supplied model-variation experiments instead vary the clipping distance in a base English-to-German model evaluated on newstest2013. Their discussion also notes that multiple encoder layers may propagate precise relative position information beyond the clipping distance.",
@@ -1687,7 +1687,7 @@
       },
       "potential_impact": "undetermined",
       "impact_rationale": "Original impact assessments differ; P3 must assess severity",
-      "consolidation_rationale": "Every pair is identified as an exact or semantic duplicate concerning the support and intended meaning of unseen-length generalization. The shared verification is to inspect claim context, training and evaluation length ranges, and any dedicated extrapolation results to distinguish representational applicability from demonstrated predictive performance.",
+      "consolidation_rationale": "Every pair is identified as an exact or semantic duplicate. All four question whether the unseen-length generalization statement describes structural applicability or supported predictive performance, and all require checking the wording alongside training-length limits and any evaluation outside the training-length range.",
       "verification_status": "unverified"
     },
     {
@@ -1766,7 +1766,7 @@
       },
       "potential_impact": "minor_candidate",
       "impact_rationale": "Original candidates agree; severity remains unverified",
-      "consolidation_rationale": "This asks whether the exact BLEU scoring pipeline can be recovered, including tokenization, case handling, references, and word-piece reconstruction. Although it overlaps with comparison matching on consistent scoring, reproducibility requires separate protocol verification and retains its external-verification requirement.",
+      "consolidation_rationale": "Recovering the exact BLEU scoring and text-processing pipeline is a separate reproducibility question. Its overlap with consistent evaluation across conditions does not resolve baseline training comparability or establish the combined-position experiment.",
       "verification_status": "unverified"
     },
     {
@@ -1836,7 +1836,7 @@
       },
       "potential_impact": "minor_candidate",
       "impact_rationale": "Original candidates agree; severity remains unverified",
-      "consolidation_rationale": "This asks whether an identifiable, matched relative-plus-sinusoidal condition supports the no-further-benefit claim. It remains separate because verifying absolute-only versus relative-only comparisons or the scoring pipeline would not establish the combined condition and its result.",
+      "consolidation_rationale": "This candidate concerns the traceability and controls of the combined relative-plus-sinusoidal condition supporting the no-benefit conclusion. Verifying absolute-versus-relative baseline comparisons does not establish this separate condition or its results.",
       "verification_status": "unverified"
     }
   ],
@@ -2720,86 +2720,86 @@
       {
         "focus_id": "D1:1",
         "dimension_id": "D1",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D1:2",
         "dimension_id": "D1",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D1:3",
         "dimension_id": "D1",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D2:1",
         "dimension_id": "D2",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D2:2",
         "dimension_id": "D2",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D2:3",
         "dimension_id": "D2",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D3:1",
         "dimension_id": "D3",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D3:2",
         "dimension_id": "D3",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D3:3",
         "dimension_id": "D3",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D4:1",
         "dimension_id": "D4",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D4:2",
         "dimension_id": "D4",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D4:3",
         "dimension_id": "D4",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D5:1",
         "dimension_id": "D5",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D5:2",
         "dimension_id": "D5",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D5:3",
@@ -2810,23 +2810,857 @@
       {
         "focus_id": "D6:1",
         "dimension_id": "D6",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D6:2",
         "dimension_id": "D6",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D6:3",
         "dimension_id": "D6",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       }
     ],
     "gaps": [
+      {
+        "gap_id": "coverage_gap_7198597e2e1fd305f757",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D1"
+        ],
+        "description": "D1 focus lacks a reliable report mapping: claim scope",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:81",
+          "Coverage is partial, with 81 omitted reading units; absence from the supplied context does not establish absence from the paper.",
+          "Reading order, section boundaries, and source mapping are not fully verified, and a human-readable reference document is unavailable.",
+          "Equations, numerical table associations, and the page 3 figure remain unverified; no concern is based on an apparent transcription defect.",
+          "The supplied prose supports regenerated baseline comparisons, reported BLEU improvements, clipping-distance experiments, representation ablations, and a measured 7% throughput decrease. These cannot be treated as missing evidence.",
+          "External novelty and priority have not been checked. The acknowledgment of earlier distance-biased attention alone does not establish overlap with the proposed vector-valued mechanism."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_6effd50cb559e249b57c",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D1"
+        ],
+        "description": "D1 focus lacks a reliable report mapping: mechanism distinction",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:81",
+          "Coverage is partial, with 81 omitted reading units; absence from the supplied context does not establish absence from the paper.",
+          "Reading order, section boundaries, and source mapping are not fully verified, and a human-readable reference document is unavailable.",
+          "Equations, numerical table associations, and the page 3 figure remain unverified; no concern is based on an apparent transcription defect.",
+          "The supplied prose supports regenerated baseline comparisons, reported BLEU improvements, clipping-distance experiments, representation ablations, and a measured 7% throughput decrease. These cannot be treated as missing evidence.",
+          "External novelty and priority have not been checked. The acknowledgment of earlier distance-biased attention alone does not establish overlap with the proposed vector-valued mechanism."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_c315391b1ce3dd38ff1a",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D1"
+        ],
+        "description": "D1 focus lacks a reliable report mapping: contribution evidence",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:81",
+          "Coverage is partial, with 81 omitted reading units; absence from the supplied context does not establish absence from the paper.",
+          "Reading order, section boundaries, and source mapping are not fully verified, and a human-readable reference document is unavailable.",
+          "Equations, numerical table associations, and the page 3 figure remain unverified; no concern is based on an apparent transcription defect.",
+          "The supplied prose supports regenerated baseline comparisons, reported BLEU improvements, clipping-distance experiments, representation ablations, and a measured 7% throughput decrease. These cannot be treated as missing evidence.",
+          "External novelty and priority have not been checked. The acknowledgment of earlier distance-biased attention alone does not establish overlap with the proposed vector-valued mechanism."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_0f75b8043f99c3ff022a",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D2"
+        ],
+        "description": "D2 focus lacks a reliable report mapping: assumptions",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:71",
+          "Reading order and section mapping are partially unverified.",
+          "The attention equations, clipping definitions, and implementation transformations are represented by fragmented or unverified formula objects, so mathematical consistency cannot be independently established here.",
+          "Table 1, Table 2, and Table 3 numerical structures are not fully visually verified.",
+          "The supplied units do not provide complete baseline training, checkpoint-selection, or runtime and memory measurement details.",
+          "The supplied units do not include a direct evaluation on sequence lengths unseen during training."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_aed3ccc865fb33d7ec2b",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D2"
+        ],
+        "description": "D2 focus lacks a reliable report mapping: algorithm mechanism",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:71",
+          "Reading order and section mapping are partially unverified.",
+          "The attention equations, clipping definitions, and implementation transformations are represented by fragmented or unverified formula objects, so mathematical consistency cannot be independently established here.",
+          "Table 1, Table 2, and Table 3 numerical structures are not fully visually verified.",
+          "The supplied units do not provide complete baseline training, checkpoint-selection, or runtime and memory measurement details.",
+          "The supplied units do not include a direct evaluation on sequence lengths unseen during training."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_21099f4778ef2378fd39",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D2"
+        ],
+        "description": "D2 focus lacks a reliable report mapping: formula limitations",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:71",
+          "Reading order and section mapping are partially unverified.",
+          "The attention equations, clipping definitions, and implementation transformations are represented by fragmented or unverified formula objects, so mathematical consistency cannot be independently established here.",
+          "Table 1, Table 2, and Table 3 numerical structures are not fully visually verified.",
+          "The supplied units do not provide complete baseline training, checkpoint-selection, or runtime and memory measurement details.",
+          "The supplied units do not include a direct evaluation on sequence lengths unseen during training."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_750c193317f93ec2d240",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D3"
+        ],
+        "description": "D3 focus lacks a reliable report mapping: comparison fairness",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:83",
+          "Reading order and section mapping are partly unverified.",
+          "The supplied context may omit relevant experimental details and does not establish that a missing comparison is absent from the full paper.",
+          "Table 1 structure and table row associations are not independently verified.",
+          "The supplied units do not provide verified run-level variability, random seeds, or complete baseline training records.",
+          "The supplied units do not include a verified experiment explicitly varying test sequence lengths beyond the training range.",
+          "The efficiency discussion reports a hardware-specific steps-per-second comparison but does not provide a complete verified memory or end-to-end runtime breakdown."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_c32737630bbfdea9cb43",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D3"
+        ],
+        "description": "D3 focus lacks a reliable report mapping: ablation",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:83",
+          "Reading order and section mapping are partly unverified.",
+          "The supplied context may omit relevant experimental details and does not establish that a missing comparison is absent from the full paper.",
+          "Table 1 structure and table row associations are not independently verified.",
+          "The supplied units do not provide verified run-level variability, random seeds, or complete baseline training records.",
+          "The supplied units do not include a verified experiment explicitly varying test sequence lengths beyond the training range.",
+          "The efficiency discussion reports a hardware-specific steps-per-second comparison but does not provide a complete verified memory or end-to-end runtime breakdown."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_5b3d0dd231c413e2d756",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D3"
+        ],
+        "description": "D3 focus lacks a reliable report mapping: result interpretation",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:83",
+          "Reading order and section mapping are partly unverified.",
+          "The supplied context may omit relevant experimental details and does not establish that a missing comparison is absent from the full paper.",
+          "Table 1 structure and table row associations are not independently verified.",
+          "The supplied units do not provide verified run-level variability, random seeds, or complete baseline training records.",
+          "The supplied units do not include a verified experiment explicitly varying test sequence lengths beyond the training range.",
+          "The efficiency discussion reports a hardware-specific steps-per-second comparison but does not provide a complete verified memory or end-to-end runtime breakdown."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_3215f606abd7a6f90847",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D4"
+        ],
+        "description": "D4 focus lacks a reliable report mapping: claim consistency",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:81",
+          "Coverage is partial, with 81 reading units omitted; absence of evidence in this bundle does not establish absence from the paper.",
+          "Reading order, section mapping, and source mapping are not fully verified, and a human-readable reference document is unavailable.",
+          "Table structures and score associations remain unverified. Configuration-specific BLEU gains can be compared through the supplied prose, but absolute table scores have not been independently checked.",
+          "Formula transcriptions and the page 3 figure remain unverified; no mathematical defect is inferred from fragmented extraction.",
+          "No P2-A source conflicts were supplied. The abstract's 1.3 and 0.3 BLEU gains agree with the big-model gains in the results prose, so the different base-model gains are not treated as a contradiction.",
+          "The graph extension is explicitly identified as future work, the compatibility-only conclusion is qualified with respect to other tasks, and the efficiency discussion supplies both an implementation strategy and a configuration-bound throughput measurement. These passages do not support separate overstatement candidates."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_bd97ef91a8616d7b7665",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D4"
+        ],
+        "description": "D4 focus lacks a reliable report mapping: source conflicts",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:81",
+          "Coverage is partial, with 81 reading units omitted; absence of evidence in this bundle does not establish absence from the paper.",
+          "Reading order, section mapping, and source mapping are not fully verified, and a human-readable reference document is unavailable.",
+          "Table structures and score associations remain unverified. Configuration-specific BLEU gains can be compared through the supplied prose, but absolute table scores have not been independently checked.",
+          "Formula transcriptions and the page 3 figure remain unverified; no mathematical defect is inferred from fragmented extraction.",
+          "No P2-A source conflicts were supplied. The abstract's 1.3 and 0.3 BLEU gains agree with the big-model gains in the results prose, so the different base-model gains are not treated as a contradiction.",
+          "The graph extension is explicitly identified as future work, the compatibility-only conclusion is qualified with respect to other tasks, and the efficiency discussion supplies both an implementation strategy and a configuration-bound throughput measurement. These passages do not support separate overstatement candidates."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_968e72b3cc98344c6103",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D4"
+        ],
+        "description": "D4 focus lacks a reliable report mapping: conclusion scope",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:81",
+          "Coverage is partial, with 81 reading units omitted; absence of evidence in this bundle does not establish absence from the paper.",
+          "Reading order, section mapping, and source mapping are not fully verified, and a human-readable reference document is unavailable.",
+          "Table structures and score associations remain unverified. Configuration-specific BLEU gains can be compared through the supplied prose, but absolute table scores have not been independently checked.",
+          "Formula transcriptions and the page 3 figure remain unverified; no mathematical defect is inferred from fragmented extraction.",
+          "No P2-A source conflicts were supplied. The abstract's 1.3 and 0.3 BLEU gains agree with the big-model gains in the results prose, so the different base-model gains are not treated as a contradiction.",
+          "The graph extension is explicitly identified as future work, the compatibility-only conclusion is qualified with respect to other tasks, and the efficiency discussion supplies both an implementation strategy and a configuration-bound throughput measurement. These passages do not support separate overstatement candidates."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_45c908aae031db960144",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D5"
+        ],
+        "description": "D5 focus lacks a reliable report mapping: implementation details",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:76",
+          "Coverage is partial, with 76 omitted reading units; an apparent local omission does not establish absence from the paper.",
+          "Reading order, section boundaries, and source mappings remain incompletely verified, and no human-readable PDF or visual inspection facility was supplied.",
+          "Formula objects, table structures, and the page 3 figure remain unverified. No candidate rests on an alleged error in their transcription.",
+          "The tensor2tensor repository and cited Transformer implementation were not inspected; they may resolve some implementation and evaluation details."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_8a85a206845ce02abbf4",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D5"
+        ],
+        "description": "D5 focus lacks a reliable report mapping: training protocol",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:76",
+          "Coverage is partial, with 76 omitted reading units; an apparent local omission does not establish absence from the paper.",
+          "Reading order, section boundaries, and source mappings remain incompletely verified, and no human-readable PDF or visual inspection facility was supplied.",
+          "Formula objects, table structures, and the page 3 figure remain unverified. No candidate rests on an alleged error in their transcription.",
+          "The tensor2tensor repository and cited Transformer implementation were not inspected; they may resolve some implementation and evaluation details."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_48c7268bf48ef0531e9a",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D6"
+        ],
+        "description": "D6 focus lacks a reliable report mapping: research gap",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:57",
+          "Coverage is partial, with 57 reading units omitted; absent discussion in these excerpts cannot establish an omission from the paper.",
+          "Reading order, section boundaries, and reference mapping remain incompletely verified, and a human-readable source document is unavailable.",
+          "The cited prior papers themselves are not supplied. Their technical content, historical priority, and the accuracy of the authors' characterizations cannot be independently established from bibliography entries.",
+          "Equations, tables, and the figure remain unverified; no positioning concern is inferred from their extraction or numerical transcription."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_002343100846232b2aef",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D6"
+        ],
+        "description": "D6 focus lacks a reliable report mapping: internal citations",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:57",
+          "Coverage is partial, with 57 reading units omitted; absent discussion in these excerpts cannot establish an omission from the paper.",
+          "Reading order, section boundaries, and reference mapping remain incompletely verified, and a human-readable source document is unavailable.",
+          "The cited prior papers themselves are not supplied. Their technical content, historical priority, and the accuracy of the authors' characterizations cannot be independently established from bibliography entries.",
+          "Equations, tables, and the figure remain unverified; no positioning concern is inferred from their extraction or numerical transcription."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_bc71555579186c897f07",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D6"
+        ],
+        "description": "D6 focus lacks a reliable report mapping: external-check leads",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+          "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+          "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+          "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: source_mapping_partial",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p2_0: visual_review_required",
+          "table table_ev_886cadb1a708_3_1: structure_incomplete",
+          "table table_p3_0: detected_unverified",
+          "table table_p4_0: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+          "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+          "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+          "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "source_mapping_partial",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:57",
+          "Coverage is partial, with 57 reading units omitted; absent discussion in these excerpts cannot establish an omission from the paper.",
+          "Reading order, section boundaries, and reference mapping remain incompletely verified, and a human-readable source document is unavailable.",
+          "The cited prior papers themselves are not supplied. Their technical content, historical priority, and the accuracy of the authors' characterizations cannot be independently established from bibliography entries.",
+          "Equations, tables, and the figure remain unverified; no positioning concern is inferred from their extraction or numerical transcription."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
       {
         "gap_id": "coverage_gap_1f0adb57ec662dfef6d7",
         "gap_type": "source_quality",
@@ -3285,7 +4119,7 @@
     {
       "verification_task_id": "verify_de54fcc35ed02354a988",
       "consolidated_issue_id": "consolidated_9825c343099d3753e676",
-      "central_question": "Were the absolute-position and relative-position runs paired with exactly the same number of updates, random seeds, checkpoint selection, and decoding settings?",
+      "central_question": "Were each absolute-position baseline and its corresponding relative-position model trained, selected, decoded, and evaluated under matched conditions so that the reported BLEU differences can be attributed to the position representations?",
       "related_claim_ids": [
         "claim_36dd8fff5585d58b",
         "claim_e782a3ffa36482eb",
@@ -3400,7 +4234,7 @@
     {
       "verification_task_id": "verify_cfd16bf8c8b4d05c632f",
       "consolidated_issue_id": "consolidated_105a91210515bf8f5b82",
-      "central_question": "Does the full paper report peak memory, wall-clock time, inference throughput, or scaling measurements for the relative-position implementation?",
+      "central_question": "What baseline and measurement scope underlie the reported 7% decrease in steps per second, and do matched runtime, memory, and scaling measurements substantiate the claimed practical efficiency of the relative-position implementation?",
       "related_claim_ids": [
         "claim_8059f7518ddd3306",
         "claim_82ee884e768cdb0f",
@@ -3601,7 +4435,7 @@
     {
       "verification_task_id": "verify_9ecbab2d89ac51599b54",
       "consolidated_issue_id": "consolidated_e3eac49834cebb136759",
-      "central_question": "Does another supplied or omitted experiment evaluate test sequences longer than those seen during training?",
+      "central_question": "Does the claim that clipping enables generalization to unseen sequence lengths refer to representations remaining defined or to maintained predictive performance, and does the complete paper provide training-length limits and evaluation outside those limits to support the latter interpretation?",
       "related_claim_ids": [
         "claim_1aee059429f33dca",
         "claim_086b9f570ac28264",
@@ -3934,10 +4768,10 @@
     "p2b_input_limited"
   ],
   "call_count": 4,
-  "input_tokens": 49472,
-  "output_tokens": 5853,
+  "input_tokens": 49344,
+  "output_tokens": 6047,
   "unknown_token_calls": 0,
-  "duration_ms": 131945,
+  "duration_ms": 135773,
   "retry_count": 0,
   "execution_status": "limited"
 }

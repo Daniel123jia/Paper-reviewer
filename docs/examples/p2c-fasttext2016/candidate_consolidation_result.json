@@ -1,19 +1,19 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
   "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
   "pdf_sha256": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
   "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
   "understanding_run_id": "38fa583bb278414998f1bb16cca0be05",
   "professional_review_run_id": "3b948d9c2406422db00955223fac9ad5",
-  "consolidation_run_id": "3ca357c92d4e418190e4115f453048b8",
+  "consolidation_run_id": "d204774e750b454e94464dc14bdf2b7f",
   "prompt_versions": [
     "candidate-semantic-grouping/v1",
-    "candidate-group-reconciliation/v1"
+    "candidate-group-reconciliation/v2"
   ],
   "model_identifier": "gpt-6.1-sol",
   "inventory": {
-    "schema_version": "1.0",
+    "schema_version": "1.1",
     "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
     "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
     "pdf_sha256": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
@@ -998,462 +998,462 @@
       "left_issue_id": "candidate_14bf69eea0dbd1bc",
       "right_issue_id": "candidate_31ec55257e7ac738",
       "relation": "distinct",
-      "rationale": "The first questions whether classification speedups represent complete training at reported accuracy; the second questions whether filtering and split rules permit exact dataset reconstruction. Training schedules and timing comparisons would not resolve dataset assignment rules.",
+      "rationale": "The first questions whether classification epoch-time ratios support time-to-quality claims; the second questions exact reconstruction of the tag dataset. Training schedules and timing evidence would not resolve filtering and split rules.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_14bf69eea0dbd1bc",
       "right_issue_id": "candidate_45ae0b8b2e4c35bd",
-      "relation": "related_but_distinct",
-      "rationale": "Both concern efficiency claims, but one concerns measured time to reported accuracy and the other concerns the averaging assumptions behind a Huffman training-complexity bound. Runtime protocol verification and a depth-based complexity derivation are independent tasks.",
+      "relation": "distinct",
+      "rationale": "Measured classification speedup scope and the theoretical depth assumptions behind Huffman training complexity are different questions. Verifying runtime endpoints would not establish average or worst-case tree-depth bounds.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_14bf69eea0dbd1bc",
       "right_issue_id": "candidate_7ac07ac2e077cb30",
       "relation": "distinct",
-      "rationale": "The first questions the interpretation of speedup measurements; the second questions evidence for a comparative or transferable sentence-representation advantage. Timing schedules cannot establish representation quality.",
+      "rationale": "The first concerns evidence for training speed at reported accuracy; the second concerns evidence for a comparative sentence-representation claim. They require timing protocols and controlled representation evaluations, respectively.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_14bf69eea0dbd1bc",
       "right_issue_id": "candidate_83d093bda4b94e99",
-      "relation": "related_but_distinct",
-      "rationale": "Both address efficiency, but classification time-to-quality comparisons differ from the node-search and heap-operation costs of hierarchical prediction. Establishing full training times would not establish prediction scaling or top-T complexity.",
+      "relation": "distinct",
+      "rationale": "The first questions the interpretation of measured classification training ratios. The second questions prediction search work, pruning behavior, and heap overhead. Complete training timings would not resolve search complexity.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_14bf69eea0dbd1bc",
       "right_issue_id": "candidate_971f36dc41e9d430",
       "relation": "related_but_distinct",
-      "rationale": "They overlap on per-epoch versus complete-training interpretation, but the first targets the validity and scope of headline classification speedups. The second additionally requires reproducible timer boundaries, CPU specifications, and tag-prediction training budgets, which can remain unresolved after the headline comparison is clarified.",
-      "shared_verification_need": "Verify classification timing units, training schedules, and correspondence between timed configurations and reported accuracies."
+      "rationale": "Both require checking epoch versus complete-run timings and their correspondence to accuracy results. However, the first asks whether headline classification speedups support time-to-quality conclusions, while the second independently asks whether timing boundaries, CPU details, and tag-prediction budgets permit reproduction. Resolving either need not resolve the other.",
+      "shared_verification_need": "Check original timing captions, configurations, and training schedules to connect reported classification accuracy with per-epoch and complete-run timing."
     },
     {
       "left_issue_id": "candidate_14bf69eea0dbd1bc",
       "right_issue_id": "candidate_9cd1bf4aa574a3c5",
       "relation": "related_but_distinct",
-      "rationale": "The first asks whether speedup ratios describe time to reported accuracy; the second asks how much speed comes from algorithms versus implementation and parallelism. Complete training schedules could resolve the former while leaving causal attribution unresolved.",
-      "shared_verification_need": "Check the scope of the efficiency claims and the hardware, thread counts, and implementations underlying the comparisons."
+      "rationale": "Both address the interpretation of practical speed comparisons under different execution conditions. The first asks about per-epoch versus time-to-quality ratios; the second asks how much speed is attributable to algorithms versus implementation and parallelism. Full-run timing alone would not isolate those contributions.",
+      "shared_verification_need": "Inspect how the paper scopes speed claims to the disclosed hardware, thread counts, implementations, and experimental configurations."
     },
     {
       "left_issue_id": "candidate_14bf69eea0dbd1bc",
       "right_issue_id": "candidate_a399dcbbab67a609",
       "relation": "distinct",
-      "rationale": "Classification speedup interpretation and the use of held-out frequencies in benchmark filtering concern different claims. The latter requires preprocessing and evaluation-label evidence rather than timing schedules.",
+      "rationale": "Classification training-time claim scope and the use of held-out frequencies in tag-dataset filtering concern different mechanisms. Timing and stopping evidence would not establish preprocessing order or evaluation consequences.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_14bf69eea0dbd1bc",
       "right_issue_id": "candidate_ba88ee299071334d",
       "relation": "distinct",
-      "rationale": "One concerns measured training efficiency, while the other concerns the evidential and literature basis for contrasting averaged fastText and word2vec representations. Their verification tasks are independent.",
+      "rationale": "The first questions runtime evidence supporting broad speed claims; the second questions the evidential and literature basis for the word2vec representation contrast. Their verification tasks are independent.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_14bf69eea0dbd1bc",
       "right_issue_id": "candidate_d4a548d8c7a42e0d",
       "relation": "distinct",
-      "rationale": "The first targets classification speedup endpoints; the second targets how multiple tags become training targets and evaluation references. Although target handling can affect runtime, verifying it does not resolve the classification speedup comparison.",
+      "rationale": "The first focuses on classification speedup endpoints, while the second focuses on converting multiple tags into training targets and evaluation references. The latter can affect tag-task workload, but does not answer the classification timing question.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_14bf69eea0dbd1bc",
       "right_issue_id": "candidate_e32dddb167373ac1",
       "relation": "distinct",
-      "rationale": "The questions concern speedup measurement scope and sentence-representation evidence, respectively. Matched representation evaluations and feature ablations would not answer the timing question.",
+      "rationale": "The candidates question separate conclusions: time to reported predictive quality and the quality or generality of averaged representations relative to word2vec. They require different experimental evidence.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_14bf69eea0dbd1bc",
       "right_issue_id": "candidate_f4b82c009ae294f8",
       "relation": "semantic_duplicate",
-      "rationale": "Both centrally question whether the same headline classification speedups, including the 15,000-fold statement, reflect per-epoch throughput under heterogeneous execution conditions or complete training at reported accuracy. The additional emphasis on attribution in the second does not change the principal verification need.",
-      "shared_verification_need": "Verify the original timing table and speedup comparator, recover training schedules and accuracy endpoints, and determine how hardware, parallelism, and implementation qualifications limit the reported ratios."
+      "rationale": "Both centrally question whether the same classification speedup ratios, including the 15,000-fold statement, describe per-epoch throughput under heterogeneous execution conditions rather than complete training to the reported accuracy. The second adds detail about contribution attribution, but substantially the same timing-table, baseline-schedule, and claim-scope verification addresses their core concern.",
+      "shared_verification_need": "Verify the original classification timing table and speedup comparator, baseline epoch counts and stopping criteria, correspondence to reported accuracies, and qualifications concerning hardware, threads, and implementations."
     },
     {
       "left_issue_id": "candidate_31ec55257e7ac738",
       "right_issue_id": "candidate_45ae0b8b2e4c35bd",
       "relation": "distinct",
-      "rationale": "Exact reconstruction of filtering and splits differs from establishing expected versus worst-case Huffman training complexity. Dataset frequencies may inform a tree instance, but reconstructing the dataset would not establish the mathematical scope of the bound.",
+      "rationale": "Dataset reconstruction asks how filtering and splits determine the experimental records; Huffman complexity asks what depth assumptions justify a training-cost statement. Knowing exact corpus construction would not by itself establish the complexity bound.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_31ec55257e7ac738",
       "right_issue_id": "candidate_7ac07ac2e077cb30",
       "relation": "distinct",
-      "rationale": "Dataset reconstruction rules and evidence for comparative sentence-representation quality are separate questions requiring different evidence.",
+      "rationale": "Exact tag-dataset reconstruction and support for a comparative sentence-representation conclusion are independent questions requiring preprocessing specifications and representation comparisons, respectively.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_31ec55257e7ac738",
       "right_issue_id": "candidate_83d093bda4b94e99",
       "relation": "distinct",
-      "rationale": "The first asks how to reproduce corpus membership and filtering; the second asks how prediction search scales with visited nodes and requested outputs. Reconstructing the benchmark does not resolve search complexity or heap-cost interpretation.",
+      "rationale": "The first asks for deterministic dataset construction; the second asks about visited search nodes, pruning, and top-T heap costs. Although label frequencies can influence a tree, reconstructing the dataset would not resolve inference complexity or search behavior.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_31ec55257e7ac738",
       "right_issue_id": "candidate_971f36dc41e9d430",
       "relation": "related_but_distinct",
-      "rationale": "Both concern experimental reproducibility, but dataset identity and measured-workload identity require separate specifications. A deterministic reconstruction script could resolve filtering and splits without specifying timer boundaries, hardware, or baseline training budgets.",
+      "rationale": "Both concern reproducibility, but one requires filtering definitions and split assignments, whereas the other requires hardware, timer boundaries, and training budgets. Dataset reconstruction and timing-protocol reconstruction remain independent verification tasks.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_31ec55257e7ac738",
       "right_issue_id": "candidate_9cd1bf4aa574a3c5",
       "relation": "distinct",
-      "rationale": "Dataset reconstruction does not address attribution of efficiency gains to algorithms, implementation, or parallelism. Controlled execution comparisons would not establish exact split membership or filtering semantics.",
+      "rationale": "The dataset candidate concerns identifying the records and label inventory; the attribution candidate concerns separating algorithmic speed from software and parallelism. A dataset script would not establish causal attribution of speed gains.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_31ec55257e7ac738",
       "right_issue_id": "candidate_a399dcbbab67a609",
       "relation": "related_but_distinct",
-      "rationale": "Both examine YFCC100M preprocessing, but exact reproducibility differs from whether held-out frequencies define label eligibility and evaluation difficulty. A fully reproducible corpus-level filter could satisfy the first concern while leaving the second question about benchmark scope and sensitivity.",
-      "shared_verification_need": "Inspect the reconstruction procedure for frequency definitions, filtering order, split assignment, and handling of records without retained tags."
+      "rationale": "Both inspect YFCC100M filtering and handling of emptied records. The first asks whether the dataset can be reconstructed exactly; the second asks whether held-out frequencies shape eligibility and evaluation difficulty. A fully reproducible corpus-level filter could resolve reconstruction while leaving the evaluation-scope question open.",
+      "shared_verification_need": "Inspect the reconstruction procedure for frequency definitions, filtering order relative to splitting, and handling of records with no retained text or tags."
     },
     {
       "left_issue_id": "candidate_31ec55257e7ac738",
       "right_issue_id": "candidate_ba88ee299071334d",
       "relation": "distinct",
-      "rationale": "The first concerns reconstructing a dataset; the second concerns the fairness and empirical support of a word2vec representation comparison. Their claims and required evidence differ.",
+      "rationale": "Exact dataset reconstruction and the fairness or empirical support of the word2vec contrast concern different claims. Neither reconstruction materials nor split rules establish comparative representation quality or fidelity to prior literature.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_31ec55257e7ac738",
       "right_issue_id": "candidate_d4a548d8c7a42e0d",
       "relation": "related_but_distinct",
-      "rationale": "They overlap on handling records with no retained tags, but the first primarily requires deterministic filtering and split reconstruction. The second requires the multi-tag target mapping, epoch definition, and precision-at-one reference rules, which dataset reconstruction alone need not specify.",
-      "shared_verification_need": "Check how preprocessing handles records with no retained tags and what tag sets the reconstructed records retain."
+      "rationale": "Both require clarification of retained tag sets and records with no remaining tags. However, exact filtering and split reconstruction does not establish whether training samples, expands, or jointly optimizes multiple targets, nor how precision at one is computed.",
+      "shared_verification_need": "Check dataset and evaluation documentation for retained tag sets and treatment of records with no retained tags."
     },
     {
       "left_issue_id": "candidate_31ec55257e7ac738",
       "right_issue_id": "candidate_e32dddb167373ac1",
       "relation": "distinct",
-      "rationale": "Exact corpus reconstruction and the scope of the claimed sentence-representation advantage are independent questions. Filtering and split documentation would not substitute for a matched representation comparison.",
+      "rationale": "The first asks whether the experimental corpus can be reconstructed; the second asks whether supervised results support the claimed advantage of averaged features over word2vec. They require independent evidence.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_31ec55257e7ac738",
       "right_issue_id": "candidate_f4b82c009ae294f8",
       "relation": "distinct",
-      "rationale": "The first concerns deterministic reconstruction of YFCC100M filtering and splits; the second concerns the interpretation of sentiment speedups across hardware and training endpoints. Dataset reconstruction would not resolve the runtime comparison.",
+      "rationale": "The first questions whether filtering and split rules reproduce the YFCC100M dataset; the second questions the interpretation of measured speedups across hardware and training endpoints. Dataset reconstruction would not resolve the runtime comparison.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_45ae0b8b2e4c35bd",
       "right_issue_id": "candidate_7ac07ac2e077cb30",
       "relation": "distinct",
-      "rationale": "Huffman training-depth assumptions and the evidence supporting a comparative sentence-representation claim are different scientific questions requiring different verification.",
+      "rationale": "Huffman training-depth bounds and the evidential scope of the word2vec representation contrast concern different claims and require independent mathematical and experimental checks.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_45ae0b8b2e4c35bd",
       "right_issue_id": "candidate_83d093bda4b94e99",
       "relation": "related_but_distinct",
-      "rationale": "Both concern hierarchical-softmax complexity, but training cost depends on target-path depths and their averaging distribution, while prediction cost depends on search exploration, pruning, and heap operations. Establishing one does not establish the other.",
-      "shared_verification_need": "Inspect the Huffman-tree implementation, while separately deriving training path costs and prediction search costs."
+      "rationale": "Both concern hierarchical-softmax efficiency, but training cost depends on target-path depth while prediction cost depends on search exploration, pruning, and heap operations. Establishing an average training-depth bound would not establish prediction scaling.",
+      "shared_verification_need": "Inspect the tree construction and implementation, then separately analyze target-path depths and prediction traversal work."
     },
     {
       "left_issue_id": "candidate_45ae0b8b2e4c35bd",
       "right_issue_id": "candidate_971f36dc41e9d430",
       "relation": "related_but_distinct",
-      "rationale": "Both bear on efficiency, but the first asks whether a theoretical training bound requires an averaging assumption; the second asks what workloads and timing boundaries produced measured runtimes. A complexity derivation cannot resolve the measurement protocol.",
+      "rationale": "Both address efficiency, but one asks how to qualify a theoretical training-complexity statement and the other asks which workloads and timing boundaries produced wall-clock results. Neither verification resolves the other.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_45ae0b8b2e4c35bd",
       "right_issue_id": "candidate_9cd1bf4aa574a3c5",
       "relation": "related_but_distinct",
-      "rationale": "The training-complexity qualification and attribution of measured speedups to algorithms versus implementation concern efficiency at different levels. The former needs a depth-based derivation; the latter needs controlled implementation and resource comparisons.",
+      "rationale": "The training-depth concern tests the scope of a specific algorithmic bound; the attribution concern asks how observed speed gains divide among algorithms, implementation, and parallelism. A valid complexity bound alone would not isolate the sources of measured speedups.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_45ae0b8b2e4c35bd",
       "right_issue_id": "candidate_a399dcbbab67a609",
       "relation": "distinct",
-      "rationale": "One questions the scope of a Huffman training-complexity statement; the other questions whether held-out frequencies determine benchmark filtering and evaluation eligibility. Their verification tasks are independent.",
+      "rationale": "The first concerns Huffman target-depth complexity; the second concerns held-out frequency information in benchmark filtering and its evaluation consequences. Checking filtering scope would not settle the complexity claim.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_45ae0b8b2e4c35bd",
       "right_issue_id": "candidate_ba88ee299071334d",
       "relation": "distinct",
-      "rationale": "Training-depth complexity and the fairness and evidential scope of the word2vec representation contrast involve different claims and evidence.",
+      "rationale": "A mathematical qualification of Huffman training cost and the fairness of a word2vec representation contrast require different evidence and answer different scientific questions.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_45ae0b8b2e4c35bd",
       "right_issue_id": "candidate_d4a548d8c7a42e0d",
       "relation": "related_but_distinct",
-      "rationale": "Target-tag handling can affect the training sampling distribution relevant to average Huffman depth, but the second concern independently asks how multilabel records become training targets and evaluation references. Neither a depth derivation nor a target-mapping specification alone resolves both concerns.",
-      "shared_verification_need": "Check how training targets are generated and whether their sampling frequencies match the counts used to construct the Huffman tree."
+      "rationale": "Multi-tag target handling can determine the sampling frequencies relevant to average Huffman cost, but the protocol question also concerns objective weighting, epoch definitions, and evaluation. Establishing that protocol would not itself establish the claimed depth bound, and a depth derivation would not specify the protocol.",
+      "shared_verification_need": "Inspect how tag targets are sampled or expanded and whether the resulting training distribution matches the frequencies used to construct the Huffman tree."
     },
     {
       "left_issue_id": "candidate_45ae0b8b2e4c35bd",
       "right_issue_id": "candidate_e32dddb167373ac1",
       "relation": "distinct",
-      "rationale": "The first concerns assumptions behind training complexity; the second concerns whether supervised classification results support a broader representation advantage over averaged word2vec vectors.",
+      "rationale": "The first questions the averaging assumptions behind a training-complexity bound; the second questions evidence for a sentence-representation advantage over word2vec. Their verification needs are independent.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_45ae0b8b2e4c35bd",
       "right_issue_id": "candidate_f4b82c009ae294f8",
       "relation": "related_but_distinct",
-      "rationale": "Both concern efficiency claims, but a theoretical bound on Huffman training work and an empirical comparison across hardware, parallelism, and training endpoints require independent evidence.",
+      "rationale": "Both concern efficiency claims, but a theoretical Huffman depth analysis differs from verifying hardware, epoch counts, and time-to-quality interpretations of measured speedup ratios. One check cannot resolve both.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_7ac07ac2e077cb30",
       "right_issue_id": "candidate_83d093bda4b94e99",
       "relation": "distinct",
-      "rationale": "The scope of sentence-representation evidence and the complexity of hierarchical prediction search concern different mechanisms and verification tasks.",
+      "rationale": "The representation candidate asks whether supervised task results support the word2vec contrast and broader reuse claims; the search candidate asks what determines prediction traversal and top-T cost. They require independent evidence.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_7ac07ac2e077cb30",
       "right_issue_id": "candidate_971f36dc41e9d430",
       "relation": "distinct",
-      "rationale": "The first asks whether supervised results justify a comparative representation claim; the second asks whether timing workloads and training budgets can be reconstructed. Resolving either leaves the other unanswered.",
+      "rationale": "Evidence for comparative sentence-representation quality does not specify runtime measurement boundaries or training budgets, and reconstructing the timing protocol does not validate the representation conclusion.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_7ac07ac2e077cb30",
       "right_issue_id": "candidate_9cd1bf4aa574a3c5",
       "relation": "distinct",
-      "rationale": "Although both address interpretation of contributions, one concerns comparative representation quality and transfer scope, while the other concerns causal attribution of speedups to algorithms, software, and parallelism.",
+      "rationale": "Although both discuss interpretation of contributions, one concerns representation quality relative to word2vec and the other concerns attribution of speed gains to algorithms versus execution choices. Their required controlled comparisons differ.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_7ac07ac2e077cb30",
       "right_issue_id": "candidate_a399dcbbab67a609",
       "relation": "distinct",
-      "rationale": "The word2vec representation contrast and the use of held-out frequencies in benchmark filtering are separate scientific questions requiring representation evidence and preprocessing evidence, respectively.",
+      "rationale": "The word2vec comparison and representation-transfer scope are separate from whether corpus-wide filtering uses held-out frequencies and changes benchmark eligibility. Verifying either leaves the other unresolved.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_7ac07ac2e077cb30",
       "right_issue_id": "candidate_ba88ee299071334d",
       "relation": "semantic_duplicate",
-      "rationale": "Both question whether the same conclusion overstates the advantage of averaged fastText features over averaged word2vec vectors beyond the evaluated supervised tasks. The additional prior-literature check in the second does not change the central claim or substantially shared verification need.",
-      "shared_verification_need": "Check the original conclusion's scope and whether the complete paper provides a controlled comparison of averaged word2vec and fastText representations or evidence supporting broader sentence-representation use."
+      "rationale": "Both question the same conclusion contrasting averaged fastText features with word2vec, and both seek a matched representation comparison and clarification of task-specific versus general scope. The additional prior-literature check and differing external-verification flags do not change that central identity.",
+      "shared_verification_need": "Check the original conclusion and full experimental evidence for a controlled averaged-word2vec comparison and any support for representation reuse; consult cited word2vec sources to assess the contrast's characterization."
     },
     {
       "left_issue_id": "candidate_7ac07ac2e077cb30",
       "right_issue_id": "candidate_d4a548d8c7a42e0d",
       "relation": "distinct",
-      "rationale": "One concerns evidence for a broader representation claim; the other concerns how multiple tags enter training and precision-at-one evaluation. A target-handling specification would not establish comparative representation quality.",
+      "rationale": "The first concerns whether the representation conclusion exceeds the demonstrated evidence; the second concerns how multiple tags enter training and precision-at-one evaluation. Resolving target handling would not establish the word2vec comparison.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_7ac07ac2e077cb30",
       "right_issue_id": "candidate_e32dddb167373ac1",
       "relation": "semantic_duplicate",
-      "rationale": "Both challenge the same word2vec contrast and the inference from task-supervised classifier performance to broader sentence-representation quality. The second's emphasis on n-gram contributions adds a verification detail within the same central concern.",
-      "shared_verification_need": "Verify the conclusion's intended scope and inspect controlled word2vec comparisons and representation evaluations, including whether word-only results support the claimed advantage."
+      "rationale": "Both question whether supervised classification results justify the same broader contrast with averaged word2vec representations. The additional emphasis on n-gram contributions refines the controls needed for that comparison without introducing a separate central question.",
+      "shared_verification_need": "Verify the conclusion's intended scope and whether matched comparisons isolate averaged word features from classifier training, supervision, and n-gram additions, with transfer evidence if broader reuse is claimed."
     },
     {
       "left_issue_id": "candidate_7ac07ac2e077cb30",
       "right_issue_id": "candidate_f4b82c009ae294f8",
       "relation": "distinct",
-      "rationale": "Comparative sentence-representation evidence and the interpretation of measured speedup ratios concern different claims and require independent evaluations.",
+      "rationale": "The scope of a representation-quality conclusion and the validity of interpreting heterogeneous runtime ratios as time-to-quality advantages concern different outcomes and require independent checks.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_83d093bda4b94e99",
       "right_issue_id": "candidate_971f36dc41e9d430",
       "relation": "related_but_distinct",
-      "rationale": "Both bear on inference efficiency, but the first asks how search work scales with visited nodes and requested outputs; the second asks what operations, hardware, and budgets the reported timers cover. Timing-protocol clarification alone cannot establish search complexity.",
-      "shared_verification_need": null
+      "rationale": "Both bear on inference-efficiency evidence, but the search candidate asks how visited nodes and heap operations determine scaling, while the protocol candidate asks what operations and configurations were timed. Clear timing boundaries would not establish search complexity.",
+      "shared_verification_need": "Inspect the inference implementation and timing documentation to identify the search operations included in reported test times; scaling still requires separate traversal or runtime measurements."
     },
     {
       "left_issue_id": "candidate_83d093bda4b94e99",
       "right_issue_id": "candidate_9cd1bf4aa574a3c5",
       "relation": "related_but_distinct",
-      "rationale": "Both examine the explanation of fast inference, but the first concerns the search mechanism's scaling and top-T overhead, while the second concerns how much observed speedup is attributable to that mechanism versus implementation and parallelism. Search analysis and controlled attribution comparisons remain separate verification tasks.",
-      "shared_verification_need": "Inspect the inference implementation and relevant benchmarks to identify the search mechanism and its contribution to measured performance; scaling and attribution still require separate analyses."
+      "rationale": "The search candidate tests the conditions and total work behind hierarchical prediction scaling; the attribution candidate asks how much practical speedup comes from that mechanism versus software and parallelism. Search analysis informs attribution but does not replace controlled comparisons.",
+      "shared_verification_need": "Examine the hierarchical inference implementation and controlled comparisons against scoring all classes under matched execution conditions; separately assess visited-node and top-T scaling."
     },
     {
       "left_issue_id": "candidate_83d093bda4b94e99",
       "right_issue_id": "candidate_a399dcbbab67a609",
       "relation": "distinct",
-      "rationale": "The first questions search complexity and top-T heap overhead; the second questions whether frequency filtering uses held-out data and changes benchmark composition. Search analysis and preprocessing inspection are independent verification tasks.",
+      "rationale": "The first questions prediction-search complexity and heap overhead; the second questions whether benchmark filtering uses held-out frequencies. Search analysis and preprocessing verification answer different questions.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_83d093bda4b94e99",
       "right_issue_id": "candidate_ba88ee299071334d",
       "relation": "distinct",
-      "rationale": "Prediction-search scaling and the fairness of the contrast with averaged word2vec representations concern different mechanisms and require different evidence.",
+      "rationale": "Prediction-search scaling and the fairness of the word2vec representation contrast concern different claims and require different evidence.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_83d093bda4b94e99",
       "right_issue_id": "candidate_d4a548d8c7a42e0d",
       "relation": "distinct",
-      "rationale": "The first concerns nodes visited, pruning, and top-T retrieval costs; the second concerns converting multiple reference tags into training targets and evaluation references. Establishing either protocol would not resolve the other.",
+      "rationale": "The first concerns nodes visited and top-T search costs; the second concerns converting multiple reference tags into training targets and evaluation outcomes. Verifying either mechanism would not resolve the other.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_83d093bda4b94e99",
       "right_issue_id": "candidate_e32dddb167373ac1",
       "relation": "distinct",
-      "rationale": "Search complexity requires traversal analysis and scaling evidence, whereas the representation claim requires matched word2vec comparisons and clarification of supervised-task scope.",
+      "rationale": "The scope of prediction-complexity observations is independent of whether supervised classification results support a general sentence-representation contrast with word2vec.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_83d093bda4b94e99",
       "right_issue_id": "candidate_f4b82c009ae294f8",
       "relation": "related_but_distinct",
-      "rationale": "Both concern efficiency claims, but the first questions inference-search complexity under different probability distributions and output counts, while the second questions measured speedup comparisons across hardware and training endpoints. Neither verification resolves the other.",
+      "rationale": "Both concern efficiency claims, but search complexity requires traversal analysis and scaling evidence, while the runtime comparison requires hardware, training-endpoint, and timing-ratio verification. Neither task resolves the other.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_971f36dc41e9d430",
       "right_issue_id": "candidate_9cd1bf4aa574a3c5",
       "relation": "related_but_distinct",
-      "rationale": "Reconstructing timing boundaries, hardware, and training budgets overlaps with assessing speedup attribution. However, a reproducible timing protocol does not isolate algorithmic gains from implementation and parallelism; attribution requires additional controlled comparisons.",
-      "shared_verification_need": "Inspect the reported hardware, thread counts, timing definitions, and model configurations underlying the efficiency comparisons."
+      "rationale": "Reconstructing timing boundaries and training budgets differs from attributing speed gains to algorithms versus implementation and parallelism. A fully specified timing protocol could still leave causal attribution unresolved.",
+      "shared_verification_need": "Inspect hardware, thread counts, implementation configurations, and timing documentation; attribution additionally requires controlled comparisons."
     },
     {
       "left_issue_id": "candidate_971f36dc41e9d430",
       "right_issue_id": "candidate_a399dcbbab67a609",
       "relation": "distinct",
-      "rationale": "The timing candidate asks what workloads and budgets were measured; the filtering candidate asks which data determine feature and label eligibility. Timer documentation would not establish preprocessing dependence on held-out frequencies.",
+      "rationale": "Runtime reproducibility concerns measured workloads and timing boundaries; the filtering concern concerns use of held-out frequency information and its effect on benchmark composition. Including preprocessing in a timer would not establish how filtering was defined.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_971f36dc41e9d430",
       "right_issue_id": "candidate_ba88ee299071334d",
       "relation": "distinct",
-      "rationale": "Runtime reproducibility and the characterization of averaged word2vec representations require separate experimental-protocol and representation-comparison evidence.",
+      "rationale": "Timing protocol reconstruction and the evidentiary basis for the word2vec contrast address independent claims.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_971f36dc41e9d430",
       "right_issue_id": "candidate_d4a548d8c7a42e0d",
       "relation": "related_but_distinct",
-      "rationale": "Tag-target handling affects updates per epoch and therefore the measured training workload. Nevertheless, resolving target construction and precision-at-one semantics would leave timer boundaries and comparator budgets unresolved, while timing documentation need not specify the multi-tag objective.",
-      "shared_verification_need": "Determine what constitutes a tag-prediction epoch and whether fastText and Tagspace use comparable target handling and training workloads."
+      "rationale": "Multiple-tag handling affects the number of updates per epoch and therefore the timed workload. However, timer boundaries and comparator budgets require separate verification from target construction and precision-at-one semantics.",
+      "shared_verification_need": "Check how a tag-prediction epoch is defined, including whether multiple tags generate multiple updates or expanded training instances."
     },
     {
       "left_issue_id": "candidate_971f36dc41e9d430",
       "right_issue_id": "candidate_e32dddb167373ac1",
       "relation": "distinct",
-      "rationale": "The first concerns the reproducibility of wall-clock measurements; the second concerns whether supervised classification evidence supports a broader sentence-representation comparison. Their verification needs are independent.",
+      "rationale": "The first questions the reproducibility of runtime measurements; the second questions the scope of representation claims. Timing documentation would not establish representation quality or a matched word2vec comparison.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_971f36dc41e9d430",
       "right_issue_id": "candidate_f4b82c009ae294f8",
       "relation": "related_but_distinct",
-      "rationale": "Both question per-epoch versus complete-run timing and correspondence between timed models and reported accuracy. The first additionally focuses on reconstructing timers and tag-prediction budgets; the second asks whether headline sentiment speedup magnitudes survive matched training endpoints and resource considerations. Their verification substantially overlaps but does not resolve both in full.",
-      "shared_verification_need": "Verify original timing tables, per-epoch versus full-run units, model configurations, and the training budgets that produced the paired accuracy results."
+      "rationale": "They overlap on per-epoch versus complete-run timing and hardware disclosures. The first asks whether workloads can be reconstructed, including tag-prediction budgets and timer boundaries; the second asks whether headline sentiment speedup ratios support time-to-quality or model-level conclusions. Reproducibility alone would not settle that interpretation.",
+      "shared_verification_need": "Verify original timing tables, configurations, epoch counts, stopping criteria, hardware, and whether timed runs correspond to the reported accuracies."
     },
     {
       "left_issue_id": "candidate_9cd1bf4aa574a3c5",
       "right_issue_id": "candidate_a399dcbbab67a609",
       "relation": "distinct",
-      "rationale": "Attributing efficiency gains to algorithms versus implementation requires controlled performance comparisons. Establishing whether filtering uses held-out frequencies requires inspecting dataset construction. These are independent questions.",
+      "rationale": "Attributing efficiency gains to algorithmic components is independent of determining whether filtering used held-out frequencies and changed benchmark eligibility.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_9cd1bf4aa574a3c5",
       "right_issue_id": "candidate_ba88ee299071334d",
       "relation": "distinct",
-      "rationale": "Although both concern interpretation of the contribution, one asks what causes runtime gains and the other asks whether the word2vec contrast is supported and faithful to prior work. They require different comparisons and source checks.",
+      "rationale": "Although both mention contribution scope, one concerns the source of speed gains and the other concerns the validity of a representation comparison with word2vec. They require independent experiments and source checks.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_9cd1bf4aa574a3c5",
       "right_issue_id": "candidate_d4a548d8c7a42e0d",
-      "relation": "distinct",
-      "rationale": "The first seeks to separate algorithmic efficiency from software and parallelism; the second seeks the multi-tag training and evaluation specification. Clarifying target handling alone cannot establish causal attribution of speedups.",
-      "shared_verification_need": null
+      "relation": "related_but_distinct",
+      "rationale": "Tag-target construction can affect the workload used in an efficiency comparison, but specifying that construction does not isolate algorithmic gains from implementation and parallelism. The target and evaluation protocol also raises independent scientific questions.",
+      "shared_verification_need": "Check whether fastText and Tagspace use comparable target handling and effective training workloads in the tag-prediction comparison."
     },
     {
       "left_issue_id": "candidate_9cd1bf4aa574a3c5",
       "right_issue_id": "candidate_e32dddb167373ac1",
       "relation": "distinct",
-      "rationale": "Runtime attribution and the scope of sentence-representation evidence concern separate scientific claims. Controlled implementation and thread comparisons would not answer matched word2vec or representation-transfer questions.",
+      "rationale": "The algorithmic attribution of speed gains and the generality of averaged sentence representations concern different mechanisms and need different controlled comparisons.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_9cd1bf4aa574a3c5",
       "right_issue_id": "candidate_f4b82c009ae294f8",
       "relation": "related_but_distinct",
-      "rationale": "Both ask how hardware, parallelism, and implementation affect efficiency comparisons. The attribution candidate asks which components explain gains across the system, including Vowpal Wabbit and tag prediction; the speedup candidate additionally asks whether per-epoch ratios represent total time to reported accuracy. Controlled attribution and endpoint verification remain separate needs.",
-      "shared_verification_need": "Check hardware and thread configurations and seek controlled measurements separating implementation and parallelism from model effects."
+      "rationale": "Both question how implementation and parallelism affect efficiency conclusions. The first asks how much speed comes from algorithmic components across comparisons; the second additionally tests specific headline ratios and complete training costs at reported accuracy. Attribution controls would not by themselves verify those endpoints and ratios.",
+      "shared_verification_need": "Inspect hardware, thread counts, implementation effects, and controlled resource comparisons to assess what the reported speedups can be attributed to."
     },
     {
       "left_issue_id": "candidate_a399dcbbab67a609",
       "right_issue_id": "candidate_ba88ee299071334d",
       "relation": "distinct",
-      "rationale": "Corpus filtering and held-out frequency dependence concern benchmark construction; the word2vec contrast concerns representation quality and prior-work characterization. Their evidence requirements do not overlap substantively.",
+      "rationale": "Corpus filtering and held-out frequency use concern benchmark construction; the word2vec contrast concerns prior-work characterization and representation evidence. Their verification needs are independent.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_a399dcbbab67a609",
       "right_issue_id": "candidate_d4a548d8c7a42e0d",
       "relation": "related_but_distinct",
-      "rationale": "Both involve retained tags, examples without retained tags, and precision-at-one references. However, the first asks which partition determines filtering and how that changes the benchmark, while the second asks how multiple tags enter the objective and define an epoch. A shared preprocessing check would resolve only part of each concern.",
-      "shared_verification_need": "Inspect treatment of examples with no retained tags and whether precision at one uses original or retained reference tags."
+      "rationale": "Both involve retained tags and precision-at-one evaluation, including records without retained tags. However, corpus-wide versus training-only filtering is independent of how multiple tags are mapped to the training objective. Either could be specified while the other remains unresolved.",
+      "shared_verification_need": "Inspect dataset construction and evaluation code for treatment of records without retained tags and whether precision at one uses original or retained reference tags."
     },
     {
       "left_issue_id": "candidate_a399dcbbab67a609",
       "right_issue_id": "candidate_e32dddb167373ac1",
       "relation": "distinct",
-      "rationale": "The first questions corpus-level filtering and evaluation composition; the second questions the evidential scope of the comparison with averaged word2vec vectors. Dataset reconstruction cannot establish the representation claim.",
+      "rationale": "The filtering concern tests benchmark construction and held-out information use; the representation concern tests whether supervised results justify the word2vec contrast. One verification task would not resolve both.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_a399dcbbab67a609",
       "right_issue_id": "candidate_f4b82c009ae294f8",
       "relation": "distinct",
-      "rationale": "Held-out frequency use in tag-benchmark construction and hardware or training-endpoint differences in speedup comparisons are separate methodological questions requiring independent verification.",
+      "rationale": "The first concerns frequency filtering and the composition of the tag benchmark; the second concerns hardware, parallelism, and training endpoints behind reported speedup factors. They question different claims and require independent evidence.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_ba88ee299071334d",
       "right_issue_id": "candidate_d4a548d8c7a42e0d",
       "relation": "distinct",
-      "rationale": "The first questions whether the contrast with averaged word2vec representations exceeds the representation evidence; the second questions how multiple tags enter training and precision-at-one evaluation. Checking comparative representation evidence would not resolve the tag protocol, and reconstructing that protocol would not establish the word2vec contrast.",
+      "rationale": "The first questions whether the contrast with averaged word2vec representations exceeds the representation evidence; the second questions how multiple reference tags are handled in training and precision-at-one evaluation. They require independent checks of comparative representation evidence and tag-processing protocols.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_ba88ee299071334d",
       "right_issue_id": "candidate_e32dddb167373ac1",
       "relation": "semantic_duplicate",
-      "rationale": "Both question the same conclusion: whether supervised task results justify a broader advantage over averaged unsupervised word2vec representations. Both require checking the conclusion's scope and any matched word2vec comparison. The first adds fidelity to cited literature, while the second emphasizes word-only versus n-gram evidence; these are complementary checks of the same central claim.",
-      "shared_verification_need": "Inspect the complete conclusion and comparative experiments to determine whether the word2vec contrast is limited to the evaluated supervised tasks and supported by a matched comparison, accounting for supervision and feature differences."
+      "rationale": "Both question the same conclusion: whether supervised task results justify a broader advantage over averaged unsupervised word2vec representations. Both require checking the conclusion's scope and any matched word2vec comparison. The first additionally emphasizes fidelity to prior literature, while the second emphasizes word-only versus n-gram evidence; these are complementary checks on the same central question. Their differing external-verification flags do not change that overlap.",
+      "shared_verification_need": "Inspect the complete conclusion and comparative experiments to determine whether the word2vec contrast is restricted to the evaluated supervised tasks and supported by matched representation evidence, accounting for supervision and feature differences."
     },
     {
       "left_issue_id": "candidate_ba88ee299071334d",
       "right_issue_id": "candidate_f4b82c009ae294f8",
       "relation": "distinct",
-      "rationale": "The first concerns the scientific scope and fidelity of a sentence-representation comparison with word2vec. The second concerns whether empirical speedup ratios reflect comparable hardware, parallelism, and training endpoints. They require independent representation and timing evidence.",
+      "rationale": "The first concerns the evidential scope of a sentence-representation comparison with word2vec. The second concerns whether reported runtime ratios support the stated efficiency advantage given hardware, parallelism, and training endpoints. Resolving either requires evidence that would not resolve the other.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_d4a548d8c7a42e0d",
       "right_issue_id": "candidate_e32dddb167373ac1",
       "relation": "distinct",
-      "rationale": "The tag-protocol concern asks how multi-tag records map to the loss, epochs, and precision-at-one metric. The representation concern asks whether supervised results support the conclusion's contrast with word2vec. Resolving the target and evaluation protocol would not resolve the comparative representation claim.",
+      "rationale": "The tag candidate asks how multi-tag records map to training targets and evaluation references. The representation candidate asks whether supervised results justify the conclusion's contrast with averaged word2vec vectors. Protocol reconstruction would not establish the comparative representation claim, and a representation comparison would not specify the tag protocol.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_d4a548d8c7a42e0d",
       "right_issue_id": "candidate_f4b82c009ae294f8",
       "relation": "related_but_distinct",
-      "rationale": "Both touch the interpretation of training effort and epochs, but they question different mechanisms. The first requires reconstructing multi-tag target handling and evaluation in the tag-prediction experiment; the second requires auditing classification timing ratios, hardware, thread counts, and accuracy endpoints. A tag-protocol check would not resolve those speedup comparisons, nor would a timing audit establish target handling.",
+      "rationale": "Both touch the interpretation of training cost and epochs, but they question different mechanisms in different experimental settings. The tag candidate requires establishing target handling, example weighting, and precision-at-one semantics in YFCC100M; the runtime candidate requires checking classification timing ratios, hardware, thread counts, and training endpoints. Clarifying tag-based epoch accounting would not resolve the runtime comparison concern.",
       "shared_verification_need": null
     },
     {
       "left_issue_id": "candidate_e32dddb167373ac1",
       "right_issue_id": "candidate_f4b82c009ae294f8",
       "relation": "distinct",
-      "rationale": "The first questions whether predictive results establish a general sentence-representation advantage over word2vec averaging. The second questions the comparability and scope of measured speedups. Matched representation evaluations and matched timing or training-endpoint evidence are independent verification needs.",
+      "rationale": "The representation candidate questions whether task-supervised features support a general contrast with word2vec averaging. The runtime candidate questions the comparability and interpretation of measured speedups. Matched representation evaluations and matched timing or training-endpoint evidence are independent verification needs.",
       "shared_verification_need": null
     }
   ],
@@ -1461,7 +1461,7 @@
     {
       "consolidated_issue_id": "consolidated_8103558cbdda88bc3c6c",
       "title": "Broad speed claims may conflate per-epoch speed with time to the reported accuracy",
-      "central_question": "Which comparator, dataset, model configuration, and timing calculation produce the stated 15,000-fold speedup?",
+      "central_question": "Do the original classification timing tables, speedup calculations, and baseline training schedules support the headline speed advantages as complete-training comparisons at the reported accuracies, or only as per-epoch comparisons under the disclosed hardware, thread counts, and implementations?",
       "observed_facts": [
         "The abstract couples comparable accuracy with training and evaluation that are many orders of magnitude faster. The classification timing table explicitly reports single-epoch times, whereas fastText's reported classification results use five epochs. The timing discussion compares fastText on 20 CPU threads with convolutional models on a Tesla K40 GPU and GRNNs on one CPU thread, then states a speedup reaching at least 15,000-fold.",
         "Table 2 is explicitly captioned as training time for a single epoch. The results text states that fastText uses five epochs, whereas the timing discussion compares fastText on a CPU with 20 threads against char-CNN and VDCNN on a Tesla K40 GPU and cites GRNN timing on a single CPU thread. The authors report several-orders-of-magnitude speed advantages and a speedup reaching at least 15,000-fold. They also acknowledge that newer CUDA convolution implementations could accelerate char-CNN by a factor of ten."
@@ -1569,7 +1569,7 @@
       },
       "potential_impact": "major_candidate",
       "impact_rationale": "Original candidates agree; severity remains unverified",
-      "consolidation_rationale": "Both question whether the headline classification speedup ratios describe per-epoch throughput or complete training to the reported accuracy under the disclosed hardware and parallelism conditions. The same timing-table, comparator, training-schedule, and accuracy-endpoint checks address both.",
+      "consolidation_rationale": "Both question whether the reported classification speedups, including the 15,000-fold statement, measure per-epoch throughput or complete training to the reported accuracy under the disclosed execution conditions. The same verification of timing tables, comparators, training schedules, and claim qualifications addresses their shared concern.",
       "verification_status": "unverified"
     },
     {
@@ -1627,7 +1627,7 @@
       },
       "potential_impact": "undetermined",
       "impact_rationale": "Original candidates agree; severity remains unverified",
-      "consolidation_rationale": "Exact reconstruction of filtering and split membership requires frequency definitions, record-handling rules, and deterministic assignment details. This remains separate from whether filtering uses held-out frequencies and from how retained tags enter training.",
+      "consolidation_rationale": "Exact reconstruction of the tag dataset requires checking frequency definitions, record handling, and split assignment. This remains separate from whether filtering uses held-out information and from how multiple tags enter training.",
       "verification_status": "unverified"
     },
     {
@@ -1684,13 +1684,13 @@
       },
       "potential_impact": "minor_candidate",
       "impact_rationale": "Original candidates agree; severity remains unverified",
-      "consolidation_rationale": "This questions the averaging and target-depth assumptions behind the Huffman training-complexity statement. A depth-based derivation and verification of the relevant frequency distribution are separate from prediction-search analysis and runtime measurement.",
+      "consolidation_rationale": "The scope of the Huffman training-complexity bound requires verification of target depths and frequency-weighted averaging assumptions. Prediction search complexity and measured runtime protocols require distinct checks.",
       "verification_status": "unverified"
     },
     {
       "consolidated_issue_id": "consolidated_1a30bff6ccc7941967da",
       "title": "The contrast with averaged word2vec representations may exceed the demonstrated classification evidence",
-      "central_question": "Does the complete paper evaluate averaged word2vec features against the learned fastText features under a controlled downstream classifier?",
+      "central_question": "Does the complete paper and the cited word2vec literature support the conclusion's contrast between averaged fastText features and averaged unsupervised word2vec vectors, through matched comparisons accounting for supervision, classifier, and n-gram features, and is the claim limited to the evaluated supervised tasks or supported for broader sentence-representation reuse?",
       "observed_facts": [
         "The architecture averages learned feature representations and trains them against document labels. The conclusion states that, unlike unsupervised word2vec vectors, the method's word features can be averaged to form good sentence representations. The supplied evaluations report supervised classification accuracy and tag-prediction precision at one.",
         "The conclusion states, across two reading units, that unlike unsupervised word vectors from word2vec, fastText's word features can be averaged to form good sentence representations. The model description explicitly acknowledges similarity to CBOW, with a label replacing the middle word. The supplied experimental descriptions concern supervised classification and tag prediction; they do not directly establish the comparative quality of averaged word2vec representations.",
@@ -1805,7 +1805,7 @@
       },
       "potential_impact": "minor_candidate",
       "impact_rationale": "Original candidates agree; severity remains unverified",
-      "consolidation_rationale": "Every pair questions the same conclusion's contrast between averaged fastText and word2vec representations. Checking the original wording, intended task scope, and matched representation comparisons substantially addresses all three. Their additional checks concerning cited literature, supervision, and n-gram features remain preserved, including the disagreement about whether external verification is required.",
+      "consolidation_rationale": "Every pair questions the same conclusion contrasting averaged fastText features with averaged word2vec representations. Checking the conclusion's scope and matched comparative evidence addresses the shared concern; feature controls, transfer evidence, and fidelity to cited literature remain complementary verification angles in the original candidates, including their differing external-verification requirements.",
       "verification_status": "unverified"
     },
     {
@@ -1882,7 +1882,7 @@
       },
       "potential_impact": "undetermined",
       "impact_rationale": "Original candidates agree; severity remains unverified",
-      "consolidation_rationale": "This questions prediction-search work, pruning behavior, and the interpretation of top-T heap overhead. Verification requires traversal analysis and scaling evidence, independently of training-path complexity or the protocol used for reported wall-clock measurements.",
+      "consolidation_rationale": "Prediction scaling requires checking traversal work, pruning behavior, and top-T heap overhead. Neither a training-depth bound nor reproducible timing boundaries resolves this search-complexity question.",
       "verification_status": "unverified"
     },
     {
@@ -1974,7 +1974,7 @@
       },
       "potential_impact": "major_candidate",
       "impact_rationale": "Original candidates agree; severity remains unverified",
-      "consolidation_rationale": "This asks whether timer boundaries, CPU specifications, measured configurations, and tag-prediction training budgets permit runtime reproduction. Those protocol details can remain unresolved after the scope of the headline classification speedups is clarified.",
+      "consolidation_rationale": "Reconstructing timed workloads requires hardware details, timer boundaries, and training budgets across the classification and tag experiments. This is distinct from interpreting headline speedup claims or attributing gains to algorithmic components.",
       "verification_status": "unverified"
     },
     {
@@ -2056,7 +2056,7 @@
       },
       "potential_impact": "undetermined",
       "impact_rationale": "Original candidates agree; severity remains unverified",
-      "consolidation_rationale": "This asks how efficiency gains are attributable to algorithmic components, implementation, and parallelism. Controlled component and execution comparisons are needed beyond clarification of training endpoints, timing protocols, or theoretical complexity.",
+      "consolidation_rationale": "Separating algorithmic contributions from implementation and parallelism requires controlled attribution evidence. Verifying complete-training ratios or timing reproducibility alone would leave that attribution unresolved.",
       "verification_status": "unverified"
     },
     {
@@ -2119,7 +2119,7 @@
       },
       "potential_impact": "undetermined",
       "impact_rationale": "Original candidates agree; severity remains unverified",
-      "consolidation_rationale": "This questions whether held-out frequencies determine filtering and thereby affect benchmark eligibility and evaluation scope. A reproducible reconstruction procedure or a specified multi-tag objective would not by itself resolve that dependence or its consequences.",
+      "consolidation_rationale": "Whether held-out frequencies determine filtering and evaluation eligibility is a separate benchmark-scope question. Exact dataset reconstruction and multi-tag target handling can each be resolved without settling it.",
       "verification_status": "unverified"
     },
     {
@@ -2191,7 +2191,7 @@
       },
       "potential_impact": "major_candidate",
       "impact_rationale": "Original candidates agree; severity remains unverified",
-      "consolidation_rationale": "This asks how multiple retained tags map to training targets, epochs, and precision-at-one references. These protocol choices require separate verification from filtering provenance, deterministic dataset reconstruction, and timing boundaries.",
+      "consolidation_rationale": "Mapping multiple retained tags to the training objective and evaluation references requires its own protocol verification. Filtering rules, split reconstruction, and timer definitions do not establish target weighting or precision-at-one semantics.",
       "verification_status": "unverified"
     }
   ],
@@ -3079,20 +3079,20 @@
       {
         "focus_id": "D1:1",
         "dimension_id": "D1",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D1:2",
         "dimension_id": "D1",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D1:3",
         "dimension_id": "D1",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D2:1",
@@ -3103,62 +3103,62 @@
       {
         "focus_id": "D2:2",
         "dimension_id": "D2",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D2:3",
         "dimension_id": "D2",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D3:1",
         "dimension_id": "D3",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D3:2",
         "dimension_id": "D3",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D3:3",
         "dimension_id": "D3",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D4:1",
         "dimension_id": "D4",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D4:2",
         "dimension_id": "D4",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D4:3",
         "dimension_id": "D4",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D5:1",
         "dimension_id": "D5",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D5:2",
         "dimension_id": "D5",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D5:3",
@@ -3169,23 +3169,743 @@
       {
         "focus_id": "D6:1",
         "dimension_id": "D6",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D6:2",
         "dimension_id": "D6",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       },
       {
         "focus_id": "D6:3",
         "dimension_id": "D6",
-        "status": "reported_partial",
-        "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+        "status": "mapping_uncertain",
+        "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
       }
     ],
     "gaps": [
+      {
+        "gap_id": "coverage_gap_a0627c837dcfd6239e46",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D1"
+        ],
+        "description": "D1 focus lacks a reliable report mapping: claim scope",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+          "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+          "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+          "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+          "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p1_0: structure_incomplete",
+          "table table_ev_26739aba340e_2_3: structure_incomplete",
+          "table table_ev_26739aba340e_2_9: structure_incomplete",
+          "table table_ev_26739aba340e_2_14: structure_incomplete",
+          "table table_ev_26739aba340e_3_8: structure_incomplete",
+          "table table_ev_26739aba340e_3_16: structure_incomplete",
+          "figure figure_ev_26739aba340e_1_3: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:36",
+          "Coverage is partial, with 36 reading units omitted; no absence from the complete paper is inferred.",
+          "Reading order and section boundaries are unverified, and no human-readable reference document or reliable human page references are available.",
+          "Table structures and numerical cell associations remain unverified. Candidate concerns below rely on prose rather than reconstructed numerical comparisons.",
+          "The loss and hierarchical probability equations are fragmented, and the architecture figure requires visual verification.",
+          "The authors explicitly acknowledge prior low-rank classifiers, CBOW-like architecture, hierarchical softmax, and feature hashing, and frame fastText as a simple baseline. The supplied evidence does not justify treating reuse of these components as a novelty defect."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_e91477898d544fd05bd0",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D1"
+        ],
+        "description": "D1 focus lacks a reliable report mapping: mechanism distinction",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+          "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+          "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+          "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+          "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p1_0: structure_incomplete",
+          "table table_ev_26739aba340e_2_3: structure_incomplete",
+          "table table_ev_26739aba340e_2_9: structure_incomplete",
+          "table table_ev_26739aba340e_2_14: structure_incomplete",
+          "table table_ev_26739aba340e_3_8: structure_incomplete",
+          "table table_ev_26739aba340e_3_16: structure_incomplete",
+          "figure figure_ev_26739aba340e_1_3: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:36",
+          "Coverage is partial, with 36 reading units omitted; no absence from the complete paper is inferred.",
+          "Reading order and section boundaries are unverified, and no human-readable reference document or reliable human page references are available.",
+          "Table structures and numerical cell associations remain unverified. Candidate concerns below rely on prose rather than reconstructed numerical comparisons.",
+          "The loss and hierarchical probability equations are fragmented, and the architecture figure requires visual verification.",
+          "The authors explicitly acknowledge prior low-rank classifiers, CBOW-like architecture, hierarchical softmax, and feature hashing, and frame fastText as a simple baseline. The supplied evidence does not justify treating reuse of these components as a novelty defect."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_09596e1bf7c466ecb220",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D1"
+        ],
+        "description": "D1 focus lacks a reliable report mapping: contribution evidence",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+          "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+          "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+          "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+          "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p1_0: structure_incomplete",
+          "table table_ev_26739aba340e_2_3: structure_incomplete",
+          "table table_ev_26739aba340e_2_9: structure_incomplete",
+          "table table_ev_26739aba340e_2_14: structure_incomplete",
+          "table table_ev_26739aba340e_3_8: structure_incomplete",
+          "table table_ev_26739aba340e_3_16: structure_incomplete",
+          "figure figure_ev_26739aba340e_1_3: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:36",
+          "Coverage is partial, with 36 reading units omitted; no absence from the complete paper is inferred.",
+          "Reading order and section boundaries are unverified, and no human-readable reference document or reliable human page references are available.",
+          "Table structures and numerical cell associations remain unverified. Candidate concerns below rely on prose rather than reconstructed numerical comparisons.",
+          "The loss and hierarchical probability equations are fragmented, and the architecture figure requires visual verification.",
+          "The authors explicitly acknowledge prior low-rank classifiers, CBOW-like architecture, hierarchical softmax, and feature hashing, and frame fastText as a simple baseline. The supplied evidence does not justify treating reuse of these components as a novelty defect."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_7f97c48ac6966e07a183",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D2"
+        ],
+        "description": "D2 focus lacks a reliable report mapping: algorithm mechanism",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+          "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+          "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+          "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+          "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p1_0: structure_incomplete",
+          "table table_ev_26739aba340e_2_3: structure_incomplete",
+          "table table_ev_26739aba340e_2_9: structure_incomplete",
+          "table table_ev_26739aba340e_2_14: structure_incomplete",
+          "table table_ev_26739aba340e_3_8: structure_incomplete",
+          "table table_ev_26739aba340e_3_16: structure_incomplete",
+          "figure figure_ev_26739aba340e_1_3: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:41",
+          "Coverage is partial, reading order and section mapping are unverified, and a human-readable reference document is unavailable.",
+          "The loss and hierarchical path-probability equations are fragmented, with relevant formula reading units omitted; their mathematical transcription cannot be assessed reliably.",
+          "The architecture figure requires visual verification. The prose nevertheless consistently describes embedding and averaging followed by a classifier.",
+          "Result tables have incomplete structure. No candidate depends on treating extracted numerical cell assignments as verified.",
+          "Implementation and independent complexity verification were not available. Missing detail in the supplied units does not establish its absence from the complete paper."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_2f5b8ffd11674469a1e5",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D2"
+        ],
+        "description": "D2 focus lacks a reliable report mapping: formula limitations",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+          "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+          "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+          "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+          "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p1_0: structure_incomplete",
+          "table table_ev_26739aba340e_2_3: structure_incomplete",
+          "table table_ev_26739aba340e_2_9: structure_incomplete",
+          "table table_ev_26739aba340e_2_14: structure_incomplete",
+          "table table_ev_26739aba340e_3_8: structure_incomplete",
+          "table table_ev_26739aba340e_3_16: structure_incomplete",
+          "figure figure_ev_26739aba340e_1_3: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:41",
+          "Coverage is partial, reading order and section mapping are unverified, and a human-readable reference document is unavailable.",
+          "The loss and hierarchical path-probability equations are fragmented, with relevant formula reading units omitted; their mathematical transcription cannot be assessed reliably.",
+          "The architecture figure requires visual verification. The prose nevertheless consistently describes embedding and averaging followed by a classifier.",
+          "Result tables have incomplete structure. No candidate depends on treating extracted numerical cell assignments as verified.",
+          "Implementation and independent complexity verification were not available. Missing detail in the supplied units does not establish its absence from the complete paper."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_026feab393ae112a42b2",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D3"
+        ],
+        "description": "D3 focus lacks a reliable report mapping: comparison fairness",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+          "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+          "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+          "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+          "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p1_0: structure_incomplete",
+          "table table_ev_26739aba340e_2_3: structure_incomplete",
+          "table table_ev_26739aba340e_2_9: structure_incomplete",
+          "table table_ev_26739aba340e_2_14: structure_incomplete",
+          "table table_ev_26739aba340e_3_8: structure_incomplete",
+          "table table_ev_26739aba340e_3_16: structure_incomplete",
+          "figure figure_ev_26739aba340e_1_3: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:45",
+          "Coverage is partial, with 45 reading units omitted; a detail absent from this context cannot be treated as absent from the paper.",
+          "Reading order and section mapping are unresolved, and no human-readable reference document or reliable human page references are supplied.",
+          "The accuracy and timing tables have incomplete structure. Numerical cell assignments and speedup calculations have not been independently verified.",
+          "The supplied results already compare fastText with and without bigrams and, for tag prediction, with hidden dimensions 50 and 200. These comparisons should not be described as missing ablations.",
+          "Fragmented equations and the unverified architecture figure limit mathematical inspection; no concern here depends on their transcription."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_40f3fafeb15ac653b4c4",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D3"
+        ],
+        "description": "D3 focus lacks a reliable report mapping: ablation",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+          "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+          "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+          "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+          "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p1_0: structure_incomplete",
+          "table table_ev_26739aba340e_2_3: structure_incomplete",
+          "table table_ev_26739aba340e_2_9: structure_incomplete",
+          "table table_ev_26739aba340e_2_14: structure_incomplete",
+          "table table_ev_26739aba340e_3_8: structure_incomplete",
+          "table table_ev_26739aba340e_3_16: structure_incomplete",
+          "figure figure_ev_26739aba340e_1_3: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:45",
+          "Coverage is partial, with 45 reading units omitted; a detail absent from this context cannot be treated as absent from the paper.",
+          "Reading order and section mapping are unresolved, and no human-readable reference document or reliable human page references are supplied.",
+          "The accuracy and timing tables have incomplete structure. Numerical cell assignments and speedup calculations have not been independently verified.",
+          "The supplied results already compare fastText with and without bigrams and, for tag prediction, with hidden dimensions 50 and 200. These comparisons should not be described as missing ablations.",
+          "Fragmented equations and the unverified architecture figure limit mathematical inspection; no concern here depends on their transcription."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_c7f213240b0b56cbb9b4",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D3"
+        ],
+        "description": "D3 focus lacks a reliable report mapping: result interpretation",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+          "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+          "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+          "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+          "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p1_0: structure_incomplete",
+          "table table_ev_26739aba340e_2_3: structure_incomplete",
+          "table table_ev_26739aba340e_2_9: structure_incomplete",
+          "table table_ev_26739aba340e_2_14: structure_incomplete",
+          "table table_ev_26739aba340e_3_8: structure_incomplete",
+          "table table_ev_26739aba340e_3_16: structure_incomplete",
+          "figure figure_ev_26739aba340e_1_3: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:45",
+          "Coverage is partial, with 45 reading units omitted; a detail absent from this context cannot be treated as absent from the paper.",
+          "Reading order and section mapping are unresolved, and no human-readable reference document or reliable human page references are supplied.",
+          "The accuracy and timing tables have incomplete structure. Numerical cell assignments and speedup calculations have not been independently verified.",
+          "The supplied results already compare fastText with and without bigrams and, for tag prediction, with hidden dimensions 50 and 200. These comparisons should not be described as missing ablations.",
+          "Fragmented equations and the unverified architecture figure limit mathematical inspection; no concern here depends on their transcription."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_67c3f15ecc346c31a0b8",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D4"
+        ],
+        "description": "D4 focus lacks a reliable report mapping: claim consistency",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+          "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+          "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+          "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+          "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p1_0: structure_incomplete",
+          "table table_ev_26739aba340e_2_3: structure_incomplete",
+          "table table_ev_26739aba340e_2_9: structure_incomplete",
+          "table table_ev_26739aba340e_2_14: structure_incomplete",
+          "table table_ev_26739aba340e_3_8: structure_incomplete",
+          "table table_ev_26739aba340e_3_16: structure_incomplete",
+          "figure figure_ev_26739aba340e_1_3: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:13",
+          "Coverage is partial, with 13 reading units omitted. Absence of evidence in this bundle does not establish absence from the paper.",
+          "Reading order and section mapping are unverified; a human-readable reference document and reliable human page references are unavailable.",
+          "Result-table structures and numerical column associations remain unverified. No candidate treats a numerical discrepancy arising from extraction as an established author error.",
+          "The abstract's sub-ten-minute training and sub-minute prediction statements can correspond to the smaller tag-prediction configurations; the slower 200-unit configurations do not by themselves contradict those statements.",
+          "No P2-A source_conflicts were supplied."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_a2c0b02bb87b2a24f828",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D4"
+        ],
+        "description": "D4 focus lacks a reliable report mapping: source conflicts",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+          "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+          "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+          "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+          "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p1_0: structure_incomplete",
+          "table table_ev_26739aba340e_2_3: structure_incomplete",
+          "table table_ev_26739aba340e_2_9: structure_incomplete",
+          "table table_ev_26739aba340e_2_14: structure_incomplete",
+          "table table_ev_26739aba340e_3_8: structure_incomplete",
+          "table table_ev_26739aba340e_3_16: structure_incomplete",
+          "figure figure_ev_26739aba340e_1_3: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:13",
+          "Coverage is partial, with 13 reading units omitted. Absence of evidence in this bundle does not establish absence from the paper.",
+          "Reading order and section mapping are unverified; a human-readable reference document and reliable human page references are unavailable.",
+          "Result-table structures and numerical column associations remain unverified. No candidate treats a numerical discrepancy arising from extraction as an established author error.",
+          "The abstract's sub-ten-minute training and sub-minute prediction statements can correspond to the smaller tag-prediction configurations; the slower 200-unit configurations do not by themselves contradict those statements.",
+          "No P2-A source_conflicts were supplied."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_3ee99ee7e99059844358",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D4"
+        ],
+        "description": "D4 focus lacks a reliable report mapping: conclusion scope",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+          "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+          "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+          "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+          "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p1_0: structure_incomplete",
+          "table table_ev_26739aba340e_2_3: structure_incomplete",
+          "table table_ev_26739aba340e_2_9: structure_incomplete",
+          "table table_ev_26739aba340e_2_14: structure_incomplete",
+          "table table_ev_26739aba340e_3_8: structure_incomplete",
+          "table table_ev_26739aba340e_3_16: structure_incomplete",
+          "figure figure_ev_26739aba340e_1_3: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:13",
+          "Coverage is partial, with 13 reading units omitted. Absence of evidence in this bundle does not establish absence from the paper.",
+          "Reading order and section mapping are unverified; a human-readable reference document and reliable human page references are unavailable.",
+          "Result-table structures and numerical column associations remain unverified. No candidate treats a numerical discrepancy arising from extraction as an established author error.",
+          "The abstract's sub-ten-minute training and sub-minute prediction statements can correspond to the smaller tag-prediction configurations; the slower 200-unit configurations do not by themselves contradict those statements.",
+          "No P2-A source_conflicts were supplied."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_d52f55e4e69d406c3fe0",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D5"
+        ],
+        "description": "D5 focus lacks a reliable report mapping: implementation details",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+          "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+          "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+          "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+          "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p1_0: structure_incomplete",
+          "table table_ev_26739aba340e_2_3: structure_incomplete",
+          "table table_ev_26739aba340e_2_9: structure_incomplete",
+          "table table_ev_26739aba340e_2_14: structure_incomplete",
+          "table table_ev_26739aba340e_3_8: structure_incomplete",
+          "table table_ev_26739aba340e_3_16: structure_incomplete",
+          "figure figure_ev_26739aba340e_1_3: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:43",
+          "Coverage is partial; omitted reading units may contain relevant implementation or protocol details.",
+          "Reading order and section mapping are not verified, and no human-readable original is available.",
+          "The loss and hierarchical probability equations are fragmented; no concern is based on their apparent transcription.",
+          "Result tables have incomplete structure, so numerical alignments and runtime ratios have not been independently checked.",
+          "The linked implementation and promised dataset-reconstruction script have not been inspected."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_f1a99e9fe14aa5afb946",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D5"
+        ],
+        "description": "D5 focus lacks a reliable report mapping: training protocol",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+          "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+          "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+          "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+          "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p1_0: structure_incomplete",
+          "table table_ev_26739aba340e_2_3: structure_incomplete",
+          "table table_ev_26739aba340e_2_9: structure_incomplete",
+          "table table_ev_26739aba340e_2_14: structure_incomplete",
+          "table table_ev_26739aba340e_3_8: structure_incomplete",
+          "table table_ev_26739aba340e_3_16: structure_incomplete",
+          "figure figure_ev_26739aba340e_1_3: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:43",
+          "Coverage is partial; omitted reading units may contain relevant implementation or protocol details.",
+          "Reading order and section mapping are not verified, and no human-readable original is available.",
+          "The loss and hierarchical probability equations are fragmented; no concern is based on their apparent transcription.",
+          "Result tables have incomplete structure, so numerical alignments and runtime ratios have not been independently checked.",
+          "The linked implementation and promised dataset-reconstruction script have not been inspected."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_712f833b4e546a8a047a",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D6"
+        ],
+        "description": "D6 focus lacks a reliable report mapping: research gap",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+          "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+          "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+          "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+          "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p1_0: structure_incomplete",
+          "table table_ev_26739aba340e_2_3: structure_incomplete",
+          "table table_ev_26739aba340e_2_9: structure_incomplete",
+          "table table_ev_26739aba340e_2_14: structure_incomplete",
+          "table table_ev_26739aba340e_3_8: structure_incomplete",
+          "table table_ev_26739aba340e_3_16: structure_incomplete",
+          "figure figure_ev_26739aba340e_1_3: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:37",
+          "Coverage is partial, with 37 reading units omitted, including much of the reference list. Completeness of related-work coverage and bibliographic accuracy cannot be established.",
+          "The original human-readable document is unavailable, and reading order and section boundaries remain unverified.",
+          "Result-table structures and numerical alignments remain unverified; no concern here depends on treating extracted numerical comparisons as independently checked.",
+          "The cited prior publications were not supplied in sufficient detail to verify their findings or citation-to-claim fit externally.",
+          "The supplied text explicitly credits existing low-rank approaches, CBOW, hierarchical softmax, hashing, and n-gram features and acknowledges that the model could be implemented in Vowpal Wabbit. These acknowledgments do not support a concern about claiming those individual mechanisms as new."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_1f2389f839eb3f1150f7",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D6"
+        ],
+        "description": "D6 focus lacks a reliable report mapping: internal citations",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+          "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+          "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+          "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+          "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p1_0: structure_incomplete",
+          "table table_ev_26739aba340e_2_3: structure_incomplete",
+          "table table_ev_26739aba340e_2_9: structure_incomplete",
+          "table table_ev_26739aba340e_2_14: structure_incomplete",
+          "table table_ev_26739aba340e_3_8: structure_incomplete",
+          "table table_ev_26739aba340e_3_16: structure_incomplete",
+          "figure figure_ev_26739aba340e_1_3: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:37",
+          "Coverage is partial, with 37 reading units omitted, including much of the reference list. Completeness of related-work coverage and bibliographic accuracy cannot be established.",
+          "The original human-readable document is unavailable, and reading order and section boundaries remain unverified.",
+          "Result-table structures and numerical alignments remain unverified; no concern here depends on treating extracted numerical comparisons as independently checked.",
+          "The cited prior publications were not supplied in sufficient detail to verify their findings or citation-to-claim fit externally.",
+          "The supplied text explicitly credits existing low-rank approaches, CBOW, hierarchical softmax, hashing, and n-gram features and acknowledges that the model could be implemented in Vowpal Wabbit. These acknowledgments do not support a concern about claiming those individual mechanisms as new."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
+      {
+        "gap_id": "coverage_gap_70554e6a1e1719f1117e",
+        "gap_type": "focus_not_inspected",
+        "affected_contribution_ids": [],
+        "affected_claim_ids": [],
+        "affected_dimension_ids": [
+          "D6"
+        ],
+        "description": "D6 focus lacks a reliable report mapping: external-check leads",
+        "cause": "free_text_mapping_uncertain",
+        "source_limitations": [
+          "Legacy block order is not a verified reading order.",
+          "Formula transcription, table rows, figures, section boundaries and references require verification.",
+          "A missing object in this candidate inventory does not prove absence from the PDF.",
+          "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+          "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+          "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+          "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+          "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+          "Source quality: reading_order_ambiguous",
+          "Source quality: section_mapping_incomplete",
+          "Source quality: human_reading_reference_missing",
+          "Source quality: human_page_reference_missing",
+          "table table_p1_0: structure_incomplete",
+          "table table_ev_26739aba340e_2_3: structure_incomplete",
+          "table table_ev_26739aba340e_2_9: structure_incomplete",
+          "table table_ev_26739aba340e_2_14: structure_incomplete",
+          "table table_ev_26739aba340e_3_8: structure_incomplete",
+          "table table_ev_26739aba340e_3_16: structure_incomplete",
+          "figure figure_ev_26739aba340e_1_3: visual_review_required",
+          "reading_order_ambiguous",
+          "section_mapping_incomplete",
+          "human_reading_reference_missing",
+          "human_page_reference_missing",
+          "p2a_limited",
+          "omitted_reading_units:37",
+          "Coverage is partial, with 37 reading units omitted, including much of the reference list. Completeness of related-work coverage and bibliographic accuracy cannot be established.",
+          "The original human-readable document is unavailable, and reading order and section boundaries remain unverified.",
+          "Result-table structures and numerical alignments remain unverified; no concern here depends on treating extracted numerical comparisons as independently checked.",
+          "The cited prior publications were not supplied in sufficient detail to verify their findings or citation-to-claim fit externally.",
+          "The supplied text explicitly credits existing low-rank approaches, CBOW, hierarchical softmax, hashing, and n-gram features and acknowledges that the model could be implemented in Vowpal Wabbit. These acknowledgments do not support a concern about claiming those individual mechanisms as new."
+        ],
+        "next_action": "Check whether this specific focus was inspected",
+        "status": "unresolved"
+      },
       {
         "gap_id": "coverage_gap_d035ee2d84c45f796854",
         "gap_type": "source_quality",
@@ -3627,7 +4347,7 @@
     {
       "verification_task_id": "verify_1763c10f94e264329e44",
       "consolidated_issue_id": "consolidated_8103558cbdda88bc3c6c",
-      "central_question": "Which comparator, dataset, model configuration, and timing calculation produce the stated 15,000-fold speedup?",
+      "central_question": "Do the original classification timing tables, speedup calculations, and baseline training schedules support the headline speed advantages as complete-training comparisons at the reported accuracies, or only as per-epoch comparisons under the disclosed hardware, thread counts, and implementations?",
       "related_claim_ids": [
         "claim_b1536496726f40f8",
         "claim_4ee5d311407a9fdc",
@@ -3899,7 +4619,7 @@
     {
       "verification_task_id": "verify_c7495f27de04117960b1",
       "consolidated_issue_id": "consolidated_1a30bff6ccc7941967da",
-      "central_question": "Does the complete paper evaluate averaged word2vec features against the learned fastText features under a controlled downstream classifier?",
+      "central_question": "Does the complete paper and the cited word2vec literature support the conclusion's contrast between averaged fastText features and averaged unsupervised word2vec vectors, through matched comparisons accounting for supervision, classifier, and n-gram features, and is the claim limited to the evaluated supervised tasks or supported for broader sentence-representation reuse?",
       "related_claim_ids": [
         "claim_c65e802567c3ff8f",
         "claim_8860fc3be607ecff",
@@ -4497,10 +5217,10 @@
     "p2b_input_limited"
   ],
   "call_count": 5,
-  "input_tokens": 65097,
-  "output_tokens": 7357,
+  "input_tokens": 65344,
+  "output_tokens": 7220,
   "unknown_token_calls": 0,
-  "duration_ms": 172393,
+  "duration_ms": 160040,
   "retry_count": 0,
   "execution_status": "limited"
 }

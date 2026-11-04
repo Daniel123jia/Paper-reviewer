@@ -2,7 +2,7 @@
   {
     "consolidated_issue_id": "consolidated_9825c343099d3753e676",
     "title": "The supplied evidence does not fully establish comparability of the baseline and relative-position runs",
-    "central_question": "Were the absolute-position and relative-position runs paired with exactly the same number of updates, random seeds, checkpoint selection, and decoding settings?",
+    "central_question": "Were each absolute-position baseline and its corresponding relative-position model trained, selected, decoded, and evaluated under matched conditions so that the reported BLEU differences can be attributed to the position representations?",
     "observed_facts": [
       "The authors state that they generated baseline results to isolate the impact of relative position representations from other changes to the library and experimental configuration. The reported model settings nevertheless differ between base and big configurations: the base model is trained for 100,000 steps without checkpoint averaging on K40 GPUs, whereas the big model is trained for 300,000 steps with the last 20 checkpoints averaged on P100 GPUs. The supplied units do not give complete, separate baseline training and checkpoint-selection details.",
       "The authors state that they generated sinusoidal-position baseline results to isolate relative position representations from changes to the underlying library and experimental configuration. They report base and big model configurations, including different training durations, hardware, dropout settings, clipping distances, and checkpoint averaging procedures for the proposed models."
@@ -96,13 +96,13 @@
     },
     "potential_impact": "undetermined",
     "impact_rationale": "Original impact assessments differ; P3 must assess severity",
-    "consolidation_rationale": "Both question whether matched absolute-position and relative-position training, checkpoint, and evaluation procedures support attribution of the reported BLEU gains. The pairwise evidence identifies substantially the same verification work: inspecting condition-specific configurations and run records.",
+    "consolidation_rationale": "Both question whether the reported BLEU gains isolate the effect of relative position representations. The pairwise evidence identifies them as semantic duplicates requiring the same inspection of paired training configurations, checkpoint policies, evaluation settings, and result provenance.",
     "verification_status": "unverified"
   },
   {
     "consolidated_issue_id": "consolidated_105a91210515bf8f5b82",
     "title": "The measured efficiency evidence is narrower than the broad implementation claim",
-    "central_question": "Does the full paper report peak memory, wall-clock time, inference throughput, or scaling measurements for the relative-position implementation?",
+    "central_question": "What baseline and measurement scope underlie the reported 7% decrease in steps per second, and do matched runtime, memory, and scaling measurements substantiate the claimed practical efficiency of the relative-position implementation?",
     "observed_facts": [
       "The authors describe an efficient tensor-reshaping implementation and report a 7% decrease in training steps per second while retaining the same model and batch sizes on P100 GPUs as Vaswani et al. They also give asymptotic storage-complexity expressions for relative-position representations.",
       "The authors describe a tensor-reshaping implementation for the relative-position terms and state that the same approach applies to the output computation. For the machine translation experiments, they report a 7% decrease in steps per second while retaining the same model and batch sizes on P100 GPUs as Vaswani et al. (2017). They also state asymptotic storage changes from O(bhndz) to O(bhndz + n²da), with relative representations shared across heads and sequences."
@@ -188,7 +188,7 @@
     },
     "potential_impact": "undetermined",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "Both question whether the reported throughput comparison and limited resource measurements substantiate the practical efficiency claim. Identifying the comparison baseline, measurement scope, execution settings, and runtime and memory coverage would substantially resolve both.",
+    "consolidation_rationale": "Both question whether the reported 7% decrease in steps per second substantiates the practical efficiency claim. Their shared verification requires identifying the comparator and measurement scope, checking matched benchmark conditions, and inspecting available runtime, memory, and scaling evidence. The separate question about the theoretical storage bound remains outside this group.",
     "verification_status": "unverified"
   },
   {
@@ -265,13 +265,13 @@
     },
     "potential_impact": "minor_candidate",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "This asks which tensors and head-sharing assumptions are included in the stated asymptotic storage bound. It remains separate from practical efficiency measurement because verifying runtime comparisons and benchmark coverage would not resolve the completeness of the mathematical storage accounting.",
+    "consolidation_rationale": "This candidate questions the tensor scope and sharing assumptions of the stated asymptotic storage bound. Although related to practical efficiency, resolving the theoretical accounting requires a distinct check of which tensors the bound includes and how head sharing changes it.",
     "verification_status": "unverified"
   },
   {
     "consolidated_issue_id": "consolidated_e3eac49834cebb136759",
     "title": "The claim about generalization to unseen sequence lengths is presented without a corresponding evaluation in the supplied evidence",
-    "central_question": "Does another supplied or omitted experiment evaluate test sequences longer than those seen during training?",
+    "central_question": "Does the claim that clipping enables generalization to unseen sequence lengths refer to representations remaining defined or to maintained predictive performance, and does the complete paper provide training-length limits and evaluation outside those limits to support the latter interpretation?",
     "observed_facts": [
       "The authors state that relative position representations are invariant to total sequence length and that clipping the maximum distance enables generalization to sequence lengths not seen during training. The supplied experiments vary the clipping distance on the WMT English-to-German newstest2013 development set, but the reported setup does not state that training and evaluation use deliberately different sequence-length ranges.",
       "The authors state that their relative position representations are invariant to total sequence length and that clipping enables generalization to sequence lengths unseen during training. The supplied model-variation experiments instead vary the clipping distance in a base English-to-German model evaluated on newstest2013. Their discussion also notes that multiple encoder layers may propagate precise relative position information beyond the clipping distance.",
@@ -391,7 +391,7 @@
     },
     "potential_impact": "undetermined",
     "impact_rationale": "Original impact assessments differ; P3 must assess severity",
-    "consolidation_rationale": "Every pair is identified as an exact or semantic duplicate concerning the support and intended meaning of unseen-length generalization. The shared verification is to inspect claim context, training and evaluation length ranges, and any dedicated extrapolation results to distinguish representational applicability from demonstrated predictive performance.",
+    "consolidation_rationale": "Every pair is identified as an exact or semantic duplicate. All four question whether the unseen-length generalization statement describes structural applicability or supported predictive performance, and all require checking the wording alongside training-length limits and any evaluation outside the training-length range.",
     "verification_status": "unverified"
   },
   {
@@ -470,7 +470,7 @@
     },
     "potential_impact": "minor_candidate",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "This asks whether the exact BLEU scoring pipeline can be recovered, including tokenization, case handling, references, and word-piece reconstruction. Although it overlaps with comparison matching on consistent scoring, reproducibility requires separate protocol verification and retains its external-verification requirement.",
+    "consolidation_rationale": "Recovering the exact BLEU scoring and text-processing pipeline is a separate reproducibility question. Its overlap with consistent evaluation across conditions does not resolve baseline training comparability or establish the combined-position experiment.",
     "verification_status": "unverified"
   },
   {
@@ -540,7 +540,7 @@
     },
     "potential_impact": "minor_candidate",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "This asks whether an identifiable, matched relative-plus-sinusoidal condition supports the no-further-benefit claim. It remains separate because verifying absolute-only versus relative-only comparisons or the scoring pipeline would not establish the combined condition and its result.",
+    "consolidation_rationale": "This candidate concerns the traceability and controls of the combined relative-plus-sinusoidal condition supporting the no-benefit conclusion. Verifying absolute-versus-relative baseline comparisons does not establish this separate condition or its results.",
     "verification_status": "unverified"
   }
 ]

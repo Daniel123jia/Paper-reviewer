@@ -2,7 +2,7 @@
   {
     "consolidated_issue_id": "consolidated_8103558cbdda88bc3c6c",
     "title": "Broad speed claims may conflate per-epoch speed with time to the reported accuracy",
-    "central_question": "Which comparator, dataset, model configuration, and timing calculation produce the stated 15,000-fold speedup?",
+    "central_question": "Do the original classification timing tables, speedup calculations, and baseline training schedules support the headline speed advantages as complete-training comparisons at the reported accuracies, or only as per-epoch comparisons under the disclosed hardware, thread counts, and implementations?",
     "observed_facts": [
       "The abstract couples comparable accuracy with training and evaluation that are many orders of magnitude faster. The classification timing table explicitly reports single-epoch times, whereas fastText's reported classification results use five epochs. The timing discussion compares fastText on 20 CPU threads with convolutional models on a Tesla K40 GPU and GRNNs on one CPU thread, then states a speedup reaching at least 15,000-fold.",
       "Table 2 is explicitly captioned as training time for a single epoch. The results text states that fastText uses five epochs, whereas the timing discussion compares fastText on a CPU with 20 threads against char-CNN and VDCNN on a Tesla K40 GPU and cites GRNN timing on a single CPU thread. The authors report several-orders-of-magnitude speed advantages and a speedup reaching at least 15,000-fold. They also acknowledge that newer CUDA convolution implementations could accelerate char-CNN by a factor of ten."
@@ -110,7 +110,7 @@
     },
     "potential_impact": "major_candidate",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "Both question whether the headline classification speedup ratios describe per-epoch throughput or complete training to the reported accuracy under the disclosed hardware and parallelism conditions. The same timing-table, comparator, training-schedule, and accuracy-endpoint checks address both.",
+    "consolidation_rationale": "Both question whether the reported classification speedups, including the 15,000-fold statement, measure per-epoch throughput or complete training to the reported accuracy under the disclosed execution conditions. The same verification of timing tables, comparators, training schedules, and claim qualifications addresses their shared concern.",
     "verification_status": "unverified"
   },
   {
@@ -168,7 +168,7 @@
     },
     "potential_impact": "undetermined",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "Exact reconstruction of filtering and split membership requires frequency definitions, record-handling rules, and deterministic assignment details. This remains separate from whether filtering uses held-out frequencies and from how retained tags enter training.",
+    "consolidation_rationale": "Exact reconstruction of the tag dataset requires checking frequency definitions, record handling, and split assignment. This remains separate from whether filtering uses held-out information and from how multiple tags enter training.",
     "verification_status": "unverified"
   },
   {
@@ -225,13 +225,13 @@
     },
     "potential_impact": "minor_candidate",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "This questions the averaging and target-depth assumptions behind the Huffman training-complexity statement. A depth-based derivation and verification of the relevant frequency distribution are separate from prediction-search analysis and runtime measurement.",
+    "consolidation_rationale": "The scope of the Huffman training-complexity bound requires verification of target depths and frequency-weighted averaging assumptions. Prediction search complexity and measured runtime protocols require distinct checks.",
     "verification_status": "unverified"
   },
   {
     "consolidated_issue_id": "consolidated_1a30bff6ccc7941967da",
     "title": "The contrast with averaged word2vec representations may exceed the demonstrated classification evidence",
-    "central_question": "Does the complete paper evaluate averaged word2vec features against the learned fastText features under a controlled downstream classifier?",
+    "central_question": "Does the complete paper and the cited word2vec literature support the conclusion's contrast between averaged fastText features and averaged unsupervised word2vec vectors, through matched comparisons accounting for supervision, classifier, and n-gram features, and is the claim limited to the evaluated supervised tasks or supported for broader sentence-representation reuse?",
     "observed_facts": [
       "The architecture averages learned feature representations and trains them against document labels. The conclusion states that, unlike unsupervised word2vec vectors, the method's word features can be averaged to form good sentence representations. The supplied evaluations report supervised classification accuracy and tag-prediction precision at one.",
       "The conclusion states, across two reading units, that unlike unsupervised word vectors from word2vec, fastText's word features can be averaged to form good sentence representations. The model description explicitly acknowledges similarity to CBOW, with a label replacing the middle word. The supplied experimental descriptions concern supervised classification and tag prediction; they do not directly establish the comparative quality of averaged word2vec representations.",
@@ -346,7 +346,7 @@
     },
     "potential_impact": "minor_candidate",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "Every pair questions the same conclusion's contrast between averaged fastText and word2vec representations. Checking the original wording, intended task scope, and matched representation comparisons substantially addresses all three. Their additional checks concerning cited literature, supervision, and n-gram features remain preserved, including the disagreement about whether external verification is required.",
+    "consolidation_rationale": "Every pair questions the same conclusion contrasting averaged fastText features with averaged word2vec representations. Checking the conclusion's scope and matched comparative evidence addresses the shared concern; feature controls, transfer evidence, and fidelity to cited literature remain complementary verification angles in the original candidates, including their differing external-verification requirements.",
     "verification_status": "unverified"
   },
   {
@@ -423,7 +423,7 @@
     },
     "potential_impact": "undetermined",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "This questions prediction-search work, pruning behavior, and the interpretation of top-T heap overhead. Verification requires traversal analysis and scaling evidence, independently of training-path complexity or the protocol used for reported wall-clock measurements.",
+    "consolidation_rationale": "Prediction scaling requires checking traversal work, pruning behavior, and top-T heap overhead. Neither a training-depth bound nor reproducible timing boundaries resolves this search-complexity question.",
     "verification_status": "unverified"
   },
   {
@@ -515,7 +515,7 @@
     },
     "potential_impact": "major_candidate",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "This asks whether timer boundaries, CPU specifications, measured configurations, and tag-prediction training budgets permit runtime reproduction. Those protocol details can remain unresolved after the scope of the headline classification speedups is clarified.",
+    "consolidation_rationale": "Reconstructing timed workloads requires hardware details, timer boundaries, and training budgets across the classification and tag experiments. This is distinct from interpreting headline speedup claims or attributing gains to algorithmic components.",
     "verification_status": "unverified"
   },
   {
@@ -597,7 +597,7 @@
     },
     "potential_impact": "undetermined",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "This asks how efficiency gains are attributable to algorithmic components, implementation, and parallelism. Controlled component and execution comparisons are needed beyond clarification of training endpoints, timing protocols, or theoretical complexity.",
+    "consolidation_rationale": "Separating algorithmic contributions from implementation and parallelism requires controlled attribution evidence. Verifying complete-training ratios or timing reproducibility alone would leave that attribution unresolved.",
     "verification_status": "unverified"
   },
   {
@@ -660,7 +660,7 @@
     },
     "potential_impact": "undetermined",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "This questions whether held-out frequencies determine filtering and thereby affect benchmark eligibility and evaluation scope. A reproducible reconstruction procedure or a specified multi-tag objective would not by itself resolve that dependence or its consequences.",
+    "consolidation_rationale": "Whether held-out frequencies determine filtering and evaluation eligibility is a separate benchmark-scope question. Exact dataset reconstruction and multi-tag target handling can each be resolved without settling it.",
     "verification_status": "unverified"
   },
   {
@@ -732,7 +732,7 @@
     },
     "potential_impact": "major_candidate",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "This asks how multiple retained tags map to training targets, epochs, and precision-at-one references. These protocol choices require separate verification from filtering provenance, deterministic dataset reconstruction, and timing boundaries.",
+    "consolidation_rationale": "Mapping multiple retained tags to the training objective and evaluation references requires its own protocol verification. Filtering rules, split reconstruction, and timer definitions do not establish target weighting or precision-at-one semantics.",
     "verification_status": "unverified"
   }
 ]

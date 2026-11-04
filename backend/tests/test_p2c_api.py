@@ -59,7 +59,8 @@ def test_api_persists_inventory_relations_tasks_and_safe_usage(tmp_path, monkeyp
                         "shared_verification_need": "source check"} for a, b in user["pairs"]]}
                 else:
                     content = {"groups": [{"issue_ids": sorted(user["candidates"]),
-                                           "rationale": "one source check"}]}
+                                           "rationale": "one source check",
+                                           "central_question": "Do these concerns need the same source check?"}]}
                 return [SimpleNamespace(model="actual-model", choices=[SimpleNamespace(
                     delta=SimpleNamespace(content=json.dumps(content)))], usage=None),
                     SimpleNamespace(model="actual-model", choices=[],

@@ -75,3 +75,34 @@ def test_blocked_limited_dimension_is_not_reported_as_inspected():
                for gap in audit.gaps)
     assert all(item.status == "coverage_gap" for item in audit.professional_focus
                if item.dimension_id == "D2")
+
+
+def test_algorithm_focus_does_not_imply_assumptions_or_formula_review():
+    bundle, plan, profile, mapping, review, inventory = case()
+    dimension = review.dimensions[1]
+    dimension.inspection_focus = ["algorithm mechanism"]
+    dimension.coverage_status = "sufficient"
+    audit = audit_coverage(bundle, plan, profile, mapping, review, inventory)
+    d2 = [item for item in audit.professional_focus if item.dimension_id == "D2"]
+    assert [item.status for item in d2] == [
+        "mapping_uncertain", "reported_inspected", "mapping_uncertain"]
+    assert audit.evidence_level == "model_report_only"
+
+
+def test_specific_focus_with_partial_source_stays_partial():
+    bundle, plan, profile, mapping, review, inventory = case()
+    review.dimensions[1].inspection_focus = ["algorithm mechanism"]
+    audit = audit_coverage(bundle, plan, profile, mapping, review, inventory)
+    d2 = [item for item in audit.professional_focus if item.dimension_id == "D2"]
+    assert [item.status for item in d2] == [
+        "mapping_uncertain", "reported_partial", "mapping_uncertain"]
+
+
+def test_explicitly_unchecked_focus_is_not_reported_inspected():
+    bundle, plan, profile, mapping, review, inventory = case()
+    dimension = review.dimensions[1]
+    dimension.inspection_focus = ["algorithm mechanism was not inspected"]
+    dimension.coverage_status = "sufficient"
+    audit = audit_coverage(bundle, plan, profile, mapping, review, inventory)
+    assert all(item.status == "mapping_uncertain" for item in audit.professional_focus
+               if item.dimension_id == "D2")

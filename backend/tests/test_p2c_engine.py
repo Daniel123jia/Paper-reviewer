@@ -16,7 +16,8 @@ def grouping_model(stage, system, user):
                     for a, b in payload["pairs"]]}
     else:
         content = {"groups": [{"issue_ids": sorted(payload["candidates"]),
-                                "rationale": "one scientific question"}]}
+                                "rationale": "one scientific question",
+                                "central_question": "Do these concerns need the same source check?"}]}
     return {"content": json.dumps(content), "model_identifier": "mock-actual",
             "input_tokens": 100, "output_tokens": 50, "duration_ms": 2}
 
@@ -34,6 +35,7 @@ def test_run_produces_traceable_unverified_tasks_and_valid_schema():
     assert set(task.original_candidate_ids) == set(issue.source_candidate_ids)
     assert task.original_document_snapshot["snapshot_id"] == "snap1"
     assert task.source_refs_to_check == issue.original_source_refs
+    assert task.central_question == issue.central_question
     assert task.verification_status == issue.verification_status == "unverified"
     assert CandidateConsolidationResult.model_validate(result.model_dump()) == result
 
@@ -74,6 +76,25 @@ def test_invalid_model_output_retains_all_candidates_and_flags_limit():
     assert len(result.lineage) == result.inventory.candidate_count
     assert len(result.consolidated_issues) == result.inventory.candidate_count
     assert result.unknown_token_calls == 0
+
+
+def test_unsupported_model_central_question_degrades_without_losing_tasks():
+    bundle, plan, profile, mapping, review = fixture_review()
+    def model(stage, system, user):
+        response = grouping_model(stage, system, user)
+        if stage == "reconciliation":
+            payload = json.loads(response["content"])
+            payload["groups"][0]["central_question"] = "Does a novel BLEU 99 result prove the claim?"
+            response["content"] = json.dumps(payload)
+        return response
+    result = run_p2c(bundle, plan, profile, mapping, review, "u1", "b1", "c7",
+                     model, "requested", p2b_status="limited")
+    issue = result.consolidated_issues[0]
+    assert "central_question:unresolved" in result.incomplete_items
+    assert "BLEU 99" not in issue.central_question
+    assert result.verification_tasks[0].central_question == issue.central_question
+    assert all(question in issue.verification_questions for candidate in review.candidates
+               for question in candidate.verification_questions)
 
 
 def test_false_verified_result_cannot_pass_schema():

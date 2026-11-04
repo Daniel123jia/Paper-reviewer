@@ -12,11 +12,13 @@ All three P2-C runs used actual `gpt-6.1-sol` responses through the existing Ope
 
 | Paper | Original candidates → consolidated issues | Pair relation counts (exact / semantic / related distinct / distinct) | Calls | Input / output Tokens | Wall time | Coverage gaps |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Shaw 2018 | 11 → 6 | 2 / 6 / 11 / 36 | 4 | 49,472 / 5,853 | 131.9 s | 20 |
-| DistilBERT 2019 | 13 → 9 | 2 / 2 / 29 / 45 | 5 | 70,982 / 8,329 | 186.8 s | 23 |
-| fastText 2016 | 12 → 9 | 0 / 4 / 21 / 41 | 5 | 65,097 / 7,357 | 172.4 s | 19 |
+| Shaw 2018 | 11 → 6 | 2 / 6 / 11 / 36 | 4 | 49,344 / 6,047 | 135.8 s | 37 |
+| DistilBERT 2019 | 13 → 9 | 1 / 3 / 28 / 46 | 5 | 70,882 / 8,354 | 181.6 s | 41 |
+| fastText 2016 | 12 → 9 | 0 / 4 / 20 / 42 | 5 | 65,344 / 7,220 | 160.0 s | 35 |
 
-Total P2-C model usage: **14 calls, 185,551 input Tokens, 21,539 output Tokens, 491.1 s summed wall time**. All final calls reported Tokens; unknown-token calls and retries were zero. These counts are accounting and audit data, not evidence that a particular number of issues is scientifically correct. Raw requests/responses are confined to ignored private files with restrictive permissions; no API key or raw call payload is exported to GitHub.
+Total P2-C.1 model usage: **14 calls, 185,570 input Tokens, 21,621 output Tokens, 477.4 s summed wall time**. All final calls reported Tokens; unknown-token calls and retries were zero. These counts are accounting and audit data, not evidence that a particular number of issues is scientifically correct. Raw requests/responses are confined to ignored private files with restrictive permissions; no API key or raw call payload is exported to GitHub. The run uses P2-C schema `1.1`, pair Prompt `candidate-semantic-grouping/v1` and reconciliation Prompt `candidate-group-reconciliation/v2`.
+
+Compared with the accepted P2-C commit, the rerun kept the exact same candidate membership in every group and the same positive/counterevidence reference sets. The new group-level central questions express the shared doubt and verification need, while every original verification question remains in its issue and P3 task. This check is about preservation and wording; it does not establish that the scientific concerns are true.
 
 ## Manual review of grouping decisions
 
@@ -45,7 +47,7 @@ This appraisal compares original candidate text, relation judgments, consolidate
 
 ## Coverage and handoff limits
 
-CoverageAudit exposes all six dimension records and all P2-A contributions/Claims for each paper. Its inspection evidence level is `model_report_only`. Each final P2-B dimension was `limited` with partial original-source coverage, so professional focus is `reported_partial`; none is called fully verified. Gap totals above break down as: Shaw 12 source-quality, 6 Claim-not-reported-inspected, 1 required-material, 1 external-material; DistilBERT 17/4/1/1; fastText 15/2/1/1. These are **review/source tasks, not author defects**. The full [CoverageGap lists](examples/p2c-shaw2018/coverage_audit.json) and their paper-specific counterparts identify affected IDs, causes and next actions.
+CoverageAudit exposes all six dimension records and all P2-A contributions/Claims for each paper. Its inspection evidence level is `model_report_only`. A focus is `reported_partial` only when the P2-B free text explicitly names that focus and the dimension has partial source coverage. Otherwise the free text cannot establish focus-specific inspection, so the focus is `mapping_uncertain` with a gap. Shaw has 1 reported partial and 17 uncertain foci; DistilBERT has 18 uncertain; fastText has 2 reported partial and 16 uncertain. None is called fully verified. Gap totals above break down as: Shaw 17 focus-mapping, 12 source-quality, 6 Claim-not-reported-inspected, 1 required-material, 1 external-material; DistilBERT 18/17/4/1/1; fastText 16/15/2/1/1. These are **review/source tasks, not author defects**. The full [CoverageGap lists](examples/p2c-shaw2018/coverage_audit.json) and their paper-specific counterparts identify affected IDs, causes and next actions.
 
 Every consolidated issue has one [P3 VerificationTask](examples/p2c-shaw2018/verification_tasks.json) with its frozen snapshot, original candidates, original positive/counterevidence roles, all preserved questions and limitations. The [lineage files](examples/p2c-shaw2018/candidate_lineage.json) show a single counted owner for every original candidate; the complete per-paper files are linked above. P3 may refine or reject concerns after independent PDF, mathematical, code and external checks. P2-C has not done those checks.
 
@@ -59,4 +61,4 @@ Every consolidated issue has one [P3 VerificationTask](examples/p2c-shaw2018/ver
 
 ## Regression boundary
 
-Local final-tree verification passed the complete P1/P2-A/P2-B/P2-C backend suite (**139 passed, 2 skipped**), unchanged frontend build, and **5/5** existing Playwright PDF-reader/review regressions. The new CI workflow repeats them on GitHub. Its run URL and final counts are reported in the PR after completion.
+Local final-tree verification passed the complete P1/P2-A/P2-B/P2-C backend suite (**145 passed, 2 skipped**), the unchanged frontend build, and **5/5** existing Playwright PDF-reader/review regressions. The P2-C CI workflow repeats these checks on GitHub; the run link is reported in PR #4 after completion.

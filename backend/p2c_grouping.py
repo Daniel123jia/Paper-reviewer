@@ -3,6 +3,7 @@
 import hashlib
 import itertools
 import json
+import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,7 +19,7 @@ from backend.review import parse_model_json
 
 PROMPTS = Path(__file__).with_name("prompts") / "p2c"
 PAIR_VERSION = "candidate-semantic-grouping/v1"
-RECONCILE_VERSION = "candidate-group-reconciliation/v1"
+RECONCILE_VERSION = "candidate-group-reconciliation/v2"
 DUPLICATE_KINDS = {"exact_duplicate", "semantic_duplicate"}
 
 
@@ -58,6 +59,26 @@ def _unique(values):
 def _source_union(refs):
     return [CandidateSourceRef(source_id=source_id, evidence_role=role)
             for source_id, role in dict.fromkeys((ref.source_id, ref.evidence_role) for ref in refs)]
+
+
+def _central_question(candidates, proposed):
+    original_questions = _unique(question for item in candidates
+                                 for question in item.verification_questions)
+    if len(candidates) == 1:
+        return original_questions[0], True
+    question = proposed.get("central_question")
+    source = " ".join(str(value) for item in candidates for value in (
+        item.title, item.observed_fact, item.suspected_problem, item.why_it_matters,
+        *item.verification_questions))
+    entities = re.findall(r"\b(?:\d+(?:[.,]\d+)*|[A-Z]{2,}[A-Za-z0-9]*)\b",
+                          question if isinstance(question, str) else "")
+    grounded = (isinstance(question, str) and len(question.strip()) >= 15 and
+                question.strip().endswith(("?", "？")) and
+                question not in original_questions and
+                all(entity.casefold() in source.casefold() for entity in entities))
+    if grounded:
+        return question.strip(), True
+    return " / ".join(original_questions), False
 
 
 def _pair_index(inventory, relations):
@@ -107,6 +128,7 @@ def consolidate_from_relations(inventory: OriginalCandidateInventory,
         split = _split_into_cliques(proposal["issue_ids"], pair_index)
         for members in split:
             candidates = [original[issue_id] for issue_id in members]
+            central_question, _ = _central_question(candidates, proposal if len(split) == 1 else {})
             identifier = hashlib.sha256((inventory.document_id + "|" +
                 inventory.professional_review_run_id + "|" + "|".join(members)).encode()).hexdigest()[:20]
             consolidated_id = f"consolidated_{identifier}"
@@ -117,7 +139,7 @@ def consolidate_from_relations(inventory: OriginalCandidateInventory,
             issue = ConsolidatedIssue(
                 consolidated_issue_id=consolidated_id,
                 title=candidates[0].title,
-                central_question=candidates[0].verification_questions[0],
+                central_question=central_question,
                 observed_facts=_unique(item.observed_fact for item in candidates),
                 suspected_problem=" / ".join(_unique(item.suspected_problem for item in candidates)),
                 scientific_significance=" / ".join(_unique(item.why_it_matters for item in candidates)),
@@ -162,9 +184,10 @@ def _validated_group_reply(raw, ids):
     if not isinstance(raw, dict) or set(raw) != {"groups"} or not isinstance(raw["groups"], list):
         raise ValueError("reconciliation reply requires groups")
     groups = raw["groups"]
-    if any(not isinstance(group, dict) or set(group) != {"issue_ids", "rationale"} or
+    if any(not isinstance(group, dict) or set(group) != {"issue_ids", "rationale", "central_question"} or
            not isinstance(group["issue_ids"], list) or not group["issue_ids"] or
-           not isinstance(group["rationale"], str) or not group["rationale"].strip()
+           not isinstance(group["rationale"], str) or not group["rationale"].strip() or
+           not isinstance(group["central_question"], str) or not group["central_question"].strip()
            for group in groups):
         raise ValueError("invalid reconciliation group")
     listed = [item for group in groups for item in group["issue_ids"]]
@@ -182,7 +205,7 @@ def run_semantic_grouping(inventory: OriginalCandidateInventory, mapping: ClaimE
     budget = budget or RunBudget(max_calls=16, max_input_tokens=200000,
                                  max_output_tokens=50000, max_duration_ms=1800000)
     pair_prompt = (PROMPTS / "candidate-semantic-grouping.v1.txt").read_text(encoding="utf-8")
-    reconciliation_prompt = (PROMPTS / "candidate-group-reconciliation.v1.txt").read_text(encoding="utf-8")
+    reconciliation_prompt = (PROMPTS / "candidate-group-reconciliation.v2.txt").read_text(encoding="utf-8")
     ids = sorted(item.issue_id for item in inventory.candidates)
     all_pairs = list(itertools.combinations(ids, 2))
     catalog = {item.issue_id: item.model_dump() for item in inventory.candidates}
@@ -260,6 +283,11 @@ def run_semantic_grouping(inventory: OriginalCandidateInventory, mapping: ClaimE
             incomplete.append("reconciliation:unresolved")
             proposed = suggested
         issues, lineage = consolidate_from_relations(inventory, mapping, relations, proposed)
+        originals = {item.issue_id: item for item in inventory.candidates}
+        if any(len(group["issue_ids"]) > 1 and not _central_question(
+                [originals[issue_id] for issue_id in group["issue_ids"]], group)[1]
+                for group in proposed):
+            incomplete.append("central_question:unresolved")
         if len(issues) > len(proposed):
             incomplete.append("reconciliation:global_consistency_split")
     else:

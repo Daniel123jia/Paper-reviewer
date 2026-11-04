@@ -26,3 +26,7 @@ def test_public_result_preserves_p2b_candidates_and_evidence_mapping(paper):
     assert all(ref.source_id in source_mapping for issue in result.consolidated_issues
                for ref in issue.original_source_refs + issue.counterevidence_refs)
     assert len(result.verification_tasks) == len(result.consolidated_issues)
+    assert all(task.central_question == next(issue.central_question for issue in result.consolidated_issues
+               if issue.consolidated_issue_id == task.consolidated_issue_id)
+               for task in result.verification_tasks)
+    assert all(issue.verification_status == "unverified" for issue in result.consolidated_issues)

@@ -2,7 +2,7 @@
   {
     "verification_task_id": "verify_1763c10f94e264329e44",
     "consolidated_issue_id": "consolidated_8103558cbdda88bc3c6c",
-    "central_question": "Which comparator, dataset, model configuration, and timing calculation produce the stated 15,000-fold speedup?",
+    "central_question": "Do the original classification timing tables, speedup calculations, and baseline training schedules support the headline speed advantages as complete-training comparisons at the reported accuracies, or only as per-epoch comparisons under the disclosed hardware, thread counts, and implementations?",
     "related_claim_ids": [
       "claim_b1536496726f40f8",
       "claim_4ee5d311407a9fdc",
@@ -274,7 +274,7 @@
   {
     "verification_task_id": "verify_c7495f27de04117960b1",
     "consolidated_issue_id": "consolidated_1a30bff6ccc7941967da",
-    "central_question": "Does the complete paper evaluate averaged word2vec features against the learned fastText features under a controlled downstream classifier?",
+    "central_question": "Does the complete paper and the cited word2vec literature support the conclusion's contrast between averaged fastText features and averaged unsupervised word2vec vectors, through matched comparisons accounting for supervision, classifier, and n-gram features, and is the claim limited to the evaluated supervised tasks or supported for broader sentence-representation reuse?",
     "related_claim_ids": [
       "claim_c65e802567c3ff8f",
       "claim_8860fc3be607ecff",

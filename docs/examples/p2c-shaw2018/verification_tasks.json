@@ -2,7 +2,7 @@
   {
     "verification_task_id": "verify_de54fcc35ed02354a988",
     "consolidated_issue_id": "consolidated_9825c343099d3753e676",
-    "central_question": "Were the absolute-position and relative-position runs paired with exactly the same number of updates, random seeds, checkpoint selection, and decoding settings?",
+    "central_question": "Were each absolute-position baseline and its corresponding relative-position model trained, selected, decoded, and evaluated under matched conditions so that the reported BLEU differences can be attributed to the position representations?",
     "related_claim_ids": [
       "claim_36dd8fff5585d58b",
       "claim_e782a3ffa36482eb",
@@ -117,7 +117,7 @@
   {
     "verification_task_id": "verify_cfd16bf8c8b4d05c632f",
     "consolidated_issue_id": "consolidated_105a91210515bf8f5b82",
-    "central_question": "Does the full paper report peak memory, wall-clock time, inference throughput, or scaling measurements for the relative-position implementation?",
+    "central_question": "What baseline and measurement scope underlie the reported 7% decrease in steps per second, and do matched runtime, memory, and scaling measurements substantiate the claimed practical efficiency of the relative-position implementation?",
     "related_claim_ids": [
       "claim_8059f7518ddd3306",
       "claim_82ee884e768cdb0f",
@@ -318,7 +318,7 @@
   {
     "verification_task_id": "verify_9ecbab2d89ac51599b54",
     "consolidated_issue_id": "consolidated_e3eac49834cebb136759",
-    "central_question": "Does another supplied or omitted experiment evaluate test sequences longer than those seen during training?",
+    "central_question": "Does the claim that clipping enables generalization to unseen sequence lengths refer to representations remaining defined or to maintained predictive performance, and does the complete paper provide training-length limits and evaluation outside those limits to support the latter interpretation?",
     "related_claim_ids": [
       "claim_1aee059429f33dca",
       "claim_086b9f570ac28264",

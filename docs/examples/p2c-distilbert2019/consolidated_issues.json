@@ -2,7 +2,7 @@
   {
     "consolidated_issue_id": "consolidated_c9750ce2c32914386e93",
     "title": "The effective triple objective requires verification beyond the supplied high-level loss description",
-    "central_question": "Do the original PDF and experiment-specific code specify the loss coefficients, training temperature, reductions, and any temperature-dependent scaling?",
+    "central_question": "Do the original source and experiment-specific code and configurations uniquely specify the reported triple objective, including loss coefficients, training temperature and scaling, contributing token positions, hidden-state pairing, reductions, and coefficient handling in the ablations?",
     "observed_facts": [
       "The supplied method text defines the final objective as a linear combination of teacher-distribution distillation, masked language modeling, and cosine embedding losses. It describes cosine alignment of teacher and student hidden-state directions and a shared training temperature, but these units do not give the combination coefficients, numerical temperature, token positions included in each loss, or the hidden-state pairing used for cosine alignment. The student has half the teacher's layers and shares its dimensionality.",
       "The authors describe a linear combination of distillation, masked language modeling, and cosine embedding losses. They specify that teacher and student share a training temperature and use temperature one at inference. The supplied description does not give numerical mixture weights or training temperature, identify the hidden-state layers used for cosine alignment, or state which token positions contribute to the distillation and cosine terms. The student has half as many layers as the teacher and is initialized from alternating teacher layers."
@@ -89,13 +89,13 @@
     },
     "potential_impact": "undetermined",
     "impact_rationale": "Original impact assessments differ; P3 must assess severity",
-    "consolidation_rationale": "Both ask whether the implemented triple objective is uniquely specified. The same checks of the original description and experiment-specific configuration resolve loss weights, temperature and scaling, token selection, hidden-state pairing, reductions, and coefficient handling in ablations. Their differing external-verification requirements and impact labels remain unresolved candidate metadata.",
+    "consolidation_rationale": "Both question whether the implemented triple objective can be reconstructed from the source and experiment-specific configurations. They require the same checks of loss coefficients, temperature, token selection, hidden-state pairing, reductions, and ablation scaling; their external-verification labels differ but do not change this shared question.",
     "verification_status": "unverified"
   },
   {
     "consolidated_issue_id": "consolidated_2fc7365d65828d021acd",
     "title": "SQuAD adaptation-distillation results require reconciliation before interpreting the improvement",
-    "central_question": "What values and metric order does the original PDF show for DistilBERT (D)?",
+    "central_question": "What EM and F1 scores do the original prose and Table 2 report for DistilBERT with adaptation-stage distillation under the same evaluation configuration, and do the reconciled scores support the reported improvement over DistilBERT and the 'within three points' gap to BERT?",
     "observed_facts": [
       "The prose describes two successive distillation stages and reports 79.8 F1 and 70.4 EM, calling these results within three points of the full model. The incomplete Table 2 extraction associates DistilBERT (D) with 79.1/86.9 under an EM/F1 header, and its caption defines D as a second distillation step during fine-tuning.",
       "The continuation of the SQuAD adaptation discussion reports two successive distillation stages and gives 79.8 F1 and 70.4 EM, described as within three points of the full model. The extracted Table 2 caption identifies SQuAD results as development-set EM/F1 and marks D as a second distillation step during fine-tuning. Its unverified numerical extraction lists DistilBERT (D) as 79.1/86.9 and BERT-base as 81.2/88.5."
@@ -167,13 +167,13 @@
     },
     "potential_impact": "undetermined",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "Both concern the same apparent conflict between SQuAD adaptation-distillation scores in prose and Table 2. Checking the original values, metric order, evaluation configuration, and full-model baseline would resolve both, subject to their extraction limitations.",
+    "consolidation_rationale": "Both identify the same apparent conflict between the SQuAD adaptation-distillation scores in the prose and Table 2. Checking the original values, metric ordering, evaluation configurations, and full-model baseline would resolve both.",
     "verification_status": "unverified"
   },
   {
     "consolidated_issue_id": "consolidated_74d31eae282a7e352cfb",
     "title": "Lower pretraining cost is supported by a comparison with a different training setup",
-    "central_question": "What cost boundary do the authors intend: incremental student distillation given an available teacher, or total teacher-plus-student pretraining?",
+    "central_question": "Does the reported training-resource evidence support the lower-pretraining-cost claim under an explicit accounting boundary for teacher pretraining and teacher computation, with a relevant comparison controlling data exposure and target performance?",
     "observed_facts": [
       "The abstract calls DistilBERT cheaper to pretrain, and the introduction claims a smaller computational training budget than larger counterparts. The supplied compute paragraph reports approximately 90 hours on eight 16GB V100 GPUs for DistilBERT and compares this with one day on 1,024 32GB V100 GPUs for RoBERTa. The method also initializes the student from pretrained teacher layers and uses teacher distributions and hidden states during training.",
       "The authors state that DistilBERT requires a smaller computational training budget. They report training on eight 16 GB V100 GPUs for approximately 90 hours, followed by a contextual comparison with RoBERTa training for one day on 1,024 32 GB V100 GPUs. The student also uses pretrained teacher weights and teacher-derived training signals."
@@ -251,13 +251,13 @@
     },
     "potential_impact": "undetermined",
     "impact_rationale": "Original impact assessments differ; P3 must assess severity",
-    "consolidation_rationale": "Both question whether the reported training-resource comparison supports the pretraining-cost claim. They require substantially the same verification of workload comparability, the relevant baseline, teacher computation included in student runtime, and incremental versus total teacher-plus-student cost boundaries.",
+    "consolidation_rationale": "Both question whether the reported training resources support the broader lower-pretraining-cost claim. They require the same clarification of teacher-cost accounting, runtime coverage, and comparability of training workloads and performance targets.",
     "verification_status": "unverified"
   },
   {
     "consolidated_issue_id": "consolidated_8e8e2b5dcfc41219ae35",
     "title": "Single-component ablations may not establish the joint contribution of additional distillation signals",
-    "central_question": "Does the original Table 4 confirm the extracted single-component-removal configurations, and are additional relevant comparisons provided elsewhere?",
+    "central_question": "Does Table 4 or other available material compare the full objective with an otherwise matched, teacher-initialized student trained with masked language modeling alone, removing both distillation losses, and thereby establish their combined contribution rather than only conditional component benefits?",
     "observed_facts": [
       "The ablation caption identifies the reference as a model trained with the triple loss and teacher-weight initialization. The extracted rows describe removing each loss separately and replacing teacher initialization with random initialization. The accompanying prose says that removing masked language modeling has little impact and that the two distillation losses account for a large portion of performance. The discussion also attributes substantial gains to teacher initialization and additional losses.",
       "The objective combines Lce, Lcos, and Lmlm. Table 4 is described as comparing individual loss removals and random initialization against the full triple loss with teacher-weight initialization. The prose interprets these ablations as evidence that the two distillation losses account for a large portion of performance and that additional pretraining distillation signals are beneficial."
@@ -353,7 +353,7 @@
     },
     "potential_impact": "undetermined",
     "impact_rationale": "Original impact assessments differ; P3 must assess severity",
-    "consolidation_rationale": "Both ask whether single-component ablations establish the combined contribution of the two distillation losses over a matched, teacher-initialized MLM-only student. The same experiment inventory, joint-removal control, matching checks, and attribution-language review would resolve both.",
+    "consolidation_rationale": "Both ask whether single-component ablations isolate the combined performance contribution of the two distillation losses beyond teacher initialization and masked language modeling. The same verified ablation inventory and matched MLM-only control would address both.",
     "verification_status": "unverified"
   },
   {
@@ -427,7 +427,7 @@
     },
     "potential_impact": "minor_candidate",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "This separately questions whether the aggregate GLUE score ratio supports the broad 97% capability-retention wording. Verification requires checking aggregation, task-level degradation, and the surrounding claim scope.",
+    "consolidation_rationale": "This concerns the interpretation of the GLUE aggregate ratio and the scope of the capability-retention headline. It remains separate from experiment reproducibility, mechanism attribution, and other reported results.",
     "verification_status": "unverified"
   },
   {
@@ -502,7 +502,7 @@
     },
     "potential_impact": "minor_candidate",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "This separately asks whether the comparative wording about pretraining versus task-specific distillation is supported by a matched comparison between stages. Joint-loss controls and reconciliation of SQuAD scores would not answer that question.",
+    "consolidation_rationale": "This asks whether comparisons between distillation stages support the related-work wording. Joint-loss ablations require different controls, and the broader attribution candidate includes an additional independent verification need.",
     "verification_status": "unverified"
   },
   {
@@ -570,7 +570,7 @@
     },
     "potential_impact": "undetermined",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "This concerns reproducibility and comparability of CPU and mobile inference timing. Its workload, runtime, precision, threading, and timing-boundary checks are separate from training-cost accounting and training-procedure reproducibility.",
+    "consolidation_rationale": "This concerns CPU and mobile inference timing workloads and runtime settings. Training-cost accounting and training or accuracy reproducibility cannot resolve this measurement question.",
     "verification_status": "unverified"
   },
   {
@@ -649,7 +649,7 @@
     },
     "potential_impact": "major_candidate",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "This concerns whether pretraining exposure, optimization, preprocessing, downstream fine-tuning, and checkpoint selection are sufficiently specified to reproduce the reported experiments. Those checks remain separate from objective specification and the existence of causal comparison controls.",
+    "consolidation_rationale": "This concerns reconstructing pretraining exposure, optimization, preprocessing, and downstream evaluation. It remains distinct from defining the objective and determining whether the experimental controls support causal attribution.",
     "verification_status": "unverified"
   },
   {
@@ -741,7 +741,7 @@
     },
     "potential_impact": "undetermined",
     "impact_rationale": "Original candidates agree; severity remains unverified",
-    "consolidation_rationale": "This candidate combines joint attribution of distillation losses with comparative scope across distillation stages. Pairwise evidence marks it related but distinct from each narrower candidate: verifying a matched MLM-only control would leave the stage comparison unresolved, and verifying the stage comparison would leave joint-loss attribution unresolved. It therefore remains separate as an intact original candidate.",
+    "consolidation_rationale": "This candidate combines joint-loss attribution with comparisons between pretraining and task-specific distillation. Pairwise evidence identifies only partial overlap with the narrower candidates, so neither verification alone would resolve its full concern.",
     "verification_status": "unverified"
   }
 ]

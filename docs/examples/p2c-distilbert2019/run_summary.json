@@ -6,15 +6,15 @@
   "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
   "understanding_run_id": "18e72bb44b124089a0b0a2d74f85d80c",
   "professional_review_run_id": "1146246578504a7b99666a4c690a02de",
-  "consolidation_run_id": "98a29d954013492d9f5c1b2ae1c371bd",
+  "consolidation_run_id": "6890db04f76a43598942e2a1f0576276",
   "execution_status": "limited",
   "original_candidate_count": 13,
   "consolidated_issue_count": 9,
   "relation_counts": {
-    "exact_duplicate": 2,
-    "distinct": 45,
-    "related_but_distinct": 29,
-    "semantic_duplicate": 2
+    "semantic_duplicate": 3,
+    "distinct": 46,
+    "related_but_distinct": 28,
+    "exact_duplicate": 1
   },
   "group_sizes": [
     2,
@@ -28,6 +28,7 @@
     1
   ],
   "coverage_gap_types": {
+    "focus_not_inspected": 18,
     "source_quality": 17,
     "claim_not_inspected": 4,
     "required_material_missing": 1,
@@ -35,11 +36,11 @@
   },
   "verification_task_count": 9,
   "call_count": 5,
-  "input_tokens": 70982,
-  "output_tokens": 8329,
+  "input_tokens": 70882,
+  "output_tokens": 8354,
   "unknown_token_calls": 0,
   "retry_count": 0,
-  "duration_ms": 186810,
+  "duration_ms": 181589,
   "incomplete_items": [
     "D1:limited",
     "D2:limited",
@@ -51,7 +52,7 @@
   ],
   "prompt_versions": [
     "candidate-semantic-grouping/v1",
-    "candidate-group-reconciliation/v1"
+    "candidate-group-reconciliation/v2"
   ],
   "model_identifier": "gpt-6.1-sol"
 }

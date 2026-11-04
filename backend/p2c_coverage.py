@@ -1,6 +1,7 @@
 """Audit reported P2-B inspection and frozen-source limits without creating new issues."""
 
 import hashlib
+import re
 
 from backend.p2a_schema import source_reference_index
 from backend.p2b_dimensions import DIMENSIONS, configuration
@@ -10,6 +11,19 @@ from backend.p2c_schema import (ClaimCoverage, ContributionCoverage, CoverageAud
 
 def _unique(values):
     return list(dict.fromkeys(values))
+
+
+def _focus_explicitly_reported(name, reported_focus):
+    """Only an explicit focus label in P2-B free text supports a focus-level claim."""
+    phrase = re.sub(r"\s+", " ", name.casefold()).strip()
+    for item in reported_focus:
+        text = re.sub(r"\s+", " ", item.casefold())
+        if re.search(r"\b(?:not|without|unable|cannot|failed|unverified|missing)\b|未|没有|无法",
+                     text):
+            continue
+        if re.search(r"(?<!\w)" + re.escape(phrase) + r"(?!\w)", text):
+            return True
+    return False
 
 
 def _gap(bundle, gap_type, description, cause, next_action, dimensions=(), claims=(),
@@ -64,6 +78,12 @@ def audit_coverage(bundle, plan, profile, mapping, review, inventory) -> Coverag
                 gaps.append(_gap(bundle, "focus_not_inspected",
                     f"{dimension.dimension_id} focus not reported: {name}",
                     "dimension_unfinished", "Inspect this applicable focus",
+                    dimensions=[dimension.dimension_id], limitations=dimension.limitations))
+            elif not _focus_explicitly_reported(name, dimension.inspection_focus):
+                status, explanation = "mapping_uncertain", "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+                gaps.append(_gap(bundle, "focus_not_inspected",
+                    f"{dimension.dimension_id} focus lacks a reliable report mapping: {name}",
+                    "free_text_mapping_uncertain", "Check whether this specific focus was inspected",
                     dimensions=[dimension.dimension_id], limitations=dimension.limitations))
             elif dimension.coverage_status == "sufficient":
                 status, explanation = "reported_inspected", "Model reported inspection; not independently verified"
