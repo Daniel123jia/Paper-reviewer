@@ -1,6 +1,23 @@
 # P2-A real-model evaluation
 
-This is an engineering and manual academic check of N1–N3. It does not certify scientific-review quality. All runs use public PDFs and the existing model interface. The three prompt templates contain no paper-specific expected answers. DistilBERT was held out from prompt adjustment.
+## P2-A.1 independent-review repair results
+
+The final public-paper structured outputs are [Shaw ReviewPlan](examples/p2a-shaw2018/review_plan.json), [Shaw PaperProfile](examples/p2a-shaw2018/paper_profile.json), [Shaw ClaimEvidenceMap](examples/p2a-shaw2018/claim_evidence_map.json), [DistilBERT ReviewPlan](examples/p2a-distilbert2019/review_plan.json), [DistilBERT PaperProfile](examples/p2a-distilbert2019/paper_profile.json), and [DistilBERT ClaimEvidenceMap](examples/p2a-distilbert2019/claim_evidence_map.json). The complete [before/after contribution lists and manual grouping notes](p2a1-contribution-comparison.md) are separate. Each result was revalidated against its private Source Bundle snapshot before copying; no raw request, raw response, credential, PDF or local diagnostic trace is committed.
+
+| Public paper | Baseline calls / failed | P2-A.1 first completed calls / failed | Final deterministic replay calls / failed | Baseline known input / output tokens | Final known input / output tokens | Baseline provider time | Final provider-equivalent time |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Shaw 2018 | 20 / 5 | 14 / 1 | 13 / 0 | 131,279 / 26,529 | 124,358 / 20,256 | 935,134 ms | 534,781 ms |
+| DistilBERT 2019 | 16 / 4 | 12 / 1 | 11 / 0 | 99,587 / 27,406 | 100,655 / 19,456 | 1,110,372 ms | 517,946 ms |
+
+The final runs replayed exact successful prior model calls from the private cache after the last deterministic title fix. “Provider-equivalent time” sums the original recorded provider duration of each replayed real response and the actual duration of new calls; it is an estimate of the calls in the final path, **not** the short wall time of a cached replay or a fresh full-run benchmark. The first P2-A.1 completed trials contained six Shaw and five DistilBERT replays, with new consistency, mapping and normalizer calls made to the model. Their failed attempts and unknown token usage remain explicit in private traces. Reported token totals cover completed calls only; failed-call token counts are unknown and budgeted conservatively. DistilBERT input tokens rose slightly because the new consistency pass compares source excerpts.
+
+N2 and N3 still cover all 167 Shaw and all 107 DistilBERT reading units. Final global maps contain three contribution groups for each paper, with 31 Shaw and 29 DistilBERT claims. Shaw retains distinct method, relation-aware interpretation and translation-result themes. DistilBERT retains method, empirical/device results, and component/ablation themes. The two resource-release statements remain in PaperProfile but are excluded from the core contribution map. Counts are observed results, not a programmed target. Model-assisted grouping can still make a semantic mistake; the third DistilBERT group is broad and needs human review.
+
+The final DistilBERT PaperProfile contains one `unresolved_source_conflict`: page-3 Table 2's DistilBERT (D) 79.1 EM / 86.9 F1 is linked to `ru_ev_738e0f5c48b8_2_8`, and the later prose's 70.4 EM / 79.8 F1 to `ru_ev_738e0f5c48b8_3_3`. Both references resolve to the same PDF snapshot and original Evidence IDs. The recorded question is whether the two statements use identical evaluation conditions. This is a verification lead, not an author-error finding. The Shaw consistency pass found no comparable same-configuration difference. Mock regressions also verify that different model/configuration values stay separate.
+
+## Original P2-A baseline record
+
+The following record describes the original runs before P2-A.1. This is an engineering and manual academic check of N1–N3, not a certification of scientific-review quality. All runs use public PDFs and the existing model interface. The prompts contain no paper-specific expected answers. DistilBERT was held out from prompt adjustment.
 
 ## Reproducibility and privacy
 
@@ -52,7 +69,7 @@ N1 correctly identifies model compression through pre-training distillation. N2 
 
 One discrepancy deserves explicit follow-up: the paper's page-3 Table 2 gives the two-step distilled SQuAD result as 79.1 EM / 86.9 F1, while page-4 prose gives 70.4 EM / 79.8 F1. The profile reports the prose numbers with a source reference but does not surface this table/prose conflict. This is a known limitation of P2-A understanding, compounded by P1's unverified table structure. It is a manual observation here, not a generated review finding or a reason to silently alter the model output. The PDF's Table 3 caption also calls STS-B “sentiment analysis”; the profile attributes that wording to the caption rather than presenting it as an independently verified task definition.
 
-## Remaining risks for ChatGPT review
+## Baseline risks that prompted P2-A.1
 
 1. N3 produces duplicate or overly granular contribution/claim objects; P2-B should not treat raw object count as scientific quality.
 2. N2 did not flag the held-out paper's Table 2/prose SQuAD discrepancy. Downstream evidence verification must compare structured tables with nearby narrative, after the table structure is checked against the PDF.

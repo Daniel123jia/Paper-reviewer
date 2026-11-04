@@ -1,0 +1,1021 @@
+{
+  "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+  "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+  "review_run_id": "f1ea24fe281847428ed7f12eb9cc4055",
+  "prompt_version": "contribution-evidence-mapper/v2",
+  "schema_version": "1.1",
+  "model_identifier": "gpt-6.1-sol",
+  "input_coverage": {
+    "total_unit_count": 107,
+    "included_unit_count": 107,
+    "excluded_unit_ids": [],
+    "source_quality_status": "needs_review",
+    "limitations": [
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "human_reading_reference_missing",
+      "human_page_reference_missing"
+    ]
+  },
+  "execution_status": "limited",
+  "contributions": [
+    {
+      "id": "contrib_1566dbcdab589253",
+      "title": "A general-purpose compressed language representation model obtained through distillation during pretraining, with a triple loss designed to transfer the larger model's learned inductive biases.",
+      "description": "A general-purpose compressed language representation model obtained through distillation during pretraining, with a triple loss designed to transfer the larger model's learned inductive biases.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_0_5",
+        "ru_ev_738e0f5c48b8_1_1",
+        "ru_ev_738e0f5c48b8_1_9",
+        "ru_ev_738e0f5c48b8_1_11",
+        "ru_ev_738e0f5c48b8_1_12",
+        "ru_ev_738e0f5c48b8_2_9",
+        "ru_ev_738e0f5c48b8_2_10",
+        "ru_ev_738e0f5c48b8_3_0",
+        "ru_ev_738e0f5c48b8_3_10",
+        "ru_ev_738e0f5c48b8_4_1"
+      ]
+    },
+    {
+      "id": "contrib_a69a0c1a4bacd980",
+      "title": "Evidence of downstream utility, reduced model size and inference cost, and feasibility of on-device computation.",
+      "description": "Evidence of downstream utility, reduced model size and inference cost, and feasibility of on-device computation.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_0_5",
+        "ru_ev_738e0f5c48b8_1_0",
+        "ru_ev_738e0f5c48b8_4_1",
+        "ru_ev_738e0f5c48b8_1_1",
+        "ru_ev_738e0f5c48b8_2_13",
+        "ru_ev_738e0f5c48b8_2_16",
+        "ru_ev_738e0f5c48b8_3_3",
+        "ru_ev_738e0f5c48b8_3_5",
+        "ru_ev_738e0f5c48b8_3_6"
+      ]
+    },
+    {
+      "id": "contrib_0d14ae76d74073bd",
+      "title": "They claim to demonstrate successful general-purpose language model training through distillation, analyze training components through ablations, and demonstrate applicability to edge deployment.",
+      "description": "They claim to demonstrate successful general-purpose language model training through distillation, analyze training components through ablations, and demonstrate applicability to edge deployment.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_4_1",
+        "ru_ev_738e0f5c48b8_3_0",
+        "ru_ev_738e0f5c48b8_3_1",
+        "ru_ev_738e0f5c48b8_3_2",
+        "ru_ev_738e0f5c48b8_3_8",
+        "ru_ev_738e0f5c48b8_3_11"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim_5781794966696eaf",
+      "contribution_id": "contrib_1566dbcdab589253",
+      "statement": "A general-purpose pretrained language model can be successfully trained through distillation.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_0_5",
+        "ru_ev_738e0f5c48b8_1_0",
+        "ru_ev_738e0f5c48b8_4_1"
+      ]
+    },
+    {
+      "id": "claim_f2c2895cdf0b221c",
+      "contribution_id": "contrib_1566dbcdab589253",
+      "statement": "The training objective linearly combines teacher-distribution distillation, supervised masked language modeling, and a cosine embedding loss intended to align the directions of student and teacher hidden-state vectors.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_1_9"
+      ]
+    },
+    {
+      "id": "claim_566105bda60abf77",
+      "contribution_id": "contrib_1566dbcdab589253",
+      "statement": "The distillation component trains the student using the teacher's soft target probabilities and full output distribution.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_1_6",
+        "ru_ev_738e0f5c48b8_1_7"
+      ]
+    },
+    {
+      "id": "claim_9779f33f9c0b1f16",
+      "contribution_id": "contrib_1566dbcdab589253",
+      "statement": "Teacher and student use the same softmax temperature during training, and the temperature is set to 1 at inference.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_1_8"
+      ]
+    },
+    {
+      "id": "claim_1d8dfeb2d48d9d90",
+      "contribution_id": "contrib_1566dbcdab589253",
+      "statement": "DistilBERT retains BERT's general architecture while removing token-type embeddings and the pooler and reducing the number of layers by a factor of two.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_1_11"
+      ]
+    },
+    {
+      "id": "claim_f39a4b699e96c9c0",
+      "contribution_id": "contrib_1566dbcdab589253",
+      "statement": "The authors report that, at a fixed parameter budget, varying hidden size affects computational efficiency less than varying factors such as the number of layers, motivating their reduction in layer count.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_1_11"
+      ]
+    },
+    {
+      "id": "claim_fd8c95be2c48e6c3",
+      "contribution_id": "contrib_1566dbcdab589253",
+      "statement": "The authors report that ablation studies indicate all three components of the triple loss are important for achieving the best performance.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_1_1"
+      ]
+    },
+    {
+      "id": "claim_a988d37de6a98ee4",
+      "contribution_id": "contrib_a69a0c1a4bacd980",
+      "statement": "DistilBERT is reported to be 40% smaller than BERT.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_0_5",
+        "ru_ev_738e0f5c48b8_1_1",
+        "ru_ev_738e0f5c48b8_4_1"
+      ]
+    },
+    {
+      "id": "claim_611de9ef8d44ac80",
+      "contribution_id": "contrib_a69a0c1a4bacd980",
+      "statement": "DistilBERT is reported to retain 97% of BERT's language understanding capabilities.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_0_5",
+        "ru_ev_738e0f5c48b8_4_1"
+      ]
+    },
+    {
+      "id": "claim_283486190c3131ec",
+      "contribution_id": "contrib_a69a0c1a4bacd980",
+      "statement": "DistilBERT is reported to be 60% faster than BERT.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_0_5",
+        "ru_ev_738e0f5c48b8_1_1",
+        "ru_ev_738e0f5c48b8_4_1"
+      ]
+    },
+    {
+      "id": "claim_a793d18032424034",
+      "contribution_id": "contrib_a69a0c1a4bacd980",
+      "statement": "The authors report that the compressed pretrained model can be fine-tuned to achieve performance similar to larger models across several downstream tasks.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_1_0",
+        "ru_ev_738e0f5c48b8_1_1"
+      ]
+    },
+    {
+      "id": "claim_63e2eafc9e7d920b",
+      "contribution_id": "contrib_a69a0c1a4bacd980",
+      "statement": "The authors report that the compressed model requires a smaller computational training budget and is cheaper to pretrain.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_0_5",
+        "ru_ev_738e0f5c48b8_1_0"
+      ]
+    },
+    {
+      "id": "claim_d1b1f2e3b68097f5",
+      "contribution_id": "contrib_a69a0c1a4bacd980",
+      "statement": "The authors report that their compressed models can run on mobile devices and that on-device capabilities are demonstrated through a proof-of-concept experiment and a comparative on-device study.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_0_5",
+        "ru_ev_738e0f5c48b8_1_0"
+      ]
+    },
+    {
+      "id": "claim_6856c650a32f279f",
+      "contribution_id": "contrib_1566dbcdab589253",
+      "statement": "The student shares the teacher's dimensionality and is initialized by taking one teacher layer out of every two.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_1_12"
+      ]
+    },
+    {
+      "id": "claim_a2b450d58ed1c272",
+      "contribution_id": "contrib_1566dbcdab589253",
+      "statement": "DistilBERT pretraining uses dynamic masking, gradient accumulation with batches of up to 4,000 examples, and no next sentence prediction objective.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_2_9"
+      ]
+    },
+    {
+      "id": "claim_c9ecc7ab08d7f657",
+      "contribution_id": "contrib_1566dbcdab589253",
+      "statement": "DistilBERT was trained on English Wikipedia and Toronto Book Corpus using eight 16 GB V100 GPUs for approximately 90 hours.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_2_10"
+      ]
+    },
+    {
+      "id": "claim_7f94f2c3b02471d1",
+      "contribution_id": "contrib_a69a0c1a4bacd980",
+      "statement": "On the nine GLUE development-set tasks, DistilBERT matches or improves on the ELMo baseline and retains 97% of BERT's performance with 40% fewer parameters.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_2_12",
+        "ru_ev_738e0f5c48b8_2_13",
+        "ru_ev_738e0f5c48b8_2_0",
+        "ru_ev_738e0f5c48b8_2_2"
+      ]
+    },
+    {
+      "id": "claim_6841112de060ce92",
+      "contribution_id": "contrib_a69a0c1a4bacd980",
+      "statement": "On IMDb, DistilBERT is reported to be 0.6 percentage points behind BERT in test accuracy while being 40% smaller.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_2_16",
+        "ru_ev_738e0f5c48b8_2_8"
+      ]
+    },
+    {
+      "id": "claim_ee9962158c6d1fe1",
+      "contribution_id": "contrib_a69a0c1a4bacd980",
+      "statement": "On SQuAD, DistilBERT is reported to be within 3.9 points of full BERT; the prose does not specify the metric for this gap.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_2_16"
+      ]
+    },
+    {
+      "id": "claim_4bfe1aa731526603",
+      "contribution_id": "contrib_a69a0c1a4bacd980",
+      "statement": "An additional distillation step during SQuAD adaptation uses a BERT teacher previously fine-tuned on SQuAD to supply an additional loss term.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_2_17",
+        "ru_ev_738e0f5c48b8_3_3"
+      ]
+    },
+    {
+      "id": "claim_8714842114919bb3",
+      "contribution_id": "contrib_a69a0c1a4bacd980",
+      "statement": "The prose reports that distillation during both pretraining and SQuAD adaptation achieves 79.8 F1 and 70.4 exact match, described as within three points of the full model.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_3_3"
+      ]
+    },
+    {
+      "id": "claim_48ba77f5678ab247",
+      "contribution_id": "contrib_a69a0c1a4bacd980",
+      "statement": "For a full pass over the STS-B development set with batch size 1 on an Intel Xeon E5-2690 v3 at 2.9 GHz, the authors report that DistilBERT has 40% fewer parameters and is 60% faster than BERT.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_3_5",
+        "ru_ev_738e0f5c48b8_2_5",
+        "ru_ev_738e0f5c48b8_2_7"
+      ]
+    },
+    {
+      "id": "claim_ebe71c95d1ed5ebe",
+      "contribution_id": "contrib_a69a0c1a4bacd980",
+      "statement": "In a question answering application on an iPhone 7 Plus, DistilBERT is reported to be 71% faster than the authors' BERT-base question answering model when tokenization is excluded, and the model occupies 207 MB.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_3_6"
+      ]
+    },
+    {
+      "id": "claim_09ff6e1b7fb028b5",
+      "contribution_id": "contrib_0d14ae76d74073bd",
+      "statement": "The ablation study evaluates components of the triple loss and student initialization using GLUE macro-score, reporting changes relative to the full triple loss.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_3_0",
+        "ru_ev_738e0f5c48b8_3_1",
+        "ru_ev_738e0f5c48b8_3_8"
+      ]
+    },
+    {
+      "id": "claim_0a57519d2ef17286",
+      "contribution_id": "contrib_0d14ae76d74073bd",
+      "statement": "The extracted ablation table reports GLUE macro-score changes of -2.96 when Lce is omitted, -1.46 when Lcos is omitted, -0.31 when Lmlm is omitted, and -3.69 when random initialization replaces teacher-weight initialization.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_3_2"
+      ]
+    },
+    {
+      "id": "claim_d28549b138b8a261",
+      "contribution_id": "contrib_1566dbcdab589253",
+      "statement": "The authors report that general-purpose pretraining distillation is beneficial compared with task-specific distillation, and that additional teacher distillation signals benefit pretraining.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_3_10"
+      ]
+    },
+    {
+      "id": "claim_c3cfff9dcf610ba7",
+      "contribution_id": "contrib_0d14ae76d74073bd",
+      "statement": "Removing the masked language modeling loss has little impact on GLUE macro-score, while the two distillation losses account for a large portion of performance.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_3_8"
+      ]
+    },
+    {
+      "id": "claim_2ff45f5c2970edc4",
+      "contribution_id": "contrib_0d14ae76d74073bd",
+      "statement": "Using teacher knowledge through initialization and additional losses yields substantial performance gains in the ablation study.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_3_11"
+      ]
+    },
+    {
+      "id": "claim_3884cb9074ac27d4",
+      "contribution_id": "contrib_0d14ae76d74073bd",
+      "statement": "The authors report demonstrating that DistilBERT is a compelling option for edge applications.",
+      "evidence_ref_ids": [
+        "ru_ev_738e0f5c48b8_4_1"
+      ]
+    }
+  ],
+  "evidence_refs": [
+    {
+      "id": "ru_ev_738e0f5c48b8_0_5",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_0_5",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_0_5"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 0,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_1_1",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_1_1",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_1_1"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_1_9",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_1_9",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_1_9"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_1_11",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_1_11",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_1_11"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_1_12",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_1_12",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_1_12"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_2_9",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_2_9",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_2_9"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_2_10",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_2_10",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_2_10"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_3_0",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_3_0",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_3_0"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_3_10",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_3_10",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_3_10"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_4_1",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_4_1",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_4_1"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 4,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_1_0",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_1_0",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_1_0"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_2_13",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_2_13",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_2_13"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_2_16",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_2_16",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_2_16"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_3_3",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_3_3",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_3_3"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_3_5",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_3_5",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_3_5"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_3_6",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_3_6",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_3_6"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_3_1",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_3_1",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_3_1"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_3_2",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_3_2",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_3_2"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_3_8",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_3_8",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_3_8"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_3_11",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_3_11",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_3_11"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_1_6",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_1_6",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_1_6"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_1_7",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_1_7",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_1_7"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_1_8",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_1_8",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_1_8"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_2_12",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_2_12",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_2_12"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_2_0",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_2_0",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_2_0"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_2_2",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_2_2",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_2_2"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_2_8",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_2_8",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_2_8"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_2_17",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_2_17",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_2_17"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_2_5",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_2_5",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_2_5"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_738e0f5c48b8_2_7",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_738e0f5c48b8_2_7",
+      "evidence_ids": [
+        "ev_738e0f5c48b8_2_7"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "738e0f5c48b84077a25d25fa650b5b00",
+      "source_bundle_id": "sb_a70c78e2b4db_738e0f5c48b84077a25d25fa650b5b00_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    }
+  ],
+  "support_relations": [
+    {
+      "claim_id": "claim_5781794966696eaf",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_0_5",
+      "relation": "direct_source",
+      "explanation": "The abstract explicitly proposes general-purpose DistilBERT, distillation during pretraining, and subsequent fine-tuning across tasks."
+    },
+    {
+      "claim_id": "claim_5781794966696eaf",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_1_0",
+      "relation": "direct_source",
+      "explanation": "The introduction describes general-purpose models pretrained with distillation that retain flexibility for downstream fine-tuning."
+    },
+    {
+      "claim_id": "claim_f2c2895cdf0b221c",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_1_9",
+      "relation": "direct_source",
+      "explanation": "The prose names all three losses, describes their linear combination, and states the intended hidden-state alignment effect."
+    },
+    {
+      "claim_id": "claim_566105bda60abf77",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_1_6",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly states that the student is trained with a distillation loss over teacher soft targets; the fragmented equation is not used to establish an exact formula."
+    },
+    {
+      "claim_id": "claim_566105bda60abf77",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_1_7",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly identifies use of the full teacher distribution as the training signal."
+    },
+    {
+      "claim_id": "claim_9779f33f9c0b1f16",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_1_8",
+      "relation": "direct_source",
+      "explanation": "The text directly specifies a shared training temperature and an inference temperature of 1."
+    },
+    {
+      "claim_id": "claim_1d8dfeb2d48d9d90",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_1_11",
+      "relation": "direct_source",
+      "explanation": "The student architecture paragraph explicitly lists the removed components and halving of layer count."
+    },
+    {
+      "claim_id": "claim_f39a4b699e96c9c0",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_1_11",
+      "relation": "direct_source",
+      "explanation": "The authors explicitly attribute the computational-efficiency comparison to their investigations and use it to motivate reducing layers."
+    },
+    {
+      "claim_id": "claim_fd8c95be2c48e6c3",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_1_1",
+      "relation": "direct_source",
+      "explanation": "The introduction explicitly summarizes the claimed ablation outcome."
+    },
+    {
+      "claim_id": "claim_a988d37de6a98ee4",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_0_5",
+      "relation": "direct_source",
+      "explanation": "The abstract states a 40% reduction in BERT model size."
+    },
+    {
+      "claim_id": "claim_a988d37de6a98ee4",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_1_1",
+      "relation": "direct_source",
+      "explanation": "The introduction describes the distilled Transformer as 40% smaller."
+    },
+    {
+      "claim_id": "claim_611de9ef8d44ac80",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_0_5",
+      "relation": "direct_source",
+      "explanation": "The abstract explicitly states retention of 97% of language understanding capabilities without specifying the underlying aggregation in this unit."
+    },
+    {
+      "claim_id": "claim_283486190c3131ec",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_0_5",
+      "relation": "direct_source",
+      "explanation": "The abstract reports that the model is 60% faster."
+    },
+    {
+      "claim_id": "claim_283486190c3131ec",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_1_1",
+      "relation": "direct_source",
+      "explanation": "The introduction explicitly identifies the reported 60% improvement as inference speed."
+    },
+    {
+      "claim_id": "claim_a793d18032424034",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_1_0",
+      "relation": "direct_source",
+      "explanation": "The text directly claims similar downstream performance and preserved fine-tuning flexibility."
+    },
+    {
+      "claim_id": "claim_a793d18032424034",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_1_1",
+      "relation": "direct_source",
+      "explanation": "The introduction reiterates similar performance across a variety of downstream tasks."
+    },
+    {
+      "claim_id": "claim_63e2eafc9e7d920b",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_0_5",
+      "relation": "direct_source",
+      "explanation": "The abstract explicitly describes the model as cheaper to pretrain."
+    },
+    {
+      "claim_id": "claim_63e2eafc9e7d920b",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_1_0",
+      "relation": "direct_source",
+      "explanation": "The introduction explicitly claims a smaller computational training budget."
+    },
+    {
+      "claim_id": "claim_d1b1f2e3b68097f5",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_0_5",
+      "relation": "direct_source",
+      "explanation": "The abstract states that a proof-of-concept experiment and comparative on-device study demonstrate on-device capabilities."
+    },
+    {
+      "claim_id": "claim_d1b1f2e3b68097f5",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_1_0",
+      "relation": "direct_source",
+      "explanation": "The introduction explicitly says the compressed models are small enough to run on mobile devices."
+    },
+    {
+      "claim_id": "claim_6856c650a32f279f",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_1_12",
+      "relation": "direct_source",
+      "explanation": "The initialization paragraph explicitly states common dimensionality and selection of one teacher layer out of every two."
+    },
+    {
+      "claim_id": "claim_a2b450d58ed1c272",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_2_9",
+      "relation": "direct_source",
+      "explanation": "The prose specifies dynamic masking, gradient accumulation up to 4K examples per batch, and omission of next sentence prediction."
+    },
+    {
+      "claim_id": "claim_c9ecc7ab08d7f657",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_2_10",
+      "relation": "direct_source",
+      "explanation": "The data and compute paragraph names the corpora, GPU configuration, and approximate training duration."
+    },
+    {
+      "claim_id": "claim_7f94f2c3b02471d1",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_2_12",
+      "relation": "direct_source",
+      "explanation": "The evaluation paragraph identifies nine GLUE datasets, development-set evaluation, and separate fine-tuning without ensembling or multitask fine-tuning."
+    },
+    {
+      "claim_id": "claim_7f94f2c3b02471d1",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_2_13",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly reports parity or improvement over ELMo, 97% performance retention, and 40% fewer parameters."
+    },
+    {
+      "claim_id": "claim_7f94f2c3b02471d1",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_2_0",
+      "relation": "unverified",
+      "explanation": "The extracted caption reports 97% retention and medians of five runs, but its associated table remains structurally incomplete."
+    },
+    {
+      "claim_id": "claim_7f94f2c3b02471d1",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_2_2",
+      "relation": "unverified",
+      "explanation": "The extracted model scores provide potential numerical support, but column and row associations have not been structurally verified."
+    },
+    {
+      "claim_id": "claim_6841112de060ce92",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_2_16",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly states the IMDb accuracy gap and size reduction."
+    },
+    {
+      "claim_id": "claim_6841112de060ce92",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_2_8",
+      "relation": "unverified",
+      "explanation": "The extracted downstream results include apparent IMDb accuracies, but the table structure remains unverified."
+    },
+    {
+      "claim_id": "claim_ee9962158c6d1fe1",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_2_16",
+      "relation": "direct_source",
+      "explanation": "The prose reports a SQuAD gap within 3.9 points without naming the metric."
+    },
+    {
+      "claim_id": "claim_4bfe1aa731526603",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_2_17",
+      "relation": "direct_source",
+      "explanation": "The paragraph begins the description of SQuAD adaptation using a previously fine-tuned BERT model."
+    },
+    {
+      "claim_id": "claim_4bfe1aa731526603",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_3_3",
+      "relation": "direct_source",
+      "explanation": "The continuation identifies the model as the teacher for an additional distillation loss and describes two successive distillation stages."
+    },
+    {
+      "claim_id": "claim_8714842114919bb3",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_3_3",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly supplies 79.8 F1, 70.4 EM, and the within-three-points characterization."
+    },
+    {
+      "claim_id": "claim_48ba77f5678ab247",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_3_5",
+      "relation": "direct_source",
+      "explanation": "The paragraph specifies the CPU benchmark conditions and explicitly reports both percentage improvements."
+    },
+    {
+      "claim_id": "claim_48ba77f5678ab247",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_2_5",
+      "relation": "unverified",
+      "explanation": "The extracted efficiency-table header identifies parameter counts and inference time, but the table structure is incomplete."
+    },
+    {
+      "claim_id": "claim_48ba77f5678ab247",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_2_7",
+      "relation": "unverified",
+      "explanation": "The extracted rows appear to report parameter counts and timing values; their table associations remain unverified."
+    },
+    {
+      "claim_id": "claim_ebe71c95d1ed5ebe",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_3_6",
+      "relation": "direct_source",
+      "explanation": "The on-device paragraph identifies the application, device, comparator, timing exclusion, speed improvement, and storage size."
+    },
+    {
+      "claim_id": "claim_09ff6e1b7fb028b5",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_3_0",
+      "relation": "unverified",
+      "explanation": "The extracted caption identifies the reference configuration, but the ablation table remains structurally incomplete."
+    },
+    {
+      "claim_id": "claim_09ff6e1b7fb028b5",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_3_1",
+      "relation": "unverified",
+      "explanation": "The extracted header identifies variation in GLUE macro-score as the measurement; the table has not been structurally verified."
+    },
+    {
+      "claim_id": "claim_0a57519d2ef17286",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_3_2",
+      "relation": "unverified",
+      "explanation": "The loss omissions and numerical changes are read from an incomplete table extraction and require verification of row associations."
+    },
+    {
+      "claim_id": "claim_5781794966696eaf",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_4_1",
+      "relation": "direct_source",
+      "explanation": "The conclusion explicitly states that a general-purpose language model was successfully trained with distillation."
+    },
+    {
+      "claim_id": "claim_d28549b138b8a261",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_3_10",
+      "relation": "direct_source",
+      "explanation": "The related-work discussion explicitly reports benefits from general-purpose pretraining distillation and additional teacher distillation signals."
+    },
+    {
+      "claim_id": "claim_a988d37de6a98ee4",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_4_1",
+      "relation": "direct_source",
+      "explanation": "The conclusion directly reports that DistilBERT is 40% smaller; it does not provide the underlying size measurements."
+    },
+    {
+      "claim_id": "claim_283486190c3131ec",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_4_1",
+      "relation": "direct_source",
+      "explanation": "The conclusion directly reports that DistilBERT is 60% faster; it does not specify timing measurements or test conditions."
+    },
+    {
+      "claim_id": "claim_611de9ef8d44ac80",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_4_1",
+      "relation": "direct_source",
+      "explanation": "The conclusion explicitly reports 97% retention of language understanding capabilities without providing the underlying scores or aggregation."
+    },
+    {
+      "claim_id": "claim_09ff6e1b7fb028b5",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_3_8",
+      "relation": "direct_source",
+      "explanation": "The passage identifies the ablated components, GLUE macro-score, and reporting of deltas relative to the full triple loss."
+    },
+    {
+      "claim_id": "claim_c3cfff9dcf610ba7",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_3_8",
+      "relation": "direct_source",
+      "explanation": "The passage explicitly gives the authors' qualitative interpretation of the loss ablations and refers to Table 4."
+    },
+    {
+      "claim_id": "claim_2ff45f5c2970edc4",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_3_11",
+      "relation": "direct_source",
+      "explanation": "The passage explicitly attributes substantial gains to teacher-based initialization and additional losses, citing the ablation study."
+    },
+    {
+      "claim_id": "claim_3884cb9074ac27d4",
+      "evidence_ref_id": "ru_ev_738e0f5c48b8_4_1",
+      "relation": "direct_source",
+      "explanation": "The conclusion explicitly asserts demonstrated suitability for edge applications."
+    }
+  ],
+  "evidence_gaps": [
+    {
+      "claim_id": "claim_0a57519d2ef17286",
+      "description": "Global evidence exists but requires source verification.",
+      "status": "source_unverified"
+    }
+  ]
+}

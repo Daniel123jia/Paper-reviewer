@@ -25,7 +25,7 @@ from backend.exporter import render_export
 from backend.access import AccessPolicy, COOKIE_NAME, SESSION_SECONDS
 from backend.source_bundle import build_source_bundle
 from backend.parse_quality import assess_parse_quality
-from backend.p2a_engine import P2AError, run_p2a
+from backend.p2a_engine import BudgetExceeded, P2AError, RunBudget, run_p2a
 
 
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
@@ -286,6 +286,8 @@ def create_app(data_dir: Path) -> FastAPI:
         def summarize(items):
             return {"calls": len(items), "input_tokens": sum(row["input_tokens"] or 0 for row in items),
                     "output_tokens": sum(row["output_tokens"] or 0 for row in items),
+                    "unknown_token_calls": sum(row["input_tokens"] is None or row["output_tokens"] is None
+                                               for row in items),
                     "duration_ms": sum(row["duration_ms"] for row in items),
                     "known_cost_usd": round(sum(row["cost_usd"] or 0 for row in items), 8),
                     "unpriced_calls": sum(row["cost_usd"] is None for row in items),
@@ -482,10 +484,19 @@ def create_app(data_dir: Path) -> FastAPI:
 
             run_p2a(
                 bundle, run_id, model_call, model, request.target_journal,
-                request.special_requirements, on_result=persist_result, on_trace=persist_trace)
+                request.special_requirements, on_result=persist_result, on_trace=persist_trace,
+                budget=RunBudget(
+                    max_calls=int(os.environ.get("P2A_MAX_CALLS", "32")),
+                    max_input_tokens=int(os.environ.get("P2A_MAX_INPUT_TOKENS", "300000")),
+                    max_output_tokens=int(os.environ.get("P2A_MAX_OUTPUT_TOKENS", "100000")),
+                    max_duration_ms=int(os.environ.get("P2A_MAX_DURATION_MS", "1800000"))))
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET status = 'completed', "
                            "finished_at = datetime('now') WHERE id = ?", (run_id,))
+        except BudgetExceeded as exc:
+            with connect() as db:
+                db.execute("UPDATE paper_understanding_runs SET status = 'budget_exceeded', error = ?, "
+                           "finished_at = datetime('now') WHERE id = ?", (str(exc), run_id))
         except P2AError as exc:
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET status = 'failed', error = ?, "

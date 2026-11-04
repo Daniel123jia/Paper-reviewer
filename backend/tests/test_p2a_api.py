@@ -1,4 +1,5 @@
 import io
+import json
 import re
 import sqlite3
 from types import SimpleNamespace
@@ -42,7 +43,7 @@ def _pdf():
 def _fake_completion(messages):
     system = messages[0]["content"]
     user = messages[1]["content"]
-    source_id = re.search(r"\[(ru_[^\]]+)\]", user).group(1)
+    source_id = None if "contribution-normalizer/v1" in system else re.search(r"\[(ru_[^\]]+)\]", user).group(1)
     if "paper-type-planner/v1" in system:
         payload = {"paper_type": "AI algorithm research", "research_domain": "AI",
                    "methodological_paradigm": "empirical", "applicable_review_dimensions": ["method"],
@@ -55,6 +56,10 @@ def _fake_completion(messages):
                    "experimental_setup": [], "datasets_and_metrics": [], "main_results": [],
                    "author_claimed_contributions": [], "conclusions": [],
                    "author_stated_limitations": [], "unresolved_source_gaps": ["table not checked"]}
+    elif "contribution-normalizer/v1" in system:
+        data = json.loads(user)
+        payload = {"contribution_groups": [list(range(len(data["contributions"])))],
+                   "claim_groups": [list(range(len(data["claims"])))], "global_support": []}
     else:
         payload = {"contributions": [{"id": "c1", "title": "Component",
                                       "description": "Authors introduce a component",
@@ -64,7 +69,6 @@ def _fake_completion(messages):
                    "support_relations": [{"claim_id": "cl1", "evidence_ref_id": source_id,
                                           "relation": "direct_source", "explanation": "Direct text"}],
                    "evidence_gaps": []}
-    import json
     content = json.dumps(payload)
     middle = len(content) // 2
     return [SimpleNamespace(model="actual-model", choices=[SimpleNamespace(
@@ -98,7 +102,7 @@ def test_understanding_run_persists_scoped_results_without_changing_review_basel
     detail = client.get(f'/api/understanding-runs/{created.json()["id"]}')
     assert detail.status_code == 200
     result = detail.json()
-    assert result["status"] == "completed"
+    assert result["status"] == "completed", result["error"]
     frozen_bundle = client.get(f'/api/understanding-runs/{result["id"]}/source-bundle').json()
     assert frozen_bundle["bundle_id"] == result["source_bundle_id"]
     assert frozen_bundle["document"]["snapshot_id"] == document["snapshot_id"]
@@ -106,11 +110,12 @@ def test_understanding_run_persists_scoped_results_without_changing_review_basel
     assert result["paper_profile"]["source_bundle_id"] == result["review_plan"]["source_bundle_id"]
     assert result["claim_evidence_map"]["evidence_refs"][0]["snapshot_id"] == document["snapshot_id"]
     assert [item["stage"] for item in result["model_calls"]] == [
-        "paper-type-planner", "paper-understanding", "contribution-evidence-mapper"]
+        "paper-type-planner", "paper-understanding", "contribution-evidence-mapper",
+        "contribution-normalizer"]
     assert all(item["actual_model"] == "actual-model" and item["input_tokens"] == 80
                for item in result["model_calls"])
     usage = client.get("/api/usage/summary").json()
-    assert next(item for item in usage["by_category"] if item["category"] == "understanding")["calls"] == 3
+    assert next(item for item in usage["by_category"] if item["category"] == "understanding")["calls"] == 4
     assert client.get("/api/review-cases").json() == []
 
 
@@ -140,6 +145,8 @@ def test_understanding_run_reports_model_failure_and_missing_key(tmp_path, monke
     assert result["error"] == "paper-type-planner: model_call_failed:RuntimeError"
     assert len(result["model_calls"]) == 2
     assert all(call["status"] == "failed" for call in result["model_calls"])
+    usage = client.get("/api/usage/summary").json()
+    assert usage["total"]["unknown_token_calls"] == 2
 
 
 def test_completed_plan_survives_downstream_model_failure(tmp_path, monkeypatch):
@@ -170,3 +177,29 @@ def test_completed_plan_survives_downstream_model_failure(tmp_path, monkeypatch)
     assert result["review_plan"]["paper_type"] == "AI algorithm research"
     assert result["paper_profile"] is None
     assert "secret-bearing" not in str(result)
+
+
+def test_understanding_budget_exceeded_is_explicit(tmp_path, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "fake-key")
+    monkeypatch.setenv("P2A_MAX_CALLS", "1")
+
+    class FakeOpenAI:
+        def __init__(self, **kwargs):
+            pass
+
+        @property
+        def chat(self):
+            return SimpleNamespace(completions=SimpleNamespace(
+                create=lambda **kwargs: _fake_completion(kwargs["messages"])))
+
+    monkeypatch.setattr("backend.app.OpenAI", FakeOpenAI)
+    client = TestClient(create_app(tmp_path))
+    document = client.post("/api/documents", files={"file": ("paper.pdf", io.BytesIO(_pdf()),
+                                                        "application/pdf")}).json()
+    created = client.post(f'/api/documents/{document["id"]}/understanding-runs', json={})
+    result = client.get(f'/api/understanding-runs/{created.json()["id"]}').json()
+    assert result["status"] == "budget_exceeded"
+    assert result["error"] == "paper-understanding: budget_exceeded"
+    assert result["review_plan"] is not None
+    assert result["paper_profile"] is None
+    assert len(result["model_calls"]) == 1

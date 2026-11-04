@@ -28,7 +28,7 @@ class ResultMetadata(StrictModel):
     source_bundle_id: str = Field(min_length=1)
     review_run_id: str = Field(min_length=1)
     prompt_version: str = Field(min_length=1)
-    schema_version: Literal["1.0"]
+    schema_version: Literal["1.0", "1.1"]
     model_identifier: str = Field(min_length=1)
     input_coverage: InputCoverage
     execution_status: Literal["completed", "limited"]
@@ -51,6 +51,17 @@ class SourcedFact(StrictModel):
     text: str = Field(min_length=1)
     evidence_ref_ids: list[str] = Field(min_length=1)
     provenance: Literal["direct_source", "model_interpretation"] = "direct_source"
+
+
+class SourceConflict(StrictModel):
+    status: Literal["unresolved_source_conflict"] = "unresolved_source_conflict"
+    topic: str = Field(min_length=1)
+    configuration: str = Field(min_length=1)
+    left_statement: str = Field(min_length=1)
+    right_statement: str = Field(min_length=1)
+    left_evidence_ref_ids: list[str] = Field(min_length=1)
+    right_evidence_ref_ids: list[str] = Field(min_length=1)
+    verification_question: str = Field(min_length=1)
 
 
 class ReviewPlan(ResultMetadata):
@@ -79,6 +90,7 @@ class PaperProfile(ResultMetadata):
     author_stated_limitations: list[SourcedFact]
     evidence_refs: list[EvidenceReference]
     unresolved_source_gaps: list[str]
+    source_conflicts: list[SourceConflict] = Field(default_factory=list)
 
 
 class Contribution(StrictModel):
@@ -154,6 +166,9 @@ def _fact_refs(profile: PaperProfile):
                   "conclusions", "author_stated_limitations"):
         for fact in getattr(profile, field):
             yield from fact.evidence_ref_ids
+    for conflict in profile.source_conflicts:
+        yield from conflict.left_evidence_ref_ids
+        yield from conflict.right_evidence_ref_ids
 
 
 def validate_source_references(result: PaperProfile | ClaimEvidenceMap, bundle: dict) -> None:

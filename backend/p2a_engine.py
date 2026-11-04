@@ -1,13 +1,15 @@
 """Deterministic N1–N3 pipeline over P1 reading units; no review findings."""
 
 import json
+import hashlib
+import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
 from backend.parse_quality import assess_input_readiness
-from backend.p2a_schema import (ClaimEvidenceMap, PaperProfile, ReviewPlan,
+from backend.p2a_schema import (ClaimEvidenceMap, PaperProfile, ReviewPlan, SourceConflict,
                                  source_reference_index, validate_source_references)
 from backend.review import parse_model_json
 
@@ -15,7 +17,9 @@ from backend.review import parse_model_json
 PROMPTS = Path(__file__).with_name("prompts")
 VERSIONS = {"paper-type-planner": "paper-type-planner/v1",
             "paper-understanding": "paper-understanding/v1",
-            "contribution-evidence-mapper": "contribution-evidence-mapper/v1"}
+            "contribution-evidence-mapper": "contribution-evidence-mapper/v2",
+            "source-consistency": "source-consistency/v1",
+            "contribution-normalizer": "contribution-normalizer/v1"}
 RESULT_METADATA = {"document_id", "source_bundle_id", "review_run_id", "prompt_version",
                    "schema_version", "model_identifier", "input_coverage", "execution_status",
                    "evidence_refs"}
@@ -44,6 +48,47 @@ class P2AError(RuntimeError):
         super().__init__(f"{stage}: {message}")
         self.stage = stage
         self.traces = traces
+
+
+class BudgetExceeded(P2AError):
+    pass
+
+
+@dataclass
+class RunBudget:
+    max_calls: int = 32
+    max_input_tokens: int = 300000
+    max_output_tokens: int = 100000
+    max_duration_ms: int = 1800000
+    calls: int = 0
+    reserved_input_tokens: int = 0
+    reserved_output_tokens: int = 0
+    elapsed_ms: int = 0
+    unknown_usage_calls: int = 0
+
+    def call(self, stage, system, user, model_call):
+        estimated_input = max(1, (len(system) + len(user) + 3) // 4)
+        estimated_output = 4096
+        if (self.calls >= self.max_calls or
+                self.reserved_input_tokens + estimated_input > self.max_input_tokens or
+                self.reserved_output_tokens + estimated_output > self.max_output_tokens or
+                self.elapsed_ms >= self.max_duration_ms):
+            raise BudgetExceeded(stage, "budget_exceeded", [])
+        self.calls += 1
+        started = time.perf_counter()
+        reply = None
+        try:
+            reply = model_call(stage, system, user)
+            return reply
+        finally:
+            self.elapsed_ms += round((time.perf_counter() - started) * 1000)
+            if isinstance(reply, dict) and reply.get("input_tokens") is not None and reply.get("output_tokens") is not None:
+                self.reserved_input_tokens += reply["input_tokens"]
+                self.reserved_output_tokens += reply["output_tokens"]
+            else:
+                self.reserved_input_tokens += estimated_input
+                self.reserved_output_tokens += estimated_output
+                self.unknown_usage_calls += 1
 
 
 def chunk_reading_units(units: list[dict], max_chars: int = 12000) -> list[list[dict]]:
@@ -115,7 +160,7 @@ def _coverage(bundle, included_units, quality):
 def _metadata(bundle, run_id, stage, actual_model, included_units, quality):
     coverage = _coverage(bundle, included_units, quality)
     return {"document_id": bundle["document"]["id"], "source_bundle_id": bundle["bundle_id"],
-            "review_run_id": run_id, "prompt_version": VERSIONS[stage], "schema_version": "1.0",
+            "review_run_id": run_id, "prompt_version": VERSIONS[stage], "schema_version": "1.1",
             "model_identifier": actual_model, "input_coverage": coverage,
             "execution_status": "completed" if quality["status"] == "ready" and
                                 not coverage["excluded_unit_ids"] else "limited"}
@@ -124,7 +169,7 @@ def _metadata(bundle, run_id, stage, actual_model, included_units, quality):
 def _referenced_ids(value):
     if isinstance(value, dict):
         for key, child in value.items():
-            if key == "evidence_ref_ids":
+            if key in {"evidence_ref_ids", "left_evidence_ref_ids", "right_evidence_ref_ids"}:
                 yield from child
             elif key == "evidence_ref_id":
                 yield child
@@ -149,7 +194,7 @@ def _with_references(payload, bundle):
 def _invoke(stage: str, user_text: str, bundle: dict, run_id: str, included_units: list[dict],
             quality: dict, requested_model: str, model_call: Callable, traces: list[CallTrace],
             result_type, on_trace: Callable | None = None):
-    system = (PROMPTS / f"{stage}.v1.txt").read_text(encoding="utf-8")
+    system = (PROMPTS / f"{stage}.{VERSIONS[stage].split('/')[-1]}.txt").read_text(encoding="utf-8")
     for attempt in range(2):
         reply = None
         started = time.perf_counter()
@@ -177,6 +222,8 @@ def _invoke(stage: str, user_text: str, bundle: dict, run_id: str, included_unit
             if on_trace:
                 on_trace(trace)
             return result
+        except BudgetExceeded:
+            raise
         except Exception as exc:
             error_code = (f"invalid_output:{type(exc).__name__}" if
                           isinstance(exc, (ValueError, TypeError)) else
@@ -194,6 +241,64 @@ def _invoke(stage: str, user_text: str, bundle: dict, run_id: str, included_unit
                 on_trace(trace)
             if attempt == 1:
                 raise P2AError(stage, error_code, traces) from exc
+
+
+def _aux_json(stage, payload, requested_model, model_call, traces, on_trace):
+    system = (PROMPTS / f"{stage}.v1.txt").read_text(encoding="utf-8")
+    for attempt in range(2):
+        started = time.perf_counter()
+        reply = None
+        try:
+            reply = model_call(stage, system, json.dumps(payload, ensure_ascii=False))
+            result = parse_model_json(reply["content"])
+            if not isinstance(result, dict) or not reply.get("model_identifier"):
+                raise ValueError("auxiliary response is not a JSON object with model identifier")
+            trace = CallTrace(stage, VERSIONS[stage], requested_model, reply["model_identifier"],
+                              reply.get("input_tokens"), reply.get("output_tokens"),
+                              reply.get("duration_ms", 0), "completed")
+            traces.append(trace)
+            if on_trace:
+                on_trace(trace)
+            return result
+        except BudgetExceeded:
+            raise
+        except Exception as exc:
+            code = f"{type(exc).__name__}"
+            trace = CallTrace(stage, VERSIONS[stage], requested_model,
+                              reply.get("model_identifier") if isinstance(reply, dict) else None,
+                              reply.get("input_tokens") if isinstance(reply, dict) else None,
+                              reply.get("output_tokens") if isinstance(reply, dict) else None,
+                              reply.get("duration_ms", 0) if isinstance(reply, dict) else
+                              round((time.perf_counter() - started) * 1000), "failed", code)
+            traces.append(trace)
+            if on_trace:
+                on_trace(trace)
+            if attempt == 1:
+                raise P2AError(stage, code, traces) from exc
+
+
+def _check_source_conflicts(profile, bundle, requested_model, model_call, traces, on_trace):
+    numeric_units = [unit for unit in bundle["reading_units"]
+                     if len(re.findall(r"(?<!\w)\d+(?:\.\d+)?(?!\w)", unit["text"])) >= 2]
+    if not numeric_units:
+        return profile
+    result = _aux_json("source-consistency",
+                       {"result_facts": [fact.model_dump() for fact in profile.main_results],
+                        "source_excerpts": [{"id": unit["id"], "section_id": unit.get("section_id"),
+                                             "text": unit["text"][:1200]} for unit in numeric_units]},
+                       requested_model, model_call, traces, on_trace)
+    conflicts = [SourceConflict.model_validate(item) for item in result["source_conflicts"]]
+    known = source_reference_index(bundle)
+    for conflict in conflicts:
+        for ref in conflict.left_evidence_ref_ids + conflict.right_evidence_ref_ids:
+            if ref not in known:
+                raise P2AError("source-consistency", "invalid_source_reference", traces)
+    payload = profile.model_dump(exclude=RESULT_METADATA)
+    payload["source_conflicts"] = [item.model_dump() for item in conflicts]
+    updated = PaperProfile.model_validate({**_with_references(payload, bundle),
+                                           **profile.model_dump(include=RESULT_METADATA - {"evidence_refs"})})
+    validate_source_references(updated, bundle)
+    return updated
 
 
 def _global_profile(partials, context, bundle, run_id, quality, requested_model,
@@ -256,23 +361,121 @@ def _global_profile(partials, context, bundle, run_id, quality, requested_model,
     return result
 
 
-def _merge_claim_maps(partials, bundle, run_id, quality):
-    if len(partials) == 1:
-        return partials[0]
+def _merge_claim_maps(partials, profile, bundle, run_id, quality, requested_model,
+                      model_call, traces, on_trace):
+    anchors = profile.author_claimed_contributions
+    contributions = [{"text": fact.text, "evidence_ref_ids": fact.evidence_ref_ids,
+                      "anchor": True} for fact in anchors]
+    contribution_index = {}
+    claims = []
+    claim_index = {}
+    for part_index, mapping in enumerate(partials):
+        for item in mapping.contributions:
+            contribution_index[(part_index, item.id)] = len(contributions)
+            contributions.append({"text": item.description or item.title,
+                                  "evidence_ref_ids": item.evidence_ref_ids, "anchor": False})
+        for item in mapping.claims:
+            claim_index[(part_index, item.id)] = len(claims)
+            claims.append({"statement": item.statement,
+                           "contribution_index": contribution_index[(part_index, item.contribution_id)],
+                           "evidence_ref_ids": item.evidence_ref_ids})
+    profile_facts = [fact.model_dump() for field in ("method_components", "experimental_setup",
+                     "main_results", "author_claimed_contributions") for fact in getattr(profile, field)]
+    grouping = _aux_json("contribution-normalizer",
+                         {"contributions": contributions, "claims": claims,
+                          "profile_facts": profile_facts},
+                         requested_model, model_call, traces, on_trace)
+
+    def partition(groups, count, label):
+        if (not isinstance(groups, list) or any(not isinstance(group, list) or not group for group in groups)
+                or sorted(index for group in groups for index in group) != list(range(count))):
+            raise P2AError("contribution-normalizer", f"invalid_{label}_partition", traces)
+        return groups
+
+    excluded = grouping.get("excluded_contribution_indices", [])
+    if (not isinstance(excluded, list) or any(not isinstance(index, int) for index in excluded)
+            or len(set(excluded)) != len(excluded)):
+        raise P2AError("contribution-normalizer", "invalid_excluded_contributions", traces)
+    contribution_groups = grouping.get("contribution_groups")
+    if (not isinstance(contribution_groups, list) or
+            any(not isinstance(group, list) or not group for group in contribution_groups) or
+            any(not isinstance(index, int) for group in contribution_groups for index in group) or
+            sorted([index for group in contribution_groups for index in group] + excluded)
+            != list(range(len(contributions)))):
+        raise P2AError("contribution-normalizer", "invalid_contribution_partition", traces)
+    claim_groups = partition(grouping.get("claim_groups"), len(claims), "claim")
     payload = {"contributions": [], "claims": [], "support_relations": [], "evidence_gaps": []}
-    for index, mapping in enumerate(partials, start=1):
-        contribution_ids = {item.id: f"part{index}_{item.id}" for item in mapping.contributions}
-        claim_ids = {item.id: f"part{index}_{item.id}" for item in mapping.claims}
-        payload["contributions"].extend({**item.model_dump(), "id": contribution_ids[item.id]}
-                                        for item in mapping.contributions)
-        payload["claims"].extend({**item.model_dump(), "id": claim_ids[item.id],
-                                  "contribution_id": contribution_ids[item.contribution_id]}
-                                 for item in mapping.claims)
-        payload["support_relations"].extend({**item.model_dump(),
-                                             "claim_id": claim_ids[item.claim_id]}
-                                            for item in mapping.support_relations)
-        payload["evidence_gaps"].extend({**item.model_dump(), "claim_id": claim_ids[item.claim_id]}
-                                        for item in mapping.evidence_gaps)
+    contribution_ids = {}
+    for group in contribution_groups:
+        members = [contributions[index] for index in group]
+        anchor = next((item for item in members if item["anchor"]), members[0])
+        refs = list(dict.fromkeys(ref for item in members for ref in item["evidence_ref_ids"]))
+        identity = anchor["text"].casefold().strip()
+        cid = "contrib_" + hashlib.sha256(identity.encode()).hexdigest()[:16]
+        if any(item["id"] == cid for item in payload["contributions"]):
+            raise P2AError("contribution-normalizer", "duplicate_contribution_identity", traces)
+        payload["contributions"].append({"id": cid, "title": anchor["text"],
+                                         "description": anchor["text"], "evidence_ref_ids": refs})
+        contribution_ids.update({index: cid for index in group})
+    merged_claim_ids = {}
+    for group in claim_groups:
+        by_parent = {}
+        for index in group:
+            parent = contribution_ids.get(claims[index]["contribution_index"])
+            if parent is None:
+                continue
+            by_parent.setdefault(parent, []).append(index)
+        for parent, members in by_parent.items():
+            selected = min((claims[index] for index in members),
+                           key=lambda item: item["statement"].casefold())
+            claim_id = "claim_" + hashlib.sha256((parent + "|" +
+                        selected["statement"].casefold().strip()).encode()).hexdigest()[:16]
+            refs = list(dict.fromkeys(ref for index in members for ref in claims[index]["evidence_ref_ids"]))
+            existing = next((item for item in payload["claims"] if item["id"] == claim_id), None)
+            if existing:
+                existing["evidence_ref_ids"] = list(dict.fromkeys(existing["evidence_ref_ids"] + refs))
+            else:
+                payload["claims"].append({"id": claim_id, "contribution_id": parent,
+                                          "statement": selected["statement"], "evidence_ref_ids": refs})
+            merged_claim_ids.update({index: claim_id for index in members})
+    relation_keys = set()
+    for part_index, mapping in enumerate(partials):
+        for relation in mapping.support_relations:
+            claim_id = merged_claim_ids.get(claim_index[(part_index, relation.claim_id)])
+            if claim_id is None:
+                continue
+            key = (claim_id, relation.evidence_ref_id, relation.relation)
+            if key not in relation_keys:
+                relation_keys.add(key)
+                payload["support_relations"].append({**relation.model_dump(), "claim_id": claim_id})
+    profile_refs = {ref for fact in profile_facts for ref in fact["evidence_ref_ids"]}
+    canonical_refs = source_reference_index(bundle)
+    for candidate in grouping.get("global_support", []):
+        index = candidate["claim_index"]
+        if not isinstance(index, int) or index not in claim_index.values():
+            raise P2AError("contribution-normalizer", "invalid_global_support_claim", traces)
+        claim_id = merged_claim_ids.get(index)
+        if claim_id is None:
+            continue
+        for ref in candidate["evidence_ref_ids"]:
+            if ref not in profile_refs or ref not in canonical_refs:
+                raise P2AError("contribution-normalizer", "invalid_global_support_source", traces)
+            key = (claim_id, ref, "unverified")
+            if key not in relation_keys:
+                relation_keys.add(key)
+                payload["support_relations"].append({"claim_id": claim_id, "evidence_ref_id": ref,
+                                                     "relation": "unverified",
+                                                     "explanation": "N2 global source lead; verify direct support."})
+    for claim in payload["claims"]:
+        related = [item for item in payload["support_relations"] if item["claim_id"] == claim["id"]]
+        if any(item["relation"] != "unverified" for item in related):
+            continue
+        if related:
+            status, description = "source_unverified", "Global evidence exists but requires source verification."
+        else:
+            status, description = "support_not_found", "Support was not found in the supplied full Source Bundle or N2 facts; verify the PDF before concluding absence."
+        payload["evidence_gaps"].append({"claim_id": claim["id"], "status": status,
+                                         "description": description})
     result = ClaimEvidenceMap.model_validate({**_with_references(payload, bundle),
                                               **_metadata(bundle, run_id,
                                                           "contribution-evidence-mapper",
@@ -293,7 +496,8 @@ def _profile_context_for_part(profile, part):
                    evidence_ids.intersection(references[source_id].evidence_ids)
                    for source_id in fact.evidence_ref_ids if source_id in references)
 
-    payload = {field: (getattr(profile, field).model_dump() if getattr(profile, field) else None)
+    payload = {field: (getattr(profile, field).model_dump() if getattr(profile, field) and
+                       local(getattr(profile, field)) else None)
                for field in SCALAR_FACTS}
     for field in LIST_FACTS:
         payload[field] = [fact.model_dump() for fact in getattr(profile, field)
@@ -304,7 +508,7 @@ def _profile_context_for_part(profile, part):
 def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: str,
             target_journal: str | None = None, special_requirements: str | None = None,
             chunk_chars: int = 12000, on_result: Callable | None = None,
-            on_trace: Callable | None = None):
+            on_trace: Callable | None = None, budget: RunBudget | None = None):
     """Run N1–N3; caller persists results and trace metadata in private storage."""
     units = bundle["reading_units"]
     if not units:
@@ -312,6 +516,9 @@ def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: st
     quality = assess_input_readiness(bundle, "section_summary")
     if quality["status"] == "blocked":
         raise P2AError("source", "required source scope is blocked", [])
+    budget = budget or RunBudget()
+    raw_model_call = model_call
+    model_call = lambda stage, system, user: budget.call(stage, system, user, raw_model_call)
     chunks = chunk_reading_units(units, chunk_chars)
     plan_units = _planning_units(bundle, chunks)
     traces = []
@@ -352,10 +559,11 @@ def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: st
         partial_profiles.extend(profile_part(part, f"{index + 1}/{len(chunks)}"))
     profile = _global_profile(partial_profiles, profile_context, bundle, run_id, quality,
                               requested_model, model_call, traces, on_trace)
+    profile = _check_source_conflicts(profile, bundle, requested_model, model_call, traces, on_trace)
     if on_result:
         on_result("paper_profile", profile)
     map_context = context
-    map_chunks = chunk_reading_units(units, min(chunk_chars, 6000))
+    map_chunks = chunk_reading_units(units, min(chunk_chars, 9000))
     partial_maps = []
 
     def map_part(part, label):
@@ -376,7 +584,8 @@ def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: st
 
     for index, part in enumerate(map_chunks):
         partial_maps.extend(map_part(part, f"{index + 1}/{len(map_chunks)}"))
-    mapping = _merge_claim_maps(partial_maps, bundle, run_id, quality)
+    mapping = _merge_claim_maps(partial_maps, profile, bundle, run_id, quality,
+                                requested_model, model_call, traces, on_trace)
     if any(gap.startswith("Global scalar synthesis failed") for gap in profile.unresolved_source_gaps):
         mapping.execution_status = "limited"
         mapping.input_coverage.limitations.append("upstream_global_synthesis_failed")

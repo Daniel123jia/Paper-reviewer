@@ -1,9 +1,9 @@
 {
   "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
   "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
-  "review_run_id": "2fdc6dd37e054b9d84a848246e9986a0",
+  "review_run_id": "bff499bcb0d247598844c4e8fbd16090",
   "prompt_version": "paper-understanding/v1",
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "model_identifier": "gpt-6.1-sol",
   "input_coverage": {
     "total_unit_count": 167,
@@ -1452,5 +1452,6 @@
     "formula formula_ev_7bae0a4ab233_1_35: detected_unverified",
     "formula formula_ev_7bae0a4ab233_2_15: detected_unverified",
     "figure figure_ev_7bae0a4ab233_2_11: visual_review_required"
-  ]
+  ],
+  "source_conflicts": []
 }
