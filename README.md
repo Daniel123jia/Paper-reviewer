@@ -4,6 +4,8 @@ P0–P2 已验收。真实 PDF 可上传、阅读、检索并跳转高亮证据�
 
 P1 结构化解析诊断已加入只读的 Source Bundle 与解析质量 API。它保留现有 Evidence ID 和审稿 Baseline，不改变模型 Prompt 或报告流程；结构候选及未可靠解析的内容会明确标记。接口契约与限制见 `docs/p1-source-bundle-schema.md`，三种解析器的隔离对照见 `docs/p1-parser-comparison.md`。
 
+P1.1 增加候选 `reading_units[]`、章节映射和按任务范围判断的输入质量门槛；这些结果仍需原始 PDF 参照，不能自动当作可靠全文。实际验收见 `docs/p1.1-reading-acceptance.md`。
+
 ## 本地运行
 
 需要 Python 3.11、Node.js 20 以上，以及 Pandoc。PDF 导出使用 Playwright Chromium，首次安装前端依赖后执行 `cd frontend && npx playwright install chromium`。

@@ -65,3 +65,18 @@ def test_wrapped_table_header_does_not_imply_collapsed_data_rows():
               "formulas": [], "figures": [], "references": [], "limitations": []}
     report = assess_parse_quality(bundle)
     assert "row_alignment_unverified" not in report["tables"][0]["issues"]
+
+
+def test_table_false_positive_and_missing_structure_are_explicit():
+    bundle = {"bundle_id": "bundle4", "pages": [], "body": [], "reading_units": [], "sections": [],
+              "tables": [{"id": "false", "page_index": 0, "row_count": 1, "col_count": 3,
+                          "cells": [["x", "y", "z"]], "status": "candidate",
+                          "structure_status": "possible_false_positive"},
+                         {"id": "missing", "page_index": 0, "row_count": 0, "col_count": 0,
+                          "cells": [], "status": "missing_structure",
+                          "structure_status": "structure_incomplete"}],
+              "formulas": [], "figures": [], "references": [], "limitations": []}
+    report = assess_parse_quality(bundle)
+    assert "possible_false_positive" in report["tables"][0]["issues"]
+    assert "table_structure_missing" in report["tables"][1]["issues"]
+    assert report["input_readiness"]["table_review"]["status"] == "blocked"

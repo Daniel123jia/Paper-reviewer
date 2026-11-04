@@ -16,6 +16,7 @@
 |---|---|
 | `backend/app.py` | FastAPI 应用、SQLite Schema、PDF 上传与解析、Evidence API、对话、审稿调用、深化反证、工具核验、草稿与导出 API |
 | `backend/source_bundle.py` | 从已有 Evidence 快照和私有 PDF 构建 v1.0 结构候选，保留原 Evidence ID 与坐标 |
+| `backend/reading_order.py` | 由 PDF block 几何位置生成候选阅读单元，并关联章节与原 Evidence |
 | `backend/parse_quality.py` | 按页、章节、表格、公式、图注报告解析状态及不能确认的部分 |
 | `backend/review.py` | 模型 JSON 解析、首轮证据选择、候选问题筛查、深化反证检索、公式关联建议 |
 | `backend/drafts.py` | 中文“内部完整报告”和“正式审稿意见”的固定模板 |
@@ -65,6 +66,8 @@ PDF upload
 论文对话与审稿任务共用 `documents/evidence`，但对话消息不会自动转入审稿候选问题。
 
 P1 新增两个只读接口：`GET /api/documents/{id}/source-bundle` 与 `GET /api/documents/{id}/parse-quality`。它们在请求时从现有 Evidence、私有 PDF 生成视图，不新增数据库表或迁移，也不改变上述 Baseline 数据流。当前结构结果为候选，双栏阅读顺序、图表和公式关联尚须核验；见 `docs/p1-source-bundle-schema.md`。
+
+P1.1 在 Source Bundle 中新增 `reading_units[]` 和章节正文候选映射。双栏清晰时以几何分栏建立候选顺序，跨栏不明确时降级为 `unverified`。表格折叠行仅作为候选拆分；默认质量接口不会把论文判为可直接用于 P2，规则及实际结果见 `docs/p1.1-reading-acceptance.md`。
 
 ## 配置和边界
 

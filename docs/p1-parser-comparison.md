@@ -58,6 +58,8 @@ The quality endpoint flags reading order on all five Shaw pages, both section-or
 
 No parser is promoted into the production Evidence path in P1. PyMuPDF4LLM improves Table 3 row layout on this paper but does not repair all reading-order errors and loses one equation marker in this run. The Source Bundle remains a conservative, traceable candidate structure. P2 requires a verified structural input policy and an Evidence-ID mapping for any chosen higher-level parser.
 
+P1.1 adds a PyMuPDF geometry-based candidate order and table-row split without promoting a comparison parser. See `docs/p1.1-reading-acceptance.md` for the new reading units, legacy snapshot compatibility and input gate.
+
 The comparison environment has a material maintenance and licensing cost: PyMuPDF4LLM adds layout/ONNX dependencies; Docling adds local layout/table models and substantially higher memory use on the Linux run. [PyMuPDF offers AGPL or commercial licensing](https://pymupdf.readthedocs.io/en/latest/about.html); [Docling code is MIT licensed](https://github.com/docling-project/docling). The product's eventual commercial deployment needs a separate license review, including parser dependencies and model weights.
 
 ## Reproduce

@@ -7,6 +7,14 @@ on:
       - .github/workflows/p1-parser-comparison.yml
       - scripts/compare_parsers.py
       - tests/fixtures/p1_parse_reference.json
+      - backend/source_bundle.py
+      - backend/reading_order.py
+      - backend/parse_quality.py
+      - backend/tests/test_source_bundle.py
+      - backend/tests/test_reading_units.py
+      - backend/tests/test_parse_quality.py
+      - backend/tests/test_p11_real_papers.py
+      - backend/tests/test_api.py
   workflow_dispatch:
 
 permissions:
@@ -23,6 +31,8 @@ jobs:
           python-version: '3.11'
       - name: Install isolated comparison dependencies
         run: python -m pip install 'PyMuPDF==1.28.2' 'pymupdf4llm==1.28.2' 'docling==2.146.0'
+      - name: Install existing backend test dependencies
+        run: python -m pip install -r backend/requirements.txt
       - name: Download and verify the public Shaw 2018 PDF
         run: |
           curl -fsSL https://arxiv.org/pdf/1803.02155 -o "$RUNNER_TEMP/shaw2018.pdf"
@@ -31,6 +41,19 @@ jobs:
           echo '4ddf0066146f0644ba87d2462e9f73d3d72537d1daffb8d6ccc50840ff6c7dea  '"$RUNNER_TEMP/jmlr2024.pdf" | sha256sum --check
       - name: Compare three parsers without storing PDF or extracted text
         run: python scripts/compare_parsers.py --shaw "$RUNNER_TEMP/shaw2018.pdf" --jmlr "$RUNNER_TEMP/jmlr2024.pdf" --timeout 600 > "$RUNNER_TEMP/p1-parser-summary.json"
+      - name: Run P1 and P1.1 regression tests against the fixed public PDFs
+        env:
+          P11_SHAW_PDF: ${{ runner.temp }}/shaw2018.pdf
+          P11_JMLR_PDF: ${{ runner.temp }}/jmlr2024.pdf
+        run: python -m pytest backend/tests/test_source_bundle.py backend/tests/test_reading_units.py backend/tests/test_parse_quality.py backend/tests/test_p11_real_papers.py backend/tests/test_parser_comparison.py backend/tests/test_api.py -q
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Build unchanged frontend
+        working-directory: frontend
+        run: npm ci && npm run build
       - uses: actions/upload-artifact@v4
         with:
           name: p1-parser-summary
