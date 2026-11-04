@@ -1,0 +1,30 @@
+name: P1 parser comparison
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install isolated comparison dependencies
+        run: python -m pip install 'PyMuPDF==1.28.2' 'pymupdf4llm==1.28.2' 'docling==2.146.0'
+      - name: Download and verify the public Shaw 2018 PDF
+        run: |
+          curl -fsSL https://arxiv.org/pdf/1803.02155 -o "$RUNNER_TEMP/shaw2018.pdf"
+          echo '8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b  '"$RUNNER_TEMP/shaw2018.pdf" | sha256sum --check
+      - name: Compare three parsers without storing PDF or extracted text
+        run: python scripts/compare_parsers.py --shaw "$RUNNER_TEMP/shaw2018.pdf" --timeout 600 > "$RUNNER_TEMP/p1-parser-summary.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p1-parser-summary
+          path: ${{ runner.temp }}/p1-parser-summary.json
+          retention-days: 7

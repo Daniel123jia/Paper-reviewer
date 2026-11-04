@@ -35,6 +35,25 @@ def test_upload_search_and_evidence_round_trip(tmp_path):
     assert evidence["bbox"][0] >= 0
 
 
+def test_source_bundle_and_quality_are_read_only_views_of_uploaded_evidence(tmp_path):
+    client = TestClient(create_app(tmp_path))
+    content = sample_pdf()
+    document = client.post("/api/documents", files={"file": ("paper.pdf", content, "application/pdf")}).json()
+    original = client.get(f'/api/documents/{document["id"]}/search', params={"q": "verification"}).json()[0]
+
+    bundle_response = client.get(f'/api/documents/{document["id"]}/source-bundle')
+    quality_response = client.get(f'/api/documents/{document["id"]}/parse-quality')
+
+    assert bundle_response.status_code == quality_response.status_code == 200
+    bundle = bundle_response.json()
+    assert bundle["document"]["snapshot_id"] == document["snapshot_id"]
+    assert original["evidence_id"] in [part["evidence_id"] for part in bundle["body"]]
+    assert quality_response.json()["source_bundle_id"] == bundle["bundle_id"]
+    assert client.get(f'/api/documents/{document["id"]}/pdf').content == content
+    assert client.get(f'/api/documents/{document["id"]}/search', params={"q": "verification"}).json()[0] == original
+    assert client.get('/api/documents/missing/source-bundle').status_code == 404
+
+
 def test_rejects_non_pdf(tmp_path):
     client = TestClient(create_app(tmp_path))
     response = client.post("/api/documents", files={"file": ("bad.pdf", io.BytesIO(b"not a pdf"), "application/pdf")})

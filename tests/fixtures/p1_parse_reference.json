@@ -1,0 +1,27 @@
+{
+  "reference_version": 1,
+  "notes": "Human-checked visible landmarks. This is not a full transcription or an accuracy percentage.",
+  "shaw2018": {
+    "sha256": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+    "page_count": 5,
+    "headings": [
+      "2.2 Self-Attention",
+      "3 Proposed Architecture",
+      "3.2 Relative Position Representations",
+      "3.3 Efficient Implementation",
+      "4.1 Experimental Setup",
+      "4.2 Machine Translation",
+      "4.3 Model Variations"
+    ],
+    "table_rows": ["Yes Yes 25.8", "No Yes 25.8", "Yes No 25.3", "No No 12.5"],
+    "equations": ["(1)", "(2)", "(3)", "(4)", "(5)"],
+    "figure_captions": ["Figure 1"]
+  },
+  "single_column": {
+    "page_count": 2,
+    "headings": ["1 Introduction", "2 Method", "3 Results", "References"],
+    "table_rows": ["Alpha 1.0", "Beta 2.0"],
+    "equations": ["(1)"],
+    "figure_captions": ["Figure 1"]
+  }
+}
