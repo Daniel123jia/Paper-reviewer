@@ -1,0 +1,67 @@
+[
+  {
+    "original_issue_id": "candidate_2349c5cdd44540ee",
+    "consolidated_issue_id": "consolidated_c9750ce2c32914386e93",
+    "split_rationale": null
+  },
+  {
+    "original_issue_id": "candidate_35b744cc386ff5f3",
+    "consolidated_issue_id": "consolidated_c9750ce2c32914386e93",
+    "split_rationale": null
+  },
+  {
+    "original_issue_id": "candidate_4797eae58a0d02e4",
+    "consolidated_issue_id": "consolidated_2fc7365d65828d021acd",
+    "split_rationale": null
+  },
+  {
+    "original_issue_id": "candidate_8cc2ac38dbe85ec5",
+    "consolidated_issue_id": "consolidated_2fc7365d65828d021acd",
+    "split_rationale": null
+  },
+  {
+    "original_issue_id": "candidate_8ef728e15e00c987",
+    "consolidated_issue_id": "consolidated_74d31eae282a7e352cfb",
+    "split_rationale": null
+  },
+  {
+    "original_issue_id": "candidate_9a34220f56b4571f",
+    "consolidated_issue_id": "consolidated_74d31eae282a7e352cfb",
+    "split_rationale": null
+  },
+  {
+    "original_issue_id": "candidate_b43a63c1120cd273",
+    "consolidated_issue_id": "consolidated_8e8e2b5dcfc41219ae35",
+    "split_rationale": null
+  },
+  {
+    "original_issue_id": "candidate_cbff9281b140f698",
+    "consolidated_issue_id": "consolidated_8e8e2b5dcfc41219ae35",
+    "split_rationale": null
+  },
+  {
+    "original_issue_id": "candidate_bcbebaa303e3d372",
+    "consolidated_issue_id": "consolidated_571a39dcba42a9759ff6",
+    "split_rationale": null
+  },
+  {
+    "original_issue_id": "candidate_d3a08b0240d95640",
+    "consolidated_issue_id": "consolidated_63e4fcc89ffc9ebae2cf",
+    "split_rationale": null
+  },
+  {
+    "original_issue_id": "candidate_d4020475ec42754b",
+    "consolidated_issue_id": "consolidated_84cf783ca167b1714267",
+    "split_rationale": null
+  },
+  {
+    "original_issue_id": "candidate_d66b4d629e17092d",
+    "consolidated_issue_id": "consolidated_1ca04a734f00044fd43b",
+    "split_rationale": null
+  },
+  {
+    "original_issue_id": "candidate_fb1bf9ee8ee47391",
+    "consolidated_issue_id": "consolidated_0caacb13a2bb7f01cbb8",
+    "split_rationale": null
+  }
+]

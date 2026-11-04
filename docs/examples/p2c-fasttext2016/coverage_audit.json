@@ -1,0 +1,2086 @@
+{
+  "dimensions": [
+    {
+      "dimension_id": "D1",
+      "execution_status": "limited",
+      "applicability_status": "applicable",
+      "coverage_status": "partial",
+      "candidate_count": 2,
+      "no_issue_explanation": null,
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:36",
+        "Coverage is partial, with 36 reading units omitted; no absence from the complete paper is inferred.",
+        "Reading order and section boundaries are unverified, and no human-readable reference document or reliable human page references are available.",
+        "Table structures and numerical cell associations remain unverified. Candidate concerns below rely on prose rather than reconstructed numerical comparisons.",
+        "The loss and hierarchical probability equations are fragmented, and the architecture figure requires visual verification.",
+        "The authors explicitly acknowledge prior low-rank classifiers, CBOW-like architecture, hierarchical softmax, and feature hashing, and frame fastText as a simple baseline. The supplied evidence does not justify treating reuse of these components as a novelty defect."
+      ]
+    },
+    {
+      "dimension_id": "D2",
+      "execution_status": "limited",
+      "applicability_status": "applicable",
+      "coverage_status": "partial",
+      "candidate_count": 2,
+      "no_issue_explanation": null,
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:41",
+        "Coverage is partial, reading order and section mapping are unverified, and a human-readable reference document is unavailable.",
+        "The loss and hierarchical path-probability equations are fragmented, with relevant formula reading units omitted; their mathematical transcription cannot be assessed reliably.",
+        "The architecture figure requires visual verification. The prose nevertheless consistently describes embedding and averaging followed by a classifier.",
+        "Result tables have incomplete structure. No candidate depends on treating extracted numerical cell assignments as verified.",
+        "Implementation and independent complexity verification were not available. Missing detail in the supplied units does not establish its absence from the complete paper."
+      ]
+    },
+    {
+      "dimension_id": "D3",
+      "execution_status": "limited",
+      "applicability_status": "partially_applicable",
+      "coverage_status": "partial",
+      "candidate_count": 2,
+      "no_issue_explanation": null,
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:45",
+        "Coverage is partial, with 45 reading units omitted; a detail absent from this context cannot be treated as absent from the paper.",
+        "Reading order and section mapping are unresolved, and no human-readable reference document or reliable human page references are supplied.",
+        "The accuracy and timing tables have incomplete structure. Numerical cell assignments and speedup calculations have not been independently verified.",
+        "The supplied results already compare fastText with and without bigrams and, for tag prediction, with hidden dimensions 50 and 200. These comparisons should not be described as missing ablations.",
+        "Fragmented equations and the unverified architecture figure limit mathematical inspection; no concern here depends on their transcription."
+      ]
+    },
+    {
+      "dimension_id": "D4",
+      "execution_status": "limited",
+      "applicability_status": "applicable",
+      "coverage_status": "partial",
+      "candidate_count": 2,
+      "no_issue_explanation": null,
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:13",
+        "Coverage is partial, with 13 reading units omitted. Absence of evidence in this bundle does not establish absence from the paper.",
+        "Reading order and section mapping are unverified; a human-readable reference document and reliable human page references are unavailable.",
+        "Result-table structures and numerical column associations remain unverified. No candidate treats a numerical discrepancy arising from extraction as an established author error.",
+        "The abstract's sub-ten-minute training and sub-minute prediction statements can correspond to the smaller tag-prediction configurations; the slower 200-unit configurations do not by themselves contradict those statements.",
+        "No P2-A source_conflicts were supplied."
+      ]
+    },
+    {
+      "dimension_id": "D5",
+      "execution_status": "limited",
+      "applicability_status": "applicable",
+      "coverage_status": "partial",
+      "candidate_count": 3,
+      "no_issue_explanation": null,
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:43",
+        "Coverage is partial; omitted reading units may contain relevant implementation or protocol details.",
+        "Reading order and section mapping are not verified, and no human-readable original is available.",
+        "The loss and hierarchical probability equations are fragmented; no concern is based on their apparent transcription.",
+        "Result tables have incomplete structure, so numerical alignments and runtime ratios have not been independently checked.",
+        "The linked implementation and promised dataset-reconstruction script have not been inspected."
+      ]
+    },
+    {
+      "dimension_id": "D6",
+      "execution_status": "limited",
+      "applicability_status": "applicable",
+      "coverage_status": "partial",
+      "candidate_count": 1,
+      "no_issue_explanation": null,
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:37",
+        "Coverage is partial, with 37 reading units omitted, including much of the reference list. Completeness of related-work coverage and bibliographic accuracy cannot be established.",
+        "The original human-readable document is unavailable, and reading order and section boundaries remain unverified.",
+        "Result-table structures and numerical alignments remain unverified; no concern here depends on treating extracted numerical comparisons as independently checked.",
+        "The cited prior publications were not supplied in sufficient detail to verify their findings or citation-to-claim fit externally.",
+        "The supplied text explicitly credits existing low-rank approaches, CBOW, hierarchical softmax, hashing, and n-gram features and acknowledges that the model could be implemented in Vowpal Wabbit. These acknowledgments do not support a concern about claiming those individual mechanisms as new."
+      ]
+    }
+  ],
+  "contributions": [
+    {
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "claim_ids": [
+        "claim_8860fc3be607ecff",
+        "claim_51e7adc9b15d0e02",
+        "claim_6d1e5bf9d7b4c4d4",
+        "claim_33b526a261c6a73e",
+        "claim_6b3718ef93d4b460",
+        "claim_d8e226e6165d59e1",
+        "claim_b1536496726f40f8",
+        "claim_a6f3c6b475a8b97d",
+        "claim_5119876d8751ee73",
+        "claim_3e81c7155ccae328",
+        "claim_8336132cdc8ce581",
+        "claim_bae5cfbc7c8ffb5b",
+        "claim_4a3dc828381768d1",
+        "claim_71f8142f6a6fbd62",
+        "claim_ac132679a77fdbc7",
+        "claim_ed578c71e9671304",
+        "claim_806bb52fd416208b",
+        "claim_4632b53f4de11555",
+        "claim_8bc4f1e06b6ba6e3"
+      ],
+      "inspected_claim_ids": [
+        "claim_8860fc3be607ecff",
+        "claim_51e7adc9b15d0e02",
+        "claim_6d1e5bf9d7b4c4d4",
+        "claim_33b526a261c6a73e",
+        "claim_6b3718ef93d4b460",
+        "claim_d8e226e6165d59e1",
+        "claim_b1536496726f40f8",
+        "claim_a6f3c6b475a8b97d",
+        "claim_5119876d8751ee73",
+        "claim_3e81c7155ccae328",
+        "claim_8336132cdc8ce581",
+        "claim_bae5cfbc7c8ffb5b",
+        "claim_4a3dc828381768d1",
+        "claim_71f8142f6a6fbd62",
+        "claim_ac132679a77fdbc7",
+        "claim_ed578c71e9671304",
+        "claim_806bb52fd416208b",
+        "claim_4632b53f4de11555",
+        "claim_8bc4f1e06b6ba6e3"
+      ],
+      "candidate_ids": [
+        "candidate_9cd1bf4aa574a3c5",
+        "candidate_e32dddb167373ac1",
+        "candidate_45ae0b8b2e4c35bd",
+        "candidate_83d093bda4b94e99",
+        "candidate_f4b82c009ae294f8",
+        "candidate_a399dcbbab67a609",
+        "candidate_14bf69eea0dbd1bc",
+        "candidate_d4a548d8c7a42e0d",
+        "candidate_31ec55257e7ac738",
+        "candidate_971f36dc41e9d430"
+      ],
+      "status": "source_limited",
+      "limitations": [
+        "The supplied reading units state the practical prediction complexity but do not provide measurements across class counts or a derivation specifying the scope of the top-T heap cost. Further support may occur elsewhere in the paper.",
+        "The supplied reading units contain summary assertions but no task-level accuracy comparisons, timing results, or matched baseline configurations supporting the claimed accuracy and speed relationship. This is a local evidence gap.",
+        "The supplied reading units do not provide the detailed dataset, CPU configuration, training settings, or timing results underlying the abstract's billion-word training claim. This is a local evidence gap.",
+        "The supplied reading units do not provide the hardware, prediction settings, or detailed timing results underlying the abstract's half-million-sentence classification claim. This is a local evidence gap.",
+        "The supplied local units state the implementation speedup and Vowpal Wabbit options but do not provide benchmark timings, hardware, or dataset-specific conditions for that comparison.",
+        "The supplied local reading units do not explain the rank constraint or fast loss computation stated in the profile contribution. Architecture and loss support must be located in other source portions.",
+        "The local passage asserts a fast inference advantage but does not supply the inference algorithm needed to examine that mechanism.",
+        "Table 5 has incomplete extracted structure; the numerical precision-at-one associations require source-table verification.",
+        "The training/test header alignment and numerical runtime associations require source-table verification."
+      ]
+    },
+    {
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "claim_ids": [
+        "claim_d626dcbe362f10e8",
+        "claim_1133d756d8934075",
+        "claim_ef81b34abfb26685",
+        "claim_08de6e5772093db6",
+        "claim_853357f3b4e77a6e",
+        "claim_61bbb136047b7443",
+        "claim_c0b9ae33c373b048",
+        "claim_4ee5d311407a9fdc",
+        "claim_67d50643162d3173",
+        "claim_c65e802567c3ff8f",
+        "claim_2d26dc6d784b4f2f"
+      ],
+      "inspected_claim_ids": [
+        "claim_d626dcbe362f10e8",
+        "claim_1133d756d8934075",
+        "claim_ef81b34abfb26685",
+        "claim_853357f3b4e77a6e",
+        "claim_61bbb136047b7443",
+        "claim_4ee5d311407a9fdc",
+        "claim_67d50643162d3173",
+        "claim_c65e802567c3ff8f",
+        "claim_2d26dc6d784b4f2f"
+      ],
+      "candidate_ids": [
+        "candidate_9cd1bf4aa574a3c5",
+        "candidate_e32dddb167373ac1",
+        "candidate_f4b82c009ae294f8",
+        "candidate_14bf69eea0dbd1bc",
+        "candidate_7ac07ac2e077cb30",
+        "candidate_971f36dc41e9d430",
+        "candidate_ba88ee299071334d"
+      ],
+      "status": "not_reported_inspected",
+      "limitations": [
+        "The conclusion directly states the cross-task comparison, but the local reading units do not include the full task-level accuracy and timing results supporting its breadth.",
+        "The accuracy table has incomplete structure, and the numeric row-to-column assignments have not been verified against a human-readable source.",
+        "The Tang et al. comparison table has incomplete structure; the dataset assignments for the extracted accuracy values remain unverified.",
+        "The training-time table has incomplete structure; assignment of the extracted seconds to the fastText configuration requires source verification.",
+        "The local fragment states the 15,000-fold speedup but omits the preceding context identifying the precise comparator, dataset, hardware conditions, and timing calculation."
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "claim_8860fc3be607ecff",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2",
+        "D6"
+      ],
+      "candidate_ids": [
+        "candidate_e32dddb167373ac1"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_51e7adc9b15d0e02",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D2",
+        "D5"
+      ],
+      "candidate_ids": [
+        "candidate_d4a548d8c7a42e0d"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_6d1e5bf9d7b4c4d4",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D2",
+        "D5"
+      ],
+      "candidate_ids": [],
+      "status": "reported_inspected_no_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_33b526a261c6a73e",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2",
+        "D6"
+      ],
+      "candidate_ids": [
+        "candidate_45ae0b8b2e4c35bd"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_6b3718ef93d4b460",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D2"
+      ],
+      "candidate_ids": [
+        "candidate_83d093bda4b94e99"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_d8e226e6165d59e1",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2"
+      ],
+      "candidate_ids": [
+        "candidate_83d093bda4b94e99"
+      ],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The supplied reading units state the practical prediction complexity but do not provide measurements across class counts or a derivation specifying the scope of the top-T heap cost. Further support may occur elsewhere in the paper."
+      ]
+    },
+    {
+      "claim_id": "claim_b1536496726f40f8",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D1",
+        "D3",
+        "D4",
+        "D6"
+      ],
+      "candidate_ids": [
+        "candidate_9cd1bf4aa574a3c5",
+        "candidate_f4b82c009ae294f8",
+        "candidate_14bf69eea0dbd1bc"
+      ],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The supplied reading units contain summary assertions but no task-level accuracy comparisons, timing results, or matched baseline configurations supporting the claimed accuracy and speed relationship. This is a local evidence gap."
+      ]
+    },
+    {
+      "claim_id": "claim_d626dcbe362f10e8",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "inspected_by_dimensions": [
+        "D1",
+        "D4",
+        "D6"
+      ],
+      "candidate_ids": [],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The conclusion directly states the cross-task comparison, but the local reading units do not include the full task-level accuracy and timing results supporting its breadth."
+      ]
+    },
+    {
+      "claim_id": "claim_a6f3c6b475a8b97d",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D4"
+      ],
+      "candidate_ids": [],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The supplied reading units do not provide the detailed dataset, CPU configuration, training settings, or timing results underlying the abstract's billion-word training claim. This is a local evidence gap."
+      ]
+    },
+    {
+      "claim_id": "claim_5119876d8751ee73",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D4"
+      ],
+      "candidate_ids": [],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The supplied reading units do not provide the hardware, prediction settings, or detailed timing results underlying the abstract's half-million-sentence classification claim. This is a local evidence gap."
+      ]
+    },
+    {
+      "claim_id": "claim_3e81c7155ccae328",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2",
+        "D6"
+      ],
+      "candidate_ids": [],
+      "status": "reported_inspected_no_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_8336132cdc8ce581",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2",
+        "D6"
+      ],
+      "candidate_ids": [],
+      "status": "reported_inspected_no_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_bae5cfbc7c8ffb5b",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D1",
+        "D6"
+      ],
+      "candidate_ids": [
+        "candidate_9cd1bf4aa574a3c5"
+      ],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The supplied local units state the implementation speedup and Vowpal Wabbit options but do not provide benchmark timings, hardware, or dataset-specific conditions for that comparison."
+      ]
+    },
+    {
+      "claim_id": "claim_1133d756d8934075",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "inspected_by_dimensions": [
+        "D1",
+        "D3",
+        "D5",
+        "D6"
+      ],
+      "candidate_ids": [
+        "candidate_f4b82c009ae294f8",
+        "candidate_971f36dc41e9d430"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_ef81b34abfb26685",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "inspected_by_dimensions": [
+        "D1",
+        "D3",
+        "D4"
+      ],
+      "candidate_ids": [
+        "candidate_e32dddb167373ac1"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_08de6e5772093db6",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "inspected_by_dimensions": [],
+      "candidate_ids": [],
+      "status": "not_reported_inspected",
+      "evidence_level": "not_reported",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_853357f3b4e77a6e",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "inspected_by_dimensions": [
+        "D3"
+      ],
+      "candidate_ids": [],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The accuracy table has incomplete structure, and the numeric row-to-column assignments have not been verified against a human-readable source."
+      ]
+    },
+    {
+      "claim_id": "claim_61bbb136047b7443",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "inspected_by_dimensions": [
+        "D4",
+        "D6"
+      ],
+      "candidate_ids": [],
+      "status": "reported_inspected_no_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_c0b9ae33c373b048",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "inspected_by_dimensions": [],
+      "candidate_ids": [],
+      "status": "not_reported_inspected",
+      "evidence_level": "not_reported",
+      "limitations": [
+        "The Tang et al. comparison table has incomplete structure; the dataset assignments for the extracted accuracy values remain unverified."
+      ]
+    },
+    {
+      "claim_id": "claim_4ee5d311407a9fdc",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "inspected_by_dimensions": [
+        "D1",
+        "D3",
+        "D4",
+        "D5"
+      ],
+      "candidate_ids": [
+        "candidate_9cd1bf4aa574a3c5",
+        "candidate_f4b82c009ae294f8",
+        "candidate_14bf69eea0dbd1bc",
+        "candidate_971f36dc41e9d430"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_67d50643162d3173",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "inspected_by_dimensions": [
+        "D3",
+        "D4",
+        "D5"
+      ],
+      "candidate_ids": [
+        "candidate_f4b82c009ae294f8",
+        "candidate_971f36dc41e9d430"
+      ],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The training-time table has incomplete structure; assignment of the extracted seconds to the fastText configuration requires source verification."
+      ]
+    },
+    {
+      "claim_id": "claim_4a3dc828381768d1",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D1"
+      ],
+      "candidate_ids": [
+        "candidate_9cd1bf4aa574a3c5"
+      ],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The supplied local reading units do not explain the rank constraint or fast loss computation stated in the profile contribution. Architecture and loss support must be located in other source portions."
+      ]
+    },
+    {
+      "claim_id": "claim_71f8142f6a6fbd62",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D2",
+        "D3",
+        "D5"
+      ],
+      "candidate_ids": [
+        "candidate_a399dcbbab67a609",
+        "candidate_d4a548d8c7a42e0d",
+        "candidate_31ec55257e7ac738"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_ac132679a77fdbc7",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D1",
+        "D3",
+        "D4",
+        "D5"
+      ],
+      "candidate_ids": [
+        "candidate_d4a548d8c7a42e0d",
+        "candidate_971f36dc41e9d430"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_ed578c71e9671304",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D3"
+      ],
+      "candidate_ids": [],
+      "status": "reported_inspected_no_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_806bb52fd416208b",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "D5"
+      ],
+      "candidate_ids": [
+        "candidate_9cd1bf4aa574a3c5",
+        "candidate_83d093bda4b94e99",
+        "candidate_971f36dc41e9d430"
+      ],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The local passage asserts a fast inference advantage but does not supply the inference algorithm needed to examine that mechanism."
+      ]
+    },
+    {
+      "claim_id": "claim_4632b53f4de11555",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D3",
+        "D5"
+      ],
+      "candidate_ids": [
+        "candidate_a399dcbbab67a609",
+        "candidate_d4a548d8c7a42e0d",
+        "candidate_31ec55257e7ac738"
+      ],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "Table 5 has incomplete extracted structure; the numerical precision-at-one associations require source-table verification."
+      ]
+    },
+    {
+      "claim_id": "claim_8bc4f1e06b6ba6e3",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "inspected_by_dimensions": [
+        "D3",
+        "D4",
+        "D5"
+      ],
+      "candidate_ids": [
+        "candidate_971f36dc41e9d430"
+      ],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The training/test header alignment and numerical runtime associations require source-table verification."
+      ]
+    },
+    {
+      "claim_id": "claim_c65e802567c3ff8f",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "inspected_by_dimensions": [
+        "D1",
+        "D4",
+        "D6"
+      ],
+      "candidate_ids": [
+        "candidate_e32dddb167373ac1",
+        "candidate_7ac07ac2e077cb30",
+        "candidate_ba88ee299071334d"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_2d26dc6d784b4f2f",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "inspected_by_dimensions": [
+        "D3",
+        "D4"
+      ],
+      "candidate_ids": [
+        "candidate_f4b82c009ae294f8",
+        "candidate_14bf69eea0dbd1bc"
+      ],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The local fragment states the 15,000-fold speedup but omits the preceding context identifying the precise comparator, dataset, hardware conditions, and timing calculation."
+      ]
+    }
+  ],
+  "professional_focus": [
+    {
+      "focus_id": "D1:1",
+      "dimension_id": "D1",
+      "status": "mapping_uncertain",
+      "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+    },
+    {
+      "focus_id": "D1:2",
+      "dimension_id": "D1",
+      "status": "mapping_uncertain",
+      "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+    },
+    {
+      "focus_id": "D1:3",
+      "dimension_id": "D1",
+      "status": "mapping_uncertain",
+      "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+    },
+    {
+      "focus_id": "D2:1",
+      "dimension_id": "D2",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D2:2",
+      "dimension_id": "D2",
+      "status": "mapping_uncertain",
+      "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+    },
+    {
+      "focus_id": "D2:3",
+      "dimension_id": "D2",
+      "status": "mapping_uncertain",
+      "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+    },
+    {
+      "focus_id": "D3:1",
+      "dimension_id": "D3",
+      "status": "mapping_uncertain",
+      "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+    },
+    {
+      "focus_id": "D3:2",
+      "dimension_id": "D3",
+      "status": "mapping_uncertain",
+      "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+    },
+    {
+      "focus_id": "D3:3",
+      "dimension_id": "D3",
+      "status": "mapping_uncertain",
+      "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+    },
+    {
+      "focus_id": "D4:1",
+      "dimension_id": "D4",
+      "status": "mapping_uncertain",
+      "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+    },
+    {
+      "focus_id": "D4:2",
+      "dimension_id": "D4",
+      "status": "mapping_uncertain",
+      "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+    },
+    {
+      "focus_id": "D4:3",
+      "dimension_id": "D4",
+      "status": "mapping_uncertain",
+      "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+    },
+    {
+      "focus_id": "D5:1",
+      "dimension_id": "D5",
+      "status": "mapping_uncertain",
+      "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+    },
+    {
+      "focus_id": "D5:2",
+      "dimension_id": "D5",
+      "status": "mapping_uncertain",
+      "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+    },
+    {
+      "focus_id": "D5:3",
+      "dimension_id": "D5",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D6:1",
+      "dimension_id": "D6",
+      "status": "mapping_uncertain",
+      "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+    },
+    {
+      "focus_id": "D6:2",
+      "dimension_id": "D6",
+      "status": "mapping_uncertain",
+      "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+    },
+    {
+      "focus_id": "D6:3",
+      "dimension_id": "D6",
+      "status": "mapping_uncertain",
+      "explanation": "P2-B free text does not explicitly identify this focus; inspection is unconfirmed"
+    }
+  ],
+  "gaps": [
+    {
+      "gap_id": "coverage_gap_a0627c837dcfd6239e46",
+      "gap_type": "focus_not_inspected",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D1"
+      ],
+      "description": "D1 focus lacks a reliable report mapping: claim scope",
+      "cause": "free_text_mapping_uncertain",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:36",
+        "Coverage is partial, with 36 reading units omitted; no absence from the complete paper is inferred.",
+        "Reading order and section boundaries are unverified, and no human-readable reference document or reliable human page references are available.",
+        "Table structures and numerical cell associations remain unverified. Candidate concerns below rely on prose rather than reconstructed numerical comparisons.",
+        "The loss and hierarchical probability equations are fragmented, and the architecture figure requires visual verification.",
+        "The authors explicitly acknowledge prior low-rank classifiers, CBOW-like architecture, hierarchical softmax, and feature hashing, and frame fastText as a simple baseline. The supplied evidence does not justify treating reuse of these components as a novelty defect."
+      ],
+      "next_action": "Check whether this specific focus was inspected",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_e91477898d544fd05bd0",
+      "gap_type": "focus_not_inspected",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D1"
+      ],
+      "description": "D1 focus lacks a reliable report mapping: mechanism distinction",
+      "cause": "free_text_mapping_uncertain",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:36",
+        "Coverage is partial, with 36 reading units omitted; no absence from the complete paper is inferred.",
+        "Reading order and section boundaries are unverified, and no human-readable reference document or reliable human page references are available.",
+        "Table structures and numerical cell associations remain unverified. Candidate concerns below rely on prose rather than reconstructed numerical comparisons.",
+        "The loss and hierarchical probability equations are fragmented, and the architecture figure requires visual verification.",
+        "The authors explicitly acknowledge prior low-rank classifiers, CBOW-like architecture, hierarchical softmax, and feature hashing, and frame fastText as a simple baseline. The supplied evidence does not justify treating reuse of these components as a novelty defect."
+      ],
+      "next_action": "Check whether this specific focus was inspected",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_09596e1bf7c466ecb220",
+      "gap_type": "focus_not_inspected",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D1"
+      ],
+      "description": "D1 focus lacks a reliable report mapping: contribution evidence",
+      "cause": "free_text_mapping_uncertain",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:36",
+        "Coverage is partial, with 36 reading units omitted; no absence from the complete paper is inferred.",
+        "Reading order and section boundaries are unverified, and no human-readable reference document or reliable human page references are available.",
+        "Table structures and numerical cell associations remain unverified. Candidate concerns below rely on prose rather than reconstructed numerical comparisons.",
+        "The loss and hierarchical probability equations are fragmented, and the architecture figure requires visual verification.",
+        "The authors explicitly acknowledge prior low-rank classifiers, CBOW-like architecture, hierarchical softmax, and feature hashing, and frame fastText as a simple baseline. The supplied evidence does not justify treating reuse of these components as a novelty defect."
+      ],
+      "next_action": "Check whether this specific focus was inspected",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_7f97c48ac6966e07a183",
+      "gap_type": "focus_not_inspected",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D2"
+      ],
+      "description": "D2 focus lacks a reliable report mapping: algorithm mechanism",
+      "cause": "free_text_mapping_uncertain",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:41",
+        "Coverage is partial, reading order and section mapping are unverified, and a human-readable reference document is unavailable.",
+        "The loss and hierarchical path-probability equations are fragmented, with relevant formula reading units omitted; their mathematical transcription cannot be assessed reliably.",
+        "The architecture figure requires visual verification. The prose nevertheless consistently describes embedding and averaging followed by a classifier.",
+        "Result tables have incomplete structure. No candidate depends on treating extracted numerical cell assignments as verified.",
+        "Implementation and independent complexity verification were not available. Missing detail in the supplied units does not establish its absence from the complete paper."
+      ],
+      "next_action": "Check whether this specific focus was inspected",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_2f5b8ffd11674469a1e5",
+      "gap_type": "focus_not_inspected",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D2"
+      ],
+      "description": "D2 focus lacks a reliable report mapping: formula limitations",
+      "cause": "free_text_mapping_uncertain",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:41",
+        "Coverage is partial, reading order and section mapping are unverified, and a human-readable reference document is unavailable.",
+        "The loss and hierarchical path-probability equations are fragmented, with relevant formula reading units omitted; their mathematical transcription cannot be assessed reliably.",
+        "The architecture figure requires visual verification. The prose nevertheless consistently describes embedding and averaging followed by a classifier.",
+        "Result tables have incomplete structure. No candidate depends on treating extracted numerical cell assignments as verified.",
+        "Implementation and independent complexity verification were not available. Missing detail in the supplied units does not establish its absence from the complete paper."
+      ],
+      "next_action": "Check whether this specific focus was inspected",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_026feab393ae112a42b2",
+      "gap_type": "focus_not_inspected",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D3"
+      ],
+      "description": "D3 focus lacks a reliable report mapping: comparison fairness",
+      "cause": "free_text_mapping_uncertain",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:45",
+        "Coverage is partial, with 45 reading units omitted; a detail absent from this context cannot be treated as absent from the paper.",
+        "Reading order and section mapping are unresolved, and no human-readable reference document or reliable human page references are supplied.",
+        "The accuracy and timing tables have incomplete structure. Numerical cell assignments and speedup calculations have not been independently verified.",
+        "The supplied results already compare fastText with and without bigrams and, for tag prediction, with hidden dimensions 50 and 200. These comparisons should not be described as missing ablations.",
+        "Fragmented equations and the unverified architecture figure limit mathematical inspection; no concern here depends on their transcription."
+      ],
+      "next_action": "Check whether this specific focus was inspected",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_40f3fafeb15ac653b4c4",
+      "gap_type": "focus_not_inspected",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D3"
+      ],
+      "description": "D3 focus lacks a reliable report mapping: ablation",
+      "cause": "free_text_mapping_uncertain",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:45",
+        "Coverage is partial, with 45 reading units omitted; a detail absent from this context cannot be treated as absent from the paper.",
+        "Reading order and section mapping are unresolved, and no human-readable reference document or reliable human page references are supplied.",
+        "The accuracy and timing tables have incomplete structure. Numerical cell assignments and speedup calculations have not been independently verified.",
+        "The supplied results already compare fastText with and without bigrams and, for tag prediction, with hidden dimensions 50 and 200. These comparisons should not be described as missing ablations.",
+        "Fragmented equations and the unverified architecture figure limit mathematical inspection; no concern here depends on their transcription."
+      ],
+      "next_action": "Check whether this specific focus was inspected",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_c7f213240b0b56cbb9b4",
+      "gap_type": "focus_not_inspected",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D3"
+      ],
+      "description": "D3 focus lacks a reliable report mapping: result interpretation",
+      "cause": "free_text_mapping_uncertain",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:45",
+        "Coverage is partial, with 45 reading units omitted; a detail absent from this context cannot be treated as absent from the paper.",
+        "Reading order and section mapping are unresolved, and no human-readable reference document or reliable human page references are supplied.",
+        "The accuracy and timing tables have incomplete structure. Numerical cell assignments and speedup calculations have not been independently verified.",
+        "The supplied results already compare fastText with and without bigrams and, for tag prediction, with hidden dimensions 50 and 200. These comparisons should not be described as missing ablations.",
+        "Fragmented equations and the unverified architecture figure limit mathematical inspection; no concern here depends on their transcription."
+      ],
+      "next_action": "Check whether this specific focus was inspected",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_67c3f15ecc346c31a0b8",
+      "gap_type": "focus_not_inspected",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D4"
+      ],
+      "description": "D4 focus lacks a reliable report mapping: claim consistency",
+      "cause": "free_text_mapping_uncertain",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:13",
+        "Coverage is partial, with 13 reading units omitted. Absence of evidence in this bundle does not establish absence from the paper.",
+        "Reading order and section mapping are unverified; a human-readable reference document and reliable human page references are unavailable.",
+        "Result-table structures and numerical column associations remain unverified. No candidate treats a numerical discrepancy arising from extraction as an established author error.",
+        "The abstract's sub-ten-minute training and sub-minute prediction statements can correspond to the smaller tag-prediction configurations; the slower 200-unit configurations do not by themselves contradict those statements.",
+        "No P2-A source_conflicts were supplied."
+      ],
+      "next_action": "Check whether this specific focus was inspected",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_a2c0b02bb87b2a24f828",
+      "gap_type": "focus_not_inspected",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D4"
+      ],
+      "description": "D4 focus lacks a reliable report mapping: source conflicts",
+      "cause": "free_text_mapping_uncertain",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:13",
+        "Coverage is partial, with 13 reading units omitted. Absence of evidence in this bundle does not establish absence from the paper.",
+        "Reading order and section mapping are unverified; a human-readable reference document and reliable human page references are unavailable.",
+        "Result-table structures and numerical column associations remain unverified. No candidate treats a numerical discrepancy arising from extraction as an established author error.",
+        "The abstract's sub-ten-minute training and sub-minute prediction statements can correspond to the smaller tag-prediction configurations; the slower 200-unit configurations do not by themselves contradict those statements.",
+        "No P2-A source_conflicts were supplied."
+      ],
+      "next_action": "Check whether this specific focus was inspected",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_3ee99ee7e99059844358",
+      "gap_type": "focus_not_inspected",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D4"
+      ],
+      "description": "D4 focus lacks a reliable report mapping: conclusion scope",
+      "cause": "free_text_mapping_uncertain",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:13",
+        "Coverage is partial, with 13 reading units omitted. Absence of evidence in this bundle does not establish absence from the paper.",
+        "Reading order and section mapping are unverified; a human-readable reference document and reliable human page references are unavailable.",
+        "Result-table structures and numerical column associations remain unverified. No candidate treats a numerical discrepancy arising from extraction as an established author error.",
+        "The abstract's sub-ten-minute training and sub-minute prediction statements can correspond to the smaller tag-prediction configurations; the slower 200-unit configurations do not by themselves contradict those statements.",
+        "No P2-A source_conflicts were supplied."
+      ],
+      "next_action": "Check whether this specific focus was inspected",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_d52f55e4e69d406c3fe0",
+      "gap_type": "focus_not_inspected",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D5"
+      ],
+      "description": "D5 focus lacks a reliable report mapping: implementation details",
+      "cause": "free_text_mapping_uncertain",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:43",
+        "Coverage is partial; omitted reading units may contain relevant implementation or protocol details.",
+        "Reading order and section mapping are not verified, and no human-readable original is available.",
+        "The loss and hierarchical probability equations are fragmented; no concern is based on their apparent transcription.",
+        "Result tables have incomplete structure, so numerical alignments and runtime ratios have not been independently checked.",
+        "The linked implementation and promised dataset-reconstruction script have not been inspected."
+      ],
+      "next_action": "Check whether this specific focus was inspected",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_f1a99e9fe14aa5afb946",
+      "gap_type": "focus_not_inspected",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D5"
+      ],
+      "description": "D5 focus lacks a reliable report mapping: training protocol",
+      "cause": "free_text_mapping_uncertain",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:43",
+        "Coverage is partial; omitted reading units may contain relevant implementation or protocol details.",
+        "Reading order and section mapping are not verified, and no human-readable original is available.",
+        "The loss and hierarchical probability equations are fragmented; no concern is based on their apparent transcription.",
+        "Result tables have incomplete structure, so numerical alignments and runtime ratios have not been independently checked.",
+        "The linked implementation and promised dataset-reconstruction script have not been inspected."
+      ],
+      "next_action": "Check whether this specific focus was inspected",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_712f833b4e546a8a047a",
+      "gap_type": "focus_not_inspected",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D6"
+      ],
+      "description": "D6 focus lacks a reliable report mapping: research gap",
+      "cause": "free_text_mapping_uncertain",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:37",
+        "Coverage is partial, with 37 reading units omitted, including much of the reference list. Completeness of related-work coverage and bibliographic accuracy cannot be established.",
+        "The original human-readable document is unavailable, and reading order and section boundaries remain unverified.",
+        "Result-table structures and numerical alignments remain unverified; no concern here depends on treating extracted numerical comparisons as independently checked.",
+        "The cited prior publications were not supplied in sufficient detail to verify their findings or citation-to-claim fit externally.",
+        "The supplied text explicitly credits existing low-rank approaches, CBOW, hierarchical softmax, hashing, and n-gram features and acknowledges that the model could be implemented in Vowpal Wabbit. These acknowledgments do not support a concern about claiming those individual mechanisms as new."
+      ],
+      "next_action": "Check whether this specific focus was inspected",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_1f2389f839eb3f1150f7",
+      "gap_type": "focus_not_inspected",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D6"
+      ],
+      "description": "D6 focus lacks a reliable report mapping: internal citations",
+      "cause": "free_text_mapping_uncertain",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:37",
+        "Coverage is partial, with 37 reading units omitted, including much of the reference list. Completeness of related-work coverage and bibliographic accuracy cannot be established.",
+        "The original human-readable document is unavailable, and reading order and section boundaries remain unverified.",
+        "Result-table structures and numerical alignments remain unverified; no concern here depends on treating extracted numerical comparisons as independently checked.",
+        "The cited prior publications were not supplied in sufficient detail to verify their findings or citation-to-claim fit externally.",
+        "The supplied text explicitly credits existing low-rank approaches, CBOW, hierarchical softmax, hashing, and n-gram features and acknowledges that the model could be implemented in Vowpal Wabbit. These acknowledgments do not support a concern about claiming those individual mechanisms as new."
+      ],
+      "next_action": "Check whether this specific focus was inspected",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_70554e6a1e1719f1117e",
+      "gap_type": "focus_not_inspected",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D6"
+      ],
+      "description": "D6 focus lacks a reliable report mapping: external-check leads",
+      "cause": "free_text_mapping_uncertain",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:37",
+        "Coverage is partial, with 37 reading units omitted, including much of the reference list. Completeness of related-work coverage and bibliographic accuracy cannot be established.",
+        "The original human-readable document is unavailable, and reading order and section boundaries remain unverified.",
+        "Result-table structures and numerical alignments remain unverified; no concern here depends on treating extracted numerical comparisons as independently checked.",
+        "The cited prior publications were not supplied in sufficient detail to verify their findings or citation-to-claim fit externally.",
+        "The supplied text explicitly credits existing low-rank approaches, CBOW, hierarchical softmax, hashing, and n-gram features and acknowledges that the model could be implemented in Vowpal Wabbit. These acknowledgments do not support a concern about claiming those individual mechanisms as new."
+      ],
+      "next_action": "Check whether this specific focus was inspected",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_d035ee2d84c45f796854",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_97e74aec1af3cf15"
+      ],
+      "affected_claim_ids": [
+        "claim_d8e226e6165d59e1"
+      ],
+      "affected_dimension_ids": [
+        "D1",
+        "D2"
+      ],
+      "description": "Claim claim_d8e226e6165d59e1 has unresolved source evidence: The supplied reading units state the practical prediction complexity but do not provide measurements across class counts or a derivation specifying the scope of the top-T heap cost. Further support may occur elsewhere in the paper.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The supplied reading units state the practical prediction complexity but do not provide measurements across class counts or a derivation specifying the scope of the top-T heap cost. Further support may occur elsewhere in the paper."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_8058b7d2ba6e6e988380",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_97e74aec1af3cf15"
+      ],
+      "affected_claim_ids": [
+        "claim_b1536496726f40f8"
+      ],
+      "affected_dimension_ids": [
+        "D1",
+        "D3",
+        "D4",
+        "D6"
+      ],
+      "description": "Claim claim_b1536496726f40f8 has unresolved source evidence: The supplied reading units contain summary assertions but no task-level accuracy comparisons, timing results, or matched baseline configurations supporting the claimed accuracy and speed relationship. This is a local evidence gap.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The supplied reading units contain summary assertions but no task-level accuracy comparisons, timing results, or matched baseline configurations supporting the claimed accuracy and speed relationship. This is a local evidence gap."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_5bcd4effabc474e984eb",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_79564b0c2f56215c"
+      ],
+      "affected_claim_ids": [
+        "claim_d626dcbe362f10e8"
+      ],
+      "affected_dimension_ids": [
+        "D1",
+        "D4",
+        "D6"
+      ],
+      "description": "Claim claim_d626dcbe362f10e8 has unresolved source evidence: The conclusion directly states the cross-task comparison, but the local reading units do not include the full task-level accuracy and timing results supporting its breadth.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The conclusion directly states the cross-task comparison, but the local reading units do not include the full task-level accuracy and timing results supporting its breadth."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_a13ae66c7b83a640e8fe",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_97e74aec1af3cf15"
+      ],
+      "affected_claim_ids": [
+        "claim_a6f3c6b475a8b97d"
+      ],
+      "affected_dimension_ids": [
+        "D4"
+      ],
+      "description": "Claim claim_a6f3c6b475a8b97d has unresolved source evidence: The supplied reading units do not provide the detailed dataset, CPU configuration, training settings, or timing results underlying the abstract's billion-word training claim. This is a local evidence gap.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The supplied reading units do not provide the detailed dataset, CPU configuration, training settings, or timing results underlying the abstract's billion-word training claim. This is a local evidence gap."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_272e53a393f5facf01e5",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_97e74aec1af3cf15"
+      ],
+      "affected_claim_ids": [
+        "claim_5119876d8751ee73"
+      ],
+      "affected_dimension_ids": [
+        "D4"
+      ],
+      "description": "Claim claim_5119876d8751ee73 has unresolved source evidence: The supplied reading units do not provide the hardware, prediction settings, or detailed timing results underlying the abstract's half-million-sentence classification claim. This is a local evidence gap.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The supplied reading units do not provide the hardware, prediction settings, or detailed timing results underlying the abstract's half-million-sentence classification claim. This is a local evidence gap."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_b5ed60eca2dafb66e91f",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_97e74aec1af3cf15"
+      ],
+      "affected_claim_ids": [
+        "claim_bae5cfbc7c8ffb5b"
+      ],
+      "affected_dimension_ids": [
+        "D1",
+        "D6"
+      ],
+      "description": "Claim claim_bae5cfbc7c8ffb5b has unresolved source evidence: The supplied local units state the implementation speedup and Vowpal Wabbit options but do not provide benchmark timings, hardware, or dataset-specific conditions for that comparison.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The supplied local units state the implementation speedup and Vowpal Wabbit options but do not provide benchmark timings, hardware, or dataset-specific conditions for that comparison."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_3aa1f24a5226e39af2b0",
+      "gap_type": "claim_not_inspected",
+      "affected_contribution_ids": [
+        "contrib_79564b0c2f56215c"
+      ],
+      "affected_claim_ids": [
+        "claim_08de6e5772093db6"
+      ],
+      "affected_dimension_ids": [],
+      "description": "Claim claim_08de6e5772093db6 has no completed inspection record",
+      "cause": "no_model_report",
+      "source_limitations": [],
+      "next_action": "Inspect the claim using its original source evidence",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_5c02bccc54fed036ece4",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_79564b0c2f56215c"
+      ],
+      "affected_claim_ids": [
+        "claim_853357f3b4e77a6e"
+      ],
+      "affected_dimension_ids": [
+        "D3"
+      ],
+      "description": "Claim claim_853357f3b4e77a6e has unresolved source evidence: The accuracy table has incomplete structure, and the numeric row-to-column assignments have not been verified against a human-readable source.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The accuracy table has incomplete structure, and the numeric row-to-column assignments have not been verified against a human-readable source."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_2bafa9a335d80b10a333",
+      "gap_type": "claim_not_inspected",
+      "affected_contribution_ids": [
+        "contrib_79564b0c2f56215c"
+      ],
+      "affected_claim_ids": [
+        "claim_c0b9ae33c373b048"
+      ],
+      "affected_dimension_ids": [],
+      "description": "Claim claim_c0b9ae33c373b048 has no completed inspection record",
+      "cause": "no_model_report",
+      "source_limitations": [
+        "The Tang et al. comparison table has incomplete structure; the dataset assignments for the extracted accuracy values remain unverified."
+      ],
+      "next_action": "Inspect the claim using its original source evidence",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_2b3e43809b7d559a3bbd",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_79564b0c2f56215c"
+      ],
+      "affected_claim_ids": [
+        "claim_c0b9ae33c373b048"
+      ],
+      "affected_dimension_ids": [],
+      "description": "Claim claim_c0b9ae33c373b048 has unresolved source evidence: The Tang et al. comparison table has incomplete structure; the dataset assignments for the extracted accuracy values remain unverified.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The Tang et al. comparison table has incomplete structure; the dataset assignments for the extracted accuracy values remain unverified."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_78e8772f97f998108c68",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_79564b0c2f56215c"
+      ],
+      "affected_claim_ids": [
+        "claim_67d50643162d3173"
+      ],
+      "affected_dimension_ids": [
+        "D3",
+        "D4",
+        "D5"
+      ],
+      "description": "Claim claim_67d50643162d3173 has unresolved source evidence: The training-time table has incomplete structure; assignment of the extracted seconds to the fastText configuration requires source verification.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The training-time table has incomplete structure; assignment of the extracted seconds to the fastText configuration requires source verification."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_a0f6fe73be3961d77682",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_97e74aec1af3cf15"
+      ],
+      "affected_claim_ids": [
+        "claim_4a3dc828381768d1"
+      ],
+      "affected_dimension_ids": [
+        "D1"
+      ],
+      "description": "Claim claim_4a3dc828381768d1 has unresolved source evidence: The supplied local reading units do not explain the rank constraint or fast loss computation stated in the profile contribution. Architecture and loss support must be located in other source portions.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The supplied local reading units do not explain the rank constraint or fast loss computation stated in the profile contribution. Architecture and loss support must be located in other source portions."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_66ada5c4ae51f871189b",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_97e74aec1af3cf15"
+      ],
+      "affected_claim_ids": [
+        "claim_806bb52fd416208b"
+      ],
+      "affected_dimension_ids": [
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "D5"
+      ],
+      "description": "Claim claim_806bb52fd416208b has unresolved source evidence: The local passage asserts a fast inference advantage but does not supply the inference algorithm needed to examine that mechanism.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The local passage asserts a fast inference advantage but does not supply the inference algorithm needed to examine that mechanism."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_519b13d214705b7165b2",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_97e74aec1af3cf15"
+      ],
+      "affected_claim_ids": [
+        "claim_4632b53f4de11555"
+      ],
+      "affected_dimension_ids": [
+        "D3",
+        "D5"
+      ],
+      "description": "Claim claim_4632b53f4de11555 has unresolved source evidence: Table 5 has incomplete extracted structure; the numerical precision-at-one associations require source-table verification.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "Table 5 has incomplete extracted structure; the numerical precision-at-one associations require source-table verification."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_71621ee16a0e7c8a6c6a",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_97e74aec1af3cf15"
+      ],
+      "affected_claim_ids": [
+        "claim_8bc4f1e06b6ba6e3"
+      ],
+      "affected_dimension_ids": [
+        "D3",
+        "D4",
+        "D5"
+      ],
+      "description": "Claim claim_8bc4f1e06b6ba6e3 has unresolved source evidence: The training/test header alignment and numerical runtime associations require source-table verification.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The training/test header alignment and numerical runtime associations require source-table verification."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_abbc9bf8f6fc7e40e404",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_79564b0c2f56215c"
+      ],
+      "affected_claim_ids": [
+        "claim_2d26dc6d784b4f2f"
+      ],
+      "affected_dimension_ids": [
+        "D3",
+        "D4"
+      ],
+      "description": "Claim claim_2d26dc6d784b4f2f has unresolved source evidence: The local fragment states the 15,000-fold speedup but omits the preceding context identifying the precise comparator, dataset, hardware conditions, and timing calculation.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The local fragment states the 15,000-fold speedup but omits the preceding context identifying the precise comparator, dataset, hardware conditions, and timing calculation."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_ca3207435c8b9719cd62",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "D5",
+        "D6"
+      ],
+      "description": "P2-B input has unresolved source limitations",
+      "cause": "frozen_source_or_p2a_limit",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+        "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+        "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+        "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+        "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_p1_0: structure_incomplete",
+        "table table_ev_26739aba340e_2_3: structure_incomplete",
+        "table table_ev_26739aba340e_2_9: structure_incomplete",
+        "table table_ev_26739aba340e_2_14: structure_incomplete",
+        "table table_ev_26739aba340e_3_8: structure_incomplete",
+        "table table_ev_26739aba340e_3_16: structure_incomplete",
+        "figure figure_ev_26739aba340e_1_3: visual_review_required",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "source_quality_status:needs_review"
+      ],
+      "next_action": "Review original PDF and omitted/visual regions as needed",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_336e5b04a5b4b41b12ee",
+      "gap_type": "required_material_missing",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [],
+      "description": "ReviewPlan lists required materials not available in this run",
+      "cause": "missing_materials",
+      "source_limitations": [
+        "A human-readable reference document and human page references are unavailable according to the supplied quality state.",
+        "Verified reading order and complete section mapping are unresolved in the supplied extraction.",
+        "Complete table structure is unavailable for table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16.",
+        "Visual verification remains outstanding for figure_ev_26739aba340e_1_3."
+      ],
+      "next_action": "Obtain or explicitly scope out the required material",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_21a36e055f28d13130ea",
+      "gap_type": "external_material",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [
+        "claim_c65e802567c3ff8f"
+      ],
+      "affected_dimension_ids": [
+        "D6"
+      ],
+      "description": "Candidate questions require external material",
+      "cause": "candidate_external_verification_flag",
+      "source_limitations": [],
+      "next_action": "Check cited literature, code or data in P3",
+      "status": "unresolved"
+    }
+  ],
+  "limitations": [
+    "Legacy block order is not a verified reading order.",
+    "Formula transcription, table rows, figures, section boundaries and references require verification.",
+    "A missing object in this candidate inventory does not prove absence from the PDF.",
+    "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+    "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+    "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+    "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+    "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+    "Source quality: reading_order_ambiguous",
+    "Source quality: section_mapping_incomplete",
+    "Source quality: human_reading_reference_missing",
+    "Source quality: human_page_reference_missing",
+    "table table_p1_0: structure_incomplete",
+    "table table_ev_26739aba340e_2_3: structure_incomplete",
+    "table table_ev_26739aba340e_2_9: structure_incomplete",
+    "table table_ev_26739aba340e_2_14: structure_incomplete",
+    "table table_ev_26739aba340e_3_8: structure_incomplete",
+    "table table_ev_26739aba340e_3_16: structure_incomplete",
+    "figure figure_ev_26739aba340e_1_3: visual_review_required",
+    "reading_order_ambiguous",
+    "section_mapping_incomplete",
+    "human_reading_reference_missing",
+    "human_page_reference_missing",
+    "p2a_limited",
+    "source_quality_status:needs_review"
+  ],
+  "evidence_level": "model_report_only"
+}

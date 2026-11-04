@@ -1,0 +1,387 @@
+[
+  {
+    "left_issue_id": "candidate_411d89d947fb55ec",
+    "right_issue_id": "candidate_44ae8c725a2e4956",
+    "relation": "distinct",
+    "rationale": "The first questions whether BLEU gains isolate the position representation; the second questions the empirical scope of implementation efficiency. Matched translation training records would not establish memory or runtime tradeoffs.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_411d89d947fb55ec",
+    "right_issue_id": "candidate_4e6dea2fd90f07da",
+    "relation": "distinct",
+    "rationale": "Baseline comparability concerns experimental attribution of BLEU gains, whereas the storage concern requires accounting for attention tensors and representation sharing in the stated asymptotic bound.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_411d89d947fb55ec",
+    "right_issue_id": "candidate_549cf495fe3bd6f9",
+    "relation": "distinct",
+    "rationale": "Matching absolute and relative training conditions addresses attribution of ordinary translation gains. Testing unseen-length generalization requires training-length limits and evaluation outside those limits.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_411d89d947fb55ec",
+    "right_issue_id": "candidate_633aeca7f9bd479d",
+    "relation": "distinct",
+    "rationale": "The first concerns confounding in baseline comparisons; the second concerns whether length-independent labels support a claim of predictive performance at unseen lengths. Their decisive evidence differs.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_411d89d947fb55ec",
+    "right_issue_id": "candidate_7000f7ac462a95b7",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern interpreting reported BLEU gains and overlap on consistent evaluation. However, baseline matching requires paired training and selection records, while scoring reproducibility requires the exact scorer and text-processing pipeline. An identical but undocumented scoring pipeline could satisfy internal comparability without resolving reproducibility.",
+    "shared_verification_need": "Check whether baseline and relative-position outputs used identical scoring, reference processing, and decoding settings; additional training records and scoring specifications remain independently necessary."
+  },
+  {
+    "left_issue_id": "candidate_411d89d947fb55ec",
+    "right_issue_id": "candidate_94105da03d98236b",
+    "relation": "distinct",
+    "rationale": "The first asks whether translation-quality comparisons are controlled; the second asks whether a throughput comparison and broader efficiency evidence substantiate implementation cost claims. Their comparison baselines serve different scientific questions.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_411d89d947fb55ec",
+    "right_issue_id": "candidate_b869e41b9495ceea",
+    "relation": "distinct",
+    "rationale": "Controlling the reported absolute-versus-relative BLEU comparison does not test performance under a deliberate sequence-length shift, which is the second candidate's concern.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_411d89d947fb55ec",
+    "right_issue_id": "candidate_d0595236a2c0a091",
+    "relation": "distinct",
+    "rationale": "Baseline matching concerns causal attribution of measured gains. The generalization boundary concerns the meaning and evidence for extrapolation beyond training lengths, requiring different textual and experimental checks.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_411d89d947fb55ec",
+    "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
+    "relation": "semantic_duplicate",
+    "rationale": "Both question whether each absolute-position baseline and relative-position model used matched training, checkpoint selection, decoding, and evaluation conditions so that BLEU differences can be attributed to position representations. Their differing impact assessments do not change the verification task.",
+    "shared_verification_need": "Inspect paired baseline and relative-position configurations and result provenance, including update budgets, optimization, seeds, checkpoint selection or averaging, data handling, and decoding/evaluation settings."
+  },
+  {
+    "left_issue_id": "candidate_411d89d947fb55ec",
+    "right_issue_id": "candidate_ea97b96233a7aa53",
+    "relation": "related_but_distinct",
+    "rationale": "Both require controlled position-representation comparisons, but they concern different contrasts: absolute versus relative representations, and combined representations versus the single-representation conditions. Verifying the former does not establish the combined condition or its no-benefit result.",
+    "shared_verification_need": "Inspect training, checkpoint, and evaluation settings across position-representation conditions; the combined-condition scores and provenance require a separate check."
+  },
+  {
+    "left_issue_id": "candidate_44ae8c725a2e4956",
+    "right_issue_id": "candidate_4e6dea2fd90f07da",
+    "relation": "related_but_distinct",
+    "rationale": "Both address storage and implementation efficiency, with overlap in tensor accounting. The first primarily asks whether practical throughput, memory, and other cost measurements support the efficiency claim; the second asks whether the theoretical storage bound includes attention matrices and the applicable sharing assumptions. Neither verification alone resolves both.",
+    "shared_verification_need": "Inspect which tensors the implementation materializes and how head and sequence sharing affect storage; practical cost measurements and the scope of the theoretical bound still require separate verification."
+  },
+  {
+    "left_issue_id": "candidate_44ae8c725a2e4956",
+    "right_issue_id": "candidate_549cf495fe3bd6f9",
+    "relation": "distinct",
+    "rationale": "Implementation cost evidence and predictive generalization to unseen sequence lengths are different questions. Runtime or memory measurements do not establish length-extrapolation quality.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_44ae8c725a2e4956",
+    "right_issue_id": "candidate_633aeca7f9bd479d",
+    "relation": "distinct",
+    "rationale": "The first concerns practical efficiency evidence; the second concerns whether structural length independence supports a predictive generalization claim. They require cost benchmarks and length-shifted performance evidence, respectively.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_44ae8c725a2e4956",
+    "right_issue_id": "candidate_7000f7ac462a95b7",
+    "relation": "distinct",
+    "rationale": "The efficiency concern requires implementation benchmarks and cost accounting. The BLEU protocol concern requires scorer, tokenization, case, and reconstruction specifications. Recovering one protocol would not resolve the other.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_44ae8c725a2e4956",
+    "right_issue_id": "candidate_94105da03d98236b",
+    "relation": "semantic_duplicate",
+    "rationale": "Both question whether the single reported 7% throughput decrease adequately substantiates practical efficiency, given uncertain comparison conditions and missing memory, runtime, and scaling evidence. Their additional examples of desirable measurements refine the same central verification need.",
+    "shared_verification_need": "Identify the precise throughput baseline and measurement scope, verify matched benchmarking conditions, and inspect available memory, wall-clock, and scaling measurements alongside implementation tensor accounting."
+  },
+  {
+    "left_issue_id": "candidate_44ae8c725a2e4956",
+    "right_issue_id": "candidate_b869e41b9495ceea",
+    "relation": "distinct",
+    "rationale": "The first asks about practical computation and memory costs; the second asks whether clipping supports performance on unseen sequence lengths. These require independent benchmarks and generalization experiments.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_44ae8c725a2e4956",
+    "right_issue_id": "candidate_d0595236a2c0a091",
+    "relation": "distinct",
+    "rationale": "The practical efficiency claim and the distinction between representational applicability and predictive length extrapolation concern different properties and different supporting evidence.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_44ae8c725a2e4956",
+    "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
+    "relation": "distinct",
+    "rationale": "Although both mention matched comparison conditions, one concerns runtime and memory evidence while the other concerns attribution of BLEU improvements. A controlled efficiency benchmark would not establish matched translation training histories.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_44ae8c725a2e4956",
+    "right_issue_id": "candidate_ea97b96233a7aa53",
+    "relation": "distinct",
+    "rationale": "Efficiency measurements do not determine whether a combined absolute-plus-relative condition was evaluated or whether it improved translation quality. The latter requires identifiable combined-condition results and controls.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_4e6dea2fd90f07da",
+    "right_issue_id": "candidate_549cf495fe3bd6f9",
+    "relation": "distinct",
+    "rationale": "The storage candidate questions asymptotic tensor accounting and sharing assumptions. The generalization candidate questions predictive evidence outside training-length ranges. Their common reference to sequence length does not make their verification tasks equivalent.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_4e6dea2fd90f07da",
+    "right_issue_id": "candidate_633aeca7f9bd479d",
+    "relation": "distinct",
+    "rationale": "The first questions which tensors and sharing configurations the storage bound covers; the second questions whether length-independent representations establish predictive generalization to unseen lengths. Memory accounting would not resolve the generalization claim.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_4e6dea2fd90f07da",
+    "right_issue_id": "candidate_7000f7ac462a95b7",
+    "relation": "distinct",
+    "rationale": "Storage-bound scope requires tensor and implementation accounting, while BLEU reproducibility requires identification of scoring and text-processing procedures. These are independent verification tasks.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_4e6dea2fd90f07da",
+    "right_issue_id": "candidate_94105da03d98236b",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern computational cost and overlap on whether the storage formula matches materialized tensors. However, the first targets asymptotic memory accounting, whereas the second also requires the runtime baseline, measurement boundaries, and empirical scaling evidence. Resolving the storage formula would not resolve the runtime concern.",
+    "shared_verification_need": "Check which tensors are materialized and how head sharing affects the stated storage terms."
+  },
+  {
+    "left_issue_id": "candidate_4e6dea2fd90f07da",
+    "right_issue_id": "candidate_b869e41b9495ceea",
+    "relation": "distinct",
+    "rationale": "The storage concern asks about tensor accounting and sharing assumptions; the generalization concern asks for evaluation beyond training sequence lengths. Neither verification resolves the other.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_4e6dea2fd90f07da",
+    "right_issue_id": "candidate_d0595236a2c0a091",
+    "relation": "distinct",
+    "rationale": "The first questions the scope of an asymptotic storage bound, while the second questions whether clipping supports a claim about unseen-length predictive performance. They require different evidence.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_4e6dea2fd90f07da",
+    "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
+    "relation": "distinct",
+    "rationale": "Verifying memory complexity requires tensor accounting; verifying attribution of BLEU gains requires matched baseline training and evaluation configurations. The scientific questions and evidence are independent.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_4e6dea2fd90f07da",
+    "right_issue_id": "candidate_ea97b96233a7aa53",
+    "relation": "distinct",
+    "rationale": "Storage-bound scope and evidence for a combined relative-plus-absolute position control concern different claims. Inspecting memory accounting would not establish the combined condition's configuration or results.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_549cf495fe3bd6f9",
+    "right_issue_id": "candidate_633aeca7f9bd479d",
+    "relation": "semantic_duplicate",
+    "rationale": "Both question whether the unseen-length generalization statement is supported beyond representational invariance and the clipping-distance ablation. One emphasizes evaluation coverage and the other contribution scope, but checking the intended claim and any length-extrapolation evaluation would substantially resolve both.",
+    "shared_verification_need": "Inspect the statement in context and locate training-length limits, evaluation-length distributions, and performance results outside the training-length range."
+  },
+  {
+    "left_issue_id": "candidate_549cf495fe3bd6f9",
+    "right_issue_id": "candidate_7000f7ac462a95b7",
+    "relation": "distinct",
+    "rationale": "The first asks whether unseen-length generalization was evaluated; the second asks how reported BLEU scores were computed. Recovering the scoring pipeline does not establish a length-shifted evaluation.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_549cf495fe3bd6f9",
+    "right_issue_id": "candidate_94105da03d98236b",
+    "relation": "distinct",
+    "rationale": "Evidence for unseen-length predictive generalization and evidence for practical computational efficiency address separate claims. Length-distribution checks would not determine the runtime baseline or measurement scope.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_549cf495fe3bd6f9",
+    "right_issue_id": "candidate_b869e41b9495ceea",
+    "relation": "exact_duplicate",
+    "rationale": "Both identify the same unresolved question: whether clipping's asserted unseen-length generalization has direct evaluation support rather than only a clipping-distance ablation on the ordinary development set. Their verification tasks are effectively the same.",
+    "shared_verification_need": "Check the complete paper for a deliberately length-shifted evaluation, training and test length distributions, and clarification of whether the generalization statement is architectural or empirical."
+  },
+  {
+    "left_issue_id": "candidate_549cf495fe3bd6f9",
+    "right_issue_id": "candidate_d0595236a2c0a091",
+    "relation": "semantic_duplicate",
+    "rationale": "Both question the evidential boundary between length-independent relation representations and demonstrated performance at unseen lengths. The difference between emphasis on missing evaluation and emphasis on claim wording does not create an independent scientific question.",
+    "shared_verification_need": "Determine the contextual meaning of the generalization statement and whether results explicitly test predictive performance outside the training-length range."
+  },
+  {
+    "left_issue_id": "candidate_549cf495fe3bd6f9",
+    "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
+    "relation": "distinct",
+    "rationale": "The first concerns evidence for length extrapolation; the second concerns whether ordinary translation gains are attributable to position representations under matched training conditions. Baseline matching alone would not establish unseen-length performance.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_549cf495fe3bd6f9",
+    "right_issue_id": "candidate_ea97b96233a7aa53",
+    "relation": "distinct",
+    "rationale": "A length-extrapolation evaluation and a combined-position control test different hypotheses. Locating or verifying either experiment would not resolve the other concern.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_633aeca7f9bd479d",
+    "right_issue_id": "candidate_7000f7ac462a95b7",
+    "relation": "distinct",
+    "rationale": "The first asks whether structural applicability supports a predictive generalization claim; the second asks whether BLEU scoring procedures are reproducible. They require independent evidence.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_633aeca7f9bd479d",
+    "right_issue_id": "candidate_94105da03d98236b",
+    "relation": "distinct",
+    "rationale": "The generalization claim requires interpretation and length-extrapolation evidence, whereas the efficiency claim requires defined runtime comparisons and cost measurements. Neither task resolves the other.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_633aeca7f9bd479d",
+    "right_issue_id": "candidate_b869e41b9495ceea",
+    "relation": "semantic_duplicate",
+    "rationale": "Both question whether clipping and length-independent labels justify unseen-length performance claims when the supplied experiment varies clipping distance rather than evaluation length. Their different framing leads to substantially the same verification need.",
+    "shared_verification_need": "Check whether the full paper distinguishes representational applicability from predictive extrapolation and supplies an evaluation beyond training lengths."
+  },
+  {
+    "left_issue_id": "candidate_633aeca7f9bd479d",
+    "right_issue_id": "candidate_d0595236a2c0a091",
+    "relation": "exact_duplicate",
+    "rationale": "Both explicitly question the same possible conflation between assigning relative-position labels at unseen lengths and maintaining translation performance there. Both require checking the statement's intended meaning and any supporting length-extrapolation experiment.",
+    "shared_verification_need": "Inspect the original wording and qualifications, then verify training-length limits and results for evaluation sequences outside those limits."
+  },
+  {
+    "left_issue_id": "candidate_633aeca7f9bd479d",
+    "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
+    "relation": "distinct",
+    "rationale": "The first concerns the scope of the unseen-length generalization claim; the second concerns confounding in baseline comparisons for reported BLEU gains. Matched training records do not establish extrapolation beyond training lengths.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_633aeca7f9bd479d",
+    "right_issue_id": "candidate_ea97b96233a7aa53",
+    "relation": "distinct",
+    "rationale": "The first questions evidence for unseen-length performance, while the second questions traceability and matching of a combined-position experiment. These test separate architectural claims and require separate experimental evidence.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_7000f7ac462a95b7",
+    "right_issue_id": "candidate_94105da03d98236b",
+    "relation": "distinct",
+    "rationale": "The first questions reproducibility of BLEU scoring; the second questions the baseline, measurement scope, and configuration coverage of efficiency evidence. Scoring configurations and runtime or memory measurements require independent verification.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_7000f7ac462a95b7",
+    "right_issue_id": "candidate_b869e41b9495ceea",
+    "relation": "distinct",
+    "rationale": "Recovering the BLEU processing pipeline addresses score reproducibility, whereas identifying evaluation beyond training lengths addresses length generalization. A specified scorer would not establish a length-extrapolation test, and such a test would not uniquely specify the scorer.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_7000f7ac462a95b7",
+    "right_issue_id": "candidate_d0595236a2c0a091",
+    "relation": "distinct",
+    "rationale": "The scoring concern asks how numerical BLEU results were produced. The generalization concern asks whether clipping supports only representational applicability or also predictive performance at unseen lengths. They require different evidence.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_7000f7ac462a95b7",
+    "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern interpretation of the reported BLEU gains and overlap on identical evaluation processing across models. However, specifying a reproducible scoring pipeline does not establish matched training and checkpoint procedures, while establishing matched conditions does not necessarily recover the exact scorer and text processing.",
+    "shared_verification_need": "Check whether baseline and relative-position outputs used identical decoding, text processing, scoring, and references; scorer reproducibility and training-condition matching also require separate checks."
+  },
+  {
+    "left_issue_id": "candidate_7000f7ac462a95b7",
+    "right_issue_id": "candidate_ea97b96233a7aa53",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern the translation evaluation record, but the first asks how scores were computed and the second asks whether an identifiable, matched combined-position experiment supports the no-benefit conclusion. Recovering either the scoring pipeline or the combined-condition result alone would not resolve both.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_94105da03d98236b",
+    "right_issue_id": "candidate_b869e41b9495ceea",
+    "relation": "distinct",
+    "rationale": "Efficiency evidence concerns runtime, memory, and implementation comparisons. Unseen-length generalization concerns predictive performance outside the training length range. Varying sequence length for cost measurements would not establish predictive generalization.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_94105da03d98236b",
+    "right_issue_id": "candidate_d0595236a2c0a091",
+    "relation": "distinct",
+    "rationale": "The efficiency candidate requires implementation and performance-measurement evidence. The clipping candidate requires clarification of the generalization claim and evidence about predictive performance at unseen lengths. Neither verification resolves the other.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_94105da03d98236b",
+    "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
+    "relation": "distinct",
+    "rationale": "The efficiency candidate questions the comparator and scope of cost measurements; the baseline-matching candidate questions whether translation-quality gains isolate position representations. Identifying a runtime baseline would not establish matched BLEU experiment conditions.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_94105da03d98236b",
+    "right_issue_id": "candidate_ea97b96233a7aa53",
+    "relation": "distinct",
+    "rationale": "Runtime and memory evidence for the implementation addresses a different claim from the translation-quality effect of combining absolute and relative positions. Each requires its own comparison and measurements.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_b869e41b9495ceea",
+    "right_issue_id": "candidate_d0595236a2c0a091",
+    "relation": "semantic_duplicate",
+    "rationale": "Both question whether the clipping-based unseen-length claim has support beyond structural applicability and an aggregate clipping-distance ablation. One emphasizes the missing direct experiment and the other the boundary of the wording, but both require substantially the same inspection of claim intent and length-extrapolation evidence.",
+    "shared_verification_need": "Inspect the complete generalization language and any training-length limits, evaluation length distributions, and results outside the training range to determine whether the statement asserts structural applicability or supported predictive generalization."
+  },
+  {
+    "left_issue_id": "candidate_b869e41b9495ceea",
+    "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern the adequacy of translation experiments, but one asks whether unseen-length performance was tested and the other whether ordinary absolute-versus-relative comparisons control training and evaluation conditions. Matched baseline records would not establish length extrapolation.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_b869e41b9495ceea",
+    "right_issue_id": "candidate_ea97b96233a7aa53",
+    "relation": "related_but_distinct",
+    "rationale": "Both question whether a stated architectural advantage has a directly traceable experiment. However, an evaluation outside training lengths and a combined-position control test different claims and require independent experimental evidence.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_d0595236a2c0a091",
+    "right_issue_id": "candidate_e9f93ba5fdcc8f8a",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern what translation results justify, but the first addresses the distinction between structural length invariance and predictive extrapolation, while the second addresses attribution of BLEU gains under matched conditions. Their central verification needs are independent.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_d0595236a2c0a091",
+    "right_issue_id": "candidate_ea97b96233a7aa53",
+    "relation": "related_but_distinct",
+    "rationale": "Both examine whether claims about position representations exceed the supplied experimental support. The unseen-length claim requires interpretation and length-extrapolation evidence; the combination claim requires an identifiable combined-position result and matched controls. One check would not resolve both.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_e9f93ba5fdcc8f8a",
+    "right_issue_id": "candidate_ea97b96233a7aa53",
+    "relation": "related_but_distinct",
+    "rationale": "Both require controlled comparisons of position representations and overlap on training and evaluation configuration checks. However, matching absolute-only and relative-only baselines does not identify or validate the combined-position condition, and a valid combined-condition experiment does not establish matching for every reported baseline comparison.",
+    "shared_verification_need": "Inspect condition-specific training, checkpoint, and evaluation records for matched comparisons; separately establish the combined-position result and the matching of each absolute-versus-relative baseline pair."
+  }
+]

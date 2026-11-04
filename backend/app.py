@@ -28,6 +28,9 @@ from backend.parse_quality import assess_parse_quality
 from backend.p2a_engine import BudgetExceeded, P2AError, RunBudget, run_p2a
 from backend.p2a_schema import ClaimEvidenceMap, PaperProfile, ReviewPlan
 from backend.p2b_engine import run_p2b, validate_understanding_snapshot
+from backend.p2b_schema import ProfessionalReviewResult
+from backend.p2c_engine import run_p2c
+from backend.p2c_normalizer import validate_consolidation_inputs
 
 
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
@@ -54,6 +57,10 @@ class ReviewCaseRequest(BaseModel):
 class UnderstandingRunRequest(BaseModel):
     target_journal: str | None = Field(default=None, max_length=200)
     special_requirements: str | None = Field(default=None, max_length=2000)
+
+
+class ConsolidationRunRequest(BaseModel):
+    retry: bool = False
 
 
 class EquationCheckRequest(BaseModel):
@@ -240,6 +247,27 @@ def create_app(data_dir: Path) -> FastAPI:
                 duration_ms INTEGER NOT NULL, status TEXT NOT NULL, error TEXT
             );
             CREATE INDEX IF NOT EXISTS p2b_calls_run ON professional_review_model_calls(run_id);
+            CREATE TABLE IF NOT EXISTS candidate_consolidation_runs (
+                id TEXT PRIMARY KEY, professional_review_run_id TEXT NOT NULL,
+                understanding_run_id TEXT NOT NULL, document_id TEXT NOT NULL,
+                source_bundle_id TEXT NOT NULL, status TEXT NOT NULL, error TEXT,
+                inventory_json TEXT, result_json TEXT,
+                created_at TEXT NOT NULL, finished_at TEXT
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS p2c_one_active_per_p2b
+                ON candidate_consolidation_runs(professional_review_run_id)
+                WHERE status IN ('queued', 'running');
+            CREATE TABLE IF NOT EXISTS candidate_consolidation_relation_batches (
+                run_id TEXT NOT NULL, batch_number INTEGER NOT NULL, relations_json TEXT NOT NULL,
+                PRIMARY KEY (run_id, batch_number)
+            );
+            CREATE TABLE IF NOT EXISTS candidate_consolidation_model_calls (
+                id TEXT PRIMARY KEY, run_id TEXT NOT NULL, stage TEXT NOT NULL,
+                prompt_version TEXT NOT NULL, requested_model TEXT NOT NULL,
+                actual_model TEXT, input_tokens INTEGER, output_tokens INTEGER,
+                duration_ms INTEGER NOT NULL, status TEXT NOT NULL, error TEXT
+            );
+            CREATE INDEX IF NOT EXISTS p2c_calls_run ON candidate_consolidation_model_calls(run_id);
         """)
         columns = {row[1] for row in db.execute("PRAGMA table_info(review_findings)")}
         if "support_assessment" not in columns:
@@ -256,6 +284,11 @@ def create_app(data_dir: Path) -> FastAPI:
         db.execute("UPDATE professional_review_runs SET status = CASE WHEN EXISTS "
                    "(SELECT 1 FROM professional_review_dimensions d WHERE d.run_id = professional_review_runs.id) "
                    "THEN 'partial_failed' ELSE 'failed' END, error = 'interrupted_by_restart', "
+                   "finished_at = datetime('now') WHERE status IN ('queued', 'running')")
+        db.execute("UPDATE candidate_consolidation_runs SET status = CASE WHEN inventory_json IS NOT NULL "
+                   "OR EXISTS (SELECT 1 FROM candidate_consolidation_relation_batches b "
+                   "WHERE b.run_id = candidate_consolidation_runs.id) THEN 'partial_failed' "
+                   "ELSE 'failed' END, error = 'interrupted_by_restart', "
                    "finished_at = datetime('now') WHERE status IN ('queued', 'running')")
 
     app = FastAPI(title="AI 论文深度审稿工作台")
@@ -702,6 +735,144 @@ def create_app(data_dir: Path) -> FastAPI:
         result["dimensions"] = dimensions
         result["candidates"] = [candidate for dimension in dimensions
                                 for candidate in dimension["candidates"]]
+        result["model_calls"] = calls
+        return result
+
+    def load_consolidation_inputs(professional_review_run_id):
+        with connect() as db:
+            row = db.execute("SELECT * FROM professional_review_runs WHERE id = ?",
+                             (professional_review_run_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "专业审查任务不存在")
+        if row["status"] not in {"completed", "limited"} or not row["result_json"]:
+            raise HTTPException(409, "专业审查任务不是完整可整理输入")
+        understanding, bundle, plan, profile, mapping = load_professional_inputs(
+            row["understanding_run_id"])
+        try:
+            review = ProfessionalReviewResult.model_validate_json(row["result_json"])
+            if row["document_id"] != understanding["document_id"] or \
+                    row["source_bundle_id"] != bundle["bundle_id"]:
+                raise ValueError("P2-B run source metadata mismatch")
+            validate_consolidation_inputs(bundle, plan, profile, mapping, review,
+                row["understanding_run_id"], professional_review_run_id, row["status"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise HTTPException(409, f"专业审查快照无效：{type(exc).__name__}") from None
+        return row, bundle, plan, profile, mapping, review
+
+    def run_candidate_consolidation(professional_review_run_id, run_id):
+        try:
+            source, bundle, plan, profile, mapping, review = load_consolidation_inputs(
+                professional_review_run_id)
+            with connect() as db:
+                db.execute("UPDATE candidate_consolidation_runs SET status = 'running' WHERE id = ?", (run_id,))
+            model = os.environ.get("OPENAI_MODEL", "gpt-6.1-sol")
+            client = OpenAI(base_url=model_base_url(), timeout=180, max_retries=0)
+
+            def model_call(stage, system, user):
+                started = time.perf_counter()
+                stream = client.chat.completions.create(
+                    model=model, messages=[{"role": "system", "content": system},
+                                           {"role": "user", "content": user}],
+                    stream=True, stream_options={"include_usage": True})
+                pieces = []
+                actual_model = None
+                usage = None
+                for chunk in stream:
+                    actual_model = chunk.model or actual_model
+                    usage = chunk.usage or usage
+                    if chunk.choices and chunk.choices[0].delta.content:
+                        pieces.append(chunk.choices[0].delta.content)
+                return {"content": "".join(pieces), "model_identifier": actual_model,
+                        "input_tokens": getattr(usage, "prompt_tokens", None),
+                        "output_tokens": getattr(usage, "completion_tokens", None),
+                        "duration_ms": round((time.perf_counter() - started) * 1000)}
+
+            def persist_inventory(inventory):
+                with connect() as db:
+                    db.execute("UPDATE candidate_consolidation_runs SET inventory_json = ? WHERE id = ?",
+                               (inventory.model_dump_json(), run_id))
+
+            def persist_batch(batch_number, relations):
+                with connect() as db:
+                    db.execute("INSERT OR REPLACE INTO candidate_consolidation_relation_batches "
+                               "VALUES (?, ?, ?)",
+                               (run_id, batch_number, json.dumps([item.model_dump() for item in relations])))
+
+            def persist_trace(trace):
+                with connect() as db:
+                    db.execute("INSERT INTO candidate_consolidation_model_calls VALUES "
+                               "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               (uuid.uuid4().hex, run_id, trace.stage, trace.prompt_version,
+                                trace.requested_model, trace.actual_model,
+                                trace.input_tokens, trace.output_tokens, trace.duration_ms,
+                                trace.status, trace.error))
+
+            result = run_p2c(bundle, plan, profile, mapping, review,
+                source["understanding_run_id"], professional_review_run_id,
+                run_id, model_call, model, p2b_status=source["status"],
+                budget=RunBudget(
+                    max_calls=int(os.environ.get("P2C_MAX_CALLS", "16")),
+                    max_input_tokens=int(os.environ.get("P2C_MAX_INPUT_TOKENS", "200000")),
+                    max_output_tokens=int(os.environ.get("P2C_MAX_OUTPUT_TOKENS", "50000")),
+                    max_duration_ms=int(os.environ.get("P2C_MAX_DURATION_MS", "1800000"))),
+                on_inventory=persist_inventory, on_batch=persist_batch, on_trace=persist_trace)
+            with connect() as db:
+                db.execute("UPDATE candidate_consolidation_runs SET status = ?, result_json = ?, "
+                           "finished_at = datetime('now') WHERE id = ?",
+                           (result.execution_status, result.model_dump_json(), run_id))
+        except Exception as exc:
+            with connect() as db:
+                row = db.execute("SELECT inventory_json FROM candidate_consolidation_runs WHERE id = ?",
+                                 (run_id,)).fetchone()
+                db.execute("UPDATE candidate_consolidation_runs SET status = ?, error = ?, "
+                           "finished_at = datetime('now') WHERE id = ?",
+                           ("partial_failed" if row and row["inventory_json"] else "failed",
+                            f"consolidation:{type(exc).__name__}", run_id))
+
+    @app.post("/api/professional-review-runs/{run_id}/consolidation-runs", status_code=202)
+    def create_consolidation_run(run_id: str, background_tasks: BackgroundTasks,
+                                 payload: ConsolidationRunRequest | None = None):
+        if not os.environ.get("OPENAI_API_KEY"):
+            raise HTTPException(503, "后端尚未配置 OPENAI_API_KEY")
+        source, bundle, _, _, _, _ = load_consolidation_inputs(run_id)
+        new_id = uuid.uuid4().hex
+        try:
+            with connect() as db:
+                existing = db.execute("SELECT id, status FROM candidate_consolidation_runs "
+                                      "WHERE professional_review_run_id = ? ORDER BY rowid DESC LIMIT 1",
+                                      (run_id,)).fetchone()
+                if existing and (existing["status"] in {"queued", "running"} or
+                                 not payload or not payload.retry):
+                    raise HTTPException(409, "该专业审查任务已有整合运行；请先查看现有结果")
+                db.execute("INSERT INTO candidate_consolidation_runs "
+                           "(id, professional_review_run_id, understanding_run_id, document_id, "
+                           "source_bundle_id, status, created_at) "
+                           "VALUES (?, ?, ?, ?, ?, 'queued', datetime('now'))",
+                           (new_id, run_id, source["understanding_run_id"],
+                            source["document_id"], bundle["bundle_id"]))
+        except sqlite3.IntegrityError:
+            raise HTTPException(409, "该专业审查任务已有整合运行") from None
+        background_tasks.add_task(run_candidate_consolidation, run_id, new_id)
+        return {"id": new_id, "professional_review_run_id": run_id, "status": "queued"}
+
+    @app.get("/api/candidate-consolidation-runs/{run_id}")
+    def get_consolidation_run(run_id: str):
+        with connect() as db:
+            row = db.execute("SELECT * FROM candidate_consolidation_runs WHERE id = ?", (run_id,)).fetchone()
+            if not row:
+                raise HTTPException(404, "候选问题整合任务不存在")
+            batches = [dict(item) for item in db.execute(
+                "SELECT batch_number, relations_json FROM candidate_consolidation_relation_batches "
+                "WHERE run_id = ? ORDER BY batch_number", (run_id,))]
+            calls = [dict(item) for item in db.execute(
+                "SELECT * FROM candidate_consolidation_model_calls WHERE run_id = ? ORDER BY rowid",
+                (run_id,))]
+        result = dict(row)
+        inventory_json = result.pop("inventory_json")
+        result_json = result.pop("result_json")
+        result["inventory"] = json.loads(inventory_json) if inventory_json else None
+        result["result"] = json.loads(result_json) if result_json else None
+        result["relations"] = [item for batch in batches for item in json.loads(batch["relations_json"])]
         result["model_calls"] = calls
         return result
 

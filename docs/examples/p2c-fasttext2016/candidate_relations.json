@@ -1,0 +1,464 @@
+[
+  {
+    "left_issue_id": "candidate_14bf69eea0dbd1bc",
+    "right_issue_id": "candidate_31ec55257e7ac738",
+    "relation": "distinct",
+    "rationale": "The first questions whether classification epoch-time ratios support time-to-quality claims; the second questions exact reconstruction of the tag dataset. Training schedules and timing evidence would not resolve filtering and split rules.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_14bf69eea0dbd1bc",
+    "right_issue_id": "candidate_45ae0b8b2e4c35bd",
+    "relation": "distinct",
+    "rationale": "Measured classification speedup scope and the theoretical depth assumptions behind Huffman training complexity are different questions. Verifying runtime endpoints would not establish average or worst-case tree-depth bounds.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_14bf69eea0dbd1bc",
+    "right_issue_id": "candidate_7ac07ac2e077cb30",
+    "relation": "distinct",
+    "rationale": "The first concerns evidence for training speed at reported accuracy; the second concerns evidence for a comparative sentence-representation claim. They require timing protocols and controlled representation evaluations, respectively.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_14bf69eea0dbd1bc",
+    "right_issue_id": "candidate_83d093bda4b94e99",
+    "relation": "distinct",
+    "rationale": "The first questions the interpretation of measured classification training ratios. The second questions prediction search work, pruning behavior, and heap overhead. Complete training timings would not resolve search complexity.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_14bf69eea0dbd1bc",
+    "right_issue_id": "candidate_971f36dc41e9d430",
+    "relation": "related_but_distinct",
+    "rationale": "Both require checking epoch versus complete-run timings and their correspondence to accuracy results. However, the first asks whether headline classification speedups support time-to-quality conclusions, while the second independently asks whether timing boundaries, CPU details, and tag-prediction budgets permit reproduction. Resolving either need not resolve the other.",
+    "shared_verification_need": "Check original timing captions, configurations, and training schedules to connect reported classification accuracy with per-epoch and complete-run timing."
+  },
+  {
+    "left_issue_id": "candidate_14bf69eea0dbd1bc",
+    "right_issue_id": "candidate_9cd1bf4aa574a3c5",
+    "relation": "related_but_distinct",
+    "rationale": "Both address the interpretation of practical speed comparisons under different execution conditions. The first asks about per-epoch versus time-to-quality ratios; the second asks how much speed is attributable to algorithms versus implementation and parallelism. Full-run timing alone would not isolate those contributions.",
+    "shared_verification_need": "Inspect how the paper scopes speed claims to the disclosed hardware, thread counts, implementations, and experimental configurations."
+  },
+  {
+    "left_issue_id": "candidate_14bf69eea0dbd1bc",
+    "right_issue_id": "candidate_a399dcbbab67a609",
+    "relation": "distinct",
+    "rationale": "Classification training-time claim scope and the use of held-out frequencies in tag-dataset filtering concern different mechanisms. Timing and stopping evidence would not establish preprocessing order or evaluation consequences.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_14bf69eea0dbd1bc",
+    "right_issue_id": "candidate_ba88ee299071334d",
+    "relation": "distinct",
+    "rationale": "The first questions runtime evidence supporting broad speed claims; the second questions the evidential and literature basis for the word2vec representation contrast. Their verification tasks are independent.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_14bf69eea0dbd1bc",
+    "right_issue_id": "candidate_d4a548d8c7a42e0d",
+    "relation": "distinct",
+    "rationale": "The first focuses on classification speedup endpoints, while the second focuses on converting multiple tags into training targets and evaluation references. The latter can affect tag-task workload, but does not answer the classification timing question.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_14bf69eea0dbd1bc",
+    "right_issue_id": "candidate_e32dddb167373ac1",
+    "relation": "distinct",
+    "rationale": "The candidates question separate conclusions: time to reported predictive quality and the quality or generality of averaged representations relative to word2vec. They require different experimental evidence.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_14bf69eea0dbd1bc",
+    "right_issue_id": "candidate_f4b82c009ae294f8",
+    "relation": "semantic_duplicate",
+    "rationale": "Both centrally question whether the same classification speedup ratios, including the 15,000-fold statement, describe per-epoch throughput under heterogeneous execution conditions rather than complete training to the reported accuracy. The second adds detail about contribution attribution, but substantially the same timing-table, baseline-schedule, and claim-scope verification addresses their core concern.",
+    "shared_verification_need": "Verify the original classification timing table and speedup comparator, baseline epoch counts and stopping criteria, correspondence to reported accuracies, and qualifications concerning hardware, threads, and implementations."
+  },
+  {
+    "left_issue_id": "candidate_31ec55257e7ac738",
+    "right_issue_id": "candidate_45ae0b8b2e4c35bd",
+    "relation": "distinct",
+    "rationale": "Dataset reconstruction asks how filtering and splits determine the experimental records; Huffman complexity asks what depth assumptions justify a training-cost statement. Knowing exact corpus construction would not by itself establish the complexity bound.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_31ec55257e7ac738",
+    "right_issue_id": "candidate_7ac07ac2e077cb30",
+    "relation": "distinct",
+    "rationale": "Exact tag-dataset reconstruction and support for a comparative sentence-representation conclusion are independent questions requiring preprocessing specifications and representation comparisons, respectively.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_31ec55257e7ac738",
+    "right_issue_id": "candidate_83d093bda4b94e99",
+    "relation": "distinct",
+    "rationale": "The first asks for deterministic dataset construction; the second asks about visited search nodes, pruning, and top-T heap costs. Although label frequencies can influence a tree, reconstructing the dataset would not resolve inference complexity or search behavior.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_31ec55257e7ac738",
+    "right_issue_id": "candidate_971f36dc41e9d430",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern reproducibility, but one requires filtering definitions and split assignments, whereas the other requires hardware, timer boundaries, and training budgets. Dataset reconstruction and timing-protocol reconstruction remain independent verification tasks.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_31ec55257e7ac738",
+    "right_issue_id": "candidate_9cd1bf4aa574a3c5",
+    "relation": "distinct",
+    "rationale": "The dataset candidate concerns identifying the records and label inventory; the attribution candidate concerns separating algorithmic speed from software and parallelism. A dataset script would not establish causal attribution of speed gains.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_31ec55257e7ac738",
+    "right_issue_id": "candidate_a399dcbbab67a609",
+    "relation": "related_but_distinct",
+    "rationale": "Both inspect YFCC100M filtering and handling of emptied records. The first asks whether the dataset can be reconstructed exactly; the second asks whether held-out frequencies shape eligibility and evaluation difficulty. A fully reproducible corpus-level filter could resolve reconstruction while leaving the evaluation-scope question open.",
+    "shared_verification_need": "Inspect the reconstruction procedure for frequency definitions, filtering order relative to splitting, and handling of records with no retained text or tags."
+  },
+  {
+    "left_issue_id": "candidate_31ec55257e7ac738",
+    "right_issue_id": "candidate_ba88ee299071334d",
+    "relation": "distinct",
+    "rationale": "Exact dataset reconstruction and the fairness or empirical support of the word2vec contrast concern different claims. Neither reconstruction materials nor split rules establish comparative representation quality or fidelity to prior literature.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_31ec55257e7ac738",
+    "right_issue_id": "candidate_d4a548d8c7a42e0d",
+    "relation": "related_but_distinct",
+    "rationale": "Both require clarification of retained tag sets and records with no remaining tags. However, exact filtering and split reconstruction does not establish whether training samples, expands, or jointly optimizes multiple targets, nor how precision at one is computed.",
+    "shared_verification_need": "Check dataset and evaluation documentation for retained tag sets and treatment of records with no retained tags."
+  },
+  {
+    "left_issue_id": "candidate_31ec55257e7ac738",
+    "right_issue_id": "candidate_e32dddb167373ac1",
+    "relation": "distinct",
+    "rationale": "The first asks whether the experimental corpus can be reconstructed; the second asks whether supervised results support the claimed advantage of averaged features over word2vec. They require independent evidence.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_31ec55257e7ac738",
+    "right_issue_id": "candidate_f4b82c009ae294f8",
+    "relation": "distinct",
+    "rationale": "The first questions whether filtering and split rules reproduce the YFCC100M dataset; the second questions the interpretation of measured speedups across hardware and training endpoints. Dataset reconstruction would not resolve the runtime comparison.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_45ae0b8b2e4c35bd",
+    "right_issue_id": "candidate_7ac07ac2e077cb30",
+    "relation": "distinct",
+    "rationale": "Huffman training-depth bounds and the evidential scope of the word2vec representation contrast concern different claims and require independent mathematical and experimental checks.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_45ae0b8b2e4c35bd",
+    "right_issue_id": "candidate_83d093bda4b94e99",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern hierarchical-softmax efficiency, but training cost depends on target-path depth while prediction cost depends on search exploration, pruning, and heap operations. Establishing an average training-depth bound would not establish prediction scaling.",
+    "shared_verification_need": "Inspect the tree construction and implementation, then separately analyze target-path depths and prediction traversal work."
+  },
+  {
+    "left_issue_id": "candidate_45ae0b8b2e4c35bd",
+    "right_issue_id": "candidate_971f36dc41e9d430",
+    "relation": "related_but_distinct",
+    "rationale": "Both address efficiency, but one asks how to qualify a theoretical training-complexity statement and the other asks which workloads and timing boundaries produced wall-clock results. Neither verification resolves the other.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_45ae0b8b2e4c35bd",
+    "right_issue_id": "candidate_9cd1bf4aa574a3c5",
+    "relation": "related_but_distinct",
+    "rationale": "The training-depth concern tests the scope of a specific algorithmic bound; the attribution concern asks how observed speed gains divide among algorithms, implementation, and parallelism. A valid complexity bound alone would not isolate the sources of measured speedups.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_45ae0b8b2e4c35bd",
+    "right_issue_id": "candidate_a399dcbbab67a609",
+    "relation": "distinct",
+    "rationale": "The first concerns Huffman target-depth complexity; the second concerns held-out frequency information in benchmark filtering and its evaluation consequences. Checking filtering scope would not settle the complexity claim.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_45ae0b8b2e4c35bd",
+    "right_issue_id": "candidate_ba88ee299071334d",
+    "relation": "distinct",
+    "rationale": "A mathematical qualification of Huffman training cost and the fairness of a word2vec representation contrast require different evidence and answer different scientific questions.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_45ae0b8b2e4c35bd",
+    "right_issue_id": "candidate_d4a548d8c7a42e0d",
+    "relation": "related_but_distinct",
+    "rationale": "Multi-tag target handling can determine the sampling frequencies relevant to average Huffman cost, but the protocol question also concerns objective weighting, epoch definitions, and evaluation. Establishing that protocol would not itself establish the claimed depth bound, and a depth derivation would not specify the protocol.",
+    "shared_verification_need": "Inspect how tag targets are sampled or expanded and whether the resulting training distribution matches the frequencies used to construct the Huffman tree."
+  },
+  {
+    "left_issue_id": "candidate_45ae0b8b2e4c35bd",
+    "right_issue_id": "candidate_e32dddb167373ac1",
+    "relation": "distinct",
+    "rationale": "The first questions the averaging assumptions behind a training-complexity bound; the second questions evidence for a sentence-representation advantage over word2vec. Their verification needs are independent.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_45ae0b8b2e4c35bd",
+    "right_issue_id": "candidate_f4b82c009ae294f8",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern efficiency claims, but a theoretical Huffman depth analysis differs from verifying hardware, epoch counts, and time-to-quality interpretations of measured speedup ratios. One check cannot resolve both.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_7ac07ac2e077cb30",
+    "right_issue_id": "candidate_83d093bda4b94e99",
+    "relation": "distinct",
+    "rationale": "The representation candidate asks whether supervised task results support the word2vec contrast and broader reuse claims; the search candidate asks what determines prediction traversal and top-T cost. They require independent evidence.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_7ac07ac2e077cb30",
+    "right_issue_id": "candidate_971f36dc41e9d430",
+    "relation": "distinct",
+    "rationale": "Evidence for comparative sentence-representation quality does not specify runtime measurement boundaries or training budgets, and reconstructing the timing protocol does not validate the representation conclusion.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_7ac07ac2e077cb30",
+    "right_issue_id": "candidate_9cd1bf4aa574a3c5",
+    "relation": "distinct",
+    "rationale": "Although both discuss interpretation of contributions, one concerns representation quality relative to word2vec and the other concerns attribution of speed gains to algorithms versus execution choices. Their required controlled comparisons differ.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_7ac07ac2e077cb30",
+    "right_issue_id": "candidate_a399dcbbab67a609",
+    "relation": "distinct",
+    "rationale": "The word2vec comparison and representation-transfer scope are separate from whether corpus-wide filtering uses held-out frequencies and changes benchmark eligibility. Verifying either leaves the other unresolved.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_7ac07ac2e077cb30",
+    "right_issue_id": "candidate_ba88ee299071334d",
+    "relation": "semantic_duplicate",
+    "rationale": "Both question the same conclusion contrasting averaged fastText features with word2vec, and both seek a matched representation comparison and clarification of task-specific versus general scope. The additional prior-literature check and differing external-verification flags do not change that central identity.",
+    "shared_verification_need": "Check the original conclusion and full experimental evidence for a controlled averaged-word2vec comparison and any support for representation reuse; consult cited word2vec sources to assess the contrast's characterization."
+  },
+  {
+    "left_issue_id": "candidate_7ac07ac2e077cb30",
+    "right_issue_id": "candidate_d4a548d8c7a42e0d",
+    "relation": "distinct",
+    "rationale": "The first concerns whether the representation conclusion exceeds the demonstrated evidence; the second concerns how multiple tags enter training and precision-at-one evaluation. Resolving target handling would not establish the word2vec comparison.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_7ac07ac2e077cb30",
+    "right_issue_id": "candidate_e32dddb167373ac1",
+    "relation": "semantic_duplicate",
+    "rationale": "Both question whether supervised classification results justify the same broader contrast with averaged word2vec representations. The additional emphasis on n-gram contributions refines the controls needed for that comparison without introducing a separate central question.",
+    "shared_verification_need": "Verify the conclusion's intended scope and whether matched comparisons isolate averaged word features from classifier training, supervision, and n-gram additions, with transfer evidence if broader reuse is claimed."
+  },
+  {
+    "left_issue_id": "candidate_7ac07ac2e077cb30",
+    "right_issue_id": "candidate_f4b82c009ae294f8",
+    "relation": "distinct",
+    "rationale": "The scope of a representation-quality conclusion and the validity of interpreting heterogeneous runtime ratios as time-to-quality advantages concern different outcomes and require independent checks.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_83d093bda4b94e99",
+    "right_issue_id": "candidate_971f36dc41e9d430",
+    "relation": "related_but_distinct",
+    "rationale": "Both bear on inference-efficiency evidence, but the search candidate asks how visited nodes and heap operations determine scaling, while the protocol candidate asks what operations and configurations were timed. Clear timing boundaries would not establish search complexity.",
+    "shared_verification_need": "Inspect the inference implementation and timing documentation to identify the search operations included in reported test times; scaling still requires separate traversal or runtime measurements."
+  },
+  {
+    "left_issue_id": "candidate_83d093bda4b94e99",
+    "right_issue_id": "candidate_9cd1bf4aa574a3c5",
+    "relation": "related_but_distinct",
+    "rationale": "The search candidate tests the conditions and total work behind hierarchical prediction scaling; the attribution candidate asks how much practical speedup comes from that mechanism versus software and parallelism. Search analysis informs attribution but does not replace controlled comparisons.",
+    "shared_verification_need": "Examine the hierarchical inference implementation and controlled comparisons against scoring all classes under matched execution conditions; separately assess visited-node and top-T scaling."
+  },
+  {
+    "left_issue_id": "candidate_83d093bda4b94e99",
+    "right_issue_id": "candidate_a399dcbbab67a609",
+    "relation": "distinct",
+    "rationale": "The first questions prediction-search complexity and heap overhead; the second questions whether benchmark filtering uses held-out frequencies. Search analysis and preprocessing verification answer different questions.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_83d093bda4b94e99",
+    "right_issue_id": "candidate_ba88ee299071334d",
+    "relation": "distinct",
+    "rationale": "Prediction-search scaling and the fairness of the word2vec representation contrast concern different claims and require different evidence.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_83d093bda4b94e99",
+    "right_issue_id": "candidate_d4a548d8c7a42e0d",
+    "relation": "distinct",
+    "rationale": "The first concerns nodes visited and top-T search costs; the second concerns converting multiple reference tags into training targets and evaluation outcomes. Verifying either mechanism would not resolve the other.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_83d093bda4b94e99",
+    "right_issue_id": "candidate_e32dddb167373ac1",
+    "relation": "distinct",
+    "rationale": "The scope of prediction-complexity observations is independent of whether supervised classification results support a general sentence-representation contrast with word2vec.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_83d093bda4b94e99",
+    "right_issue_id": "candidate_f4b82c009ae294f8",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern efficiency claims, but search complexity requires traversal analysis and scaling evidence, while the runtime comparison requires hardware, training-endpoint, and timing-ratio verification. Neither task resolves the other.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_971f36dc41e9d430",
+    "right_issue_id": "candidate_9cd1bf4aa574a3c5",
+    "relation": "related_but_distinct",
+    "rationale": "Reconstructing timing boundaries and training budgets differs from attributing speed gains to algorithms versus implementation and parallelism. A fully specified timing protocol could still leave causal attribution unresolved.",
+    "shared_verification_need": "Inspect hardware, thread counts, implementation configurations, and timing documentation; attribution additionally requires controlled comparisons."
+  },
+  {
+    "left_issue_id": "candidate_971f36dc41e9d430",
+    "right_issue_id": "candidate_a399dcbbab67a609",
+    "relation": "distinct",
+    "rationale": "Runtime reproducibility concerns measured workloads and timing boundaries; the filtering concern concerns use of held-out frequency information and its effect on benchmark composition. Including preprocessing in a timer would not establish how filtering was defined.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_971f36dc41e9d430",
+    "right_issue_id": "candidate_ba88ee299071334d",
+    "relation": "distinct",
+    "rationale": "Timing protocol reconstruction and the evidentiary basis for the word2vec contrast address independent claims.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_971f36dc41e9d430",
+    "right_issue_id": "candidate_d4a548d8c7a42e0d",
+    "relation": "related_but_distinct",
+    "rationale": "Multiple-tag handling affects the number of updates per epoch and therefore the timed workload. However, timer boundaries and comparator budgets require separate verification from target construction and precision-at-one semantics.",
+    "shared_verification_need": "Check how a tag-prediction epoch is defined, including whether multiple tags generate multiple updates or expanded training instances."
+  },
+  {
+    "left_issue_id": "candidate_971f36dc41e9d430",
+    "right_issue_id": "candidate_e32dddb167373ac1",
+    "relation": "distinct",
+    "rationale": "The first questions the reproducibility of runtime measurements; the second questions the scope of representation claims. Timing documentation would not establish representation quality or a matched word2vec comparison.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_971f36dc41e9d430",
+    "right_issue_id": "candidate_f4b82c009ae294f8",
+    "relation": "related_but_distinct",
+    "rationale": "They overlap on per-epoch versus complete-run timing and hardware disclosures. The first asks whether workloads can be reconstructed, including tag-prediction budgets and timer boundaries; the second asks whether headline sentiment speedup ratios support time-to-quality or model-level conclusions. Reproducibility alone would not settle that interpretation.",
+    "shared_verification_need": "Verify original timing tables, configurations, epoch counts, stopping criteria, hardware, and whether timed runs correspond to the reported accuracies."
+  },
+  {
+    "left_issue_id": "candidate_9cd1bf4aa574a3c5",
+    "right_issue_id": "candidate_a399dcbbab67a609",
+    "relation": "distinct",
+    "rationale": "Attributing efficiency gains to algorithmic components is independent of determining whether filtering used held-out frequencies and changed benchmark eligibility.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_9cd1bf4aa574a3c5",
+    "right_issue_id": "candidate_ba88ee299071334d",
+    "relation": "distinct",
+    "rationale": "Although both mention contribution scope, one concerns the source of speed gains and the other concerns the validity of a representation comparison with word2vec. They require independent experiments and source checks.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_9cd1bf4aa574a3c5",
+    "right_issue_id": "candidate_d4a548d8c7a42e0d",
+    "relation": "related_but_distinct",
+    "rationale": "Tag-target construction can affect the workload used in an efficiency comparison, but specifying that construction does not isolate algorithmic gains from implementation and parallelism. The target and evaluation protocol also raises independent scientific questions.",
+    "shared_verification_need": "Check whether fastText and Tagspace use comparable target handling and effective training workloads in the tag-prediction comparison."
+  },
+  {
+    "left_issue_id": "candidate_9cd1bf4aa574a3c5",
+    "right_issue_id": "candidate_e32dddb167373ac1",
+    "relation": "distinct",
+    "rationale": "The algorithmic attribution of speed gains and the generality of averaged sentence representations concern different mechanisms and need different controlled comparisons.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_9cd1bf4aa574a3c5",
+    "right_issue_id": "candidate_f4b82c009ae294f8",
+    "relation": "related_but_distinct",
+    "rationale": "Both question how implementation and parallelism affect efficiency conclusions. The first asks how much speed comes from algorithmic components across comparisons; the second additionally tests specific headline ratios and complete training costs at reported accuracy. Attribution controls would not by themselves verify those endpoints and ratios.",
+    "shared_verification_need": "Inspect hardware, thread counts, implementation effects, and controlled resource comparisons to assess what the reported speedups can be attributed to."
+  },
+  {
+    "left_issue_id": "candidate_a399dcbbab67a609",
+    "right_issue_id": "candidate_ba88ee299071334d",
+    "relation": "distinct",
+    "rationale": "Corpus filtering and held-out frequency use concern benchmark construction; the word2vec contrast concerns prior-work characterization and representation evidence. Their verification needs are independent.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_a399dcbbab67a609",
+    "right_issue_id": "candidate_d4a548d8c7a42e0d",
+    "relation": "related_but_distinct",
+    "rationale": "Both involve retained tags and precision-at-one evaluation, including records without retained tags. However, corpus-wide versus training-only filtering is independent of how multiple tags are mapped to the training objective. Either could be specified while the other remains unresolved.",
+    "shared_verification_need": "Inspect dataset construction and evaluation code for treatment of records without retained tags and whether precision at one uses original or retained reference tags."
+  },
+  {
+    "left_issue_id": "candidate_a399dcbbab67a609",
+    "right_issue_id": "candidate_e32dddb167373ac1",
+    "relation": "distinct",
+    "rationale": "The filtering concern tests benchmark construction and held-out information use; the representation concern tests whether supervised results justify the word2vec contrast. One verification task would not resolve both.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_a399dcbbab67a609",
+    "right_issue_id": "candidate_f4b82c009ae294f8",
+    "relation": "distinct",
+    "rationale": "The first concerns frequency filtering and the composition of the tag benchmark; the second concerns hardware, parallelism, and training endpoints behind reported speedup factors. They question different claims and require independent evidence.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_ba88ee299071334d",
+    "right_issue_id": "candidate_d4a548d8c7a42e0d",
+    "relation": "distinct",
+    "rationale": "The first questions whether the contrast with averaged word2vec representations exceeds the representation evidence; the second questions how multiple reference tags are handled in training and precision-at-one evaluation. They require independent checks of comparative representation evidence and tag-processing protocols.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_ba88ee299071334d",
+    "right_issue_id": "candidate_e32dddb167373ac1",
+    "relation": "semantic_duplicate",
+    "rationale": "Both question the same conclusion: whether supervised task results justify a broader advantage over averaged unsupervised word2vec representations. Both require checking the conclusion's scope and any matched word2vec comparison. The first additionally emphasizes fidelity to prior literature, while the second emphasizes word-only versus n-gram evidence; these are complementary checks on the same central question. Their differing external-verification flags do not change that overlap.",
+    "shared_verification_need": "Inspect the complete conclusion and comparative experiments to determine whether the word2vec contrast is restricted to the evaluated supervised tasks and supported by matched representation evidence, accounting for supervision and feature differences."
+  },
+  {
+    "left_issue_id": "candidate_ba88ee299071334d",
+    "right_issue_id": "candidate_f4b82c009ae294f8",
+    "relation": "distinct",
+    "rationale": "The first concerns the evidential scope of a sentence-representation comparison with word2vec. The second concerns whether reported runtime ratios support the stated efficiency advantage given hardware, parallelism, and training endpoints. Resolving either requires evidence that would not resolve the other.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_d4a548d8c7a42e0d",
+    "right_issue_id": "candidate_e32dddb167373ac1",
+    "relation": "distinct",
+    "rationale": "The tag candidate asks how multi-tag records map to training targets and evaluation references. The representation candidate asks whether supervised results justify the conclusion's contrast with averaged word2vec vectors. Protocol reconstruction would not establish the comparative representation claim, and a representation comparison would not specify the tag protocol.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_d4a548d8c7a42e0d",
+    "right_issue_id": "candidate_f4b82c009ae294f8",
+    "relation": "related_but_distinct",
+    "rationale": "Both touch the interpretation of training cost and epochs, but they question different mechanisms in different experimental settings. The tag candidate requires establishing target handling, example weighting, and precision-at-one semantics in YFCC100M; the runtime candidate requires checking classification timing ratios, hardware, thread counts, and training endpoints. Clarifying tag-based epoch accounting would not resolve the runtime comparison concern.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_e32dddb167373ac1",
+    "right_issue_id": "candidate_f4b82c009ae294f8",
+    "relation": "distinct",
+    "rationale": "The representation candidate questions whether task-supervised features support a general contrast with word2vec averaging. The runtime candidate questions the comparability and interpretation of measured speedups. Matched representation evaluations and matched timing or training-endpoint evidence are independent verification needs.",
+    "shared_verification_need": null
+  }
+]

@@ -1,0 +1,1046 @@
+{
+  "schema_version": "1.1",
+  "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+  "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+  "pdf_sha256": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+  "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+  "understanding_run_id": "18e72bb44b124089a0b0a2d74f85d80c",
+  "professional_review_run_id": "1146246578504a7b99666a4c690a02de",
+  "p2a_schema_versions": {
+    "review_plan": "1.1",
+    "paper_profile": "1.1",
+    "claim_evidence_map": "1.1"
+  },
+  "p2b_schema_version": "1.0",
+  "p2b_prompt_versions": {
+    "D1": "novelty-contribution/v1",
+    "D2": "theory-method/v1",
+    "D3": "experiment-results/v1",
+    "D4": "argument-consistency/v1",
+    "D5": "technical-reproducibility/v1",
+    "D6": "literature-positioning/v1"
+  },
+  "candidate_count": 13,
+  "candidates": [
+    {
+      "issue_id": "candidate_fb1bf9ee8ee47391",
+      "dimension_id": "D1",
+      "issue_type": "mechanism_attribution_and_comparative_scope",
+      "title": "The advantage attributed to pretraining distillation may exceed what the component ablations isolate",
+      "observed_fact": "The related-work discussion states that general-purpose pretraining distillation was found beneficial rather than task-specific distillation, and contrasts the method with smaller students trained using the original pretraining objective. The method also uses teacher-layer initialization and modified BERT training practices. The ablation prose describes changes to individual loss components and initialization; the extracted table lists individual loss removals and random initialization. Removing either distillation loss individually leaves another teacher-derived loss in place. Separately, the SQuAD experiment adds task-specific distillation after pretraining distillation.",
+      "suspected_problem": "These comparisons support the utility of individual components within the proposed training procedure, but may not isolate the overall advantage of pretraining distillation over a matched compact model trained without distillation signals, or over a task-specific distillation strategy. In particular, individual loss removals do not by themselves establish the combined benefit of both distillation losses relative to masked-language-model pretraining with the same architecture and initialization. The SQuAD addition tests a complementary second stage rather than the stated alternative between distillation stages.",
+      "why_it_matters": "The central contribution is a transferable compact model obtained through pretraining distillation. Establishing that the complete recipe works is distinct from establishing which training stage or teacher-transfer mechanism produces its advantage. If the comparative evidence is narrower than the related-work wording suggests, the contribution should be interpreted as a successful integrated recipe with component-level evidence, while its advantage over alternative compression and training strategies remains unresolved.",
+      "claim_ids": [
+        "claim_4faebd9391822cb3",
+        "claim_99d4c1fba0a1e81c",
+        "claim_416e38c43588f4f0",
+        "claim_e75bc9c26e77d103",
+        "claim_d15f98a55bba3ef7"
+      ],
+      "source_refs": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_10",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_8",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_2",
+          "evidence_role": "context"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_12",
+          "evidence_role": "context"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_9",
+          "evidence_role": "context"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_3",
+          "evidence_role": "observed_statement"
+        }
+      ],
+      "possible_counterevidence": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_8",
+          "evidence_role": "counterevidence"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_0",
+          "evidence_role": "counterevidence"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_12",
+          "evidence_role": "counterevidence"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_13",
+          "evidence_role": "counterevidence"
+        }
+      ],
+      "verification_questions": [
+        "Does the complete paper report a compact-model baseline using masked language modeling alone with matched architecture, teacher-weight initialization, data, and training budget?",
+        "Do any experiments compare pretraining distillation with task-specific distillation under matched student and downstream evaluation conditions?",
+        "After verifying Table 4, which teacher-derived signals remain in each ablation, and do any rows remove both distillation losses together?",
+        "Is the phrase describing pretraining distillation as beneficial rather than task-specific distillation intended as an experimentally established comparison or as motivation for the chosen paradigm?"
+      ],
+      "potential_impact": "undetermined",
+      "verification_status": "unverified",
+      "source_limitations": [
+        "The extracted ablation table is structurally incomplete; configurations and numerical associations require checking against the original source.",
+        "Partial coverage prevents concluding that matched baselines or additional comparisons are absent from the whole paper.",
+        "The concern addresses the scope of the paper's own comparative evidence and does not assert that cited prior methods outperform or duplicate DistilBERT."
+      ],
+      "external_verification_required": false
+    },
+    {
+      "issue_id": "candidate_2349c5cdd44540ee",
+      "dimension_id": "D2",
+      "issue_type": "method_specification",
+      "title": "The effective triple objective requires verification beyond the supplied high-level loss description",
+      "observed_fact": "The supplied method text defines the final objective as a linear combination of teacher-distribution distillation, masked language modeling, and cosine embedding losses. It describes cosine alignment of teacher and student hidden-state directions and a shared training temperature, but these units do not give the combination coefficients, numerical temperature, token positions included in each loss, or the hidden-state pairing used for cosine alignment. The student has half the teacher's layers and shares its dimensionality.",
+      "suspected_problem": "The supplied description leaves multiple materially different implementations of the claimed mechanism possible. In particular, shared hidden dimensionality permits cosine comparison but does not determine which teacher and student layers are compared, while token selection, reduction, temperature, and loss weights determine the relative influence of the three objectives. This is an unresolved specification lead, rather than evidence that the original paper or code lacks these details.",
+      "why_it_matters": "Different alignment choices and relative loss scales can change both optimization and the apparent benefit of each component. Without resolving the actual objective, independent reproduction and interpretation of the cosine-loss ablation remain uncertain.",
+      "claim_ids": [
+        "claim_7bcad7997d656581",
+        "claim_cc3f6207a3c8e47a",
+        "claim_f97393e2bc593bcb"
+      ],
+      "source_refs": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_9",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_8",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_11",
+          "evidence_role": "context"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_12",
+          "evidence_role": "context"
+        }
+      ],
+      "possible_counterevidence": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_2",
+          "evidence_role": "counterevidence"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_6",
+          "evidence_role": "context"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_7",
+          "evidence_role": "context"
+        }
+      ],
+      "verification_questions": [
+        "Do the original PDF and experiment-specific code specify the loss coefficients, training temperature, reductions, and any temperature-dependent scaling?",
+        "Which token positions contribute to distillation and cosine alignment, and do teacher and student receive the same masked inputs?",
+        "Which hidden states are aligned: final-layer states, selected intermediate pairs, or another mapping?",
+        "Do the reported ablations preserve the remaining coefficients and reductions, or renormalize them after removing a component?"
+      ],
+      "potential_impact": "undetermined",
+      "verification_status": "unverified",
+      "source_limitations": [
+        "Exact equation transcription is unverified; no concern is inferred from the extracted cross-entropy sign.",
+        "Relevant details may occur in omitted material or the released training code.",
+        "The released implementation and experiment configuration have not been checked."
+      ],
+      "external_verification_required": false
+    },
+    {
+      "issue_id": "candidate_b43a63c1120cd273",
+      "dimension_id": "D2",
+      "issue_type": "mechanism_attribution",
+      "title": "Single-component ablations may not establish the joint contribution of additional distillation signals",
+      "observed_fact": "The ablation caption identifies the reference as a model trained with the triple loss and teacher-weight initialization. The extracted rows describe removing each loss separately and replacing teacher initialization with random initialization. The accompanying prose says that removing masked language modeling has little impact and that the two distillation losses account for a large portion of performance. The discussion also attributes substantial gains to teacher initialization and additional losses.",
+      "suspected_problem": "If the verified experiment inventory consists of these single-component removals, it supports conditional benefits of individual components but does not directly measure the joint gain from adding both distillation losses to an otherwise matched masked-language-modeling student. Each single-distillation-loss removal retains the other teacher-derived loss and teacher initialization, while the random-initialization variant retains both distillation losses. Interactions therefore remain unresolved, and interpreting these deltas as a joint attribution could exceed what those comparisons isolate.",
+      "why_it_matters": "A matched student trained with masked language modeling and the same teacher initialization would distinguish the incremental contribution of ongoing teacher supervision from knowledge already transferred by initialization. This affects the strength of the mechanism claim about additional pretraining distillation signals, while leaving the demonstrated usefulness of the complete model separately assessable.",
+      "claim_ids": [
+        "claim_416e38c43588f4f0",
+        "claim_99d4c1fba0a1e81c",
+        "claim_e75bc9c26e77d103"
+      ],
+      "source_refs": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_0",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_2",
+          "evidence_role": "context"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_8",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_11",
+          "evidence_role": "observed_statement"
+        }
+      ],
+      "possible_counterevidence": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_8",
+          "evidence_role": "counterevidence"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_2",
+          "evidence_role": "counterevidence"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_10",
+          "evidence_role": "context"
+        }
+      ],
+      "verification_questions": [
+        "Does the original Table 4 confirm the extracted single-component-removal configurations, and are additional relevant comparisons provided elsewhere?",
+        "Is there an otherwise matched teacher-initialized student trained with masked language modeling alone, removing both additional distillation losses?",
+        "Are training data, masking, optimization budget, and downstream evaluation held constant across the relevant comparisons?",
+        "Is the authors' attribution intended only as a statement of conditional component benefits, or as a quantitative claim about the combined contribution of distillation?"
+      ],
+      "potential_impact": "undetermined",
+      "verification_status": "unverified",
+      "source_limitations": [
+        "Table 4 row associations and numerical effects are unverified; the concern does not rely on exact extracted deltas.",
+        "Partial coverage cannot establish that a joint-removal control is absent from all paper materials.",
+        "Existing component and initialization ablations provide relevant counterevidence and should not be described as missing."
+      ],
+      "external_verification_required": false
+    },
+    {
+      "issue_id": "candidate_cbff9281b140f698",
+      "dimension_id": "D3",
+      "issue_type": "experimental_control",
+      "title": "Individual loss removals may not isolate the total benefit of pretraining distillation",
+      "observed_fact": "The objective combines Lce, Lcos, and Lmlm. Table 4 is described as comparing individual loss removals and random initialization against the full triple loss with teacher-weight initialization. The prose interprets these ablations as evidence that the two distillation losses account for a large portion of performance and that additional pretraining distillation signals are beneficial.",
+      "suspected_problem": "Each listed single-loss removal retains another teacher-supervised loss, while the random-initialization condition retains the full triple loss. These comparisons can support conditional benefits of individual components but may not establish the total gain from distillation over an otherwise matched small model trained with Lmlm alone. Interactions between Lce and Lcos could change that interpretation.",
+      "why_it_matters": "A matched Lmlm-only student would distinguish the contribution of additional teacher supervision from the performance already supplied by the reduced architecture, teacher initialization, and continued language-model training. This affects the causal interpretation of the proposed pretraining mechanism, rather than the measured usefulness of the final model.",
+      "claim_ids": [
+        "claim_416e38c43588f4f0",
+        "claim_99d4c1fba0a1e81c",
+        "claim_e75bc9c26e77d103"
+      ],
+      "source_refs": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_9",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_2",
+          "evidence_role": "supporting_result"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_8",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_10",
+          "evidence_role": "observed_statement"
+        }
+      ],
+      "possible_counterevidence": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_0",
+          "evidence_role": "counterevidence"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_8",
+          "evidence_role": "counterevidence"
+        }
+      ],
+      "verification_questions": [
+        "Does the original Table 4 or other available material include a condition removing both Lce and Lcos while retaining Lmlm?",
+        "If such a control exists, does it match the full model in architecture, teacher-weight initialization, data, token exposure, and downstream fine-tuning?",
+        "Do the authors intend the ablation conclusion only as a conditional component effect, or as a claim about the total contribution of pretraining distillation?"
+      ],
+      "potential_impact": "major_candidate",
+      "verification_status": "unverified",
+      "source_limitations": [
+        "Table 4 labels and numerical associations remain unverified.",
+        "The supplied ablation inventory may omit controls documented elsewhere."
+      ],
+      "external_verification_required": false
+    },
+    {
+      "issue_id": "candidate_9a34220f56b4571f",
+      "dimension_id": "D3",
+      "issue_type": "compute_comparison",
+      "title": "Reported training resources may not establish a comparable pretraining-cost saving",
+      "observed_fact": "The authors state that DistilBERT requires a smaller computational training budget. They report training on eight 16 GB V100 GPUs for approximately 90 hours, followed by a contextual comparison with RoBERTa training for one day on 1,024 32 GB V100 GPUs. The student also uses pretrained teacher weights and teacher-derived training signals.",
+      "suspected_problem": "The resource comparison does not by itself isolate a saving relative to the BERT counterpart: it compares different training configurations and does not establish matched data exposure or target performance. The cost boundary is also unresolved, including whether the reported duration covers teacher inference and whether teacher pretraining is treated as an existing resource or part of the total training cost.",
+      "why_it_matters": "The measured cost of producing a student from an available teacher is a different quantity from the total cost of obtaining both models. Without a clear boundary and comparison target, readers cannot determine the computational saving attributable to this method or apply the claim to a new training project.",
+      "claim_ids": [
+        "claim_a43f23cbeb41a5e9"
+      ],
+      "source_refs": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_0",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_10",
+          "evidence_role": "supporting_result"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_12",
+          "evidence_role": "context"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_9",
+          "evidence_role": "context"
+        }
+      ],
+      "possible_counterevidence": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_10",
+          "evidence_role": "counterevidence"
+        }
+      ],
+      "verification_questions": [
+        "What training-cost boundary do the authors use, and does the 90-hour figure include all teacher forward passes or preparation of cached teacher outputs?",
+        "Is the claim explicitly conditional on an already pretrained teacher?",
+        "Is a BERT or other relevant training comparison supplied with comparable data exposure and a stated performance target?",
+        "Is the RoBERTa comparison intended solely as resource context, rather than evidence of a controlled compute saving?"
+      ],
+      "potential_impact": "undetermined",
+      "verification_status": "unverified",
+      "source_limitations": [
+        "Only one student training-resource figure and a contextual RoBERTa figure are available in the supplied experimental text.",
+        "Additional accounting or training comparisons may appear in omitted material or released code."
+      ],
+      "external_verification_required": false
+    },
+    {
+      "issue_id": "candidate_4797eae58a0d02e4",
+      "dimension_id": "D3",
+      "issue_type": "result_consistency",
+      "title": "SQuAD adaptation-distillation results require reconciliation before interpreting the improvement",
+      "observed_fact": "The prose describes two successive distillation stages and reports 79.8 F1 and 70.4 EM, calling these results within three points of the full model. The incomplete Table 2 extraction associates DistilBERT (D) with 79.1/86.9 under an EM/F1 header, and its caption defines D as a second distillation step during fine-tuning.",
+      "suspected_problem": "The prose and parsed table appear to describe the same setting but imply different results. This could be a parsing problem or a difference in evaluation configuration; the current evidence cannot establish which values quantify the benefit of adaptation-stage distillation.",
+      "why_it_matters": "The resolved values determine whether the additional distillation stage improves over the pretrained student and how closely it approaches BERT on SQuAD. They are needed to assess the downstream accuracy trade-off.",
+      "claim_ids": [
+        "claim_d15f98a55bba3ef7",
+        "claim_4263e8efb6d8eecd"
+      ],
+      "source_refs": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_3",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_4",
+          "evidence_role": "context"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_8",
+          "evidence_role": "source_conflict"
+        }
+      ],
+      "possible_counterevidence": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_17",
+          "evidence_role": "context"
+        },
+        {
+          "source_id": "table_ev_6724ca5dce54_2_4",
+          "evidence_role": "counterevidence"
+        }
+      ],
+      "verification_questions": [
+        "What values and metric order does the original PDF show for DistilBERT (D)?",
+        "Do the prose and table use the same SQuAD version, split, teacher, and student configuration?",
+        "After resolving the source conflict, what are the EM and F1 improvements over DistilBERT without adaptation distillation and the corresponding gaps to BERT?"
+      ],
+      "potential_impact": "undetermined",
+      "verification_status": "unverified",
+      "source_limitations": [
+        "Table 2 is structurally incomplete and its numerical associations are unverified.",
+        "This is a source-conflict lead, not a confirmed inconsistency in the original paper."
+      ],
+      "external_verification_required": false
+    },
+    {
+      "issue_id": "candidate_8cc2ac38dbe85ec5",
+      "dimension_id": "D4",
+      "issue_type": "unresolved_result_consistency",
+      "title": "SQuAD adaptation-distillation scores require reconciliation across prose and table",
+      "observed_fact": "The continuation of the SQuAD adaptation discussion reports two successive distillation stages and gives 79.8 F1 and 70.4 EM, described as within three points of the full model. The extracted Table 2 caption identifies SQuAD results as development-set EM/F1 and marks D as a second distillation step during fine-tuning. Its unverified numerical extraction lists DistilBERT (D) as 79.1/86.9 and BERT-base as 81.2/88.5.",
+      "suspected_problem": "If the original PDF confirms these associations and both locations concern the same evaluation configuration, the prose and table would give materially different scores for the same model. The prose's 'within 3 points' characterization would also need reconciliation with its stated scores and the table's full-model baseline. Extraction uncertainty or an evaluation difference could explain the apparent conflict.",
+      "why_it_matters": "The numerical correspondence determines the measured benefit of adaptation-stage distillation and the remaining accuracy gap to BERT. Different values would support substantially different conclusions about the accuracy versus size trade-off.",
+      "claim_ids": [
+        "claim_4263e8efb6d8eecd",
+        "claim_d15f98a55bba3ef7"
+      ],
+      "source_refs": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_3",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_4",
+          "evidence_role": "context"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_8",
+          "evidence_role": "source_conflict"
+        }
+      ],
+      "possible_counterevidence": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_17",
+          "evidence_role": "context"
+        },
+        {
+          "source_id": "table_ev_6724ca5dce54_2_4",
+          "evidence_role": "context"
+        }
+      ],
+      "verification_questions": [
+        "Does the original PDF confirm the numerical entries and EM/F1 ordering attributed to DistilBERT (D) and BERT-base?",
+        "Do the prose and table refer to the same checkpoint, dataset split, and adaptation-distillation procedure?",
+        "Which full-model scores support the prose's 'within 3 points' statement?"
+      ],
+      "potential_impact": "undetermined",
+      "verification_status": "unverified",
+      "source_limitations": [
+        "Table 2 is structure_incomplete and its numerical associations are unverified.",
+        "The adaptation discussion spans a page boundary and the supplied reading order is not verified."
+      ],
+      "external_verification_required": false
+    },
+    {
+      "issue_id": "candidate_bcbebaa303e3d372",
+      "dimension_id": "D4",
+      "issue_type": "conclusion_scope",
+      "title": "The 97% headline may overextend an aggregate GLUE score ratio",
+      "observed_fact": "The abstract and conclusion describe retaining 97% of BERT's 'language understanding capabilities.' The experimental prose identifies the supporting measure as a GLUE macro-score, defined as the average of individual task scores, and the caption specifies development-set results with medians of five runs. The unverified extraction gives aggregate scores of 77.0 for DistilBERT and 79.5 for BERT-base, whose ratio is approximately 97%.",
+      "suspected_problem": "The broad capability wording may invite interpretation as uniformly retaining 97% of performance across tasks or language-understanding settings, whereas the identified evidence supports a ratio of averaged benchmark scores. An aggregate ratio can conceal uneven task-level losses and does not directly quantify a general fraction of language-understanding capability.",
+      "why_it_matters": "The distinction affects the central advertised compression trade-off. A reader choosing the smaller model for a particular task needs to distinguish aggregate benchmark retention from task-specific performance preservation.",
+      "claim_ids": [
+        "claim_1987440a651a1aeb",
+        "claim_d0de3244a9218171"
+      ],
+      "source_refs": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_0_5",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_4_1",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_13",
+          "evidence_role": "supporting_result"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_2",
+          "evidence_role": "supporting_result"
+        }
+      ],
+      "possible_counterevidence": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_0",
+          "evidence_role": "counterevidence"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_12",
+          "evidence_role": "counterevidence"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_16",
+          "evidence_role": "counterevidence"
+        }
+      ],
+      "verification_questions": [
+        "Does the verified table establish that 97% is calculated as the ratio of GLUE macro-scores, and how are individual task metrics combined?",
+        "What is the verified distribution of task-level degradation, and does it materially qualify the aggregate headline?",
+        "Does surrounding text explicitly restrict the abstract and conclusion's capability-retention wording to this benchmark aggregate?"
+      ],
+      "potential_impact": "minor_candidate",
+      "verification_status": "unverified",
+      "source_limitations": [
+        "GLUE table structure and task-to-score associations remain unverified.",
+        "This concern addresses interpretation of the stated metric, not a demonstrated arithmetic error or an assertion that other evaluations are absent."
+      ],
+      "external_verification_required": false
+    },
+    {
+      "issue_id": "candidate_8ef728e15e00c987",
+      "dimension_id": "D4",
+      "issue_type": "efficiency_conclusion_boundary",
+      "title": "Lower pretraining cost is supported by a comparison with a different training setup",
+      "observed_fact": "The abstract calls DistilBERT cheaper to pretrain, and the introduction claims a smaller computational training budget than larger counterparts. The supplied compute paragraph reports approximately 90 hours on eight 16GB V100 GPUs for DistilBERT and compares this with one day on 1,024 32GB V100 GPUs for RoBERTa. The method also initializes the student from pretrained teacher layers and uses teacher distributions and hidden states during training.",
+      "suspected_problem": "The reported resource comparison may establish a smaller particular training run without isolating savings attributable to distillation or establishing lower cost relative to the BERT model used for the principal accuracy and size comparisons. The broad cost conclusion also depends on whether it refers to incremental student training with an existing teacher or to the full process of obtaining the teacher and student.",
+      "why_it_matters": "Pretraining cost is a central practical motivation. Comparing different model and training configurations, or leaving the cost boundary implicit, can lead readers to infer savings that may not apply when training a comparable model from scratch or when a pretrained teacher is unavailable.",
+      "claim_ids": [
+        "claim_a43f23cbeb41a5e9"
+      ],
+      "source_refs": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_0_5",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_0",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_10",
+          "evidence_role": "supporting_result"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_12",
+          "evidence_role": "context"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_9",
+          "evidence_role": "context"
+        }
+      ],
+      "possible_counterevidence": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_9",
+          "evidence_role": "context"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_10",
+          "evidence_role": "counterevidence"
+        }
+      ],
+      "verification_questions": [
+        "What cost boundary do the authors intend: incremental student distillation given an available teacher, or total teacher-plus-student pretraining?",
+        "Does the reported student runtime include teacher forward computation and all training stages?",
+        "Does the full source provide a comparable BERT training budget or another comparison controlling training workload and target performance?",
+        "Is the lower-cost language explicitly limited to the reported DistilBERT versus RoBERTa runs?"
+      ],
+      "potential_impact": "major_candidate",
+      "verification_status": "unverified",
+      "source_limitations": [
+        "The supplied compute paragraph does not resolve accounting boundaries or comparability of the two training workloads.",
+        "Coverage is partial; additional cost explanations or comparisons may exist in omitted material.",
+        "No external training-cost figures have been checked or assumed."
+      ],
+      "external_verification_required": false
+    },
+    {
+      "issue_id": "candidate_35b744cc386ff5f3",
+      "dimension_id": "D5",
+      "issue_type": "objective_specification",
+      "title": "The supplied objective description does not uniquely determine the implemented triple loss",
+      "observed_fact": "The authors describe a linear combination of distillation, masked language modeling, and cosine embedding losses. They specify that teacher and student share a training temperature and use temperature one at inference. The supplied description does not give numerical mixture weights or training temperature, identify the hidden-state layers used for cosine alignment, or state which token positions contribute to the distillation and cosine terms. The student has half as many layers as the teacher and is initialized from alternating teacher layers.",
+      "suspected_problem": "Unless the complete source or released training configuration resolves these choices, multiple materially different objectives fit the description. In particular, alternating-layer initialization does not by itself specify which hidden states are aligned during training.",
+      "why_it_matters": "Loss weights, temperature, token selection, and hidden-state pairing determine the relative training signals. Different choices could change the pretrained model and the measured effects of removing each loss, preventing faithful reproduction of both the main method and its ablations.",
+      "claim_ids": [
+        "claim_7bcad7997d656581",
+        "claim_cc3f6207a3c8e47a",
+        "claim_f97393e2bc593bcb",
+        "claim_7c84cde1e814627a"
+      ],
+      "source_refs": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_9",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_8",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_11",
+          "evidence_role": "context"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_12",
+          "evidence_role": "context"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_8",
+          "evidence_role": "context"
+        }
+      ],
+      "possible_counterevidence": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_2",
+          "evidence_role": "counterevidence"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_7",
+          "evidence_role": "context"
+        }
+      ],
+      "verification_questions": [
+        "Inspect the original Knowledge distillation and DistilBERT sections and the released training configuration: what are the numerical loss coefficients and training temperature?",
+        "Which teacher and student hidden states are compared, and do distillation and cosine losses use masked tokens, all nonpadding tokens, or another selection?",
+        "How are the losses reduced and normalized, including any temperature-dependent scaling, and are the surviving coefficients preserved or rescaled in each ablation?",
+        "Does the released implementation identify the configuration used for the reported model and Table 4?"
+      ],
+      "potential_impact": "major_candidate",
+      "verification_status": "unverified",
+      "source_limitations": [
+        "Formula transcription is fragmented and unverified; the concern concerns unresolved implementation choices, not a claimed sign error.",
+        "The full PDF and released code must be checked before treating these choices as undocumented.",
+        "Table 4 associations and numerical deltas remain unverified."
+      ],
+      "external_verification_required": true
+    },
+    {
+      "issue_id": "candidate_d66b4d629e17092d",
+      "dimension_id": "D5",
+      "issue_type": "training_and_evaluation_reproducibility",
+      "title": "Reported training resources and evaluation summaries do not yet identify a reproducible experiment configuration",
+      "observed_fact": "The supplied pretraining text identifies Wikipedia and Toronto Book Corpus, dynamic masking, no next sentence prediction, batches of up to 4,000 examples through gradient accumulation, and approximately 90 hours on eight V100 GPUs. The GLUE text specifies separate task fine-tuning on development sets without ensembling or multitask training, and the table caption reports medians over five seeds. These passages do not specify the optimizer schedule, training steps or tokens, sequence-length schedule, masking parameters, or task-specific fine-tuning and checkpoint-selection settings.",
+      "suspected_problem": "If the complete paper and released experiment artifacts do not supply these settings, hardware duration and broad training practices leave both the pretraining exposure and downstream selection procedure underdetermined.",
+      "why_it_matters": "The 97% retained-performance result and the GLUE ablation deltas depend on both the pretrained checkpoint and downstream adaptation. Differences in training exposure, learning rates, or checkpoint selection can alter these scores even when architecture and loss components are held fixed.",
+      "claim_ids": [
+        "claim_d7d146a7b6e07ad5",
+        "claim_d0de3244a9218171",
+        "claim_1987440a651a1aeb",
+        "claim_7c84cde1e814627a"
+      ],
+      "source_refs": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_9",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_10",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_12",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_0",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_13",
+          "evidence_role": "context"
+        }
+      ],
+      "possible_counterevidence": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_2",
+          "evidence_role": "counterevidence"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_9",
+          "evidence_role": "counterevidence"
+        }
+      ],
+      "verification_questions": [
+        "Check the complete training and experiments sections and released scripts for the optimizer, learning-rate schedule, update count, effective batch schedule, sequence lengths, masking settings, and teacher checkpoint.",
+        "Are corpus preprocessing and tokenizer settings sufficiently specified to reconstruct the training examples?",
+        "What fine-tuning settings, hyperparameter search procedure, and checkpoint-selection rule produced the five-seed GLUE results?",
+        "Are the same downstream protocol and comparable pretraining exposure used for the ablation models, and are their configurations available?"
+      ],
+      "potential_impact": "major_candidate",
+      "verification_status": "unverified",
+      "source_limitations": [
+        "The supplied passages provide several substantive training and evaluation details; this is a lead about the remaining configuration, not a claim that no protocol is provided.",
+        "Omitted units and the cited training-code release could resolve the apparent gaps.",
+        "Unverified GLUE and ablation table structures prevent independent numerical reconstruction."
+      ],
+      "external_verification_required": true
+    },
+    {
+      "issue_id": "candidate_d4020475ec42754b",
+      "dimension_id": "D5",
+      "issue_type": "efficiency_protocol_reproducibility",
+      "title": "CPU and mobile speed comparisons require further workload and runtime specification",
+      "observed_fact": "The CPU comparison measures a full STS-B development-set pass with batch size one on an Intel Xeon E5-2690 v3 at 2.9 GHz. The mobile comparison uses an iPhone 7 Plus question answering application, reports average inference time against a previously trained BERT-base model, and explicitly excludes tokenization. The supplied passages do not identify CPU thread settings or software runtime, mobile input lengths and example set, execution backend, numerical precision, or warm-up and timing aggregation procedures.",
+      "suspected_problem": "Unless the original timing table, complete source, or released application resolves these conditions, the reported 60% CPU and 71% mobile speed improvements may be difficult to reproduce or interpret as comparisons under matched execution conditions.",
+      "why_it_matters": "Transformer latency depends on sequence length, threading, backend, precision, and timing boundaries. These choices can materially change the measured speed ratio and determine which deployment workload the reported gains describe.",
+      "claim_ids": [
+        "claim_6d289ceb45a005b3",
+        "claim_b59fbbfe374999c6"
+      ],
+      "source_refs": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_5",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_6",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_2_3",
+          "evidence_role": "context"
+        }
+      ],
+      "possible_counterevidence": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_6",
+          "evidence_role": "counterevidence"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_1_2",
+          "evidence_role": "counterevidence"
+        }
+      ],
+      "verification_questions": [
+        "Inspect the original Table 3 and timing code for raw durations, the percentage calculation, framework version, numerical precision, CPU thread settings, and timing boundaries.",
+        "For the mobile comparison, what examples, context lengths, truncation rules, backend, and device execution settings were used?",
+        "Were both models timed on identical inputs with matched runtime settings, and how were warm-up, repeated measurements, and averaging handled?",
+        "Does the released mobile application preserve the benchmark configuration used for the reported 71% improvement?"
+      ],
+      "potential_impact": "undetermined",
+      "verification_status": "unverified",
+      "source_limitations": [
+        "Table 3 is structurally incomplete and its numerical timing rows are not verified.",
+        "The mobile code-availability footnote is outside the supplied reading units; its target and contents have not been inspected.",
+        "Hardware, CPU batch size, workload identity, and mobile tokenization exclusion are explicitly supplied and should not be characterized as missing."
+      ],
+      "external_verification_required": true
+    },
+    {
+      "issue_id": "candidate_d3a08b0240d95640",
+      "dimension_id": "D6",
+      "issue_type": "related_work_comparative_claim_scope",
+      "title": "The stated advantage over task-specific distillation may exceed the comparison established by the cited ablations",
+      "observed_fact": "The related-work discussion states that the authors found general-purpose pretraining distillation beneficial 'rather than a task-specific distillation,' after describing Tang et al. and Chatterjee. It then contrasts the approach with Turc et al. and invokes the ablation study as evidence for additional pretraining distillation signals. The supplied ablation description examines loss components and student initialization within DistilBERT. The SQuAD experiment separately adds task-specific distillation after pretraining distillation.",
+      "suspected_problem": "The wording may imply an experimentally established advantage of pretraining distillation over task-specific distillation, while the cited ablations establish the value of particular signals within the authors' pretraining procedure. These are different comparisons. The supplied two-stage SQuAD experiment also tests adding task-specific distillation, rather than choosing between the two stages.",
+      "why_it_matters": "Readers could infer that the paper resolves which distillation stage is preferable relative to the cited approaches. Without a comparison that isolates training stage, the supported contribution is narrower: a useful general-purpose distillation procedure and evidence for its internal design choices.",
+      "claim_ids": [
+        "claim_4faebd9391822cb3",
+        "claim_99d4c1fba0a1e81c",
+        "claim_d15f98a55bba3ef7",
+        "claim_7c84cde1e814627a"
+      ],
+      "source_refs": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_10",
+          "evidence_role": "observed_statement"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_8",
+          "evidence_role": "supporting_result"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_3",
+          "evidence_role": "context"
+        }
+      ],
+      "possible_counterevidence": [
+        {
+          "source_id": "ru_ev_6724ca5dce54_0_5",
+          "evidence_role": "counterevidence"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_10",
+          "evidence_role": "counterevidence"
+        },
+        {
+          "source_id": "ru_ev_6724ca5dce54_3_3",
+          "evidence_role": "counterevidence"
+        }
+      ],
+      "verification_questions": [
+        "Does the complete paper compare pretraining distillation with task-specific-only distillation under sufficiently matched student architecture, initialization, data, and training budget?",
+        "Does the surrounding original text make clear that 'beneficial ... rather than' describes the authors' design choice rather than comparative superiority?",
+        "If no stage-isolating comparison is provided, should the related-work statement be restricted to the demonstrated benefit of additional teacher signals during pretraining?",
+        "Does the two-stage SQuAD result qualify the relationship between general-purpose and task-specific distillation as complementary?"
+      ],
+      "potential_impact": "minor_candidate",
+      "verification_status": "unverified",
+      "source_limitations": [
+        "The full numerical comparison tables and some reading units are omitted.",
+        "The ablation table's row associations remain unverified; this concern relies on the prose description of its scope, not its extracted numerical values.",
+        "The cited prior papers are unavailable. This candidate concerns internal evidence-to-positioning fit and does not assert that those papers are mischaracterized."
+      ],
+      "external_verification_required": false
+    }
+  ],
+  "dimension_index": {
+    "D1": [
+      "candidate_fb1bf9ee8ee47391"
+    ],
+    "D2": [
+      "candidate_2349c5cdd44540ee",
+      "candidate_b43a63c1120cd273"
+    ],
+    "D3": [
+      "candidate_cbff9281b140f698",
+      "candidate_9a34220f56b4571f",
+      "candidate_4797eae58a0d02e4"
+    ],
+    "D4": [
+      "candidate_8cc2ac38dbe85ec5",
+      "candidate_bcbebaa303e3d372",
+      "candidate_8ef728e15e00c987"
+    ],
+    "D5": [
+      "candidate_35b744cc386ff5f3",
+      "candidate_d66b4d629e17092d",
+      "candidate_d4020475ec42754b"
+    ],
+    "D6": [
+      "candidate_d3a08b0240d95640"
+    ]
+  },
+  "claim_index": {
+    "claim_4faebd9391822cb3": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_d3a08b0240d95640"
+    ],
+    "claim_76e0d94dda492765": [],
+    "claim_a43f23cbeb41a5e9": [
+      "candidate_9a34220f56b4571f",
+      "candidate_8ef728e15e00c987"
+    ],
+    "claim_7bcad7997d656581": [
+      "candidate_2349c5cdd44540ee",
+      "candidate_35b744cc386ff5f3"
+    ],
+    "claim_cc3f6207a3c8e47a": [
+      "candidate_2349c5cdd44540ee",
+      "candidate_35b744cc386ff5f3"
+    ],
+    "claim_f97393e2bc593bcb": [
+      "candidate_2349c5cdd44540ee",
+      "candidate_35b744cc386ff5f3"
+    ],
+    "claim_dc9f062d58286e85": [],
+    "claim_1987440a651a1aeb": [
+      "candidate_bcbebaa303e3d372",
+      "candidate_d66b4d629e17092d"
+    ],
+    "claim_3cb5a19341f0e7d4": [],
+    "claim_be0f5cdb90c70ed6": [],
+    "claim_6a21f05949707aee": [],
+    "claim_7afee7b51da8ee9e": [],
+    "claim_d7d146a7b6e07ad5": [
+      "candidate_d66b4d629e17092d"
+    ],
+    "claim_d0de3244a9218171": [
+      "candidate_bcbebaa303e3d372",
+      "candidate_d66b4d629e17092d"
+    ],
+    "claim_d15f98a55bba3ef7": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_4797eae58a0d02e4",
+      "candidate_8cc2ac38dbe85ec5",
+      "candidate_d3a08b0240d95640"
+    ],
+    "claim_4263e8efb6d8eecd": [
+      "candidate_4797eae58a0d02e4",
+      "candidate_8cc2ac38dbe85ec5"
+    ],
+    "claim_14129f2bafeca287": [],
+    "claim_ef47e5a973fd33fb": [],
+    "claim_86362eb48edd93b9": [],
+    "claim_6d289ceb45a005b3": [
+      "candidate_d4020475ec42754b"
+    ],
+    "claim_887f99086635919c": [],
+    "claim_9a9e74106b30d644": [],
+    "claim_b59fbbfe374999c6": [
+      "candidate_d4020475ec42754b"
+    ],
+    "claim_7b91b671ff8d6708": [],
+    "claim_416e38c43588f4f0": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_b43a63c1120cd273",
+      "candidate_cbff9281b140f698"
+    ],
+    "claim_99d4c1fba0a1e81c": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_b43a63c1120cd273",
+      "candidate_cbff9281b140f698",
+      "candidate_d3a08b0240d95640"
+    ],
+    "claim_7c84cde1e814627a": [
+      "candidate_35b744cc386ff5f3",
+      "candidate_d66b4d629e17092d",
+      "candidate_d3a08b0240d95640"
+    ],
+    "claim_e75bc9c26e77d103": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_b43a63c1120cd273",
+      "candidate_cbff9281b140f698"
+    ],
+    "claim_64af9002feb02b23": []
+  },
+  "contribution_index": {
+    "contrib_5f7cdbd91720f0a0": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_9a34220f56b4571f",
+      "candidate_4797eae58a0d02e4",
+      "candidate_8cc2ac38dbe85ec5",
+      "candidate_bcbebaa303e3d372",
+      "candidate_8ef728e15e00c987",
+      "candidate_d66b4d629e17092d",
+      "candidate_d3a08b0240d95640"
+    ],
+    "contrib_dcc40454a6f92faa": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_2349c5cdd44540ee",
+      "candidate_b43a63c1120cd273",
+      "candidate_cbff9281b140f698",
+      "candidate_35b744cc386ff5f3",
+      "candidate_d3a08b0240d95640"
+    ],
+    "contrib_f7537eea16119ebb": [
+      "candidate_bcbebaa303e3d372",
+      "candidate_d66b4d629e17092d",
+      "candidate_d4020475ec42754b"
+    ],
+    "contrib_507de8d3af4b3f42": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_b43a63c1120cd273",
+      "candidate_cbff9281b140f698",
+      "candidate_35b744cc386ff5f3",
+      "candidate_d66b4d629e17092d",
+      "candidate_d4020475ec42754b",
+      "candidate_d3a08b0240d95640"
+    ]
+  },
+  "source_index": {
+    "ru_ev_6724ca5dce54_3_10": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_b43a63c1120cd273",
+      "candidate_cbff9281b140f698",
+      "candidate_d3a08b0240d95640"
+    ],
+    "ru_ev_6724ca5dce54_3_8": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_b43a63c1120cd273",
+      "candidate_cbff9281b140f698",
+      "candidate_35b744cc386ff5f3",
+      "candidate_d3a08b0240d95640"
+    ],
+    "ru_ev_6724ca5dce54_3_2": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_b43a63c1120cd273",
+      "candidate_cbff9281b140f698"
+    ],
+    "ru_ev_6724ca5dce54_1_12": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_2349c5cdd44540ee",
+      "candidate_9a34220f56b4571f",
+      "candidate_8ef728e15e00c987",
+      "candidate_35b744cc386ff5f3"
+    ],
+    "ru_ev_6724ca5dce54_2_9": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_8ef728e15e00c987",
+      "candidate_d66b4d629e17092d"
+    ],
+    "ru_ev_6724ca5dce54_3_3": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_4797eae58a0d02e4",
+      "candidate_8cc2ac38dbe85ec5",
+      "candidate_d3a08b0240d95640"
+    ],
+    "ru_ev_6724ca5dce54_3_0": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_b43a63c1120cd273",
+      "candidate_cbff9281b140f698"
+    ],
+    "ru_ev_6724ca5dce54_2_12": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_bcbebaa303e3d372",
+      "candidate_d66b4d629e17092d"
+    ],
+    "ru_ev_6724ca5dce54_2_13": [
+      "candidate_fb1bf9ee8ee47391",
+      "candidate_bcbebaa303e3d372",
+      "candidate_d66b4d629e17092d"
+    ],
+    "ru_ev_6724ca5dce54_1_9": [
+      "candidate_2349c5cdd44540ee",
+      "candidate_cbff9281b140f698",
+      "candidate_9a34220f56b4571f",
+      "candidate_8ef728e15e00c987",
+      "candidate_35b744cc386ff5f3"
+    ],
+    "ru_ev_6724ca5dce54_1_8": [
+      "candidate_2349c5cdd44540ee",
+      "candidate_35b744cc386ff5f3"
+    ],
+    "ru_ev_6724ca5dce54_1_11": [
+      "candidate_2349c5cdd44540ee",
+      "candidate_35b744cc386ff5f3"
+    ],
+    "ru_ev_6724ca5dce54_1_2": [
+      "candidate_2349c5cdd44540ee",
+      "candidate_35b744cc386ff5f3",
+      "candidate_d66b4d629e17092d",
+      "candidate_d4020475ec42754b"
+    ],
+    "ru_ev_6724ca5dce54_1_6": [
+      "candidate_2349c5cdd44540ee"
+    ],
+    "ru_ev_6724ca5dce54_1_7": [
+      "candidate_2349c5cdd44540ee",
+      "candidate_35b744cc386ff5f3"
+    ],
+    "ru_ev_6724ca5dce54_3_11": [
+      "candidate_b43a63c1120cd273"
+    ],
+    "ru_ev_6724ca5dce54_1_0": [
+      "candidate_9a34220f56b4571f",
+      "candidate_8ef728e15e00c987"
+    ],
+    "ru_ev_6724ca5dce54_2_10": [
+      "candidate_9a34220f56b4571f",
+      "candidate_8ef728e15e00c987",
+      "candidate_d66b4d629e17092d"
+    ],
+    "ru_ev_6724ca5dce54_2_4": [
+      "candidate_4797eae58a0d02e4",
+      "candidate_8cc2ac38dbe85ec5"
+    ],
+    "ru_ev_6724ca5dce54_2_8": [
+      "candidate_4797eae58a0d02e4",
+      "candidate_8cc2ac38dbe85ec5"
+    ],
+    "ru_ev_6724ca5dce54_2_17": [
+      "candidate_4797eae58a0d02e4",
+      "candidate_8cc2ac38dbe85ec5"
+    ],
+    "table_ev_6724ca5dce54_2_4": [
+      "candidate_4797eae58a0d02e4",
+      "candidate_8cc2ac38dbe85ec5"
+    ],
+    "ru_ev_6724ca5dce54_0_5": [
+      "candidate_bcbebaa303e3d372",
+      "candidate_8ef728e15e00c987",
+      "candidate_d3a08b0240d95640"
+    ],
+    "ru_ev_6724ca5dce54_4_1": [
+      "candidate_bcbebaa303e3d372"
+    ],
+    "ru_ev_6724ca5dce54_2_2": [
+      "candidate_bcbebaa303e3d372"
+    ],
+    "ru_ev_6724ca5dce54_2_0": [
+      "candidate_bcbebaa303e3d372",
+      "candidate_d66b4d629e17092d"
+    ],
+    "ru_ev_6724ca5dce54_2_16": [
+      "candidate_bcbebaa303e3d372"
+    ],
+    "ru_ev_6724ca5dce54_3_5": [
+      "candidate_d4020475ec42754b"
+    ],
+    "ru_ev_6724ca5dce54_3_6": [
+      "candidate_d4020475ec42754b"
+    ],
+    "ru_ev_6724ca5dce54_2_3": [
+      "candidate_d4020475ec42754b"
+    ]
+  }
+}
