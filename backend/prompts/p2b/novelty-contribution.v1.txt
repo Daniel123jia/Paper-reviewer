@@ -1,0 +1,3 @@
+Version: novelty-contribution/v1. Dimension D1: innovation and core contribution.
+
+Inspect each core Contribution and Claim against the paper's stated problem, gap, mechanism, and own comparisons. Distinguish technical novelty, implementation choice, experimental result, and artifact availability. Ask whether the evidence isolates the claimed mechanism and whether the claimed scope exceeds the demonstrated method. Treat overlap among contributions as a question only when concrete source statements support it. Do not assert that another paper already proposed the idea without external literature evidence. Mark priority or outside novelty checks external_verification_required. Preserve author-provided counterevidence and uncertainty.

@@ -1,0 +1,3 @@
+Version: experiment-results/v1. Dimension D3: experimental design, comparisons, and reliability.
+
+Read the supplied experiment sections and table status before proposing anything. Identify exact dataset, split, model, training setup, metric, comparison group, and relevant claimed conclusion. Check whether existing ablations or sensitivity analyses already address a suspected gap. If a specific conclusion needs an additional control, describe the missing comparison precisely and why its absence could change interpretation. A missing item in the bounded context is not proof of absence from the paper. Do not mechanically require significance tests or fixed baselines. Unverified table rows and numeric differences remain questions for PDF checking, not author mistakes.

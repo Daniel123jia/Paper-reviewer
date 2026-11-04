@@ -26,6 +26,8 @@ from backend.access import AccessPolicy, COOKIE_NAME, SESSION_SECONDS
 from backend.source_bundle import build_source_bundle
 from backend.parse_quality import assess_parse_quality
 from backend.p2a_engine import BudgetExceeded, P2AError, RunBudget, run_p2a
+from backend.p2a_schema import ClaimEvidenceMap, PaperProfile, ReviewPlan
+from backend.p2b_engine import run_p2b, validate_understanding_snapshot
 
 
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
@@ -220,6 +222,24 @@ def create_app(data_dir: Path) -> FastAPI:
                 status TEXT NOT NULL, error TEXT
             );
             CREATE INDEX IF NOT EXISTS p2a_calls_run ON paper_understanding_model_calls(run_id);
+            CREATE TABLE IF NOT EXISTS professional_review_runs (
+                id TEXT PRIMARY KEY, understanding_run_id TEXT NOT NULL,
+                document_id TEXT NOT NULL, source_bundle_id TEXT NOT NULL,
+                status TEXT NOT NULL, error TEXT, result_json TEXT,
+                created_at TEXT NOT NULL, finished_at TEXT
+            );
+            CREATE TABLE IF NOT EXISTS professional_review_dimensions (
+                run_id TEXT NOT NULL, dimension_id TEXT NOT NULL, result_json TEXT NOT NULL,
+                PRIMARY KEY (run_id, dimension_id)
+            );
+            CREATE TABLE IF NOT EXISTS professional_review_model_calls (
+                id TEXT PRIMARY KEY, run_id TEXT NOT NULL, dimension_id TEXT NOT NULL,
+                prompt_version TEXT NOT NULL, source_bundle_id TEXT NOT NULL,
+                source_ref_ids TEXT NOT NULL, requested_model TEXT NOT NULL,
+                actual_model TEXT, input_tokens INTEGER, output_tokens INTEGER,
+                duration_ms INTEGER NOT NULL, status TEXT NOT NULL, error TEXT
+            );
+            CREATE INDEX IF NOT EXISTS p2b_calls_run ON professional_review_model_calls(run_id);
         """)
         columns = {row[1] for row in db.execute("PRAGMA table_info(review_findings)")}
         if "support_assessment" not in columns:
@@ -232,6 +252,10 @@ def create_app(data_dir: Path) -> FastAPI:
         db.execute("UPDATE finding_verifications SET status = 'failed', error = '服务重启中断，请重新运行复核', "
                    "finished_at = datetime('now') WHERE status IN ('queued', 'running')")
         db.execute("UPDATE paper_understanding_runs SET status = 'failed', error = 'interrupted_by_restart', "
+                   "finished_at = datetime('now') WHERE status IN ('queued', 'running')")
+        db.execute("UPDATE professional_review_runs SET status = CASE WHEN EXISTS "
+                   "(SELECT 1 FROM professional_review_dimensions d WHERE d.run_id = professional_review_runs.id) "
+                   "THEN 'partial_failed' ELSE 'failed' END, error = 'interrupted_by_restart', "
                    "finished_at = datetime('now') WHERE status IN ('queued', 'running')")
 
     app = FastAPI(title="AI 论文深度审稿工作台")
@@ -549,6 +573,137 @@ def create_app(data_dir: Path) -> FastAPI:
         if not row or not row["source_bundle_json"]:
             raise HTTPException(404, "该任务尚无 Source Bundle 快照")
         return json.loads(row["source_bundle_json"])
+
+    def load_professional_inputs(understanding_run_id):
+        with connect() as db:
+            row = db.execute("SELECT * FROM paper_understanding_runs WHERE id = ?",
+                             (understanding_run_id,)).fetchone()
+            if not row:
+                raise HTTPException(404, "论文理解任务不存在")
+            if row["status"] != "completed" or not all(row[key] for key in
+                    ("source_bundle_json", "review_plan", "paper_profile", "claim_evidence_map")):
+                raise HTTPException(409, "论文理解任务尚未完整完成")
+            document = db.execute("SELECT id, snapshot_id, sha256 FROM documents WHERE id = ?",
+                                  (row["document_id"],)).fetchone()
+        try:
+            bundle = json.loads(row["source_bundle_json"])
+            if row["source_bundle_id"] != bundle["bundle_id"] or not document or \
+                    bundle["document"]["id"] != document["id"] or \
+                    bundle["document"]["snapshot_id"] != document["snapshot_id"] or \
+                    (bundle["document"].get("sha256") and
+                     bundle["document"]["sha256"] != document["sha256"]):
+                raise ValueError("frozen snapshot metadata mismatch")
+            plan = ReviewPlan.model_validate_json(row["review_plan"])
+            profile = PaperProfile.model_validate_json(row["paper_profile"])
+            mapping = ClaimEvidenceMap.model_validate_json(row["claim_evidence_map"])
+            validate_understanding_snapshot(bundle, plan, profile, mapping,
+                                            understanding_run_id, row["status"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise HTTPException(409, f"论文理解快照无效：{type(exc).__name__}") from None
+        return row, bundle, plan, profile, mapping
+
+    def run_professional_review(understanding_run_id, run_id):
+        try:
+            row, bundle, plan, profile, mapping = load_professional_inputs(understanding_run_id)
+            with connect() as db:
+                db.execute("UPDATE professional_review_runs SET status = 'running' WHERE id = ?", (run_id,))
+            model = os.environ.get("OPENAI_MODEL", "gpt-6.1-sol")
+            client = OpenAI(base_url=model_base_url(), timeout=180, max_retries=0)
+
+            def model_call(stage, system, user):
+                started = time.perf_counter()
+                stream = client.chat.completions.create(
+                    model=model, messages=[{"role": "system", "content": system},
+                                           {"role": "user", "content": user}],
+                    stream=True, stream_options={"include_usage": True})
+                pieces = []
+                actual_model = None
+                usage = None
+                for chunk in stream:
+                    actual_model = chunk.model or actual_model
+                    usage = chunk.usage or usage
+                    if chunk.choices and chunk.choices[0].delta.content:
+                        pieces.append(chunk.choices[0].delta.content)
+                return {"content": "".join(pieces), "model_identifier": actual_model,
+                        "input_tokens": getattr(usage, "prompt_tokens", None),
+                        "output_tokens": getattr(usage, "completion_tokens", None),
+                        "duration_ms": round((time.perf_counter() - started) * 1000)}
+
+            def persist_dimension(dimension):
+                with connect() as db:
+                    db.execute("INSERT OR REPLACE INTO professional_review_dimensions VALUES (?, ?, ?)",
+                               (run_id, dimension.dimension_id, dimension.model_dump_json()))
+
+            def persist_trace(trace):
+                with connect() as db:
+                    db.execute("INSERT INTO professional_review_model_calls VALUES "
+                               "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               (uuid.uuid4().hex, run_id, trace.dimension_id, trace.prompt_version,
+                                trace.source_bundle_id, json.dumps(trace.source_ref_ids),
+                                trace.requested_model, trace.actual_model,
+                                trace.input_tokens, trace.output_tokens, trace.duration_ms,
+                                trace.status, trace.error))
+
+            result = run_p2b(bundle, plan, profile, mapping, understanding_run_id, run_id,
+                model_call, model, row["target_journal"], row["special_requirements"],
+                budget=RunBudget(
+                    max_calls=int(os.environ.get("P2B_MAX_CALLS", "18")),
+                    max_input_tokens=int(os.environ.get("P2B_MAX_INPUT_TOKENS", "180000")),
+                    max_output_tokens=int(os.environ.get("P2B_MAX_OUTPUT_TOKENS", "50000")),
+                    max_duration_ms=int(os.environ.get("P2B_MAX_DURATION_MS", "1800000"))),
+                on_dimension=persist_dimension, on_trace=persist_trace)
+            with connect() as db:
+                db.execute("UPDATE professional_review_runs SET status = ?, result_json = ?, "
+                           "finished_at = datetime('now') WHERE id = ?",
+                           (result.execution_status, result.model_dump_json(), run_id))
+        except Exception as exc:
+            with connect() as db:
+                completed = db.execute("SELECT count(*) FROM professional_review_dimensions "
+                                       "WHERE run_id = ?", (run_id,)).fetchone()[0]
+                db.execute("UPDATE professional_review_runs SET status = ?, error = ?, "
+                           "finished_at = datetime('now') WHERE id = ?",
+                           ("partial_failed" if completed else "failed",
+                            f"professional_review:{type(exc).__name__}", run_id))
+
+    @app.post("/api/understanding-runs/{run_id}/professional-review-runs", status_code=202)
+    def create_professional_review_run(run_id: str, background_tasks: BackgroundTasks):
+        if not os.environ.get("OPENAI_API_KEY"):
+            raise HTTPException(503, "后端尚未配置 OPENAI_API_KEY")
+        row, bundle, _, _, _ = load_professional_inputs(run_id)
+        new_id = uuid.uuid4().hex
+        with connect() as db:
+            active = db.execute("SELECT 1 FROM professional_review_runs WHERE understanding_run_id = ? "
+                                "AND status IN ('queued', 'running')", (run_id,)).fetchone()
+            if active:
+                raise HTTPException(409, "该论文已有正在运行的专业审查任务")
+            db.execute("INSERT INTO professional_review_runs "
+                       "(id, understanding_run_id, document_id, source_bundle_id, status, created_at) "
+                       "VALUES (?, ?, ?, ?, 'queued', datetime('now'))",
+                       (new_id, run_id, row["document_id"], bundle["bundle_id"]))
+        background_tasks.add_task(run_professional_review, run_id, new_id)
+        return {"id": new_id, "understanding_run_id": run_id, "status": "queued"}
+
+    @app.get("/api/professional-review-runs/{run_id}")
+    def get_professional_review_run(run_id: str):
+        with connect() as db:
+            row = db.execute("SELECT * FROM professional_review_runs WHERE id = ?", (run_id,)).fetchone()
+            if not row:
+                raise HTTPException(404, "专业审查任务不存在")
+            dimensions = [json.loads(item["result_json"]) for item in db.execute(
+                "SELECT result_json FROM professional_review_dimensions WHERE run_id = ? "
+                "ORDER BY dimension_id", (run_id,))]
+            calls = [dict(item) for item in db.execute(
+                "SELECT * FROM professional_review_model_calls WHERE run_id = ? ORDER BY rowid", (run_id,))]
+        for call in calls:
+            call["source_ref_ids"] = json.loads(call["source_ref_ids"])
+        result = dict(row)
+        result_json = result.pop("result_json")
+        result["result"] = json.loads(result_json) if result_json else None
+        result["dimensions"] = dimensions
+        result["candidates"] = [candidate for dimension in dimensions
+                                for candidate in dimension["candidates"]]
+        result["model_calls"] = calls
+        return result
 
     @app.post("/api/review-cases", status_code=201)
     def create_review_case(payload: ReviewCaseRequest):

@@ -1,0 +1,3 @@
+Version: technical-reproducibility/v1. Dimension D5: technical expression, completeness, and reproducibility.
+
+Focus on implementation, training, preprocessing, evaluation protocol, symbols, and technical diagrams that materially affect reproducing or interpreting a scientific result. Do not generate ordinary copyediting comments. Distinguish an author omission from a parser gap, omitted reading unit, or unverified visual object. Before stating that a detail is absent, check available sections and indicate what additional source region must be inspected. Explain the exact result or mechanism affected by any candidate.

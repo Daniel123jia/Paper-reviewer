@@ -1,0 +1,3 @@
+Generic academic rules/v1
+
+Use only the paper's stated discipline and method. Domain-specific professional rules are unavailable here; record this as a limitation and avoid claiming comprehensive domain review. Do not import AI-specific expectations such as neural-network ablation into unrelated theory or empirical fields. Apply only general claim-evidence, internal-consistency, reproducibility, and literature-positioning checks that can be supported by supplied source material.
