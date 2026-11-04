@@ -16,6 +16,6 @@ def test_usage_summary_separates_known_cost_from_unpriced_calls(tmp_path):
     data = response.json()
     assert data["total"] == {"calls": 3, "input_tokens": 230, "output_tokens": 60,
                              "duration_ms": 2800, "known_cost_usd": 0.005,
-                             "unpriced_calls": 1, "failed_calls": 1}
+                             "unpriced_calls": 1, "failed_calls": 1, "unknown_token_calls": 0}
     assert {item["category"] for item in data["by_category"]} == {"chat", "review", "draft"}
     assert {item["model"] for item in data["by_model"]} == {"model-a", "model-b"}

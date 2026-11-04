@@ -1,0 +1,1561 @@
+{
+  "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+  "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+  "review_run_id": "bff499bcb0d247598844c4e8fbd16090",
+  "prompt_version": "contribution-evidence-mapper/v2",
+  "schema_version": "1.1",
+  "model_identifier": "gpt-6.1-sol",
+  "input_coverage": {
+    "total_unit_count": 167,
+    "included_unit_count": 167,
+    "excluded_unit_ids": [],
+    "source_quality_status": "needs_review",
+    "limitations": [
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "source_mapping_partial",
+      "human_reading_reference_missing",
+      "human_page_reference_missing"
+    ]
+  },
+  "execution_status": "limited",
+  "contributions": [
+    {
+      "id": "contrib_1cb7039f9c6c1b35",
+      "title": "An efficient extension of Transformer self-attention that incorporates representations of relative positions or distances between sequence elements.",
+      "description": "An efficient extension of Transformer self-attention that incorporates representations of relative positions or distances between sequence elements.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_0_10",
+        "ru_ev_7bae0a4ab233_0_14",
+        "ru_ev_7bae0a4ab233_1_30",
+        "ru_ev_7bae0a4ab233_1_40",
+        "ru_ev_7bae0a4ab233_2_18",
+        "ru_ev_7bae0a4ab233_2_13",
+        "ru_ev_7bae0a4ab233_2_24",
+        "ru_ev_7bae0a4ab233_4_17",
+        "ru_ev_7bae0a4ab233_1_16",
+        "ru_ev_7bae0a4ab233_2_25",
+        "ru_ev_7bae0a4ab233_2_39",
+        "ru_ev_7bae0a4ab233_2_33",
+        "ru_ev_7bae0a4ab233_3_8",
+        "ru_ev_7bae0a4ab233_3_13",
+        "ru_ev_7bae0a4ab233_3_14",
+        "ru_ev_7bae0a4ab233_3_15",
+        "ru_ev_7bae0a4ab233_4_1"
+      ]
+    },
+    {
+      "id": "contrib_fd054258b3042193",
+      "title": "A general relation-aware interpretation of the mechanism that can represent arbitrary pairwise input relationships and potentially support graph-labeled inputs.",
+      "description": "A general relation-aware interpretation of the mechanism that can represent arbitrary pairwise input relationships and potentially support graph-labeled inputs.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_0_10",
+        "ru_ev_7bae0a4ab233_0_17",
+        "ru_ev_7bae0a4ab233_1_11",
+        "ru_ev_7bae0a4ab233_1_17",
+        "ru_ev_7bae0a4ab233_1_19",
+        "ru_ev_7bae0a4ab233_1_30"
+      ]
+    },
+    {
+      "id": "contrib_46f2e3164a471998",
+      "title": "Empirical translation improvements over absolute position representations on two WMT 2014 tasks, together with an observation that adding absolute positions to relative positions gives no further benefit.",
+      "description": "Empirical translation improvements over absolute position representations on two WMT 2014 tasks, together with an observation that adding absolute positions to relative positions gives no further benefit.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_0_10",
+        "ru_ev_7bae0a4ab233_0_14",
+        "ru_ev_7bae0a4ab233_2_38",
+        "ru_ev_7bae0a4ab233_3_0",
+        "ru_ev_7bae0a4ab233_3_1",
+        "ru_ev_7bae0a4ab233_3_16",
+        "ru_ev_7bae0a4ab233_3_3"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim_396a27d7cb80746a",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "The proposed extension incorporates representations of relative positions, or distances between sequence elements, directly into Transformer self-attention.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_0_10",
+        "ru_ev_7bae0a4ab233_0_14",
+        "ru_ev_7bae0a4ab233_4_17"
+      ]
+    },
+    {
+      "id": "claim_30555158a8b5001a",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "The authors claim an efficient implementation of self-attention with relative position representations.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_0_10",
+        "ru_ev_7bae0a4ab233_0_14"
+      ]
+    },
+    {
+      "id": "claim_c3756cac79794c27",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "The proposed relative position representations are invariant to total sequence length.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_1_16"
+      ]
+    },
+    {
+      "id": "claim_672f74a529ff8d5f",
+      "contribution_id": "contrib_fd054258b3042193",
+      "statement": "The relative position mechanism can be cast as a special case of self-attention extended to represent arbitrary relations between any two input elements; applying this framework to labeled, directed graphs is proposed as future work.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_0_10",
+        "ru_ev_7bae0a4ab233_0_17"
+      ]
+    },
+    {
+      "id": "claim_c9bdcb49a4864a43",
+      "contribution_id": "contrib_46f2e3164a471998",
+      "statement": "On WMT 2014 English-to-German translation, the approach yields a reported improvement of 1.3 BLEU over absolute position representations.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_0_10"
+      ]
+    },
+    {
+      "id": "claim_3ae7cdd173ec3c73",
+      "contribution_id": "contrib_46f2e3164a471998",
+      "statement": "On WMT 2014 English-to-French translation, the approach yields a reported improvement of 0.3 BLEU over absolute position representations.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_0_10"
+      ]
+    },
+    {
+      "id": "claim_f3a3b051bbecb9e7",
+      "contribution_id": "contrib_46f2e3164a471998",
+      "statement": "Combining relative and absolute position representations yields no further improvement in translation quality in the reported experiments.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_0_10",
+        "ru_ev_7bae0a4ab233_3_3"
+      ]
+    },
+    {
+      "id": "claim_228b023609df299e",
+      "contribution_id": "contrib_46f2e3164a471998",
+      "statement": "Relative position representations improve translation quality on both reported machine translation tasks even when they entirely replace absolute position encodings.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_0_14"
+      ]
+    },
+    {
+      "id": "claim_d341b300131621a1",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "For linear sequences, edge labels encode relative-position differences clipped to a maximum absolute distance k, producing 2k + 1 unique edge labels.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_2_18"
+      ]
+    },
+    {
+      "id": "claim_0524b52028dfb620",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "The authors claim that clipping relative distances enables generalization to sequence lengths not seen during training.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_2_18"
+      ]
+    },
+    {
+      "id": "claim_89362055d6e2e108",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "Separate learned key and value relative-position representations are indexed by clip(j − i, k), where clip(x, k) = max(−k, min(k, x)).",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_2_19",
+        "ru_ev_7bae0a4ab233_2_20",
+        "ru_ev_7bae0a4ab233_2_21",
+        "ru_ev_7bae0a4ab233_2_22",
+        "ru_ev_7bae0a4ab233_2_23",
+        "ru_ev_7bae0a4ab233_2_25",
+        "ru_ev_7bae0a4ab233_2_28"
+      ]
+    },
+    {
+      "id": "claim_a13d153ffac13eab",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "Simple addition incorporates edge representations into both output and compatibility computations, primarily to enable efficient implementation.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_1_40"
+      ]
+    },
+    {
+      "id": "claim_7e5785b40730b04e",
+      "contribution_id": "contrib_fd054258b3042193",
+      "statement": "The extension represents pairwise relationships between input elements as a labeled, directed, fully connected graph.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_1_11"
+      ]
+    },
+    {
+      "id": "claim_1a34ccb5302ed3c3",
+      "contribution_id": "contrib_fd054258b3042193",
+      "statement": "Each edge has two distinct learned representations for use in output and compatibility computations without additional linear transformations; these representations can be shared across attention heads, and the authors use da = dz.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_1_12",
+        "ru_ev_7bae0a4ab233_1_13",
+        "ru_ev_7bae0a4ab233_1_14",
+        "ru_ev_7bae0a4ab233_1_15",
+        "ru_ev_7bae0a4ab233_1_17"
+      ]
+    },
+    {
+      "id": "claim_a65093af38ab0705",
+      "contribution_id": "contrib_fd054258b3042193",
+      "statement": "The extension propagates edge information to the sublayer output and accounts for edges when determining attention compatibility.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_1_19",
+        "ru_ev_7bae0a4ab233_1_30"
+      ]
+    },
+    {
+      "id": "claim_db10ba06645c383d",
+      "contribution_id": "contrib_fd054258b3042193",
+      "statement": "The output computation is zi = sum_j αij(xj WV + aV_ij).",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_1_21",
+        "ru_ev_7bae0a4ab233_1_22",
+        "ru_ev_7bae0a4ab233_1_23",
+        "ru_ev_7bae0a4ab233_1_24",
+        "ru_ev_7bae0a4ab233_1_25"
+      ]
+    },
+    {
+      "id": "claim_98a94b6723ca94b4",
+      "contribution_id": "contrib_fd054258b3042193",
+      "statement": "The compatibility computation is eij = (xi WQ)(xj WK + aK_ij)^T / sqrt(dz).",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_1_32",
+        "ru_ev_7bae0a4ab233_1_38",
+        "ru_ev_7bae0a4ab233_1_36",
+        "ru_ev_7bae0a4ab233_1_35"
+      ]
+    },
+    {
+      "id": "claim_5b2e77cdba31ddc4",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "Sharing relative-position representations across attention heads reduces their storage complexity from O(h n² d_a) to O(n² d_a); sharing across sequences gives overall self-attention space complexity O(b h n d_z + n² d_a), compared with O(b h n d_z) without these representations.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_2_39"
+      ]
+    },
+    {
+      "id": "claim_3f90b3e607c05577",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "Splitting attention compatibility computation into an ordinary attention term and a relative-position term permits efficient computation while avoiding broadcasting relative-position representations.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_2_13",
+        "ru_ev_7bae0a4ab233_2_24"
+      ]
+    },
+    {
+      "id": "claim_8129c689bca0eaae",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "Tensor reshaping computes the relative-position compatibility term using n parallel multiplications of bh × d_z and d_z × n matrices; further reshaping allows addition to the ordinary term, and the same approach applies to the attention output computation.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_2_24"
+      ]
+    },
+    {
+      "id": "claim_c3a1795496aa8339",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "In the reported machine translation experiments, the implementation decreased steps per second by 7% while maintaining the model and batch sizes used by Vaswani et al. (2017) on P100 GPUs.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_2_33"
+      ]
+    },
+    {
+      "id": "claim_c5e5f5cefdb08f09",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "In base-model experiments without absolute position representations, BLEU on the WMT English-to-German newstest2013 development set varied little for tested relative-distance clipping values k ≥ 2.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_3_6",
+        "ru_ev_7bae0a4ab233_3_8"
+      ]
+    },
+    {
+      "id": "claim_d3aadfb8706126ce",
+      "contribution_id": "contrib_46f2e3164a471998",
+      "statement": "The translation comparison replaces sinusoidal position encodings with relative-position representations and uses regenerated Transformer baseline results to isolate the effect from other library and experimental-configuration changes.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_3_16"
+      ]
+    },
+    {
+      "id": "claim_8e6012f331858dc0",
+      "contribution_id": "contrib_46f2e3164a471998",
+      "statement": "On the WMT 2014 translation tasks evaluated using newstest2014, relative positions improved English-to-German BLEU by 0.3 for the base configuration and 1.3 for the big configuration, and English-to-French BLEU by 0.5 and 0.3, respectively.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_3_3",
+        "ru_ev_7bae0a4ab233_3_1"
+      ]
+    },
+    {
+      "id": "claim_bfc0ffb054789849",
+      "contribution_id": "contrib_46f2e3164a471998",
+      "statement": "The unverified Table 1 extraction reports base-model BLEU scores of 26.5 and 38.2 with absolute positions versus 26.8 and 38.7 with relative positions, for English-to-German and English-to-French respectively.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_3_0"
+      ]
+    },
+    {
+      "id": "claim_502df0def6beb834",
+      "contribution_id": "contrib_46f2e3164a471998",
+      "statement": "The unverified Table 1 extraction reports big-model BLEU scores of 27.9 and 41.2 with absolute positions versus 29.2 and 41.5 with relative positions, for English-to-German and English-to-French respectively.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_3_0"
+      ]
+    },
+    {
+      "id": "claim_25adcc9c5d0ab967",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "The authors evaluated separate ablations of the two relative position representations, aV_ij in equation (3) and aK_ij in equation (4).",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_3_13",
+        "ru_ev_7bae0a4ab233_3_14",
+        "ru_ev_7bae0a4ab233_3_15"
+      ]
+    },
+    {
+      "id": "claim_8a51d2c5e7c784ea",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "The unverified Table 2 extraction reports EN-DE BLEU scores of 12.5, 25.5, 25.8, 25.9, 25.8, 25.9, and 25.8 for clipping distances k = 0, 1, 2, 4, 16, 64, and 256, respectively.",
+      "evidence_ref_ids": [
+        "ru_table_p3_0_row_0",
+        "ru_table_p3_0_row_1",
+        "ru_table_p3_0_row_2",
+        "ru_table_p3_0_row_3",
+        "ru_table_p3_0_row_4",
+        "ru_table_p3_0_row_5",
+        "ru_table_p3_0_row_6",
+        "ru_table_p3_0_row_7",
+        "ru_ev_7bae0a4ab233_3_12"
+      ]
+    },
+    {
+      "id": "claim_a67687638d5133c8",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "The unverified Table 3 extraction reports EN-DE BLEU of 25.8 with both representations, 25.8 with only aK_ij, 25.3 with only aV_ij, and 12.5 with neither representation.",
+      "evidence_ref_ids": [
+        "ru_table_p4_0_row_0",
+        "ru_table_p4_0_row_1",
+        "ru_table_p4_0_row_2",
+        "ru_table_p4_0_row_3",
+        "ru_table_p4_0_row_4"
+      ]
+    },
+    {
+      "id": "claim_832ff631762a98b1",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "The authors suggest that including relative position representations only when determining compatibility between elements may be sufficient, while leaving applicability to other tasks unresolved.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_3_15",
+        "ru_ev_7bae0a4ab233_4_1"
+      ]
+    },
+    {
+      "id": "claim_062dfa04e6991e98",
+      "contribution_id": "contrib_1cb7039f9c6c1b35",
+      "statement": "The authors report that their relative-position self-attention extension improves machine translation performance.",
+      "evidence_ref_ids": [
+        "ru_ev_7bae0a4ab233_4_17"
+      ]
+    }
+  ],
+  "evidence_refs": [
+    {
+      "id": "ru_ev_7bae0a4ab233_0_10",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_0_10",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_0_10"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 0,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_0_14",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_0_14",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_0_14"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 0,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_30",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_30",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_30"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_40",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_40",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_40"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_2_18",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_2_18",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_2_18"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_2_13",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_2_13",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_2_13"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_2_24",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_2_24",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_2_24"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_4_17",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_4_17",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_4_17"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 4,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_16",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_16",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_16"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_2_25",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_2_25",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_2_25"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_2_39",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_2_39",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_2_39"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_2_33",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_2_33",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_2_33"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_3_8",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_3_8",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_8"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_3_13",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_3_13",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_13"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_3_14",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_3_14",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_14"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_3_15",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_3_15",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_15"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_4_1",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_4_1",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_4_1"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 4,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_0_17",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_0_17",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_0_17"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 0,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_11",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_11",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_11"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_17",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_17",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_17"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_19",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_19",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_19"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_2_38",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_2_38",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_2_38"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_3_0",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_3_0",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_0"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_3_1",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_3_1",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_1"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_3_16",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_3_16",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_16"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_3_3",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_3_3",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_3"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_2_19",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_2_19",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_2_19"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_2_20",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_2_20",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_2_20"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_2_21",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_2_21",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_2_21"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_2_22",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_2_22",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_2_22"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_2_23",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_2_23",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_2_23"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_2_28",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_2_28",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_2_28"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_12",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_12",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_12"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_13",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_13",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_13"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_14",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_14",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_14"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_15",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_15",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_15"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_21",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_21",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_21"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_22",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_22",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_22"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_23",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_23",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_23"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_24",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_24",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_24"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_25",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_25",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_25"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_32",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_32",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_32"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_38",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_38",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_38"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_36",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_36",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_36"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_1_35",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_1_35",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_1_35"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_3_6",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_3_6",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_6"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_table_p3_0_row_0",
+      "object_type": "reading_unit",
+      "object_id": "ru_table_p3_0_row_0",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_10"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_table_p3_0_row_1",
+      "object_type": "reading_unit",
+      "object_id": "ru_table_p3_0_row_1",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_10"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_table_p3_0_row_2",
+      "object_type": "reading_unit",
+      "object_id": "ru_table_p3_0_row_2",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_10"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_table_p3_0_row_3",
+      "object_type": "reading_unit",
+      "object_id": "ru_table_p3_0_row_3",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_10"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_table_p3_0_row_4",
+      "object_type": "reading_unit",
+      "object_id": "ru_table_p3_0_row_4",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_10"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_table_p3_0_row_5",
+      "object_type": "reading_unit",
+      "object_id": "ru_table_p3_0_row_5",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_10"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_table_p3_0_row_6",
+      "object_type": "reading_unit",
+      "object_id": "ru_table_p3_0_row_6",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_10"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_table_p3_0_row_7",
+      "object_type": "reading_unit",
+      "object_id": "ru_table_p3_0_row_7",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_10"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_7bae0a4ab233_3_12",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_7bae0a4ab233_3_12",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_3_12"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_table_p4_0_row_0",
+      "object_type": "reading_unit",
+      "object_id": "ru_table_p4_0_row_0",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_4_3",
+        "ev_7bae0a4ab233_4_4",
+        "ev_7bae0a4ab233_4_7"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 4,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_table_p4_0_row_1",
+      "object_type": "reading_unit",
+      "object_id": "ru_table_p4_0_row_1",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_4_3",
+        "ev_7bae0a4ab233_4_4",
+        "ev_7bae0a4ab233_4_7"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 4,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_table_p4_0_row_2",
+      "object_type": "reading_unit",
+      "object_id": "ru_table_p4_0_row_2",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_4_3",
+        "ev_7bae0a4ab233_4_4",
+        "ev_7bae0a4ab233_4_7"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 4,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_table_p4_0_row_3",
+      "object_type": "reading_unit",
+      "object_id": "ru_table_p4_0_row_3",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_4_3",
+        "ev_7bae0a4ab233_4_4",
+        "ev_7bae0a4ab233_4_7"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 4,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_table_p4_0_row_4",
+      "object_type": "reading_unit",
+      "object_id": "ru_table_p4_0_row_4",
+      "evidence_ids": [
+        "ev_7bae0a4ab233_4_3",
+        "ev_7bae0a4ab233_4_4",
+        "ev_7bae0a4ab233_4_7"
+      ],
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "7bae0a4ab23347d4a6b9dbedab4dc6bf",
+      "source_bundle_id": "sb_8086e2e5e139_7bae0a4ab23347d4a6b9dbedab4dc6bf_v1",
+      "page_index": 4,
+      "verification_status": "text_extracted_unverified"
+    }
+  ],
+  "support_relations": [
+    {
+      "claim_id": "claim_396a27d7cb80746a",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_0_10",
+      "relation": "direct_source",
+      "explanation": "The abstract explicitly describes extending self-attention to consider relative positions or distances between sequence elements."
+    },
+    {
+      "claim_id": "claim_396a27d7cb80746a",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_0_14",
+      "relation": "direct_source",
+      "explanation": "The introduction states that the method incorporates relative position representations into Transformer self-attention."
+    },
+    {
+      "claim_id": "claim_30555158a8b5001a",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_0_10",
+      "relation": "direct_source",
+      "explanation": "The abstract explicitly claims efficient consideration of relative position representations and an efficient implementation."
+    },
+    {
+      "claim_id": "claim_30555158a8b5001a",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_0_14",
+      "relation": "direct_source",
+      "explanation": "The introduction characterizes the proposed incorporation of relative positions as efficient."
+    },
+    {
+      "claim_id": "claim_c3756cac79794c27",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_1_16",
+      "relation": "direct_source",
+      "explanation": "The background explicitly states that the authors' relative position representations are invariant to total sequence length. It does not report an experiment establishing generalization to unseen lengths."
+    },
+    {
+      "claim_id": "claim_672f74a529ff8d5f",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_0_10",
+      "relation": "direct_source",
+      "explanation": "The abstract casts the method as an instance of relation-aware self-attention that can generalize to arbitrary graph-labeled inputs."
+    },
+    {
+      "claim_id": "claim_672f74a529ff8d5f",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_0_17",
+      "relation": "direct_source",
+      "explanation": "The introduction explicitly describes arbitrary pairwise input relations and identifies modeling labeled, directed graphs as future work."
+    },
+    {
+      "claim_id": "claim_c9bdcb49a4864a43",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_0_10",
+      "relation": "direct_source",
+      "explanation": "The abstract reports a 1.3 BLEU improvement for WMT 2014 English-to-German over absolute position representations."
+    },
+    {
+      "claim_id": "claim_3ae7cdd173ec3c73",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_0_10",
+      "relation": "direct_source",
+      "explanation": "The abstract reports a 0.3 BLEU improvement for WMT 2014 English-to-French over absolute position representations."
+    },
+    {
+      "claim_id": "claim_f3a3b051bbecb9e7",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_0_10",
+      "relation": "direct_source",
+      "explanation": "The abstract explicitly reports no further translation quality improvement from combining relative and absolute position representations."
+    },
+    {
+      "claim_id": "claim_228b023609df299e",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_0_14",
+      "relation": "direct_source",
+      "explanation": "The introduction states that improvements occur on two translation tasks even when absolute position encodings are entirely replaced."
+    },
+    {
+      "claim_id": "claim_d341b300131621a1",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_2_18",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly specifies relative-position edges, clipping at absolute distance k, and 2k + 1 labels."
+    },
+    {
+      "claim_id": "claim_0524b52028dfb620",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_2_18",
+      "relation": "direct_source",
+      "explanation": "The authors explicitly state the generalization claim; this passage does not report a test on unseen sequence lengths."
+    },
+    {
+      "claim_id": "claim_89362055d6e2e108",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_2_20",
+      "relation": "unverified",
+      "explanation": "This fragment supplies the key-representation assignment, whose indexing must be reconstructed from adjacent formula fragments."
+    },
+    {
+      "claim_id": "claim_89362055d6e2e108",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_2_21",
+      "relation": "unverified",
+      "explanation": "The fragment supplies the clipped displacement index in the extracted formula."
+    },
+    {
+      "claim_id": "claim_89362055d6e2e108",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_2_22",
+      "relation": "unverified",
+      "explanation": "The fragment supplies the value-representation assignment in the reconstructed formula."
+    },
+    {
+      "claim_id": "claim_89362055d6e2e108",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_2_23",
+      "relation": "unverified",
+      "explanation": "The extracted fragment supplies the second displacement index and clipping definition; the formula transcription has not been verified."
+    },
+    {
+      "claim_id": "claim_a13d153ffac13eab",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_1_40",
+      "relation": "direct_source",
+      "explanation": "The authors explicitly identify simple addition in both equations and describe efficient implementation as its primary motivation."
+    },
+    {
+      "claim_id": "claim_7e5785b40730b04e",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_1_11",
+      "relation": "direct_source",
+      "explanation": "The proposed pairwise extension and graph interpretation are explicitly stated."
+    },
+    {
+      "claim_id": "claim_1a34ccb5302ed3c3",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_1_14",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly refers to learning two distinct edge representations, although the surrounding notation is fragmented."
+    },
+    {
+      "claim_id": "claim_1a34ccb5302ed3c3",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_1_17",
+      "relation": "direct_source",
+      "explanation": "The continuation states their respective use in equations (3) and (4), absence of additional linear transformations, possible sharing across heads, and da = dz."
+    },
+    {
+      "claim_id": "claim_a65093af38ab0705",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_1_19",
+      "relation": "direct_source",
+      "explanation": "The prose states that the output equation is modified to propagate edge information."
+    },
+    {
+      "claim_id": "claim_a65093af38ab0705",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_1_30",
+      "relation": "direct_source",
+      "explanation": "The prose states that compatibility is modified to consider edges."
+    },
+    {
+      "claim_id": "claim_db10ba06645c383d",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_1_22",
+      "relation": "unverified",
+      "explanation": "This fragment contains the weighted value-plus-edge term; the complete equation requires assembling nearby fragments of an unverified formula extraction."
+    },
+    {
+      "claim_id": "claim_db10ba06645c383d",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_1_24",
+      "relation": "unverified",
+      "explanation": "This fragment closes the edge term and identifies equation (3), which is marked detected_unverified."
+    },
+    {
+      "claim_id": "claim_98a94b6723ca94b4",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_1_32",
+      "relation": "unverified",
+      "explanation": "The fragment contains the query and key-plus-edge product of the unverified compatibility equation."
+    },
+    {
+      "claim_id": "claim_98a94b6723ca94b4",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_1_38",
+      "relation": "unverified",
+      "explanation": "The fragment supplies the transpose and scaling denominator; their placement depends on reconstructing the unverified equation."
+    },
+    {
+      "claim_id": "claim_5b2e77cdba31ddc4",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_2_39",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly states the storage reduction from sharing across heads, possible sharing across sequences, and the resulting overall space complexity."
+    },
+    {
+      "claim_id": "claim_3f90b3e607c05577",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_2_13",
+      "relation": "direct_source",
+      "explanation": "The authors identify pair-dependent representations and broadcasting as implementation issues and explicitly state that splitting the computation into two terms resolves them."
+    },
+    {
+      "claim_id": "claim_3f90b3e607c05577",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_2_24",
+      "relation": "direct_source",
+      "explanation": "The prose distinguishes the ordinary term from the relative-position term and explains how to compute and combine them."
+    },
+    {
+      "claim_id": "claim_8129c689bca0eaae",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_2_24",
+      "relation": "direct_source",
+      "explanation": "The source specifies the number and dimensions of parallel matrix multiplications and states that the same approach applies to the output computation. This support does not require reconstructing the unverified equation."
+    },
+    {
+      "claim_id": "claim_c3a1795496aa8339",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_2_33",
+      "relation": "direct_source",
+      "explanation": "The authors explicitly report the 7% throughput decrease and retention of the reference model and batch sizes on P100 GPUs."
+    },
+    {
+      "claim_id": "claim_c5e5f5cefdb08f09",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_3_6",
+      "relation": "direct_source",
+      "explanation": "This passage establishes the base configuration, absence of absolute positions, evaluation task, development set, and BLEU metric for the model-variation experiments."
+    },
+    {
+      "claim_id": "claim_c5e5f5cefdb08f09",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_3_8",
+      "relation": "direct_source",
+      "explanation": "The prose directly reports little apparent variation in BLEU for k ≥ 2; it supports the qualitative observation independently of the unverified table."
+    },
+    {
+      "claim_id": "claim_d3aadfb8706126ce",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_3_16",
+      "relation": "direct_source",
+      "explanation": "The authors describe the relative-only versus sinusoidal comparison and their reason for generating their own baseline results."
+    },
+    {
+      "claim_id": "claim_8e6012f331858dc0",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_3_3",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly reports all four BLEU improvements by task and model size."
+    },
+    {
+      "claim_id": "claim_8e6012f331858dc0",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_3_1",
+      "relation": "direct_source",
+      "explanation": "The caption identifies the WMT 2014 translation tasks and newstest2014 evaluation set; it does not independently establish the numeric results."
+    },
+    {
+      "claim_id": "claim_bfc0ffb054789849",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_3_0",
+      "relation": "unverified",
+      "explanation": "The extracted table lists these base-model scores, but its row and column structure remains unverified."
+    },
+    {
+      "claim_id": "claim_502df0def6beb834",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_3_0",
+      "relation": "unverified",
+      "explanation": "The extracted table lists these big-model scores, but its row and column structure remains unverified."
+    },
+    {
+      "claim_id": "claim_f3a3b051bbecb9e7",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_3_3",
+      "relation": "direct_source",
+      "explanation": "The authors explicitly state that they observed no benefit from adding sinusoidal position encodings to relative-position representations."
+    },
+    {
+      "claim_id": "claim_396a27d7cb80746a",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_4_17",
+      "relation": "direct_source",
+      "explanation": "The conclusion explicitly describes an extension to self-attention that incorporates relative position information for sequences."
+    },
+    {
+      "claim_id": "claim_25adcc9c5d0ab967",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_3_13",
+      "relation": "direct_source",
+      "explanation": "The paragraph states that the authors evaluated ablating each of two relative position representations and begins naming aV_ij."
+    },
+    {
+      "claim_id": "claim_25adcc9c5d0ab967",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_3_14",
+      "relation": "direct_source",
+      "explanation": "This continuation associates aV_ij with equation (3) and begins naming aK_ij."
+    },
+    {
+      "claim_id": "claim_25adcc9c5d0ab967",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_3_15",
+      "relation": "direct_source",
+      "explanation": "This continuation associates aK_ij with equation (4); it does not supply either representation's mathematical definition."
+    },
+    {
+      "claim_id": "claim_8a51d2c5e7c784ea",
+      "evidence_ref_id": "ru_table_p3_0_row_0",
+      "relation": "unverified",
+      "explanation": "The extracted header identifies the columns as clipping distance k and EN-DE BLEU; the table is detected_unverified."
+    },
+    {
+      "claim_id": "claim_8a51d2c5e7c784ea",
+      "evidence_ref_id": "ru_table_p3_0_row_1",
+      "relation": "unverified",
+      "explanation": "The unverified row reports k = 0 and BLEU = 12.5."
+    },
+    {
+      "claim_id": "claim_8a51d2c5e7c784ea",
+      "evidence_ref_id": "ru_table_p3_0_row_2",
+      "relation": "unverified",
+      "explanation": "The unverified row reports k = 1 and BLEU = 25.5."
+    },
+    {
+      "claim_id": "claim_8a51d2c5e7c784ea",
+      "evidence_ref_id": "ru_table_p3_0_row_3",
+      "relation": "unverified",
+      "explanation": "The unverified row reports k = 2 and BLEU = 25.8."
+    },
+    {
+      "claim_id": "claim_8a51d2c5e7c784ea",
+      "evidence_ref_id": "ru_table_p3_0_row_4",
+      "relation": "unverified",
+      "explanation": "The unverified row reports k = 4 and BLEU = 25.9."
+    },
+    {
+      "claim_id": "claim_8a51d2c5e7c784ea",
+      "evidence_ref_id": "ru_table_p3_0_row_5",
+      "relation": "unverified",
+      "explanation": "The unverified row reports k = 16 and BLEU = 25.8."
+    },
+    {
+      "claim_id": "claim_8a51d2c5e7c784ea",
+      "evidence_ref_id": "ru_table_p3_0_row_6",
+      "relation": "unverified",
+      "explanation": "The unverified row reports k = 64 and BLEU = 25.9."
+    },
+    {
+      "claim_id": "claim_8a51d2c5e7c784ea",
+      "evidence_ref_id": "ru_table_p3_0_row_7",
+      "relation": "unverified",
+      "explanation": "The unverified row reports k = 256 and BLEU = 25.8."
+    },
+    {
+      "claim_id": "claim_8a51d2c5e7c784ea",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_3_12",
+      "relation": "direct_source",
+      "explanation": "The caption identifies Table 2 as experiments varying clipping distance k, without independently verifying its numerical entries."
+    },
+    {
+      "claim_id": "claim_a67687638d5133c8",
+      "evidence_ref_id": "ru_table_p4_0_row_0",
+      "relation": "unverified",
+      "explanation": "The extracted header assigns the first two columns to aV_ij and aK_ij and the third to EN-DE BLEU; the table is detected_unverified."
+    },
+    {
+      "claim_id": "claim_a67687638d5133c8",
+      "evidence_ref_id": "ru_table_p4_0_row_1",
+      "relation": "unverified",
+      "explanation": "The unverified row reports 25.8 BLEU with both representations enabled."
+    },
+    {
+      "claim_id": "claim_a67687638d5133c8",
+      "evidence_ref_id": "ru_table_p4_0_row_2",
+      "relation": "unverified",
+      "explanation": "The unverified row reports 25.8 BLEU with aV_ij disabled and aK_ij enabled."
+    },
+    {
+      "claim_id": "claim_a67687638d5133c8",
+      "evidence_ref_id": "ru_table_p4_0_row_3",
+      "relation": "unverified",
+      "explanation": "The unverified row reports 25.3 BLEU with aV_ij enabled and aK_ij disabled."
+    },
+    {
+      "claim_id": "claim_a67687638d5133c8",
+      "evidence_ref_id": "ru_table_p4_0_row_4",
+      "relation": "unverified",
+      "explanation": "The unverified row reports 12.5 BLEU with both representations disabled."
+    },
+    {
+      "claim_id": "claim_832ff631762a98b1",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_3_15",
+      "relation": "direct_source",
+      "explanation": "The text begins the authors' tentative conclusion about using relative position representations solely in compatibility computation."
+    },
+    {
+      "claim_id": "claim_832ff631762a98b1",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_4_1",
+      "relation": "direct_source",
+      "explanation": "The continuation states that this may be sufficient and explicitly requires further work to establish whether it holds for other tasks."
+    },
+    {
+      "claim_id": "claim_062dfa04e6991e98",
+      "evidence_ref_id": "ru_ev_7bae0a4ab233_4_17",
+      "relation": "direct_source",
+      "explanation": "The conclusion explicitly claims improved machine translation performance."
+    }
+  ],
+  "evidence_gaps": [
+    {
+      "claim_id": "claim_89362055d6e2e108",
+      "description": "Global evidence exists but requires source verification.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_db10ba06645c383d",
+      "description": "Global evidence exists but requires source verification.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_98a94b6723ca94b4",
+      "description": "Global evidence exists but requires source verification.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_bfc0ffb054789849",
+      "description": "Global evidence exists but requires source verification.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_502df0def6beb834",
+      "description": "Global evidence exists but requires source verification.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_a67687638d5133c8",
+      "description": "Global evidence exists but requires source verification.",
+      "status": "source_unverified"
+    }
+  ]
+}

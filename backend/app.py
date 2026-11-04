@@ -25,6 +25,7 @@ from backend.exporter import render_export
 from backend.access import AccessPolicy, COOKIE_NAME, SESSION_SECONDS
 from backend.source_bundle import build_source_bundle
 from backend.parse_quality import assess_parse_quality
+from backend.p2a_engine import BudgetExceeded, P2AError, RunBudget, run_p2a
 
 
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
@@ -46,6 +47,11 @@ class ReviewCaseRequest(BaseModel):
     original_document_id: str
     revised_document_id: str | None = None
     response_document_id: str | None = None
+
+
+class UnderstandingRunRequest(BaseModel):
+    target_journal: str | None = Field(default=None, max_length=200)
+    special_requirements: str | None = Field(default=None, max_length=2000)
 
 
 class EquationCheckRequest(BaseModel):
@@ -200,13 +206,32 @@ def create_app(data_dir: Path) -> FastAPI:
                 model TEXT NOT NULL, input_tokens INTEGER, output_tokens INTEGER,
                 cost_usd REAL, duration_ms INTEGER NOT NULL, status TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS paper_understanding_runs (
+                id TEXT PRIMARY KEY, document_id TEXT NOT NULL, source_bundle_id TEXT,
+                source_bundle_json TEXT,
+                status TEXT NOT NULL, error TEXT, target_journal TEXT, special_requirements TEXT,
+                review_plan TEXT, paper_profile TEXT, claim_evidence_map TEXT,
+                created_at TEXT NOT NULL, finished_at TEXT
+            );
+            CREATE TABLE IF NOT EXISTS paper_understanding_model_calls (
+                id TEXT PRIMARY KEY, run_id TEXT NOT NULL, stage TEXT NOT NULL,
+                prompt_version TEXT NOT NULL, requested_model TEXT NOT NULL, actual_model TEXT,
+                input_tokens INTEGER, output_tokens INTEGER, duration_ms INTEGER NOT NULL,
+                status TEXT NOT NULL, error TEXT
+            );
+            CREATE INDEX IF NOT EXISTS p2a_calls_run ON paper_understanding_model_calls(run_id);
         """)
         columns = {row[1] for row in db.execute("PRAGMA table_info(review_findings)")}
         if "support_assessment" not in columns:
             db.execute("ALTER TABLE review_findings ADD COLUMN support_assessment TEXT NOT NULL DEFAULT ''")
+        understanding_columns = {row[1] for row in db.execute("PRAGMA table_info(paper_understanding_runs)")}
+        if "source_bundle_json" not in understanding_columns:
+            db.execute("ALTER TABLE paper_understanding_runs ADD COLUMN source_bundle_json TEXT")
         db.execute("UPDATE review_runs SET status = 'failed', error = '服务重启中断，请重新运行分析', "
                    "finished_at = datetime('now') WHERE status IN ('queued', 'running')")
         db.execute("UPDATE finding_verifications SET status = 'failed', error = '服务重启中断，请重新运行复核', "
+                   "finished_at = datetime('now') WHERE status IN ('queued', 'running')")
+        db.execute("UPDATE paper_understanding_runs SET status = 'failed', error = 'interrupted_by_restart', "
                    "finished_at = datetime('now') WHERE status IN ('queued', 'running')")
 
     app = FastAPI(title="AI 论文深度审稿工作台")
@@ -253,11 +278,16 @@ def create_app(data_dir: Path) -> FastAPI:
                 SELECT 'review', model, input_tokens, output_tokens, cost_usd, duration_ms, status FROM review_model_calls
                 UNION ALL
                 SELECT 'draft', model, input_tokens, output_tokens, cost_usd, duration_ms, status FROM draft_model_calls
+                UNION ALL
+                SELECT 'understanding', COALESCE(actual_model, requested_model), input_tokens,
+                       output_tokens, NULL, duration_ms, status FROM paper_understanding_model_calls
             """)]
 
         def summarize(items):
             return {"calls": len(items), "input_tokens": sum(row["input_tokens"] or 0 for row in items),
                     "output_tokens": sum(row["output_tokens"] or 0 for row in items),
+                    "unknown_token_calls": sum(row["input_tokens"] is None or row["output_tokens"] is None
+                                               for row in items),
                     "duration_ms": sum(row["duration_ms"] for row in items),
                     "known_cost_usd": round(sum(row["cost_usd"] or 0 for row in items), 8),
                     "unpriced_calls": sum(row["cost_usd"] is None for row in items),
@@ -406,6 +436,119 @@ def create_app(data_dir: Path) -> FastAPI:
     @app.get("/api/documents/{document_id}/parse-quality")
     def get_parse_quality(document_id: str):
         return assess_parse_quality(source_bundle_for_document(document_id))
+
+    def run_understanding(document_id: str, run_id: str, request: UnderstandingRunRequest):
+        try:
+            with connect() as db:
+                db.execute("UPDATE paper_understanding_runs SET status = 'running' WHERE id = ?", (run_id,))
+            bundle = source_bundle_for_document(document_id)
+            with connect() as db:
+                db.execute("UPDATE paper_understanding_runs SET source_bundle_id = ?, source_bundle_json = ? "
+                           "WHERE id = ?", (bundle["bundle_id"], json.dumps(bundle), run_id))
+            model = os.environ.get("OPENAI_MODEL", "gpt-6.1-sol")
+            client = OpenAI(base_url=model_base_url(), timeout=180, max_retries=0)
+
+            def model_call(stage, system, user):
+                started = time.perf_counter()
+                stream = client.chat.completions.create(
+                    model=model, messages=[{"role": "system", "content": system},
+                                           {"role": "user", "content": user}],
+                    stream=True, stream_options={"include_usage": True})
+                pieces = []
+                actual_model = None
+                usage = None
+                for chunk in stream:
+                    actual_model = chunk.model or actual_model
+                    usage = chunk.usage or usage
+                    if chunk.choices and chunk.choices[0].delta.content:
+                        pieces.append(chunk.choices[0].delta.content)
+                return {"content": "".join(pieces),
+                        "model_identifier": actual_model,
+                        "input_tokens": getattr(usage, "prompt_tokens", None),
+                        "output_tokens": getattr(usage, "completion_tokens", None),
+                        "duration_ms": round((time.perf_counter() - started) * 1000)}
+
+            def persist_result(column, result):
+                if column not in {"review_plan", "paper_profile", "claim_evidence_map"}:
+                    raise ValueError("unknown understanding stage")
+                with connect() as db:
+                    db.execute(f"UPDATE paper_understanding_runs SET {column} = ? WHERE id = ?",
+                               (result.model_dump_json(), run_id))
+
+            def persist_trace(trace):
+                with connect() as db:
+                    db.execute("INSERT INTO paper_understanding_model_calls VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               (uuid.uuid4().hex, run_id, trace.stage, trace.prompt_version,
+                                trace.requested_model, trace.actual_model, trace.input_tokens,
+                                trace.output_tokens, trace.duration_ms, trace.status, trace.error))
+
+            run_p2a(
+                bundle, run_id, model_call, model, request.target_journal,
+                request.special_requirements, on_result=persist_result, on_trace=persist_trace,
+                budget=RunBudget(
+                    max_calls=int(os.environ.get("P2A_MAX_CALLS", "32")),
+                    max_input_tokens=int(os.environ.get("P2A_MAX_INPUT_TOKENS", "300000")),
+                    max_output_tokens=int(os.environ.get("P2A_MAX_OUTPUT_TOKENS", "100000")),
+                    max_duration_ms=int(os.environ.get("P2A_MAX_DURATION_MS", "1800000"))))
+            with connect() as db:
+                db.execute("UPDATE paper_understanding_runs SET status = 'completed', "
+                           "finished_at = datetime('now') WHERE id = ?", (run_id,))
+        except BudgetExceeded as exc:
+            with connect() as db:
+                db.execute("UPDATE paper_understanding_runs SET status = 'budget_exceeded', error = ?, "
+                           "finished_at = datetime('now') WHERE id = ?", (str(exc), run_id))
+        except P2AError as exc:
+            with connect() as db:
+                db.execute("UPDATE paper_understanding_runs SET status = 'failed', error = ?, "
+                           "finished_at = datetime('now') WHERE id = ?",
+                           (str(exc), run_id))
+        except Exception as exc:
+            with connect() as db:
+                db.execute("UPDATE paper_understanding_runs SET status = 'failed', error = ?, "
+                           "finished_at = datetime('now') WHERE id = ?",
+                           (f"source: {type(exc).__name__}", run_id))
+
+    @app.post("/api/documents/{document_id}/understanding-runs", status_code=202)
+    def create_understanding_run(document_id: str, payload: UnderstandingRunRequest,
+                                 background_tasks: BackgroundTasks):
+        if not os.environ.get("OPENAI_API_KEY"):
+            raise HTTPException(503, "后端尚未配置 OPENAI_API_KEY")
+        with connect() as db:
+            document_or_404(db, document_id)
+            active = db.execute("SELECT 1 FROM paper_understanding_runs WHERE document_id = ? "
+                                "AND status IN ('queued', 'running')", (document_id,)).fetchone()
+            if active:
+                raise HTTPException(409, "该论文已有正在运行的理解任务")
+            run_id = uuid.uuid4().hex
+            db.execute("INSERT INTO paper_understanding_runs "
+                       "(id, document_id, status, target_journal, special_requirements, created_at) "
+                       "VALUES (?, ?, 'queued', ?, ?, datetime('now'))",
+                       (run_id, document_id, payload.target_journal, payload.special_requirements))
+        background_tasks.add_task(run_understanding, document_id, run_id, payload)
+        return {"id": run_id, "document_id": document_id, "status": "queued"}
+
+    @app.get("/api/understanding-runs/{run_id}")
+    def get_understanding_run(run_id: str):
+        with connect() as db:
+            row = db.execute("SELECT * FROM paper_understanding_runs WHERE id = ?", (run_id,)).fetchone()
+            if not row:
+                raise HTTPException(404, "论文理解任务不存在")
+            calls = [dict(item) for item in db.execute(
+                "SELECT * FROM paper_understanding_model_calls WHERE run_id = ? ORDER BY rowid", (run_id,))]
+        result = dict(row)
+        result.pop("source_bundle_json")
+        for key in ("review_plan", "paper_profile", "claim_evidence_map"):
+            result[key] = json.loads(result[key]) if result[key] else None
+        result["model_calls"] = calls
+        return result
+
+    @app.get("/api/understanding-runs/{run_id}/source-bundle")
+    def get_understanding_source_bundle(run_id: str):
+        with connect() as db:
+            row = db.execute("SELECT source_bundle_json FROM paper_understanding_runs WHERE id = ?", (run_id,)).fetchone()
+        if not row or not row["source_bundle_json"]:
+            raise HTTPException(404, "该任务尚无 Source Bundle 快照")
+        return json.loads(row["source_bundle_json"])
 
     @app.post("/api/review-cases", status_code=201)
     def create_review_case(payload: ReviewCaseRequest):

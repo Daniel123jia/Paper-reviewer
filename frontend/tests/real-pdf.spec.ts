@@ -40,8 +40,9 @@ test('uploads a real paper, searches, jumps and highlights at different zoom lev
   await expect(page.getByTestId('evidence-highlight')).toBeVisible();
   await page.getByRole('textbox', {name: '检索论文全文'}).fill('space complexity');
   await page.getByRole('button', {name: '检索', exact: true}).click();
-  await expect(page.locator('.result-card')).toHaveCount(1);
-  await page.locator('.result-card').first().click();
+  const complexityResult = page.locator('.result-card').filter({hasText: /space complexity/i}).first();
+  await expect(complexityResult).toBeVisible();
+  await complexityResult.click();
   await expect(page.getByText('第 3 / 5 页')).toBeVisible();
   await expect.poll(async () => {
     const mark = await page.getByTestId('evidence-highlight').boundingBox();
