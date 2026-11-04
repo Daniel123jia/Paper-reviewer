@@ -10,7 +10,7 @@ from typing import Callable
 from backend.p2a_engine import BudgetExceeded, RunBudget
 from backend.p2a_schema import (ClaimEvidenceMap, PaperProfile, ReviewPlan,
                                  source_reference_index, validate_source_references)
-from backend.p2b_context import assemble_context
+from backend.p2b_context import DIMENSION_FACT_FIELDS, assemble_context
 from backend.p2b_dimensions import DIMENSIONS, applicability, configuration
 from backend.p2b_schema import (SCHEMA_VERSION, DimensionReview, IssueCandidate,
                                 ProfessionalReviewResult)
@@ -108,6 +108,44 @@ def _validated_payload(raw, rule, pack, mapping, bundle, run_id):
     return {**raw, "candidates": candidates}
 
 
+def _project_input(rule, pack, plan, profile, mapping):
+    """Send the full claim inventory but detailed facts only for this source scope."""
+    allowed = set(pack.source_ref_ids)
+    plan_fields = ("paper_type", "research_domain", "methodological_paradigm",
+                   "priority_dimensions", "missing_materials")
+    profile_fields = DIMENSION_FACT_FIELDS[rule.id]
+    profile_payload = {field: [item.model_dump() for item in value] if isinstance(value, list)
+                       else value.model_dump() if value else None
+                       for field in profile_fields for value in [getattr(profile, field)]}
+    profile_payload["unresolved_source_gaps"] = profile.unresolved_source_gaps
+    if rule.id in {"D3", "D4"}:
+        profile_payload["source_conflicts"] = [item.model_dump() for item in profile.source_conflicts]
+    selected = {claim.id for claim in mapping.claims if allowed.intersection(claim.evidence_ref_ids)}
+    selected.update(relation.claim_id for relation in mapping.support_relations
+                    if relation.evidence_ref_id in allowed)
+    claims = [{**claim.model_dump(), "evidence_ref_ids":
+               [ref for ref in claim.evidence_ref_ids if ref in allowed]}
+              for claim in mapping.claims if claim.id in selected]
+    parents = {claim.contribution_id for claim in mapping.claims if claim.id in selected}
+    contributions = [{**item.model_dump(), "evidence_ref_ids":
+                      [ref for ref in item.evidence_ref_ids if ref in allowed]}
+                     for item in mapping.contributions if item.id in parents]
+    return {"plan": {field: getattr(plan, field) for field in plan_fields},
+            "profile": profile_payload,
+            "claim_map": {"contributions": contributions, "claims": claims,
+                          "support_relations": [{"claim_id": item.claim_id,
+                                                 "evidence_ref_id": item.evidence_ref_id,
+                                                 "relation": item.relation}
+                                                for item in mapping.support_relations
+                                                if item.claim_id in selected and
+                                                item.evidence_ref_id in allowed],
+                          "evidence_gaps": [item.model_dump() for item in mapping.evidence_gaps
+                                            if item.claim_id in selected]},
+            "claim_inventory": [{"id": item.id, "contribution_id": item.contribution_id,
+                                 "statement": item.statement} for item in mapping.claims
+                                if item.id not in selected]}
+
+
 def run_p2b(bundle: dict, plan: ReviewPlan, profile: PaperProfile, mapping: ClaimEvidenceMap,
             understanding_run_id: str, run_id: str, model_call: Callable, requested_model: str,
             target_journal: str | None = None, special_requirements: str | None = None,
@@ -151,12 +189,10 @@ def run_p2b(bundle: dict, plan: ReviewPlan, profile: PaperProfile, mapping: Clai
                  else "Review not performed: source material blocked"}))
             continue
         user = json.dumps({"configuration": config_name,
-            "plan": plan.model_dump(exclude={"input_coverage"}),
-            "profile": profile.model_dump(exclude={"evidence_refs", "input_coverage"}),
-            "claim_map": mapping.model_dump(exclude={"evidence_refs", "input_coverage"}),
+            **_project_input(rule, pack, plan, profile, mapping),
             "target_journal": target_journal, "special_requirements": special_requirements,
             "context": pack.text, "allowed_source_ids": pack.source_ref_ids,
-            "coverage_status": pack.coverage_status}, ensure_ascii=False)
+            "coverage_status": pack.coverage_status}, ensure_ascii=False, separators=(",", ":"))
         result = None
         last_error = None
         for attempt in range(2):

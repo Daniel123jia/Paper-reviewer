@@ -1,0 +1,1071 @@
+{
+  "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+  "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+  "review_run_id": "38fa583bb278414998f1bb16cca0be05",
+  "prompt_version": "paper-understanding/v1",
+  "schema_version": "1.1",
+  "model_identifier": "gpt-6.1-sol",
+  "input_coverage": {
+    "total_unit_count": 109,
+    "included_unit_count": 109,
+    "excluded_unit_ids": [],
+    "source_quality_status": "needs_review",
+    "limitations": [
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "human_reading_reference_missing",
+      "human_page_reference_missing"
+    ]
+  },
+  "execution_status": "limited",
+  "research_problem": {
+    "text": "The paper studies efficient supervised text classification on very large corpora and with large output spaces, assessing predictive accuracy and computational efficiency on sentiment classification and prediction of tags from image titles and captions.",
+    "evidence_ref_ids": [
+      "ru_ev_26739aba340e_0_4",
+      "ru_ev_26739aba340e_1_18",
+      "ru_ev_26739aba340e_2_16",
+      "ru_ev_26739aba340e_3_19"
+    ],
+    "provenance": "model_interpretation"
+  },
+  "research_motivation": {
+    "text": "The authors motivate their work by the training and inference costs of neural text classifiers and the strong performance and scalability potential of linear classifiers with suitable features. They also note that ordinary linear classifiers do not share parameters across features and classes, which may limit generalization for classes with few examples.",
+    "evidence_ref_ids": [
+      "ru_ev_26739aba340e_0_8",
+      "ru_ev_26739aba340e_0_9",
+      "ru_ev_26739aba340e_0_12"
+    ],
+    "provenance": "model_interpretation"
+  },
+  "research_gap_claimed_by_authors": {
+    "text": "The authors frame their objective as scaling strong, simple text classification baselines to very large corpora and output spaces while retaining accuracy comparable to state-of-the-art methods. They identify low-rank factorization as an existing approach and investigate combining it with fast loss computation and efficient features.",
+    "evidence_ref_ids": [
+      "ru_ev_26739aba340e_0_4",
+      "ru_ev_26739aba340e_0_9"
+    ],
+    "provenance": "model_interpretation"
+  },
+  "proposed_method": {
+    "text": "The proposed fastText classifier combines a rank-constrained linear model, averaged feature embeddings, hierarchical softmax, and optional n-gram features in a tailored implementation for efficient training and prediction. Feature embeddings are averaged into a text representation and passed to a linear classifier.",
+    "evidence_ref_ids": [
+      "ru_ev_26739aba340e_0_10",
+      "ru_ev_26739aba340e_1_8",
+      "ru_ev_26739aba340e_1_16",
+      "ru_ev_26739aba340e_1_20",
+      "ru_ev_26739aba340e_1_7",
+      "ru_ev_26739aba340e_1_18",
+      "ru_ev_26739aba340e_2_16"
+    ],
+    "provenance": "model_interpretation"
+  },
+  "method_components": [
+    {
+      "text": "A lookup matrix maps words to representations that are averaged into a text representation and passed to a linear classifier. The authors describe this architecture as similar to CBOW with the middle word replaced by a label.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_0_10",
+        "ru_ev_26739aba340e_1_8"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The model uses softmax to represent class probabilities and minimizes class negative log-likelihood. The document input is a normalized bag of features; A and B are weight matrices. Training uses asynchronous stochastic gradient descent on multiple CPUs with a linearly decaying learning rate.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_8",
+        "ru_ev_26739aba340e_1_16"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "Hierarchical softmax uses a Huffman coding tree. The authors state that this reduces training complexity from O(kh) to O(h log₂(k)), where k is the number of classes and h is the text representation dimension.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_20"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "Prediction uses depth-first tree search, tracks the maximum leaf probability, and prunes branches with sufficiently small probability. The authors report observing O(h log₂(k)) test-time complexity in practice and describe a binary-heap extension for retrieving the top T targets.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_4"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "Additional bag-of-n-gram features encode partial local word order. N-grams are mapped using the hashing trick, with the hash function cited to Mikolov et al. (2011), using 10 million bins for bigrams alone and 100 million otherwise.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_7",
+        "ru_ev_26739aba340e_1_14"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The method forms sentence representations by averaging its word features; the authors contrast these features with unsupervised word2vec vectors.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_23",
+        "ru_ev_26739aba340e_4_1"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "N-gram features supplement word features. The reported experiments compare models with and without bigrams and also investigate trigrams and n-grams up to length five.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_4",
+        "ru_ev_26739aba340e_2_16",
+        "ru_ev_26739aba340e_3_20"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The authors describe a fast inference procedure that provides a speed advantage in the large tag space, contrasting it with Tagspace's computation of scores for every class; its algorithmic details are not supplied in these reading units.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_20"
+      ],
+      "provenance": "direct_source"
+    }
+  ],
+  "theoretical_assumptions": [
+    {
+      "text": "The model constrains the linear classifier through a low-rank parameterization and represents each text through averaged feature embeddings.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_0_10",
+        "ru_ev_26739aba340e_1_16"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The pruning argument relies on hierarchical path probabilities: a node's probability cannot exceed its parent's probability, allowing low-probability branches to be discarded during search.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_21",
+        "ru_ev_26739aba340e_1_4"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The feature design treats bag-of-words representations as order-invariant and uses n-grams to recover partial information about local word order efficiently.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_7"
+      ],
+      "provenance": "direct_source"
+    }
+  ],
+  "experimental_setup": [
+    {
+      "text": "The evaluation has two tasks: comparison with existing text classifiers on sentiment analysis and assessment of scalability to a large output space on a tag prediction dataset.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_18"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "For the sentiment analysis experiments, the authors follow the eight datasets and evaluation protocol of Zhang et al. (2015). They report previously published n-gram and TFIDF baselines and compare with char-CNN, char-CRNN, and VDCNN.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_22"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The supplied result extraction includes fastText configurations with representation dimension h = 10, with and without bigram features; the table structure has not been verified.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_2"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "For the main classification experiments, fastText uses 10 hidden units and five training epochs, with the learning rate selected on a validation set from {0.05, 0.1, 0.25, 0.5}. The accuracy-table caption states that fastText uses the same parameters across datasets and is evaluated with and without bigrams.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_3",
+        "ru_ev_26739aba340e_2_4",
+        "ru_ev_26739aba340e_2_16"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The authors compare against character CNNs and VDCNN. They report the best character-CNN results without data augmentation; character-CNN and VDCNN training uses an NVIDIA Tesla K40 GPU, whereas fastText uses a CPU with 20 threads. The training-time table concerns a single epoch.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_4",
+        "ru_ev_26739aba340e_2_5",
+        "ru_ev_26739aba340e_2_9",
+        "ru_ev_26739aba340e_2_17"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "For comparison with Tang et al. (2015), the authors follow that work's evaluation protocol and report its main baselines and Conv-GRNN and LSTM-GRNN models. They select fastText hyperparameters on validation data, find n-grams up to length five best, and do not use pretrained word embeddings.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_11",
+        "ru_ev_26739aba340e_2_16"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "For YFCC100M tag prediction, inputs are titles and captions rather than images. Words and tags occurring fewer than 100 times are removed before the data are split into training, validation, and test sets.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_19"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "Tag-prediction baselines are a predictor of the most frequent tag and a linear version of Tagspace. The authors say the linear Tagspace version performs comparably to its convolutional version while being much faster.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_21"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "Tag-prediction experiments run fastText for five epochs and compare hidden-layer sizes of 50 and 200. Both models use 20 threads for training and a single thread for test-time measurements.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_24",
+        "ru_ev_26739aba340e_3_20",
+        "ru_ev_26739aba340e_3_17",
+        "ru_ev_26739aba340e_3_18"
+      ],
+      "provenance": "direct_source"
+    }
+  ],
+  "datasets_and_metrics": [
+    {
+      "text": "The extracted comparison header lists eight dataset labels: AG, Sogou, DBP, Yelp P., Yelp F., Yah. A., Amz. F., and Amz. P. Their full names, sizes, and splits are not specified in the supplied prose.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_0",
+        "ru_ev_26739aba340e_1_22"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The abstract frames the evaluation in terms of classification accuracy, training speed, and classification speed.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_0_3"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "Classification performance is reported as test accuracy in percent. The extracted training-time rows name AG, Sogou, DBpedia, Yelp P., Yelp F., Yah. A., Amz. F., and Amz. P.; the table structure remains unverified.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_3",
+        "ru_ev_26739aba340e_2_8",
+        "ru_ev_26739aba340e_2_9"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The comparison with Tang et al. reports test accuracy for Yelp’13, Yelp’14, Yelp’15, and IMDB, with hyperparameters selected on validation data.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_10",
+        "ru_ev_26739aba340e_2_14",
+        "ru_ev_26739aba340e_2_15"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "YFCC100M contains almost 100 million images with captions, titles, and tags. The constructed text-based task has 91,188,648 training examples comprising 1.5 billion tokens, 930,497 validation examples, 543,424 test examples, a vocabulary of 297,141 words, and 312,116 unique tags. Evaluation uses precision at one.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_19"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "For tag prediction, the authors report test precision at one together with training and test running times, and show qualitative validation examples from fastText with 200 hidden units and bigrams.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_16",
+        "ru_ev_26739aba340e_3_8",
+        "ru_ev_26739aba340e_3_9"
+      ],
+      "provenance": "direct_source"
+    }
+  ],
+  "main_results": [
+    {
+      "text": "The authors claim that fastText often achieves accuracy comparable to deep learning classifiers while being many orders of magnitude faster for training and evaluation.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_0_3"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The abstract reports training on more than one billion words in less than ten minutes on a standard multicore CPU and classifying half a million sentences among 312,000 classes in less than one minute.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_0_3"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The authors report that their tailored implementation is at least 2–5 times faster in practice than an implementation using Vowpal Wabbit; the accompanying footnote identifies the options --nn, --ngrams, and --log multi.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_18",
+        "ru_ev_26739aba340e_1_26"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The authors report that adding bigrams improves classification performance by 1–4%. They describe fastText accuracy as slightly better than char-CNN and char-CRNN and slightly worse than VDCNN. Adding trigrams raises reported Sogou accuracy to 97.1%.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_16"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The authors describe fastText as competitive with Tang et al.'s methods and suggest that its lack of pretrained embeddings can explain a roughly one-percentage-point accuracy difference.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_16"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The extracted comparison rows report fastText accuracies of 64.2, 66.2, 66.6, and 45.2 for Yelp’13, Yelp’14, Yelp’15, and IMDB, respectively; the LSTM-GRNN row reports 65.1, 67.1, 67.6, and 45.3. These values follow the extracted header order and remain subject to table-structure verification.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_10",
+        "ru_ev_26739aba340e_2_12",
+        "ru_ev_26739aba340e_2_13"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The authors report that fastText trains on the classification datasets in less than a minute and that convolutional methods are several orders of magnitude slower under their stated hardware conditions. They acknowledge that newer CUDA convolution implementations could speed up char-CNN by a factor of ten. They report about 12 hours per epoch for Tang et al.'s GRNN method on a single CPU thread and claim speedups increasing with dataset size to at least 15,000-fold.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_17",
+        "ru_ev_26739aba340e_3_12"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "For tag prediction, the authors report similar performance between fastText and Tagspace with a small hidden layer, substantial gains from adding bigrams, more than an order-of-magnitude faster training to obtain a better-quality model, and a 600-fold test-time speedup.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_20"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The extracted tag-prediction rows list precision-at-one values of 31.2 for fastText with 50 hidden units, 36.7 with 50 units and bigrams, 41.1 with 200 units, and 46.1 with 200 units and bigrams. Tagspace values are 30.1 with 50 units and 35.6 with 200 units; the frequency baseline is 2.2. Table structure remains unverified.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_10",
+        "ru_ev_26739aba340e_3_14",
+        "ru_ev_26739aba340e_3_15",
+        "ru_ev_26739aba340e_3_16"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "Following the extracted training/test column order, fastText with 200 hidden units and bigrams has reported training and test times of 13 minutes 38 seconds and 1 minute 37 seconds; Tagspace with 200 hidden units has corresponding times of 5 hours 32 minutes and 15 hours. These column associations remain subject to table-structure verification.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_10",
+        "ru_ev_26739aba340e_3_11",
+        "ru_ev_26739aba340e_3_14",
+        "ru_ev_26739aba340e_3_15"
+      ],
+      "provenance": "direct_source"
+    }
+  ],
+  "author_claimed_contributions": [
+    {
+      "text": "The authors present fastText as a simple, efficient text classification baseline that combines a rank-constrained linear model with fast loss computation to scale to large corpora and output spaces.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_0_3",
+        "ru_ev_26739aba340e_0_4"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The paper provides a fastText repository link as an implementation resource.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_0_11"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The authors present a simple text-classification baseline whose word features can be averaged into useful sentence representations, achieving performance comparable to recent deep-learning-inspired methods on several tasks with substantially lower computational cost.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_23",
+        "ru_ev_26739aba340e_4_1"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The authors state plans to publish their code and release a script recreating the YFCC100M task to support reuse and reproduction.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_4_1",
+        "ru_ev_26739aba340e_3_19"
+      ],
+      "provenance": "direct_source"
+    }
+  ],
+  "conclusions": [
+    {
+      "text": "In the abstract and introductory summary, the authors conclude that a simple rank-constrained linear classifier with efficient loss computation can achieve performance comparable to state-of-the-art classifiers while substantially reducing computation.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_0_3",
+        "ru_ev_26739aba340e_0_4"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "The authors conclude that fastText can match the performance of recently proposed deep-learning-inspired methods on several tasks while being much faster.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_4_1"
+      ],
+      "provenance": "direct_source"
+    },
+    {
+      "text": "While acknowledging the greater theoretical representational power of deep neural networks, the authors question whether simple text-classification problems such as sentiment analysis are appropriate tasks for evaluating that power.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_4_1"
+      ],
+      "provenance": "direct_source"
+    }
+  ],
+  "author_stated_limitations": [
+    {
+      "text": "The authors report slightly lower accuracy than VDCNN in the main classification comparison and note that fastText does not use pretrained embeddings in the Tang et al. comparison, suggesting this may explain an accuracy difference of about one percentage point.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_16"
+      ],
+      "provenance": "direct_source"
+    }
+  ],
+  "evidence_refs": [
+    {
+      "id": "ru_ev_26739aba340e_0_4",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_0_4",
+      "evidence_ids": [
+        "ev_26739aba340e_0_4"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 0,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_18",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_18",
+      "evidence_ids": [
+        "ev_26739aba340e_1_18"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_16",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_16",
+      "evidence_ids": [
+        "ev_26739aba340e_2_16"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_19",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_19",
+      "evidence_ids": [
+        "ev_26739aba340e_3_19"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_0_8",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_0_8",
+      "evidence_ids": [
+        "ev_26739aba340e_0_8"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 0,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_0_9",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_0_9",
+      "evidence_ids": [
+        "ev_26739aba340e_0_9"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 0,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_0_12",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_0_12",
+      "evidence_ids": [
+        "ev_26739aba340e_0_12"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 0,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_0_10",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_0_10",
+      "evidence_ids": [
+        "ev_26739aba340e_0_10"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 0,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_8",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_8",
+      "evidence_ids": [
+        "ev_26739aba340e_1_8"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_16",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_16",
+      "evidence_ids": [
+        "ev_26739aba340e_1_16"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_20",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_20",
+      "evidence_ids": [
+        "ev_26739aba340e_1_20"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_7",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_7",
+      "evidence_ids": [
+        "ev_26739aba340e_1_7"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_4",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_4",
+      "evidence_ids": [
+        "ev_26739aba340e_1_4"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_14",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_14",
+      "evidence_ids": [
+        "ev_26739aba340e_1_14"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_23",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_23",
+      "evidence_ids": [
+        "ev_26739aba340e_3_23"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_4_1",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_4_1",
+      "evidence_ids": [
+        "ev_26739aba340e_4_1"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 4,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_4",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_4",
+      "evidence_ids": [
+        "ev_26739aba340e_2_4"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_20",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_20",
+      "evidence_ids": [
+        "ev_26739aba340e_3_20"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_21",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_21",
+      "evidence_ids": [
+        "ev_26739aba340e_1_21"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_22",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_22",
+      "evidence_ids": [
+        "ev_26739aba340e_1_22"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_2",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_2",
+      "evidence_ids": [
+        "ev_26739aba340e_2_2"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_3",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_3",
+      "evidence_ids": [
+        "ev_26739aba340e_2_3"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_5",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_5",
+      "evidence_ids": [
+        "ev_26739aba340e_2_5"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_9",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_9",
+      "evidence_ids": [
+        "ev_26739aba340e_2_9"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_17",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_17",
+      "evidence_ids": [
+        "ev_26739aba340e_2_17"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_11",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_11",
+      "evidence_ids": [
+        "ev_26739aba340e_2_11"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_21",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_21",
+      "evidence_ids": [
+        "ev_26739aba340e_3_21"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_24",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_24",
+      "evidence_ids": [
+        "ev_26739aba340e_3_24"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_17",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_17",
+      "evidence_ids": [
+        "ev_26739aba340e_3_17"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_18",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_18",
+      "evidence_ids": [
+        "ev_26739aba340e_3_18"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_0",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_0",
+      "evidence_ids": [
+        "ev_26739aba340e_2_0"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_0_3",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_0_3",
+      "evidence_ids": [
+        "ev_26739aba340e_0_3"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 0,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_8",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_8",
+      "evidence_ids": [
+        "ev_26739aba340e_2_8"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_10",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_10",
+      "evidence_ids": [
+        "ev_26739aba340e_2_10"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_14",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_14",
+      "evidence_ids": [
+        "ev_26739aba340e_2_14"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_15",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_15",
+      "evidence_ids": [
+        "ev_26739aba340e_2_15"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_16",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_16",
+      "evidence_ids": [
+        "ev_26739aba340e_3_16"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_8",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_8",
+      "evidence_ids": [
+        "ev_26739aba340e_3_8"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_9",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_9",
+      "evidence_ids": [
+        "ev_26739aba340e_3_9"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_26",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_26",
+      "evidence_ids": [
+        "ev_26739aba340e_1_26"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_12",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_12",
+      "evidence_ids": [
+        "ev_26739aba340e_2_12"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_13",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_13",
+      "evidence_ids": [
+        "ev_26739aba340e_2_13"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_12",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_12",
+      "evidence_ids": [
+        "ev_26739aba340e_3_12"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_10",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_10",
+      "evidence_ids": [
+        "ev_26739aba340e_3_10"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_14",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_14",
+      "evidence_ids": [
+        "ev_26739aba340e_3_14"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_15",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_15",
+      "evidence_ids": [
+        "ev_26739aba340e_3_15"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_11",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_11",
+      "evidence_ids": [
+        "ev_26739aba340e_3_11"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_0_11",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_0_11",
+      "evidence_ids": [
+        "ev_26739aba340e_0_11"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 0,
+      "verification_status": "text_extracted_unverified"
+    }
+  ],
+  "unresolved_source_gaps": [
+    "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+    "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+    "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+    "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+    "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+    "Source quality: reading_order_ambiguous",
+    "Source quality: section_mapping_incomplete",
+    "Source quality: human_reading_reference_missing",
+    "Source quality: human_page_reference_missing",
+    "table table_p1_0: structure_incomplete",
+    "table table_ev_26739aba340e_2_3: structure_incomplete",
+    "table table_ev_26739aba340e_2_9: structure_incomplete",
+    "table table_ev_26739aba340e_2_14: structure_incomplete",
+    "table table_ev_26739aba340e_3_8: structure_incomplete",
+    "table table_ev_26739aba340e_3_16: structure_incomplete",
+    "figure figure_ev_26739aba340e_1_3: visual_review_required"
+  ],
+  "source_conflicts": []
+}

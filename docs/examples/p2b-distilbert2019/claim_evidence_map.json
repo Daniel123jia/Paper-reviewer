@@ -1,0 +1,1142 @@
+{
+  "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+  "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+  "review_run_id": "18e72bb44b124089a0b0a2d74f85d80c",
+  "prompt_version": "contribution-evidence-mapper/v2",
+  "schema_version": "1.1",
+  "model_identifier": "gpt-6.1-sol",
+  "input_coverage": {
+    "total_unit_count": 107,
+    "included_unit_count": 107,
+    "excluded_unit_ids": [],
+    "source_quality_status": "needs_review",
+    "limitations": [
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "human_reading_reference_missing",
+      "human_page_reference_missing"
+    ]
+  },
+  "execution_status": "limited",
+  "contributions": [
+    {
+      "id": "contrib_5f7cdbd91720f0a0",
+      "title": "A compact general-purpose pretrained language model obtained through pretraining-stage knowledge distillation, retaining the ability to be fine-tuned across downstream tasks.",
+      "description": "A compact general-purpose pretrained language model obtained through pretraining-stage knowledge distillation, retaining the ability to be fine-tuned across downstream tasks.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_0_5",
+        "ru_ev_6724ca5dce54_1_0",
+        "ru_ev_6724ca5dce54_1_11",
+        "ru_ev_6724ca5dce54_1_12",
+        "ru_ev_6724ca5dce54_2_9",
+        "ru_ev_6724ca5dce54_2_12",
+        "ru_ev_6724ca5dce54_2_17",
+        "ru_ev_6724ca5dce54_3_3",
+        "ru_ev_6724ca5dce54_3_10",
+        "ru_ev_6724ca5dce54_4_1"
+      ]
+    },
+    {
+      "id": "contrib_dcc40454a6f92faa",
+      "title": "A triple training loss designed to transfer the inductive biases of larger pretrained models through language modeling, distillation, and cosine-distance objectives.",
+      "description": "A triple training loss designed to transfer the inductive biases of larger pretrained models through language modeling, distillation, and cosine-distance objectives.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_0_5",
+        "ru_ev_6724ca5dce54_1_9",
+        "ru_ev_6724ca5dce54_3_0",
+        "ru_ev_6724ca5dce54_3_2",
+        "ru_ev_6724ca5dce54_3_8",
+        "ru_ev_6724ca5dce54_3_10",
+        "ru_ev_6724ca5dce54_3_11"
+      ]
+    },
+    {
+      "id": "contrib_f7537eea16119ebb",
+      "title": "The authors introduce DistilBERT as a general-purpose pretrained BERT variant that is 40% smaller and 60% faster while retaining 97% of language understanding capability.",
+      "description": "The authors introduce DistilBERT as a general-purpose pretrained BERT variant that is 40% smaller and 60% faster while retaining 97% of language understanding capability.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_4_1",
+        "ru_ev_6724ca5dce54_0_5",
+        "ru_ev_6724ca5dce54_1_1",
+        "ru_ev_6724ca5dce54_2_0",
+        "ru_ev_6724ca5dce54_2_13",
+        "ru_ev_6724ca5dce54_2_16",
+        "ru_ev_6724ca5dce54_3_5"
+      ]
+    },
+    {
+      "id": "contrib_507de8d3af4b3f42",
+      "title": "They claim to demonstrate successful general-purpose language-model training through distillation, analyze training components through ablations, and demonstrate suitability for edge applications.",
+      "description": "They claim to demonstrate successful general-purpose language-model training through distillation, analyze training components through ablations, and demonstrate suitability for edge applications.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_4_1",
+        "ru_ev_6724ca5dce54_0_5",
+        "ru_ev_6724ca5dce54_1_0",
+        "ru_ev_6724ca5dce54_1_1",
+        "ru_ev_6724ca5dce54_3_0",
+        "ru_ev_6724ca5dce54_3_2",
+        "ru_ev_6724ca5dce54_3_6",
+        "ru_ev_6724ca5dce54_3_8",
+        "ru_ev_6724ca5dce54_3_11"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim_4faebd9391822cb3",
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "statement": "A general-purpose language model can be successfully trained through distillation during pretraining.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_0_5",
+        "ru_ev_6724ca5dce54_1_0",
+        "ru_ev_6724ca5dce54_3_10",
+        "ru_ev_6724ca5dce54_4_1"
+      ]
+    },
+    {
+      "id": "claim_76e0d94dda492765",
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "statement": "The student retains BERT's general architecture, removes token-type embeddings and the pooler, and reduces the number of layers by a factor of two.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_1_11"
+      ]
+    },
+    {
+      "id": "claim_a43f23cbeb41a5e9",
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "statement": "The authors report that their distilled models require a smaller computational training budget than their larger counterparts.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_0_5",
+        "ru_ev_6724ca5dce54_1_0"
+      ]
+    },
+    {
+      "id": "claim_7bcad7997d656581",
+      "contribution_id": "contrib_dcc40454a6f92faa",
+      "statement": "The final training objective linearly combines teacher-distribution distillation, masked language modeling, and cosine embedding losses.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_1_9"
+      ]
+    },
+    {
+      "id": "claim_cc3f6207a3c8e47a",
+      "contribution_id": "contrib_dcc40454a6f92faa",
+      "statement": "The distillation component trains the student on the teacher's soft target probabilities, using the same softmax temperature for teacher and student during training and a temperature of one at inference.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_1_6",
+        "ru_ev_6724ca5dce54_1_7",
+        "ru_ev_6724ca5dce54_1_8"
+      ]
+    },
+    {
+      "id": "claim_f97393e2bc593bcb",
+      "contribution_id": "contrib_dcc40454a6f92faa",
+      "statement": "The cosine embedding loss is intended to align the directions of student and teacher hidden-state vectors, and the authors report that adding it is beneficial.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_1_9"
+      ]
+    },
+    {
+      "id": "claim_dc9f062d58286e85",
+      "contribution_id": "contrib_f7537eea16119ebb",
+      "statement": "DistilBERT is 40% smaller than BERT.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_0_5",
+        "ru_ev_6724ca5dce54_1_1",
+        "ru_ev_6724ca5dce54_4_1"
+      ]
+    },
+    {
+      "id": "claim_1987440a651a1aeb",
+      "contribution_id": "contrib_f7537eea16119ebb",
+      "statement": "DistilBERT retains 97% of BERT's language understanding capabilities.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_0_5",
+        "ru_ev_6724ca5dce54_2_13",
+        "ru_ev_6724ca5dce54_2_0",
+        "ru_ev_6724ca5dce54_4_1"
+      ]
+    },
+    {
+      "id": "claim_3cb5a19341f0e7d4",
+      "contribution_id": "contrib_f7537eea16119ebb",
+      "statement": "DistilBERT is 60% faster than BERT.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_0_5",
+        "ru_ev_6724ca5dce54_1_1",
+        "ru_ev_6724ca5dce54_4_1"
+      ]
+    },
+    {
+      "id": "claim_be0f5cdb90c70ed6",
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "statement": "The authors report that ablation studies indicate all three components of the triple loss are important for obtaining the best performance.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_1_1"
+      ]
+    },
+    {
+      "id": "claim_6a21f05949707aee",
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "statement": "The authors claim that their compressed models can run on mobile devices and that on-device capabilities are demonstrated through a proof-of-concept experiment and a comparative on-device study.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_0_5",
+        "ru_ev_6724ca5dce54_1_0"
+      ]
+    },
+    {
+      "id": "claim_7afee7b51da8ee9e",
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "statement": "The student is initialized from the teacher by taking one layer out of every two, using their shared dimensionality.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_1_12"
+      ]
+    },
+    {
+      "id": "claim_d7d146a7b6e07ad5",
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "statement": "DistilBERT is distilled using gradient accumulation for batches of up to 4,000 examples, dynamic masking, and no next sentence prediction objective.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_2_9"
+      ]
+    },
+    {
+      "id": "claim_d0de3244a9218171",
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "statement": "The pretrained model is fine-tuned separately on the nine GLUE datasets and evaluated on their development sets without ensembling or multitask fine-tuning.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_2_12"
+      ]
+    },
+    {
+      "id": "claim_d15f98a55bba3ef7",
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "statement": "SQuAD adaptation can include a second distillation stage using a BERT teacher already fine-tuned on SQuAD, following the pretraining distillation stage.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_2_17",
+        "ru_ev_6724ca5dce54_3_3"
+      ]
+    },
+    {
+      "id": "claim_4263e8efb6d8eecd",
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "statement": "For the additional SQuAD adaptation-distillation setting, the prose reports 79.8 F1 and 70.4 exact match, described by the authors as within three points of the full model.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_3_3"
+      ]
+    },
+    {
+      "id": "claim_14129f2bafeca287",
+      "contribution_id": "contrib_dcc40454a6f92faa",
+      "statement": "The ablation reference model uses a triple loss with components labeled Lce, Lcos, and Lmlm, together with teacher-weight initialization.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_3_0",
+        "ru_ev_6724ca5dce54_3_2"
+      ]
+    },
+    {
+      "id": "claim_ef47e5a973fd33fb",
+      "contribution_id": "contrib_f7537eea16119ebb",
+      "statement": "The authors report that DistilBERT matches or improves on the ELMo baseline across all nine GLUE tasks.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_2_13"
+      ]
+    },
+    {
+      "id": "claim_86362eb48edd93b9",
+      "contribution_id": "contrib_f7537eea16119ebb",
+      "statement": "On IMDb, DistilBERT is reported to trail BERT by 0.6 percentage points in test accuracy while being 40% smaller; on SQuAD, the prose reports a gap of at most 3.9 points without specifying the metric in that statement.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_2_16"
+      ]
+    },
+    {
+      "id": "claim_6d289ceb45a005b3",
+      "contribution_id": "contrib_f7537eea16119ebb",
+      "statement": "For a complete pass over the STS-B development set on an Intel Xeon E5-2690 v3 Haswell CPU at 2.9 GHz with batch size one, the authors report that DistilBERT has 40% fewer parameters and is 60% faster than BERT.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_3_5"
+      ]
+    },
+    {
+      "id": "claim_887f99086635919c",
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "statement": "The extracted ablation table reports GLUE macro-score changes of -2.96 without Lce, -1.46 without Lcos, and -0.31 without Lmlm, relative to the triple-loss model initialized with teacher weights.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_3_0",
+        "ru_ev_6724ca5dce54_3_2"
+      ]
+    },
+    {
+      "id": "claim_9a9e74106b30d644",
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "statement": "The extracted ablation table reports a 3.69-point reduction in GLUE macro-score when the triple-loss model uses random initialization rather than teacher-weight initialization.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_3_0",
+        "ru_ev_6724ca5dce54_3_2"
+      ]
+    },
+    {
+      "id": "claim_b59fbbfe374999c6",
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "statement": "In a question answering application on an iPhone 7 Plus, DistilBERT is reported to be 71% faster than the authors' BERT-base question answering model when tokenization is excluded, with a model storage size of 207 MB.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_3_6"
+      ]
+    },
+    {
+      "id": "claim_7b91b671ff8d6708",
+      "contribution_id": "contrib_dcc40454a6f92faa",
+      "statement": "Removing the masked language modeling component from the full triple loss has little impact on the distilled model's GLUE macro-score.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_3_8"
+      ]
+    },
+    {
+      "id": "claim_416e38c43588f4f0",
+      "contribution_id": "contrib_dcc40454a6f92faa",
+      "statement": "The two distillation losses account for a large portion of the distilled model's performance in the GLUE macro-score ablation.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_3_8"
+      ]
+    },
+    {
+      "id": "claim_99d4c1fba0a1e81c",
+      "contribution_id": "contrib_dcc40454a6f92faa",
+      "statement": "Using the teacher's knowledge through additional distillation signals during pretraining is beneficial.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_3_10"
+      ]
+    },
+    {
+      "id": "claim_7c84cde1e814627a",
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "statement": "The ablation study evaluates the influence of triple-loss components and student initialization using GLUE macro-scores and deltas relative to the full triple loss.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_3_8"
+      ]
+    },
+    {
+      "id": "claim_e75bc9c26e77d103",
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "statement": "Leveraging teacher knowledge through initialization and additional losses leads to substantial performance gains.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_3_11"
+      ]
+    },
+    {
+      "id": "claim_64af9002feb02b23",
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "statement": "DistilBERT is a compelling option for edge applications.",
+      "evidence_ref_ids": [
+        "ru_ev_6724ca5dce54_4_1"
+      ]
+    }
+  ],
+  "evidence_refs": [
+    {
+      "id": "ru_ev_6724ca5dce54_0_5",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_0_5",
+      "evidence_ids": [
+        "ev_6724ca5dce54_0_5"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 0,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_1_0",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_1_0",
+      "evidence_ids": [
+        "ev_6724ca5dce54_1_0"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_1_11",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_1_11",
+      "evidence_ids": [
+        "ev_6724ca5dce54_1_11"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_1_12",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_1_12",
+      "evidence_ids": [
+        "ev_6724ca5dce54_1_12"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_2_9",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_2_9",
+      "evidence_ids": [
+        "ev_6724ca5dce54_2_9"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_2_12",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_2_12",
+      "evidence_ids": [
+        "ev_6724ca5dce54_2_12"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_2_17",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_2_17",
+      "evidence_ids": [
+        "ev_6724ca5dce54_2_17"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_3_3",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_3_3",
+      "evidence_ids": [
+        "ev_6724ca5dce54_3_3"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_3_10",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_3_10",
+      "evidence_ids": [
+        "ev_6724ca5dce54_3_10"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_4_1",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_4_1",
+      "evidence_ids": [
+        "ev_6724ca5dce54_4_1"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 4,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_1_9",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_1_9",
+      "evidence_ids": [
+        "ev_6724ca5dce54_1_9"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_3_0",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_3_0",
+      "evidence_ids": [
+        "ev_6724ca5dce54_3_0"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_3_2",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_3_2",
+      "evidence_ids": [
+        "ev_6724ca5dce54_3_2"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_3_8",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_3_8",
+      "evidence_ids": [
+        "ev_6724ca5dce54_3_8"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_3_11",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_3_11",
+      "evidence_ids": [
+        "ev_6724ca5dce54_3_11"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_1_1",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_1_1",
+      "evidence_ids": [
+        "ev_6724ca5dce54_1_1"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_2_0",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_2_0",
+      "evidence_ids": [
+        "ev_6724ca5dce54_2_0"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_2_13",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_2_13",
+      "evidence_ids": [
+        "ev_6724ca5dce54_2_13"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_2_16",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_2_16",
+      "evidence_ids": [
+        "ev_6724ca5dce54_2_16"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_3_5",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_3_5",
+      "evidence_ids": [
+        "ev_6724ca5dce54_3_5"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_3_6",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_3_6",
+      "evidence_ids": [
+        "ev_6724ca5dce54_3_6"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_1_6",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_1_6",
+      "evidence_ids": [
+        "ev_6724ca5dce54_1_6"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_1_7",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_1_7",
+      "evidence_ids": [
+        "ev_6724ca5dce54_1_7"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_1_8",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_1_8",
+      "evidence_ids": [
+        "ev_6724ca5dce54_1_8"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_6724ca5dce54_2_10",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_6724ca5dce54_2_10",
+      "evidence_ids": [
+        "ev_6724ca5dce54_2_10"
+      ],
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    }
+  ],
+  "support_relations": [
+    {
+      "claim_id": "claim_4faebd9391822cb3",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_0_5",
+      "relation": "direct_source",
+      "explanation": "The abstract explicitly describes pretraining-stage distillation of a general-purpose model followed by fine-tuning across a wide range of tasks."
+    },
+    {
+      "claim_id": "claim_4faebd9391822cb3",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_1_0",
+      "relation": "direct_source",
+      "explanation": "The introduction states that the distilled pretrained models retain flexibility and achieve good performance after downstream fine-tuning."
+    },
+    {
+      "claim_id": "claim_76e0d94dda492765",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_1_11",
+      "relation": "direct_source",
+      "explanation": "The student-architecture paragraph explicitly lists the removed components and halved layer count."
+    },
+    {
+      "claim_id": "claim_a43f23cbeb41a5e9",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_0_5",
+      "relation": "direct_source",
+      "explanation": "The abstract states that the smaller model is cheaper to pretrain."
+    },
+    {
+      "claim_id": "claim_a43f23cbeb41a5e9",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_1_0",
+      "relation": "direct_source",
+      "explanation": "The introduction explicitly claims a smaller computational training budget."
+    },
+    {
+      "claim_id": "claim_7bcad7997d656581",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_1_9",
+      "relation": "direct_source",
+      "explanation": "The prose describes a linear combination of distillation and masked language modeling losses with an added cosine embedding loss."
+    },
+    {
+      "claim_id": "claim_cc3f6207a3c8e47a",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_1_6",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly identifies the teacher's soft target probabilities as the distillation targets; this relation does not validate the fragmented equation."
+    },
+    {
+      "claim_id": "claim_cc3f6207a3c8e47a",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_1_7",
+      "relation": "direct_source",
+      "explanation": "The prose states that the objective uses the full teacher distribution and introduces softmax temperature; the extracted formula is not used as verified mathematical support."
+    },
+    {
+      "claim_id": "claim_cc3f6207a3c8e47a",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_1_8",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly specifies equal teacher and student temperatures during training and temperature one during inference."
+    },
+    {
+      "claim_id": "claim_f97393e2bc593bcb",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_1_9",
+      "relation": "direct_source",
+      "explanation": "The authors state that adding the cosine embedding loss was beneficial and describe its intended hidden-state alignment."
+    },
+    {
+      "claim_id": "claim_dc9f062d58286e85",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_0_5",
+      "relation": "direct_source",
+      "explanation": "The abstract explicitly reports a 40% reduction in BERT model size."
+    },
+    {
+      "claim_id": "claim_dc9f062d58286e85",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_1_1",
+      "relation": "direct_source",
+      "explanation": "The introduction repeats the claim of a 40% smaller Transformer."
+    },
+    {
+      "claim_id": "claim_1987440a651a1aeb",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_0_5",
+      "relation": "direct_source",
+      "explanation": "The abstract explicitly states 97% retention of language understanding capabilities."
+    },
+    {
+      "claim_id": "claim_3cb5a19341f0e7d4",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_0_5",
+      "relation": "direct_source",
+      "explanation": "The abstract reports that the compressed BERT model is 60% faster."
+    },
+    {
+      "claim_id": "claim_3cb5a19341f0e7d4",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_1_1",
+      "relation": "direct_source",
+      "explanation": "The introduction explicitly identifies the reported 60% speed improvement as an inference-time result."
+    },
+    {
+      "claim_id": "claim_be0f5cdb90c70ed6",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_1_1",
+      "relation": "direct_source",
+      "explanation": "The introduction explicitly attributes the importance of all triple-loss components to ablation studies."
+    },
+    {
+      "claim_id": "claim_6a21f05949707aee",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_0_5",
+      "relation": "direct_source",
+      "explanation": "The abstract states that on-device capabilities are demonstrated in a proof-of-concept experiment and a comparative on-device study."
+    },
+    {
+      "claim_id": "claim_6a21f05949707aee",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_1_0",
+      "relation": "direct_source",
+      "explanation": "The introduction explicitly claims that compressed models are small enough to run on mobile devices."
+    },
+    {
+      "claim_id": "claim_7afee7b51da8ee9e",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_1_12",
+      "relation": "direct_source",
+      "explanation": "The student initialization paragraph explicitly describes selecting one teacher layer out of every two."
+    },
+    {
+      "claim_id": "claim_d7d146a7b6e07ad5",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_2_9",
+      "relation": "direct_source",
+      "explanation": "The distillation paragraph explicitly lists batch size, gradient accumulation, dynamic masking, and omission of next sentence prediction."
+    },
+    {
+      "claim_id": "claim_d0de3244a9218171",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_2_12",
+      "relation": "direct_source",
+      "explanation": "The evaluation paragraph specifies nine datasets, task-specific fine-tuning, development sets, and the absence of ensembling and multitask fine-tuning."
+    },
+    {
+      "claim_id": "claim_d15f98a55bba3ef7",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_2_17",
+      "relation": "direct_source",
+      "explanation": "The paragraph begins the description of adaptation using a BERT model previously fine-tuned on SQuAD."
+    },
+    {
+      "claim_id": "claim_d15f98a55bba3ef7",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_3",
+      "relation": "direct_source",
+      "explanation": "The continuation identifies the teacher's additional loss term and explicitly distinguishes pretraining and adaptation distillation."
+    },
+    {
+      "claim_id": "claim_4263e8efb6d8eecd",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_3",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly reports these metrics and the within-three-points characterization."
+    },
+    {
+      "claim_id": "claim_14129f2bafeca287",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_0",
+      "relation": "unverified",
+      "explanation": "The table caption names triple loss and teacher-weight initialization, but the associated table structure is incomplete."
+    },
+    {
+      "claim_id": "claim_14129f2bafeca287",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_2",
+      "relation": "unverified",
+      "explanation": "The extracted rows label the three loss components; the table extraction remains unverified."
+    },
+    {
+      "claim_id": "claim_1987440a651a1aeb",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_2_13",
+      "relation": "direct_source",
+      "explanation": "The prose states 97% performance retention, 40% fewer parameters, and the macro-score definition."
+    },
+    {
+      "claim_id": "claim_1987440a651a1aeb",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_2_0",
+      "relation": "unverified",
+      "explanation": "The extracted caption repeats the 97% claim and identifies development-set evaluation and medians of five runs; its associated table remains structurally incomplete."
+    },
+    {
+      "claim_id": "claim_ef47e5a973fd33fb",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_2_13",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly says DistilBERT is on par with or improves on ELMo across the nine tasks."
+    },
+    {
+      "claim_id": "claim_86362eb48edd93b9",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_2_16",
+      "relation": "direct_source",
+      "explanation": "The prose directly reports the IMDb accuracy gap, size reduction, and metric-unspecified SQuAD gap."
+    },
+    {
+      "claim_id": "claim_6d289ceb45a005b3",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_5",
+      "relation": "direct_source",
+      "explanation": "The paragraph provides the CPU inference protocol and explicitly states the parameter reduction and speed claim."
+    },
+    {
+      "claim_id": "claim_887f99086635919c",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_0",
+      "relation": "unverified",
+      "explanation": "The extracted caption identifies the comparison reference, but the table structure is incomplete."
+    },
+    {
+      "claim_id": "claim_887f99086635919c",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_2",
+      "relation": "unverified",
+      "explanation": "The extracted loss-removal rows supply the reported changes; their numerical associations remain unverified."
+    },
+    {
+      "claim_id": "claim_9a9e74106b30d644",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_0",
+      "relation": "unverified",
+      "explanation": "The table caption defines teacher-weight initialization as part of the reference configuration."
+    },
+    {
+      "claim_id": "claim_9a9e74106b30d644",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_2",
+      "relation": "unverified",
+      "explanation": "The extracted random-initialization row reports -3.69, but the associated table remains unverified."
+    },
+    {
+      "claim_id": "claim_b59fbbfe374999c6",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_6",
+      "relation": "direct_source",
+      "explanation": "The mobile deployment paragraph explicitly supplies the device, comparison model, tokenization exclusion, speed claim, and storage size."
+    },
+    {
+      "claim_id": "claim_4faebd9391822cb3",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_10",
+      "relation": "direct_source",
+      "explanation": "The authors state that general-purpose pretraining distillation was beneficial and describe using teacher knowledge during pretraining."
+    },
+    {
+      "claim_id": "claim_4faebd9391822cb3",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_4_1",
+      "relation": "direct_source",
+      "explanation": "The conclusion explicitly states that a general-purpose language model was successfully trained with distillation."
+    },
+    {
+      "claim_id": "claim_7b91b671ff8d6708",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_8",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly reports little impact from removing masked language modeling; it does not supply numerical ablation deltas."
+    },
+    {
+      "claim_id": "claim_416e38c43588f4f0",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_8",
+      "relation": "direct_source",
+      "explanation": "The authors explicitly attribute a large portion of performance to the two distillation losses."
+    },
+    {
+      "claim_id": "claim_99d4c1fba0a1e81c",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_10",
+      "relation": "direct_source",
+      "explanation": "The related-work discussion explicitly states that additional teacher-derived distillation signals during pretraining were beneficial."
+    },
+    {
+      "claim_id": "claim_dc9f062d58286e85",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_4_1",
+      "relation": "direct_source",
+      "explanation": "The conclusion directly reports the 40% size reduction."
+    },
+    {
+      "claim_id": "claim_3cb5a19341f0e7d4",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_4_1",
+      "relation": "direct_source",
+      "explanation": "The conclusion directly reports that DistilBERT is 60% faster."
+    },
+    {
+      "claim_id": "claim_1987440a651a1aeb",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_4_1",
+      "relation": "direct_source",
+      "explanation": "The conclusion directly reports retention of 97% of language understanding capabilities."
+    },
+    {
+      "claim_id": "claim_7c84cde1e814627a",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_8",
+      "relation": "direct_source",
+      "explanation": "The paragraph identifies the ablation variables, GLUE macro-score metric, and reporting of deltas relative to the full triple loss."
+    },
+    {
+      "claim_id": "claim_e75bc9c26e77d103",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_11",
+      "relation": "direct_source",
+      "explanation": "The authors explicitly state that teacher-based initialization and additional losses lead to substantial gains."
+    },
+    {
+      "claim_id": "claim_64af9002feb02b23",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_4_1",
+      "relation": "direct_source",
+      "explanation": "The conclusion explicitly asserts demonstrated suitability for edge applications."
+    },
+    {
+      "claim_id": "claim_4faebd9391822cb3",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_2_12",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_4faebd9391822cb3",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_2_13",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_4faebd9391822cb3",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_2_16",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_4faebd9391822cb3",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_4_1",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_a43f23cbeb41a5e9",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_2_10",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_f97393e2bc593bcb",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_8",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_dc9f062d58286e85",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_2_13",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_dc9f062d58286e85",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_5",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_1987440a651a1aeb",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_2_13",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_3cb5a19341f0e7d4",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_5",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_be0f5cdb90c70ed6",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_8",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_6a21f05949707aee",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_6",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_4faebd9391822cb3",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_0_5",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_4faebd9391822cb3",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_1_0",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_64af9002feb02b23",
+      "evidence_ref_id": "ru_ev_6724ca5dce54_3_6",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    }
+  ],
+  "evidence_gaps": [
+    {
+      "claim_id": "claim_4faebd9391822cb3",
+      "description": "The supplied local reading units state downstream fine-tuning performance but do not include task-level measurements or evaluation protocols.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_a43f23cbeb41a5e9",
+      "description": "The supplied local reading units do not quantify pretraining compute savings or specify the accounting used for the training-budget comparison.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_f97393e2bc593bcb",
+      "description": "The supplied local reading units do not include measurements isolating the performance benefit of the cosine embedding loss.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_dc9f062d58286e85",
+      "description": "The supplied local reading units do not provide model-size counts or the measurement basis underlying the reported 40% reduction.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_1987440a651a1aeb",
+      "description": "The supplied local reading units do not provide benchmark scores or the aggregation calculation underlying the reported 97% retention.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_3cb5a19341f0e7d4",
+      "description": "The supplied local reading units do not provide inference timings, hardware, workloads, or the calculation underlying the reported 60% speed improvement.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_be0f5cdb90c70ed6",
+      "description": "The supplied local reading units do not include ablation configurations or results for removing individual loss components.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_6a21f05949707aee",
+      "description": "The supplied local reading units do not include the mobile-device setup, deployment measurements, or comparative on-device results.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_4263e8efb6d8eecd",
+      "description": "The unverified downstream table extraction lists different values for the additional-distillation variant than the prose. The supplied local evidence does not resolve the numerical correspondence.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_14129f2bafeca287",
+      "description": "The local support is an incomplete ablation-table extraction. The supplied reading units do not include the objective definitions or the explanation of how the triple loss transfers inductive biases.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_1987440a651a1aeb",
+      "description": "The prose supports the authors' performance-retention claim, but the incomplete GLUE table prevents independent verification of its numerical column associations from this extraction.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_887f99086635919c",
+      "description": "The ablation table is marked structure_incomplete; the loss-removal labels and numerical changes require source verification.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_9a9e74106b30d644",
+      "description": "The random-initialization result comes from the incomplete ablation-table extraction and remains unverified.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_7b91b671ff8d6708",
+      "description": "The local prose summarizes Table 4, but numerical ablation deltas are not supplied in these reading units. The listed table extraction is structurally incomplete and does not establish verified values here.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_416e38c43588f4f0",
+      "description": "Verified numerical results for the individual distillation-loss ablations are unavailable in this local part; the qualitative author statement is present.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_dc9f062d58286e85",
+      "description": "These local reading units state the percentage reduction but do not provide parameter counts or the size measurement underlying it.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_3cb5a19341f0e7d4",
+      "description": "These local reading units do not provide timing measurements, hardware, workload, or the speed comparison protocol supporting the reported percentage.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_1987440a651a1aeb",
+      "description": "These local reading units do not provide the benchmark scores or aggregation calculation underlying the reported 97% retention.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_e75bc9c26e77d103",
+      "description": "The local discussion states substantial gains but supplies no verified numerical initialization-ablation results or separate effect estimates for initialization and additional losses.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_64af9002feb02b23",
+      "description": "The local conclusion asserts edge applicability, but device-specific deployment results and evaluation conditions are not included in these reading units.",
+      "status": "source_unverified"
+    }
+  ]
+}

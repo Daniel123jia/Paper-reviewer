@@ -16,6 +16,17 @@ TERMS = {
     "D6": ("introduction", "related work", "background", "reference", "literature"),
 }
 
+DIMENSION_FACT_FIELDS = {
+    "D1": ("research_problem", "research_gap_claimed_by_authors", "proposed_method",
+           "author_claimed_contributions"),
+    "D2": ("proposed_method", "method_components", "theoretical_assumptions"),
+    "D3": ("experimental_setup", "datasets_and_metrics", "main_results"),
+    "D4": ("research_problem", "main_results", "conclusions", "author_stated_limitations"),
+    "D5": ("proposed_method", "method_components", "experimental_setup"),
+    "D6": ("research_motivation", "research_gap_claimed_by_authors",
+           "author_claimed_contributions"),
+}
+
 
 @dataclass(frozen=True)
 class ContextPack:
@@ -30,17 +41,7 @@ class ContextPack:
 
 
 def _fact_refs(profile, dimension_id):
-    fields = {
-        "D1": ("research_problem", "research_gap_claimed_by_authors", "proposed_method",
-               "author_claimed_contributions"),
-        "D2": ("proposed_method", "method_components", "theoretical_assumptions"),
-        "D3": ("experimental_setup", "datasets_and_metrics", "main_results"),
-        "D4": ("research_problem", "main_results", "conclusions", "author_stated_limitations"),
-        "D5": ("proposed_method", "method_components", "experimental_setup"),
-        "D6": ("research_motivation", "research_gap_claimed_by_authors",
-               "author_claimed_contributions"),
-    }[dimension_id]
-    for field in fields:
+    for field in DIMENSION_FACT_FIELDS[dimension_id]:
         facts = getattr(profile, field)
         for fact in facts if isinstance(facts, list) else [facts] if facts else []:
             yield from fact.evidence_ref_ids

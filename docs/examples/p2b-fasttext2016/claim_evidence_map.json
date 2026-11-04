@@ -1,0 +1,1333 @@
+{
+  "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+  "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+  "review_run_id": "38fa583bb278414998f1bb16cca0be05",
+  "prompt_version": "contribution-evidence-mapper/v2",
+  "schema_version": "1.1",
+  "model_identifier": "gpt-6.1-sol",
+  "input_coverage": {
+    "total_unit_count": 109,
+    "included_unit_count": 109,
+    "excluded_unit_ids": [],
+    "source_quality_status": "needs_review",
+    "limitations": [
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "human_reading_reference_missing",
+      "human_page_reference_missing"
+    ]
+  },
+  "execution_status": "limited",
+  "contributions": [
+    {
+      "id": "contrib_97e74aec1af3cf15",
+      "title": "The authors present fastText as a simple, efficient text classification baseline that combines a rank-constrained linear model with fast loss computation to scale to large corpora and output spaces.",
+      "description": "The authors present fastText as a simple, efficient text classification baseline that combines a rank-constrained linear model with fast loss computation to scale to large corpora and output spaces.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_0_3",
+        "ru_ev_26739aba340e_0_4",
+        "ru_ev_26739aba340e_0_10",
+        "ru_ev_26739aba340e_1_8",
+        "ru_ev_26739aba340e_1_16",
+        "ru_ev_26739aba340e_1_20",
+        "ru_ev_26739aba340e_1_4",
+        "ru_ev_26739aba340e_1_7",
+        "ru_ev_26739aba340e_1_14",
+        "ru_ev_26739aba340e_1_18",
+        "ru_ev_26739aba340e_3_19",
+        "ru_ev_26739aba340e_3_20",
+        "ru_ev_26739aba340e_3_23"
+      ]
+    },
+    {
+      "id": "contrib_79564b0c2f56215c",
+      "title": "The authors present a simple text-classification baseline whose word features can be averaged into useful sentence representations, achieving performance comparable to recent deep-learning-inspired methods on several tasks with substantially lower computational cost.",
+      "description": "The authors present a simple text-classification baseline whose word features can be averaged into useful sentence representations, achieving performance comparable to recent deep-learning-inspired methods on several tasks with substantially lower computational cost.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_23",
+        "ru_ev_26739aba340e_4_1",
+        "ru_ev_26739aba340e_2_16",
+        "ru_ev_26739aba340e_2_17",
+        "ru_ev_26739aba340e_2_2",
+        "ru_ev_26739aba340e_2_8",
+        "ru_ev_26739aba340e_2_13",
+        "ru_ev_26739aba340e_3_12"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim_8860fc3be607ecff",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "fastText uses a rank-constrained linear model in which a lookup matrix maps words to representations that are averaged into a text representation and passed to a linear classifier.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_0_10"
+      ]
+    },
+    {
+      "id": "claim_51e7adc9b15d0e02",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "The model computes class probabilities with softmax and trains by minimizing negative log-likelihood over document labels.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_8"
+      ]
+    },
+    {
+      "id": "claim_6d1e5bf9d7b4c4d4",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "Documents are represented as normalized bags of features, and training uses asynchronous stochastic gradient descent on multiple CPUs with a linearly decaying learning rate.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_16"
+      ]
+    },
+    {
+      "id": "claim_33b526a261c6a73e",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "Using hierarchical softmax based on a Huffman coding tree reduces the stated training complexity from O(kh) to O(h log₂(k)), where k is the number of classes and h is the text representation dimension.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_20"
+      ]
+    },
+    {
+      "id": "claim_6b3718ef93d4b460",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "At prediction time, depth-first search tracks the maximum leaf probability and prunes low-probability branches because a node's probability cannot exceed its parent's probability.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_4"
+      ]
+    },
+    {
+      "id": "claim_d8e226e6165d59e1",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "The authors report observing O(h log₂(k)) prediction complexity in practice and describe extending the search to retrieve the top T targets using a binary heap at a stated cost of O(log(T)).",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_4"
+      ]
+    },
+    {
+      "id": "claim_b1536496726f40f8",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "The authors report that fastText often matches deep learning classifiers in accuracy while being many orders of magnitude faster for training and evaluation.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_0_3",
+        "ru_ev_26739aba340e_0_4"
+      ]
+    },
+    {
+      "id": "claim_d626dcbe362f10e8",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "statement": "The authors conclude that fastText achieves performance on par with recently proposed deep-learning-inspired methods on several tasks while being much faster.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_4_1"
+      ]
+    },
+    {
+      "id": "claim_a6f3c6b475a8b97d",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "The authors report training fastText on more than one billion words in less than ten minutes using a standard multicore CPU.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_0_3"
+      ]
+    },
+    {
+      "id": "claim_5119876d8751ee73",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "The authors report classifying half a million sentences among 312,000 classes in less than one minute.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_0_3"
+      ]
+    },
+    {
+      "id": "claim_3e81c7155ccae328",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "fastText supplements bag-of-words features with bag-of-n-gram features to capture partial information about local word order.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_7"
+      ]
+    },
+    {
+      "id": "claim_8336132cdc8ce581",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "The implementation hashes n-grams using the hash function cited to Mikolov et al. (2011), with 10 million bins for bigrams alone and 100 million bins otherwise.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_14"
+      ]
+    },
+    {
+      "id": "claim_bae5cfbc7c8ffb5b",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "The authors report that their tailored implementation is at least 2–5 times faster in practice than an implementation using Vowpal Wabbit with the options --nn, --ngrams, and --log multi.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_18",
+        "ru_ev_26739aba340e_1_26"
+      ]
+    },
+    {
+      "id": "claim_1133d756d8934075",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "statement": "In the main classification experiments, fastText uses 10 hidden units and five epochs, with a learning rate selected on validation data from {0.05, 0.1, 0.25, 0.5}; the evaluation follows the eight datasets and protocol of Zhang et al. (2015).",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_1_22",
+        "ru_ev_26739aba340e_2_16"
+      ]
+    },
+    {
+      "id": "claim_ef81b34abfb26685",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "statement": "The authors report that adding bigrams improves classification performance by 1–4%, with overall accuracy slightly better than char-CNN and char-CRNN and slightly worse than VDCNN.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_16"
+      ]
+    },
+    {
+      "id": "claim_08de6e5772093db6",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "statement": "The authors report that adding trigrams raises Sogou accuracy to 97.1%.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_16"
+      ]
+    },
+    {
+      "id": "claim_853357f3b4e77a6e",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "statement": "The extracted accuracy table reports fastText with 10 hidden units and bigrams achieving 92.5, 96.8, 98.6, 95.7, 63.9, 72.3, 60.2, and 94.6 percent test accuracy for AG, Sogou, DBP, Yelp P., Yelp F., Yah. A., Amz. F., and Amz. P., respectively; these column assignments remain unverified.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_0",
+        "ru_ev_26739aba340e_2_2",
+        "ru_ev_26739aba340e_2_3",
+        "ru_ev_26739aba340e_2_4"
+      ]
+    },
+    {
+      "id": "claim_61bbb136047b7443",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "statement": "Under Tang et al.'s evaluation protocol, the authors describe fastText as competitive, report that n-grams up to length five perform best on validation data, and suggest that the absence of pretrained word embeddings may explain an accuracy difference of about one percentage point.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_11",
+        "ru_ev_26739aba340e_2_16"
+      ]
+    },
+    {
+      "id": "claim_c0b9ae33c373b048",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "statement": "The extracted Tang et al. comparison reports fastText test accuracies of 64.2, 66.2, 66.6, and 45.2 percent on Yelp’13, Yelp’14, Yelp’15, and IMDB, compared with LSTM-GRNN values of 65.1, 67.1, 67.6, and 45.3 percent; the table alignment remains unverified.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_10",
+        "ru_ev_26739aba340e_2_12",
+        "ru_ev_26739aba340e_2_13",
+        "ru_ev_26739aba340e_2_14",
+        "ru_ev_26739aba340e_2_15"
+      ]
+    },
+    {
+      "id": "claim_4ee5d311407a9fdc",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "statement": "The authors report training fastText in less than a minute on the classification datasets using a CPU with 20 threads, while character CNN and VDCNN methods trained on an NVIDIA Tesla K40 GPU are several orders of magnitude slower; they acknowledge that newer CUDA convolution implementations could speed up char-CNN by a factor of ten.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_17"
+      ]
+    },
+    {
+      "id": "claim_67d50643162d3173",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "statement": "The extracted training-time table assigns fastText with 10 hidden units and bigrams single-epoch times of 1, 7, 2, 3, 4, 5, 9, and 10 seconds to AG, Sogou, DBpedia, Yelp P., Yelp F., Yah. A., Amz. F., and Amz. P., respectively; these column assignments remain unverified.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_2_6",
+        "ru_ev_26739aba340e_2_7",
+        "ru_ev_26739aba340e_2_8",
+        "ru_ev_26739aba340e_2_9"
+      ]
+    },
+    {
+      "id": "claim_4a3dc828381768d1",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "The method combines a rank-constrained linear model with fast loss computation.",
+      "evidence_ref_ids": []
+    },
+    {
+      "id": "claim_71f8142f6a6fbd62",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "The scalability evaluation predicts tags from YFCC100M titles and captions without using images. After removing words and tags occurring fewer than 100 times, the task contains 91,188,648 training examples with 1.5 billion tokens, 930,497 validation examples, 543,424 test examples, 297,141 vocabulary words, and 312,116 tags; evaluation uses precision at one.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_19"
+      ]
+    },
+    {
+      "id": "claim_ac132679a77fdbc7",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "The tag-prediction experiments run fastText for five epochs and compare hidden-layer sizes of 50 and 200 against a most-frequent-tag baseline and linear Tagspace; training uses 20 threads for both models, and test timing uses one thread.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_24",
+        "ru_ev_26739aba340e_3_20",
+        "ru_ev_26739aba340e_3_21",
+        "ru_ev_26739aba340e_3_17",
+        "ru_ev_26739aba340e_3_18"
+      ]
+    },
+    {
+      "id": "claim_ed578c71e9671304",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "The authors report similar tag-prediction performance for fastText and Tagspace with a small hidden layer, and a substantial accuracy improvement from adding bigrams to fastText.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_20"
+      ]
+    },
+    {
+      "id": "claim_806bb52fd416208b",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "The authors attribute fastText's inference advantage in the space of more than 300,000 tags to its fast inference procedure, contrasting it with Tagspace's computation of scores for every class; they report obtaining a better-quality model more than an order of magnitude faster and a 600-fold test-phase speedup.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_20"
+      ]
+    },
+    {
+      "id": "claim_4632b53f4de11555",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "The extracted tag-prediction table reports precision at one of 2.2 for the frequency baseline; 30.1 and 35.6 for Tagspace with 50 and 200 hidden units; and 31.2, 36.7, 41.1, and 46.1 for fastText with 50 units, 50 units plus bigrams, 200 units, and 200 units plus bigrams, respectively. These table associations remain unverified.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_10",
+        "ru_ev_26739aba340e_3_14",
+        "ru_ev_26739aba340e_3_15",
+        "ru_ev_26739aba340e_3_16"
+      ]
+    },
+    {
+      "id": "claim_8bc4f1e06b6ba6e3",
+      "contribution_id": "contrib_97e74aec1af3cf15",
+      "statement": "Under the extracted training/test column order, fastText with 200 hidden units and bigrams takes 13 minutes 38 seconds to train and 1 minute 37 seconds to test, compared with 5 hours 32 minutes and 15 hours for Tagspace with 200 units. These column associations remain unverified.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_10",
+        "ru_ev_26739aba340e_3_11",
+        "ru_ev_26739aba340e_3_14",
+        "ru_ev_26739aba340e_3_15",
+        "ru_ev_26739aba340e_3_16"
+      ]
+    },
+    {
+      "id": "claim_c65e802567c3ff8f",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "statement": "The authors state that fastText's word features can be averaged to form good sentence representations, contrasting them with unsupervised word2vec vectors.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_23",
+        "ru_ev_26739aba340e_4_1"
+      ]
+    },
+    {
+      "id": "claim_2d26dc6d784b4f2f",
+      "contribution_id": "contrib_79564b0c2f56215c",
+      "statement": "The authors report that the speedup over neural-network-based methods increases with dataset size and reaches at least 15,000-fold.",
+      "evidence_ref_ids": [
+        "ru_ev_26739aba340e_3_12"
+      ]
+    }
+  ],
+  "evidence_refs": [
+    {
+      "id": "ru_ev_26739aba340e_0_3",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_0_3",
+      "evidence_ids": [
+        "ev_26739aba340e_0_3"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 0,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_0_4",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_0_4",
+      "evidence_ids": [
+        "ev_26739aba340e_0_4"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 0,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_0_10",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_0_10",
+      "evidence_ids": [
+        "ev_26739aba340e_0_10"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 0,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_8",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_8",
+      "evidence_ids": [
+        "ev_26739aba340e_1_8"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_16",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_16",
+      "evidence_ids": [
+        "ev_26739aba340e_1_16"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_20",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_20",
+      "evidence_ids": [
+        "ev_26739aba340e_1_20"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_4",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_4",
+      "evidence_ids": [
+        "ev_26739aba340e_1_4"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_7",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_7",
+      "evidence_ids": [
+        "ev_26739aba340e_1_7"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_14",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_14",
+      "evidence_ids": [
+        "ev_26739aba340e_1_14"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_18",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_18",
+      "evidence_ids": [
+        "ev_26739aba340e_1_18"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_19",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_19",
+      "evidence_ids": [
+        "ev_26739aba340e_3_19"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_20",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_20",
+      "evidence_ids": [
+        "ev_26739aba340e_3_20"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_23",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_23",
+      "evidence_ids": [
+        "ev_26739aba340e_3_23"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_4_1",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_4_1",
+      "evidence_ids": [
+        "ev_26739aba340e_4_1"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 4,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_16",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_16",
+      "evidence_ids": [
+        "ev_26739aba340e_2_16"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_17",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_17",
+      "evidence_ids": [
+        "ev_26739aba340e_2_17"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_2",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_2",
+      "evidence_ids": [
+        "ev_26739aba340e_2_2"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_8",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_8",
+      "evidence_ids": [
+        "ev_26739aba340e_2_8"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_13",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_13",
+      "evidence_ids": [
+        "ev_26739aba340e_2_13"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_12",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_12",
+      "evidence_ids": [
+        "ev_26739aba340e_3_12"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_26",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_26",
+      "evidence_ids": [
+        "ev_26739aba340e_1_26"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_1_22",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_1_22",
+      "evidence_ids": [
+        "ev_26739aba340e_1_22"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 1,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_0",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_0",
+      "evidence_ids": [
+        "ev_26739aba340e_2_0"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_3",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_3",
+      "evidence_ids": [
+        "ev_26739aba340e_2_3"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_4",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_4",
+      "evidence_ids": [
+        "ev_26739aba340e_2_4"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_11",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_11",
+      "evidence_ids": [
+        "ev_26739aba340e_2_11"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_10",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_10",
+      "evidence_ids": [
+        "ev_26739aba340e_2_10"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_12",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_12",
+      "evidence_ids": [
+        "ev_26739aba340e_2_12"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_14",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_14",
+      "evidence_ids": [
+        "ev_26739aba340e_2_14"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_15",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_15",
+      "evidence_ids": [
+        "ev_26739aba340e_2_15"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_6",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_6",
+      "evidence_ids": [
+        "ev_26739aba340e_2_6"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_7",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_7",
+      "evidence_ids": [
+        "ev_26739aba340e_2_7"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_2_9",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_2_9",
+      "evidence_ids": [
+        "ev_26739aba340e_2_9"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 2,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_24",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_24",
+      "evidence_ids": [
+        "ev_26739aba340e_3_24"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_21",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_21",
+      "evidence_ids": [
+        "ev_26739aba340e_3_21"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_17",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_17",
+      "evidence_ids": [
+        "ev_26739aba340e_3_17"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_18",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_18",
+      "evidence_ids": [
+        "ev_26739aba340e_3_18"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_10",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_10",
+      "evidence_ids": [
+        "ev_26739aba340e_3_10"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_14",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_14",
+      "evidence_ids": [
+        "ev_26739aba340e_3_14"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_15",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_15",
+      "evidence_ids": [
+        "ev_26739aba340e_3_15"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_16",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_16",
+      "evidence_ids": [
+        "ev_26739aba340e_3_16"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    },
+    {
+      "id": "ru_ev_26739aba340e_3_11",
+      "object_type": "reading_unit",
+      "object_id": "ru_ev_26739aba340e_3_11",
+      "evidence_ids": [
+        "ev_26739aba340e_3_11"
+      ],
+      "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+      "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+      "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+      "page_index": 3,
+      "verification_status": "text_extracted_unverified"
+    }
+  ],
+  "support_relations": [
+    {
+      "claim_id": "claim_8860fc3be607ecff",
+      "evidence_ref_id": "ru_ev_26739aba340e_0_10",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly describes the rank constraint, word lookup matrix, averaging, and linear classifier."
+    },
+    {
+      "claim_id": "claim_51e7adc9b15d0e02",
+      "evidence_ref_id": "ru_ev_26739aba340e_1_8",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly states the softmax probability model and negative log-likelihood objective; this claim does not reconstruct the fragmented equation."
+    },
+    {
+      "claim_id": "claim_6d1e5bf9d7b4c4d4",
+      "evidence_ref_id": "ru_ev_26739aba340e_1_16",
+      "relation": "direct_source",
+      "explanation": "The passage specifies normalized bag-of-features inputs and the optimization procedure."
+    },
+    {
+      "claim_id": "claim_33b526a261c6a73e",
+      "evidence_ref_id": "ru_ev_26739aba340e_1_20",
+      "relation": "direct_source",
+      "explanation": "The prose names Huffman hierarchical softmax, defines k and h, and states both complexity expressions."
+    },
+    {
+      "claim_id": "claim_6b3718ef93d4b460",
+      "evidence_ref_id": "ru_ev_26739aba340e_1_4",
+      "relation": "direct_source",
+      "explanation": "The passage explicitly gives the parent-probability argument and describes depth-first search with branch pruning."
+    },
+    {
+      "claim_id": "claim_d8e226e6165d59e1",
+      "evidence_ref_id": "ru_ev_26739aba340e_1_4",
+      "relation": "direct_source",
+      "explanation": "The authors state an observed practical prediction complexity and a binary-heap extension with the quoted cost. The passage does not establish a worst-case bound."
+    },
+    {
+      "claim_id": "claim_b1536496726f40f8",
+      "evidence_ref_id": "ru_ev_26739aba340e_0_3",
+      "relation": "direct_source",
+      "explanation": "The abstract explicitly asserts comparable accuracy and orders-of-magnitude training and evaluation speed improvements."
+    },
+    {
+      "claim_id": "claim_b1536496726f40f8",
+      "evidence_ref_id": "ru_ev_26739aba340e_0_4",
+      "relation": "direct_source",
+      "explanation": "The introductory summary independently asserts performance on par with the state of the art and identifies sentiment analysis and tag prediction as evaluation tasks."
+    },
+    {
+      "claim_id": "claim_a6f3c6b475a8b97d",
+      "evidence_ref_id": "ru_ev_26739aba340e_0_3",
+      "relation": "direct_source",
+      "explanation": "The abstract supplies the corpus size, training-time threshold, and general CPU description."
+    },
+    {
+      "claim_id": "claim_5119876d8751ee73",
+      "evidence_ref_id": "ru_ev_26739aba340e_0_3",
+      "relation": "direct_source",
+      "explanation": "The abstract supplies the sentence count, class count, and prediction-time threshold."
+    },
+    {
+      "claim_id": "claim_3e81c7155ccae328",
+      "evidence_ref_id": "ru_ev_26739aba340e_1_7",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly describes additional bag-of-n-gram features and their purpose of capturing partial local word order."
+    },
+    {
+      "claim_id": "claim_8336132cdc8ce581",
+      "evidence_ref_id": "ru_ev_26739aba340e_1_14",
+      "relation": "direct_source",
+      "explanation": "The source specifies the hashing approach, cited hash function, and both bin counts."
+    },
+    {
+      "claim_id": "claim_bae5cfbc7c8ffb5b",
+      "evidence_ref_id": "ru_ev_26739aba340e_1_18",
+      "relation": "direct_source",
+      "explanation": "The authors explicitly state the observed 2–5-fold implementation speed advantage."
+    },
+    {
+      "claim_id": "claim_bae5cfbc7c8ffb5b",
+      "evidence_ref_id": "ru_ev_26739aba340e_1_26",
+      "relation": "direct_source",
+      "explanation": "The footnote lists the Vowpal Wabbit options used."
+    },
+    {
+      "claim_id": "claim_1133d756d8934075",
+      "evidence_ref_id": "ru_ev_26739aba340e_1_22",
+      "relation": "direct_source",
+      "explanation": "The authors identify the eight datasets and evaluation protocol adopted from Zhang et al."
+    },
+    {
+      "claim_id": "claim_1133d756d8934075",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_16",
+      "relation": "direct_source",
+      "explanation": "The results prose specifies hidden units, epochs, and validation-based learning-rate selection."
+    },
+    {
+      "claim_id": "claim_ef81b34abfb26685",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_16",
+      "relation": "direct_source",
+      "explanation": "The prose explicitly states the bigram improvement and qualitative comparisons with the three neural baselines."
+    },
+    {
+      "claim_id": "claim_08de6e5772093db6",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_16",
+      "relation": "direct_source",
+      "explanation": "The authors explicitly give 97.1% Sogou accuracy when using trigrams."
+    },
+    {
+      "claim_id": "claim_853357f3b4e77a6e",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_0",
+      "relation": "unverified",
+      "explanation": "The extracted header supplies the proposed dataset order, but table structure is incomplete."
+    },
+    {
+      "claim_id": "claim_853357f3b4e77a6e",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_2",
+      "relation": "unverified",
+      "explanation": "The extracted fastText row supplies the values and configuration; their alignment to dataset columns requires verification."
+    },
+    {
+      "claim_id": "claim_853357f3b4e77a6e",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_3",
+      "relation": "direct_source",
+      "explanation": "The caption identifies the metric as test accuracy in percent."
+    },
+    {
+      "claim_id": "claim_853357f3b4e77a6e",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_4",
+      "relation": "direct_source",
+      "explanation": "The caption continuation identifies 10 hidden units and evaluation with and without bigrams."
+    },
+    {
+      "claim_id": "claim_61bbb136047b7443",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_11",
+      "relation": "direct_source",
+      "explanation": "The source identifies Tang et al.'s protocol and recurrent-network comparators."
+    },
+    {
+      "claim_id": "claim_61bbb136047b7443",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_16",
+      "relation": "direct_source",
+      "explanation": "The authors state competitiveness, the preferred n-gram length, and their proposed explanation for the accuracy difference."
+    },
+    {
+      "claim_id": "claim_c0b9ae33c373b048",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_10",
+      "relation": "unverified",
+      "explanation": "The extracted header supplies the proposed dataset order for an incompletely structured table."
+    },
+    {
+      "claim_id": "claim_c0b9ae33c373b048",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_12",
+      "relation": "unverified",
+      "explanation": "The LSTM-GRNN values are extracted from a table whose column alignment has not been verified."
+    },
+    {
+      "claim_id": "claim_c0b9ae33c373b048",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_13",
+      "relation": "unverified",
+      "explanation": "The fastText values are extracted from the same unverified table structure."
+    },
+    {
+      "claim_id": "claim_c0b9ae33c373b048",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_14",
+      "relation": "direct_source",
+      "explanation": "The caption identifies the Tang et al. comparison and validation-based hyperparameter selection."
+    },
+    {
+      "claim_id": "claim_c0b9ae33c373b048",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_15",
+      "relation": "direct_source",
+      "explanation": "The caption continuation identifies the reported metric as test accuracy."
+    },
+    {
+      "claim_id": "claim_4ee5d311407a9fdc",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_17",
+      "relation": "direct_source",
+      "explanation": "The prose states the training-time comparison, hardware conditions, and possible CUDA speed improvement."
+    },
+    {
+      "claim_id": "claim_67d50643162d3173",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_6",
+      "relation": "unverified",
+      "explanation": "The extracted model header identifies fastText, but its placement within the table requires verification."
+    },
+    {
+      "claim_id": "claim_67d50643162d3173",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_7",
+      "relation": "unverified",
+      "explanation": "The configuration header lists h = 10 and bigrams; alignment to the timing column remains unverified."
+    },
+    {
+      "claim_id": "claim_67d50643162d3173",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_8",
+      "relation": "unverified",
+      "explanation": "The extracted rows contain the proposed fastText timings, but the table structure is incomplete."
+    },
+    {
+      "claim_id": "claim_67d50643162d3173",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_9",
+      "relation": "direct_source",
+      "explanation": "The caption explicitly identifies the measurements as single-epoch training times."
+    },
+    {
+      "claim_id": "claim_71f8142f6a6fbd62",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_19",
+      "relation": "direct_source",
+      "explanation": "The dataset paragraph specifies the inputs, filtering, split sizes, vocabulary and tag counts, and evaluation metric."
+    },
+    {
+      "claim_id": "claim_ac132679a77fdbc7",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_24",
+      "relation": "direct_source",
+      "explanation": "The results paragraph states five fastText epochs and begins the hidden-layer size comparison with 50."
+    },
+    {
+      "claim_id": "claim_ac132679a77fdbc7",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_20",
+      "relation": "direct_source",
+      "explanation": "The opening continuation supplies the second hidden-layer size, 200; the passage order is not independently verified."
+    },
+    {
+      "claim_id": "claim_ac132679a77fdbc7",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_21",
+      "relation": "direct_source",
+      "explanation": "The authors identify the most-frequent-tag baseline and the linear version of Tagspace."
+    },
+    {
+      "claim_id": "claim_ac132679a77fdbc7",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_17",
+      "relation": "direct_source",
+      "explanation": "The timing note states single-thread testing and begins the statement that training uses 20 threads."
+    },
+    {
+      "claim_id": "claim_ac132679a77fdbc7",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_18",
+      "relation": "direct_source",
+      "explanation": "The continuation specifies that the training thread count applies to both models."
+    },
+    {
+      "claim_id": "claim_ed578c71e9671304",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_20",
+      "relation": "direct_source",
+      "explanation": "The authors explicitly report similar small-hidden-layer performance and an accuracy boost from bigrams."
+    },
+    {
+      "claim_id": "claim_806bb52fd416208b",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_20",
+      "relation": "direct_source",
+      "explanation": "The passage directly states the inference comparison, large class count, order-of-magnitude improvement, and 600-fold test speedup."
+    },
+    {
+      "claim_id": "claim_4632b53f4de11555",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_10",
+      "relation": "unverified",
+      "explanation": "The extracted header identifies precision at one, but the table structure is incomplete."
+    },
+    {
+      "claim_id": "claim_4632b53f4de11555",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_14",
+      "relation": "unverified",
+      "explanation": "The extracted baseline rows supply the reported numbers; their column associations await table verification."
+    },
+    {
+      "claim_id": "claim_4632b53f4de11555",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_15",
+      "relation": "unverified",
+      "explanation": "The extracted fastText rows supply the reported numbers; their column associations await table verification."
+    },
+    {
+      "claim_id": "claim_4632b53f4de11555",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_16",
+      "relation": "direct_source",
+      "explanation": "The caption identifies Table 5 as test-set precision at one for YFCC100M tag prediction."
+    },
+    {
+      "claim_id": "claim_8bc4f1e06b6ba6e3",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_10",
+      "relation": "unverified",
+      "explanation": "The running-time header is extracted from a table with incomplete structure."
+    },
+    {
+      "claim_id": "claim_8bc4f1e06b6ba6e3",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_11",
+      "relation": "unverified",
+      "explanation": "The extracted Train/Test subheaders suggest the column order but do not verify its alignment with the rows."
+    },
+    {
+      "claim_id": "claim_8bc4f1e06b6ba6e3",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_14",
+      "relation": "unverified",
+      "explanation": "The Tagspace row contains 5h32 and 15h; assigning them to training and testing requires verification."
+    },
+    {
+      "claim_id": "claim_8bc4f1e06b6ba6e3",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_15",
+      "relation": "unverified",
+      "explanation": "The fastText bigram row contains 13m38 and 1m37; assigning them to training and testing requires verification."
+    },
+    {
+      "claim_id": "claim_8bc4f1e06b6ba6e3",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_16",
+      "relation": "direct_source",
+      "explanation": "The caption confirms that Table 5 reports training and test times, without resolving the extracted column alignment."
+    },
+    {
+      "claim_id": "claim_c65e802567c3ff8f",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_23",
+      "relation": "direct_source",
+      "explanation": "The conclusion introduces the contrast with unsupervised word2vec vectors and begins the statement about word features."
+    },
+    {
+      "claim_id": "claim_c65e802567c3ff8f",
+      "evidence_ref_id": "ru_ev_26739aba340e_4_1",
+      "relation": "direct_source",
+      "explanation": "The continuation states that these features can be averaged into good sentence representations."
+    },
+    {
+      "claim_id": "claim_d626dcbe362f10e8",
+      "evidence_ref_id": "ru_ev_26739aba340e_4_1",
+      "relation": "direct_source",
+      "explanation": "The conclusion explicitly asserts comparable performance on several tasks with much greater speed."
+    },
+    {
+      "claim_id": "claim_2d26dc6d784b4f2f",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_12",
+      "relation": "direct_source",
+      "explanation": "The fragment explicitly reports increasing speedup with dataset size and at least a 15,000-fold maximum."
+    },
+    {
+      "claim_id": "claim_b1536496726f40f8",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_16",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_b1536496726f40f8",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_17",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_b1536496726f40f8",
+      "evidence_ref_id": "ru_ev_26739aba340e_3_20",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_4a3dc828381768d1",
+      "evidence_ref_id": "ru_ev_26739aba340e_0_10",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_4a3dc828381768d1",
+      "evidence_ref_id": "ru_ev_26739aba340e_1_8",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_4a3dc828381768d1",
+      "evidence_ref_id": "ru_ev_26739aba340e_1_20",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_806bb52fd416208b",
+      "evidence_ref_id": "ru_ev_26739aba340e_1_4",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_d626dcbe362f10e8",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_16",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    },
+    {
+      "claim_id": "claim_d626dcbe362f10e8",
+      "evidence_ref_id": "ru_ev_26739aba340e_2_17",
+      "relation": "unverified",
+      "explanation": "N2 global source lead; verify direct support."
+    }
+  ],
+  "evidence_gaps": [
+    {
+      "claim_id": "claim_d8e226e6165d59e1",
+      "description": "The supplied reading units state the practical prediction complexity but do not provide measurements across class counts or a derivation specifying the scope of the top-T heap cost. Further support may occur elsewhere in the paper.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_b1536496726f40f8",
+      "description": "The supplied reading units contain summary assertions but no task-level accuracy comparisons, timing results, or matched baseline configurations supporting the claimed accuracy and speed relationship. This is a local evidence gap.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_a6f3c6b475a8b97d",
+      "description": "The supplied reading units do not provide the detailed dataset, CPU configuration, training settings, or timing results underlying the abstract's billion-word training claim. This is a local evidence gap.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_5119876d8751ee73",
+      "description": "The supplied reading units do not provide the hardware, prediction settings, or detailed timing results underlying the abstract's half-million-sentence classification claim. This is a local evidence gap.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_bae5cfbc7c8ffb5b",
+      "description": "The supplied local units state the implementation speedup and Vowpal Wabbit options but do not provide benchmark timings, hardware, or dataset-specific conditions for that comparison.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_853357f3b4e77a6e",
+      "description": "The accuracy table has incomplete structure, and the numeric row-to-column assignments have not been verified against a human-readable source.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_c0b9ae33c373b048",
+      "description": "The Tang et al. comparison table has incomplete structure; the dataset assignments for the extracted accuracy values remain unverified.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_67d50643162d3173",
+      "description": "The training-time table has incomplete structure; assignment of the extracted seconds to the fastText configuration requires source verification.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_4a3dc828381768d1",
+      "description": "The supplied local reading units do not explain the rank constraint or fast loss computation stated in the profile contribution. Architecture and loss support must be located in other source portions.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_806bb52fd416208b",
+      "description": "The local passage asserts a fast inference advantage but does not supply the inference algorithm needed to examine that mechanism.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_4632b53f4de11555",
+      "description": "Table 5 has incomplete extracted structure; the numerical precision-at-one associations require source-table verification.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_8bc4f1e06b6ba6e3",
+      "description": "The training/test header alignment and numerical runtime associations require source-table verification.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_d626dcbe362f10e8",
+      "description": "The conclusion directly states the cross-task comparison, but the local reading units do not include the full task-level accuracy and timing results supporting its breadth.",
+      "status": "source_unverified"
+    },
+    {
+      "claim_id": "claim_2d26dc6d784b4f2f",
+      "description": "The local fragment states the 15,000-fold speedup but omits the preceding context identifying the precise comparator, dataset, hardware conditions, and timing calculation.",
+      "status": "source_unverified"
+    }
+  ]
+}

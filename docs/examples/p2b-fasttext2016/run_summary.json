@@ -1,0 +1,46 @@
+{
+  "paper": "fasttext2016",
+  "source_pdf_sha256": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+  "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+  "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+  "understanding_run_id": "38fa583bb278414998f1bb16cca0be05",
+  "professional_review_run_id": "3b948d9c2406422db00955223fac9ad5",
+  "p2a_status": "completed",
+  "p2b_status": "limited",
+  "p2a_calls": {
+    "calls": 11,
+    "successful_calls": 11,
+    "failed_or_invalid_calls": 0,
+    "known_input_tokens": 105190,
+    "known_output_tokens": 18324,
+    "unknown_token_calls": 0,
+    "call_duration_ms_sum": 425488
+  },
+  "p2b_calls": {
+    "calls": 6,
+    "successful_calls": 6,
+    "failed_or_invalid_calls": 0,
+    "known_input_tokens": 148320,
+    "known_output_tokens": 13811,
+    "unknown_token_calls": 0,
+    "call_duration_ms_sum": 321977
+  },
+  "p2b_elapsed_ms": 322050,
+  "candidate_count": 12,
+  "dimension_candidate_counts": {
+    "D1": 2,
+    "D2": 2,
+    "D3": 2,
+    "D4": 2,
+    "D5": 3,
+    "D6": 1
+  },
+  "dimension_coverage": {
+    "D1": "partial",
+    "D2": "partial",
+    "D3": "partial",
+    "D4": "partial",
+    "D5": "partial",
+    "D6": "partial"
+  }
+}

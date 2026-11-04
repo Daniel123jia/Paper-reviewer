@@ -132,6 +132,17 @@ def test_experiment_context_prioritizes_result_anchor_when_text_is_capped():
     assert pack.omitted_unit_ids and pack.coverage_status == "partial"
 
 
+def test_context_exposes_table_content_and_unverified_status():
+    bundle, plan, profile, mapping = inputs()
+    bundle["tables"] = [{"id": "table1", "page_index": 0, "evidence_ids": ["ev2"],
+                         "structured_rows": [["model", "score"], ["A", "8.2"]],
+                         "usability_status": "detected_unverified", "section_id": "s1"}]
+    pack = assemble_context("D3", bundle, plan, profile, mapping)
+    assert "table1" in pack.source_ref_ids
+    assert "8.2" in pack.text
+    assert "detected_unverified" in pack.text
+
+
 def test_six_dimensions_and_multiple_candidates_are_preserved():
     bundle, plan, profile, mapping = inputs()
     calls = []
@@ -157,6 +168,33 @@ def test_invalid_candidate_source_fails_one_dimension_without_losing_others():
     assert result.dimensions[0].execution_status in {"completed", "limited"}
     assert result.dimensions[-1].execution_status in {"completed", "limited"}
     assert not result.candidates
+
+
+def test_model_error_is_classified_without_exposing_private_message():
+    bundle, plan, profile, mapping = inputs()
+    traces = []
+    def model(stage, system, user):
+        if stage == "D2":
+            raise RuntimeError("secret-bearing upstream diagnostic")
+        return reply()
+    result = run_p2b(bundle, plan, profile, mapping, "u1", "p2e", model,
+                     "requested", on_trace=traces.append)
+    assert result.execution_status == "partial_failed"
+    assert result.unknown_token_calls == 2
+    assert result.dimensions[2].execution_status == "limited"
+    assert "secret-bearing" not in str(result.model_dump())
+    assert all("secret-bearing" not in str(trace) for trace in traces)
+
+
+def test_verified_candidate_status_is_rejected_before_p3():
+    bundle, plan, profile, mapping = inputs()
+    bad = candidate()
+    bad["verification_status"] = "verified"
+    result = run_p2b(bundle, plan, profile, mapping, "u1", "p2v",
+                     lambda stage, system, user: reply([bad]) if stage == "D2" else reply(),
+                     "requested")
+    assert result.dimensions[1].execution_status == "failed"
+    assert result.candidates == []
 
 
 def test_theoretical_paper_skips_experiment_dimension_with_reason():
@@ -226,3 +264,23 @@ def test_d4_receives_both_sides_of_unresolved_source_conflict():
     run_p2b(bundle, plan, profile, mapping, "u1", "p7", model, "requested")
     assert "79.1 EM" in seen["D4"] and "70.4 EM" in seen["D4"]
     assert "Same setting?" in seen["D4"]
+
+
+def test_dimension_input_projects_facts_and_claims_to_supplied_sources():
+    bundle, plan, profile, mapping = inputs()
+    seen = {}
+    def model(stage, system, user):
+        seen[stage] = json.loads(user)
+        return reply()
+    run_p2b(bundle, plan, profile, mapping, "u1", "p8", model, "requested")
+    d3 = seen["D3"]
+    assert "schema_version" not in d3["plan"]
+    assert "research_problem" not in d3["profile"]
+    assert "main_results" in d3["profile"]
+    assert "evidence_refs" not in d3["claim_map"]
+    assert all(set(claim["evidence_ref_ids"]).issubset(d3["allowed_source_ids"])
+               for claim in d3["claim_map"]["claims"])
+    detailed = {claim["id"] for claim in d3["claim_map"]["claims"]}
+    assert not detailed.intersection(item["id"] for item in d3["claim_inventory"])
+    assert all("explanation" not in relation for relation in d3["claim_map"]["support_relations"])
+    assert "required_materials" not in d3["plan"]
