@@ -1,0 +1,156 @@
+import io
+import re
+import sqlite3
+from types import SimpleNamespace
+
+import fitz
+from fastapi.testclient import TestClient
+
+from backend.app import create_app
+
+
+def test_existing_p2a_run_table_receives_source_snapshot_column(tmp_path):
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        db.execute("CREATE TABLE paper_understanding_runs (id TEXT PRIMARY KEY, document_id TEXT NOT NULL, "
+                   "source_bundle_id TEXT, status TEXT NOT NULL, error TEXT, target_journal TEXT, "
+                   "special_requirements TEXT, review_plan TEXT, paper_profile TEXT, "
+                   "claim_evidence_map TEXT, created_at TEXT NOT NULL, finished_at TEXT)")
+    create_app(tmp_path)
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        columns = {row[1] for row in db.execute("PRAGMA table_info(paper_understanding_runs)")}
+    assert "source_bundle_json" in columns
+
+
+def _pdf():
+    pdf = fitz.open()
+    page = pdf.new_page()
+    page.insert_text((70, 70), "1 Method")
+    page.insert_text((70, 100), "The authors introduce a model component.")
+    page.insert_text((70, 130), "An experiment measures its result.")
+    data = pdf.tobytes()
+    pdf.close()
+    return data
+
+
+def _fake_completion(messages):
+    system = messages[0]["content"]
+    user = messages[1]["content"]
+    source_id = re.search(r"\[(ru_[^\]]+)\]", user).group(1)
+    if "paper-type-planner/v1" in system:
+        payload = {"paper_type": "AI algorithm research", "research_domain": "AI",
+                   "methodological_paradigm": "empirical", "applicable_review_dimensions": ["method"],
+                   "priority_dimensions": ["method"], "excluded_dimensions": [],
+                   "required_materials": ["method"], "missing_materials": []}
+    elif "paper-understanding/v1" in system:
+        payload = {"research_problem": {"text": "A model problem", "evidence_ref_ids": [source_id]},
+                   "research_motivation": None, "research_gap_claimed_by_authors": None,
+                   "proposed_method": None, "method_components": [], "theoretical_assumptions": [],
+                   "experimental_setup": [], "datasets_and_metrics": [], "main_results": [],
+                   "author_claimed_contributions": [], "conclusions": [],
+                   "author_stated_limitations": [], "unresolved_source_gaps": ["table not checked"]}
+    else:
+        payload = {"contributions": [{"id": "c1", "title": "Component",
+                                      "description": "Authors introduce a component",
+                                      "evidence_ref_ids": [source_id]}],
+                   "claims": [{"id": "cl1", "contribution_id": "c1",
+                               "statement": "Component is introduced", "evidence_ref_ids": [source_id]}],
+                   "support_relations": [{"claim_id": "cl1", "evidence_ref_id": source_id,
+                                          "relation": "direct_source", "explanation": "Direct text"}],
+                   "evidence_gaps": []}
+    import json
+    return SimpleNamespace(model="actual-model", choices=[SimpleNamespace(
+        message=SimpleNamespace(content=json.dumps(payload)))],
+        usage=SimpleNamespace(prompt_tokens=80, completion_tokens=20))
+
+
+def test_understanding_run_persists_scoped_results_without_changing_review_baseline(tmp_path, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "fake-key")
+    monkeypatch.setenv("OPENAI_MODEL", "requested-model")
+
+    class FakeOpenAI:
+        def __init__(self, **kwargs):
+            pass
+
+        @property
+        def chat(self):
+            return SimpleNamespace(completions=SimpleNamespace(create=lambda **kwargs:
+                                                                _fake_completion(kwargs["messages"])))
+
+    monkeypatch.setattr("backend.app.OpenAI", FakeOpenAI)
+    client = TestClient(create_app(tmp_path))
+    document = client.post("/api/documents", files={"file": ("paper.pdf", io.BytesIO(_pdf()),
+                                                      "application/pdf")}).json()
+    created = client.post(f'/api/documents/{document["id"]}/understanding-runs',
+                          json={"target_journal": "Example Journal", "special_requirements": "Focus on method"})
+    assert created.status_code == 202
+    detail = client.get(f'/api/understanding-runs/{created.json()["id"]}')
+    assert detail.status_code == 200
+    result = detail.json()
+    assert result["status"] == "completed"
+    frozen_bundle = client.get(f'/api/understanding-runs/{result["id"]}/source-bundle').json()
+    assert frozen_bundle["bundle_id"] == result["source_bundle_id"]
+    assert frozen_bundle["document"]["snapshot_id"] == document["snapshot_id"]
+    assert result["review_plan"]["review_run_id"] == result["id"]
+    assert result["paper_profile"]["source_bundle_id"] == result["review_plan"]["source_bundle_id"]
+    assert result["claim_evidence_map"]["evidence_refs"][0]["snapshot_id"] == document["snapshot_id"]
+    assert [item["stage"] for item in result["model_calls"]] == [
+        "paper-type-planner", "paper-understanding", "contribution-evidence-mapper"]
+    assert all(item["actual_model"] == "actual-model" and item["input_tokens"] == 80
+               for item in result["model_calls"])
+    assert client.get("/api/review-cases").json() == []
+
+
+def test_understanding_run_reports_model_failure_and_missing_key(tmp_path, monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    client = TestClient(create_app(tmp_path))
+    document = client.post("/api/documents", files={"file": ("paper.pdf", io.BytesIO(_pdf()),
+                                                      "application/pdf")}).json()
+    route = f'/api/documents/{document["id"]}/understanding-runs'
+    assert client.post(route, json={}).status_code == 503
+    monkeypatch.setenv("OPENAI_API_KEY", "fake-key")
+
+    class BrokenOpenAI:
+        def __init__(self, **kwargs):
+            pass
+
+        @property
+        def chat(self):
+            return SimpleNamespace(completions=SimpleNamespace(create=lambda **kwargs:
+                                                                (_ for _ in ()).throw(RuntimeError("offline"))))
+
+    monkeypatch.setattr("backend.app.OpenAI", BrokenOpenAI)
+    created = client.post(route, json={})
+    assert created.status_code == 202
+    result = client.get(f'/api/understanding-runs/{created.json()["id"]}').json()
+    assert result["status"] == "failed"
+    assert "paper-type-planner" in result["error"]
+    assert len(result["model_calls"]) == 2
+    assert all(call["status"] == "failed" for call in result["model_calls"])
+
+
+def test_completed_plan_survives_downstream_model_failure(tmp_path, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "fake-key")
+    monkeypatch.setenv("OPENAI_MODEL", "requested-model")
+
+    class PlanOnlyOpenAI:
+        def __init__(self, **kwargs):
+            pass
+
+        @property
+        def chat(self):
+            def create(**kwargs):
+                if "paper-understanding/v1" in kwargs["messages"][0]["content"]:
+                    raise RuntimeError("secret-bearing upstream message")
+                return _fake_completion(kwargs["messages"])
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr("backend.app.OpenAI", PlanOnlyOpenAI)
+    client = TestClient(create_app(tmp_path))
+    document = client.post("/api/documents", files={"file": ("paper.pdf", io.BytesIO(_pdf()),
+                                                        "application/pdf")}).json()
+    created = client.post(f'/api/documents/{document["id"]}/understanding-runs', json={})
+    result = client.get(f'/api/understanding-runs/{created.json()["id"]}').json()
+    assert result["status"] == "failed"
+    assert result["review_plan"]["paper_type"] == "AI algorithm research"
+    assert result["paper_profile"] is None
+    assert "secret-bearing" not in str(result)

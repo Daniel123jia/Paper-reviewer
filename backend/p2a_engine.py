@@ -1,0 +1,243 @@
+"""Deterministic N1–N3 pipeline over P1 reading units; no review findings."""
+
+import json
+import time
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Callable
+
+from backend.parse_quality import assess_input_readiness
+from backend.p2a_schema import (ClaimEvidenceMap, PaperProfile, ReviewPlan,
+                                 source_reference_index, validate_source_references)
+from backend.review import parse_model_json
+
+
+PROMPTS = Path(__file__).with_name("prompts")
+VERSIONS = {"paper-type-planner": "paper-type-planner/v1",
+            "paper-understanding": "paper-understanding/v1",
+            "contribution-evidence-mapper": "contribution-evidence-mapper/v1"}
+RESULT_METADATA = {"document_id", "source_bundle_id", "review_run_id", "prompt_version",
+                   "schema_version", "model_identifier", "input_coverage", "execution_status",
+                   "evidence_refs"}
+
+
+@dataclass
+class CallTrace:
+    stage: str
+    prompt_version: str
+    requested_model: str
+    actual_model: str | None
+    input_tokens: int | None
+    output_tokens: int | None
+    duration_ms: int
+    status: str
+    error: str | None = None
+
+
+class P2AError(RuntimeError):
+    def __init__(self, stage: str, message: str, traces: list[CallTrace]):
+        super().__init__(f"{stage}: {message}")
+        self.stage = stage
+        self.traces = traces
+
+
+def chunk_reading_units(units: list[dict], max_chars: int = 12000) -> list[list[dict]]:
+    chunks = []
+    current = []
+    size = 0
+    for unit in units:
+        length = len(_unit_line(unit))
+        if current and size + length > max_chars:
+            chunks.append(current)
+            current = []
+            size = 0
+        current.append(unit)
+        size += length
+    if current:
+        chunks.append(current)
+    return chunks
+
+
+def _unit_line(unit):
+    detail = f' table={unit["table_id"]}' if unit.get("table_id") else ""
+    return (f'[{unit["id"]}] page={unit["page_index"] + 1} section={unit.get("section_id")}'
+            f' evidence={",".join(unit["evidence_ids"])} order={unit.get("reading_order_status")}{detail}\n'
+            f'{unit["text"]}\n')
+
+
+def _source_text(units):
+    return "\n".join(_unit_line(unit) for unit in units)
+
+
+def _content_json(result):
+    return json.dumps(result.model_dump(exclude=RESULT_METADATA), ensure_ascii=False)
+
+
+def _combine_partials(stage, parts, context, bundle, run_id, quality, requested_model,
+                      model_call, traces, result_type):
+    """Merge two source-grounded outputs at a time so global synthesis stays bounded."""
+    while len(parts) > 1:
+        next_parts = []
+        for index in range(0, len(parts), 2):
+            if index + 1 == len(parts):
+                next_parts.append(parts[index])
+                continue
+            left, right = parts[index:index + 2]
+            units = left[1] + right[1]
+            merged = _invoke(
+                stage, context + "\nGlobal synthesis of both parts. Merge duplicate facts, "
+                "preserve distinct facts, source IDs and unresolved gaps. For claim maps, "
+                "use unique contribution and claim IDs and preserve valid relations:\n" +
+                json.dumps([json.loads(_content_json(left[0])),
+                            json.loads(_content_json(right[0]))], ensure_ascii=False),
+                bundle, run_id, units, quality, requested_model, model_call, traces, result_type)
+            next_parts.append((merged, units))
+        parts = next_parts
+    return parts[0][0]
+
+
+def _object_catalog(bundle):
+    return "\n".join(
+        f'[{item["id"]}] type={kind} page={item["page_index"] + 1} '
+        f'status={item.get("usability_status", item.get("status", "unverified"))} '
+        f'evidence={",".join(item.get("evidence_ids") or [item.get("caption_evidence_id", "")])}'
+        for kind, items in (("table", bundle["tables"]), ("formula", bundle["formulas"]),
+                            ("figure", bundle["figures"])) for item in items)
+
+
+def _coverage(bundle, included_units, quality):
+    included = {unit["id"] for unit in included_units}
+    return {"total_unit_count": len(bundle["reading_units"]),
+            "included_unit_count": len(included),
+            "excluded_unit_ids": [unit["id"] for unit in bundle["reading_units"] if unit["id"] not in included],
+            "source_quality_status": quality["status"],
+            "limitations": list(dict.fromkeys(bundle.get("limitations", []) + quality["reasons"]))}
+
+
+def _metadata(bundle, run_id, stage, actual_model, included_units, quality):
+    coverage = _coverage(bundle, included_units, quality)
+    return {"document_id": bundle["document"]["id"], "source_bundle_id": bundle["bundle_id"],
+            "review_run_id": run_id, "prompt_version": VERSIONS[stage], "schema_version": "1.0",
+            "model_identifier": actual_model, "input_coverage": coverage,
+            "execution_status": "completed" if quality["status"] == "ready" and
+                                not coverage["excluded_unit_ids"] else "limited"}
+
+
+def _referenced_ids(value):
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if key == "evidence_ref_ids":
+                yield from child
+            elif key == "evidence_ref_id":
+                yield child
+            else:
+                yield from _referenced_ids(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from _referenced_ids(child)
+
+
+def _with_references(payload, bundle):
+    if "evidence_refs" in payload:
+        raise ValueError("model must cite source IDs; canonical references are resolved by the server")
+    index = source_reference_index(bundle)
+    cited = list(dict.fromkeys(_referenced_ids(payload)))
+    missing = [reference_id for reference_id in cited if reference_id not in index]
+    if missing:
+        raise ValueError(f"missing source object: {', '.join(missing[:5])}")
+    return {**payload, "evidence_refs": [index[reference_id].model_dump() for reference_id in cited]}
+
+
+def _invoke(stage: str, user_text: str, bundle: dict, run_id: str, included_units: list[dict],
+            quality: dict, requested_model: str, model_call: Callable, traces: list[CallTrace],
+            result_type):
+    system = (PROMPTS / f"{stage}.v1.txt").read_text(encoding="utf-8")
+    for attempt in range(2):
+        reply = None
+        started = time.perf_counter()
+        try:
+            retry_instruction = ("\nPrevious response failed output validation. Return exactly the required "
+                                 "JSON fields and cite only source IDs shown in the input.") if attempt else ""
+            reply = model_call(stage, system, user_text + retry_instruction)
+            content = reply["content"]
+            actual = reply["model_identifier"]
+            if not actual or not content:
+                raise ValueError("model response has no model identifier or content")
+            payload = parse_model_json(content)
+            if not isinstance(payload, dict):
+                raise ValueError("model response must be a JSON object")
+            if result_type is not ReviewPlan:
+                payload = _with_references(payload, bundle)
+            result = result_type.model_validate({**payload, **_metadata(
+                bundle, run_id, stage, actual, included_units, quality)})
+            if result_type is not ReviewPlan:
+                validate_source_references(result, bundle)
+            traces.append(CallTrace(stage, VERSIONS[stage], requested_model, actual,
+                                    reply.get("input_tokens"), reply.get("output_tokens"),
+                                    reply.get("duration_ms", 0), "completed"))
+            return result
+        except Exception as exc:
+            error_code = (f"invalid_output:{type(exc).__name__}" if
+                          isinstance(exc, (ValueError, TypeError)) else
+                          f"model_call_failed:{type(exc).__name__}")
+            traces.append(CallTrace(stage, VERSIONS[stage], requested_model,
+                                    reply.get("model_identifier") if "reply" in locals() and
+                                    isinstance(reply, dict) else None,
+                                    reply.get("input_tokens") if "reply" in locals() and
+                                    isinstance(reply, dict) else None,
+                                    reply.get("output_tokens") if "reply" in locals() and
+                                    isinstance(reply, dict) else None,
+                                    reply.get("duration_ms", 0) if isinstance(reply, dict) else
+                                    round((time.perf_counter() - started) * 1000),
+                                    "invalid_output" if error_code.startswith("invalid_output") else "failed",
+                                    error_code))
+            if attempt == 1:
+                raise P2AError(stage, error_code, traces) from exc
+
+
+def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: str,
+            target_journal: str | None = None, special_requirements: str | None = None,
+            chunk_chars: int = 12000, on_result: Callable | None = None):
+    """Run N1–N3; caller persists results and trace metadata in private storage."""
+    units = bundle["reading_units"]
+    if not units:
+        raise P2AError("source", "no readable reading units", [])
+    quality = assess_input_readiness(bundle, "section_summary")
+    chunks = chunk_reading_units(units, chunk_chars)
+    plan_units = units if len(chunks) == 1 else chunks[0] + [part[-1] for part in chunks[1:]]
+    traces = []
+    context = (f'Document {bundle["document"]["id"]}; Source Bundle {bundle["bundle_id"]}.\n'
+               f'Quality: {json.dumps(quality, ensure_ascii=False)}\n'
+               f'Journal: {target_journal or "not supplied"}\n'
+               f'User requirements: {special_requirements or "not supplied"}\n'
+               f'Sections: {json.dumps([item["title"] for item in bundle["sections"]], ensure_ascii=False)}\n'
+               f'Technical object status:\n{_object_catalog(bundle)}\n')
+    plan = _invoke("paper-type-planner", context + "\nReading units:\n" + _source_text(plan_units),
+                   bundle, run_id, plan_units, quality, requested_model, model_call, traces, ReviewPlan)
+    if on_result:
+        on_result("review_plan", plan)
+    profile_context = context + "\nReview plan:\n" + _content_json(plan)
+    partial_profiles = []
+    for index, part in enumerate(chunks):
+        partial_profiles.append((_invoke(
+            "paper-understanding", profile_context + f"\nPart {index + 1}/{len(chunks)}.\n" +
+            _source_text(part), bundle, run_id, part, quality, requested_model, model_call, traces,
+            PaperProfile), part))
+    profile = _combine_partials("paper-understanding", partial_profiles, profile_context,
+                                bundle, run_id, quality, requested_model, model_call, traces,
+                                PaperProfile)
+    if on_result:
+        on_result("paper_profile", profile)
+    map_context = context + "\nPaper profile:\n" + _content_json(profile)
+    partial_maps = []
+    for index, part in enumerate(chunks):
+        partial_maps.append((_invoke(
+            "contribution-evidence-mapper", map_context + f"\nPart {index + 1}/{len(chunks)}.\n" +
+            _source_text(part), bundle, run_id, part, quality, requested_model, model_call, traces,
+            ClaimEvidenceMap), part))
+    mapping = _combine_partials("contribution-evidence-mapper", partial_maps, map_context,
+                                bundle, run_id, quality, requested_model, model_call, traces,
+                                ClaimEvidenceMap)
+    if on_result:
+        on_result("claim_evidence_map", mapping)
+    return plan, profile, mapping, traces
