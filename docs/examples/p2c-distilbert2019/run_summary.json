@@ -1,0 +1,57 @@
+{
+  "paper": "distilbert2019",
+  "source_pdf_sha256": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+  "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+  "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+  "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+  "understanding_run_id": "18e72bb44b124089a0b0a2d74f85d80c",
+  "professional_review_run_id": "1146246578504a7b99666a4c690a02de",
+  "consolidation_run_id": "98a29d954013492d9f5c1b2ae1c371bd",
+  "execution_status": "limited",
+  "original_candidate_count": 13,
+  "consolidated_issue_count": 9,
+  "relation_counts": {
+    "exact_duplicate": 2,
+    "distinct": 45,
+    "related_but_distinct": 29,
+    "semantic_duplicate": 2
+  },
+  "group_sizes": [
+    2,
+    2,
+    2,
+    2,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "coverage_gap_types": {
+    "source_quality": 17,
+    "claim_not_inspected": 4,
+    "required_material_missing": 1,
+    "external_material": 1
+  },
+  "verification_task_count": 9,
+  "call_count": 5,
+  "input_tokens": 70982,
+  "output_tokens": 8329,
+  "unknown_token_calls": 0,
+  "retry_count": 0,
+  "duration_ms": 186810,
+  "incomplete_items": [
+    "D1:limited",
+    "D2:limited",
+    "D3:limited",
+    "D4:limited",
+    "D5:limited",
+    "D6:limited",
+    "p2b_input_limited"
+  ],
+  "prompt_versions": [
+    "candidate-semantic-grouping/v1",
+    "candidate-group-reconciliation/v1"
+  ],
+  "model_identifier": "gpt-6.1-sol"
+}

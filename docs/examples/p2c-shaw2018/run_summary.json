@@ -1,0 +1,54 @@
+{
+  "paper": "shaw2018",
+  "source_pdf_sha256": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+  "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+  "snapshot_id": "886cadb1a7084f458f387ce3b2315574",
+  "source_bundle_id": "sb_8086e2e5e139_886cadb1a7084f458f387ce3b2315574_v1",
+  "understanding_run_id": "848033e148ae4ff18b46f78a172f94d9",
+  "professional_review_run_id": "8c3a5a5e783c4366bbe965f4cdad6a28",
+  "consolidation_run_id": "a25219c4ffe5415c807f61beacd4126a",
+  "execution_status": "limited",
+  "original_candidate_count": 11,
+  "consolidated_issue_count": 6,
+  "relation_counts": {
+    "distinct": 36,
+    "related_but_distinct": 11,
+    "semantic_duplicate": 6,
+    "exact_duplicate": 2
+  },
+  "group_sizes": [
+    4,
+    2,
+    2,
+    1,
+    1,
+    1
+  ],
+  "coverage_gap_types": {
+    "source_quality": 12,
+    "claim_not_inspected": 6,
+    "required_material_missing": 1,
+    "external_material": 1
+  },
+  "verification_task_count": 6,
+  "call_count": 4,
+  "input_tokens": 49472,
+  "output_tokens": 5853,
+  "unknown_token_calls": 0,
+  "retry_count": 0,
+  "duration_ms": 131945,
+  "incomplete_items": [
+    "D1:limited",
+    "D2:limited",
+    "D3:limited",
+    "D4:limited",
+    "D5:limited",
+    "D6:limited",
+    "p2b_input_limited"
+  ],
+  "prompt_versions": [
+    "candidate-semantic-grouping/v1",
+    "candidate-group-reconciliation/v1"
+  ],
+  "model_identifier": "gpt-6.1-sol"
+}

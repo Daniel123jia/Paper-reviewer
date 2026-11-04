@@ -61,3 +61,17 @@ def test_inapplicable_dimension_is_recorded_without_false_gap():
                if item.dimension_id == "D3")
     assert not any(gap.gap_type == "dimension_unfinished" and "D3" in gap.affected_dimension_ids
                    for gap in audit.gaps)
+
+
+def test_blocked_limited_dimension_is_not_reported_as_inspected():
+    bundle, plan, profile, mapping, review, inventory = case()
+    dimension = review.dimensions[1]
+    dimension.coverage_status = "blocked"
+    dimension.execution_status = "limited"
+    dimension.no_issue_explanation = "Review not performed: source material blocked"
+    audit = audit_coverage(bundle, plan, profile, mapping, review, inventory)
+    assert audit.dimensions[1].evidence_level == "not_reported"
+    assert any(gap.gap_type == "dimension_unfinished" and gap.affected_dimension_ids == ["D2"]
+               for gap in audit.gaps)
+    assert all(item.status == "coverage_gap" for item in audit.professional_focus
+               if item.dimension_id == "D2")

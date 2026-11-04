@@ -1,0 +1,850 @@
+[
+  {
+    "verification_task_id": "verify_3a45a00a08fbc07fcdd4",
+    "consolidated_issue_id": "consolidated_c9750ce2c32914386e93",
+    "central_question": "Do the original PDF and experiment-specific code specify the loss coefficients, training temperature, reductions, and any temperature-dependent scaling?",
+    "related_claim_ids": [
+      "claim_7bcad7997d656581",
+      "claim_cc3f6207a3c8e47a",
+      "claim_f97393e2bc593bcb",
+      "claim_7c84cde1e814627a"
+    ],
+    "original_candidate_ids": [
+      "candidate_2349c5cdd44540ee",
+      "candidate_35b744cc386ff5f3"
+    ],
+    "source_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_1_9",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_1_8",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_1_11",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_1_12",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_8",
+        "evidence_role": "context"
+      }
+    ],
+    "counterevidence_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_1_2",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_1_6",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_1_7",
+        "evidence_role": "context"
+      }
+    ],
+    "original_document_snapshot": {
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "pdf_sha256": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1"
+    },
+    "required_checks": [
+      "Confirm the observed facts against the original PDF",
+      "Do the original PDF and experiment-specific code specify the loss coefficients, training temperature, reductions, and any temperature-dependent scaling?",
+      "Which token positions contribute to distillation and cosine alignment, and do teacher and student receive the same masked inputs?",
+      "Which hidden states are aligned: final-layer states, selected intermediate pairs, or another mapping?",
+      "Do the reported ablations preserve the remaining coefficients and reductions, or renormalize them after removing a component?",
+      "Inspect the original Knowledge distillation and DistilBERT sections and the released training configuration: what are the numerical loss coefficients and training temperature?",
+      "Which teacher and student hidden states are compared, and do distillation and cosine losses use masked tokens, all nonpadding tokens, or another selection?",
+      "How are the losses reduced and normalized, including any temperature-dependent scaling, and are the surviving coefficients preserved or rescaled in each ablation?",
+      "Does the released implementation identify the configuration used for the reported model and Table 4?"
+    ],
+    "additional_materials_needed": [
+      "External literature, code or dataset relevant to this question"
+    ],
+    "external_verification_required": true,
+    "priority_for_verification": "undetermined",
+    "limitations": [
+      "Exact equation transcription is unverified; no concern is inferred from the extracted cross-entropy sign.",
+      "Relevant details may occur in omitted material or the released training code.",
+      "The released implementation and experiment configuration have not been checked.",
+      "Formula transcription is fragmented and unverified; the concern concerns unresolved implementation choices, not a claimed sign error.",
+      "The full PDF and released code must be checked before treating these choices as undocumented.",
+      "Table 4 associations and numerical deltas remain unverified.",
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+      "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+      "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+      "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+      "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+      "Source quality: reading_order_ambiguous",
+      "Source quality: section_mapping_incomplete",
+      "Source quality: human_reading_reference_missing",
+      "Source quality: human_page_reference_missing",
+      "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+      "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+      "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "human_reading_reference_missing",
+      "human_page_reference_missing",
+      "p2a_limited"
+    ],
+    "verification_status": "unverified"
+  },
+  {
+    "verification_task_id": "verify_8519b1fe2056683370b9",
+    "consolidated_issue_id": "consolidated_2fc7365d65828d021acd",
+    "central_question": "What values and metric order does the original PDF show for DistilBERT (D)?",
+    "related_claim_ids": [
+      "claim_d15f98a55bba3ef7",
+      "claim_4263e8efb6d8eecd"
+    ],
+    "original_candidate_ids": [
+      "candidate_4797eae58a0d02e4",
+      "candidate_8cc2ac38dbe85ec5"
+    ],
+    "source_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_3",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_4",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_8",
+        "evidence_role": "source_conflict"
+      }
+    ],
+    "counterevidence_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_17",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "table_ev_6724ca5dce54_2_4",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "table_ev_6724ca5dce54_2_4",
+        "evidence_role": "context"
+      }
+    ],
+    "original_document_snapshot": {
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "pdf_sha256": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1"
+    },
+    "required_checks": [
+      "Confirm the observed facts against the original PDF",
+      "What values and metric order does the original PDF show for DistilBERT (D)?",
+      "Do the prose and table use the same SQuAD version, split, teacher, and student configuration?",
+      "After resolving the source conflict, what are the EM and F1 improvements over DistilBERT without adaptation distillation and the corresponding gaps to BERT?",
+      "Does the original PDF confirm the numerical entries and EM/F1 ordering attributed to DistilBERT (D) and BERT-base?",
+      "Do the prose and table refer to the same checkpoint, dataset split, and adaptation-distillation procedure?",
+      "Which full-model scores support the prose's 'within 3 points' statement?"
+    ],
+    "additional_materials_needed": [
+      "Original PDF visual inspection of cited table, formula or figure"
+    ],
+    "external_verification_required": false,
+    "priority_for_verification": "undetermined",
+    "limitations": [
+      "Table 2 is structurally incomplete and its numerical associations are unverified.",
+      "This is a source-conflict lead, not a confirmed inconsistency in the original paper.",
+      "Table 2 is structure_incomplete and its numerical associations are unverified.",
+      "The adaptation discussion spans a page boundary and the supplied reading order is not verified.",
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+      "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+      "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+      "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+      "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+      "Source quality: reading_order_ambiguous",
+      "Source quality: section_mapping_incomplete",
+      "Source quality: human_reading_reference_missing",
+      "Source quality: human_page_reference_missing",
+      "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+      "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+      "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "human_reading_reference_missing",
+      "human_page_reference_missing",
+      "p2a_limited"
+    ],
+    "verification_status": "unverified"
+  },
+  {
+    "verification_task_id": "verify_636263b3fa88f2815a22",
+    "consolidated_issue_id": "consolidated_74d31eae282a7e352cfb",
+    "central_question": "What cost boundary do the authors intend: incremental student distillation given an available teacher, or total teacher-plus-student pretraining?",
+    "related_claim_ids": [
+      "claim_a43f23cbeb41a5e9"
+    ],
+    "original_candidate_ids": [
+      "candidate_8ef728e15e00c987",
+      "candidate_9a34220f56b4571f"
+    ],
+    "source_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_0_5",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_1_0",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_10",
+        "evidence_role": "supporting_result"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_1_12",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_1_9",
+        "evidence_role": "context"
+      }
+    ],
+    "counterevidence_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_9",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_10",
+        "evidence_role": "counterevidence"
+      }
+    ],
+    "original_document_snapshot": {
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "pdf_sha256": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1"
+    },
+    "required_checks": [
+      "Confirm the observed facts against the original PDF",
+      "What cost boundary do the authors intend: incremental student distillation given an available teacher, or total teacher-plus-student pretraining?",
+      "Does the reported student runtime include teacher forward computation and all training stages?",
+      "Does the full source provide a comparable BERT training budget or another comparison controlling training workload and target performance?",
+      "Is the lower-cost language explicitly limited to the reported DistilBERT versus RoBERTa runs?",
+      "What training-cost boundary do the authors use, and does the 90-hour figure include all teacher forward passes or preparation of cached teacher outputs?",
+      "Is the claim explicitly conditional on an already pretrained teacher?",
+      "Is a BERT or other relevant training comparison supplied with comparable data exposure and a stated performance target?",
+      "Is the RoBERTa comparison intended solely as resource context, rather than evidence of a controlled compute saving?"
+    ],
+    "additional_materials_needed": [],
+    "external_verification_required": false,
+    "priority_for_verification": "undetermined",
+    "limitations": [
+      "The supplied compute paragraph does not resolve accounting boundaries or comparability of the two training workloads.",
+      "Coverage is partial; additional cost explanations or comparisons may exist in omitted material.",
+      "No external training-cost figures have been checked or assumed.",
+      "Only one student training-resource figure and a contextual RoBERTa figure are available in the supplied experimental text.",
+      "Additional accounting or training comparisons may appear in omitted material or released code.",
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+      "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+      "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+      "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+      "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+      "Source quality: reading_order_ambiguous",
+      "Source quality: section_mapping_incomplete",
+      "Source quality: human_reading_reference_missing",
+      "Source quality: human_page_reference_missing",
+      "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+      "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+      "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "human_reading_reference_missing",
+      "human_page_reference_missing",
+      "p2a_limited"
+    ],
+    "verification_status": "unverified"
+  },
+  {
+    "verification_task_id": "verify_641fb5ebefc3284a239f",
+    "consolidated_issue_id": "consolidated_8e8e2b5dcfc41219ae35",
+    "central_question": "Does the original Table 4 confirm the extracted single-component-removal configurations, and are additional relevant comparisons provided elsewhere?",
+    "related_claim_ids": [
+      "claim_416e38c43588f4f0",
+      "claim_99d4c1fba0a1e81c",
+      "claim_e75bc9c26e77d103"
+    ],
+    "original_candidate_ids": [
+      "candidate_b43a63c1120cd273",
+      "candidate_cbff9281b140f698"
+    ],
+    "source_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_0",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_2",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_8",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_11",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_1_9",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_2",
+        "evidence_role": "supporting_result"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_10",
+        "evidence_role": "observed_statement"
+      }
+    ],
+    "counterevidence_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_8",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_2",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_10",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_0",
+        "evidence_role": "counterevidence"
+      }
+    ],
+    "original_document_snapshot": {
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "pdf_sha256": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1"
+    },
+    "required_checks": [
+      "Confirm the observed facts against the original PDF",
+      "Does the original Table 4 confirm the extracted single-component-removal configurations, and are additional relevant comparisons provided elsewhere?",
+      "Is there an otherwise matched teacher-initialized student trained with masked language modeling alone, removing both additional distillation losses?",
+      "Are training data, masking, optimization budget, and downstream evaluation held constant across the relevant comparisons?",
+      "Is the authors' attribution intended only as a statement of conditional component benefits, or as a quantitative claim about the combined contribution of distillation?",
+      "Does the original Table 4 or other available material include a condition removing both Lce and Lcos while retaining Lmlm?",
+      "If such a control exists, does it match the full model in architecture, teacher-weight initialization, data, token exposure, and downstream fine-tuning?",
+      "Do the authors intend the ablation conclusion only as a conditional component effect, or as a claim about the total contribution of pretraining distillation?"
+    ],
+    "additional_materials_needed": [],
+    "external_verification_required": false,
+    "priority_for_verification": "undetermined",
+    "limitations": [
+      "Table 4 row associations and numerical effects are unverified; the concern does not rely on exact extracted deltas.",
+      "Partial coverage cannot establish that a joint-removal control is absent from all paper materials.",
+      "Existing component and initialization ablations provide relevant counterevidence and should not be described as missing.",
+      "Table 4 labels and numerical associations remain unverified.",
+      "The supplied ablation inventory may omit controls documented elsewhere.",
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+      "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+      "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+      "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+      "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+      "Source quality: reading_order_ambiguous",
+      "Source quality: section_mapping_incomplete",
+      "Source quality: human_reading_reference_missing",
+      "Source quality: human_page_reference_missing",
+      "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+      "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+      "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "human_reading_reference_missing",
+      "human_page_reference_missing",
+      "p2a_limited"
+    ],
+    "verification_status": "unverified"
+  },
+  {
+    "verification_task_id": "verify_e3fc5b4dd3e4021d567e",
+    "consolidated_issue_id": "consolidated_571a39dcba42a9759ff6",
+    "central_question": "Does the verified table establish that 97% is calculated as the ratio of GLUE macro-scores, and how are individual task metrics combined?",
+    "related_claim_ids": [
+      "claim_1987440a651a1aeb",
+      "claim_d0de3244a9218171"
+    ],
+    "original_candidate_ids": [
+      "candidate_bcbebaa303e3d372"
+    ],
+    "source_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_0_5",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_4_1",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_13",
+        "evidence_role": "supporting_result"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_2",
+        "evidence_role": "supporting_result"
+      }
+    ],
+    "counterevidence_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_0",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_12",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_16",
+        "evidence_role": "counterevidence"
+      }
+    ],
+    "original_document_snapshot": {
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "pdf_sha256": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1"
+    },
+    "required_checks": [
+      "Confirm the observed facts against the original PDF",
+      "Does the verified table establish that 97% is calculated as the ratio of GLUE macro-scores, and how are individual task metrics combined?",
+      "What is the verified distribution of task-level degradation, and does it materially qualify the aggregate headline?",
+      "Does surrounding text explicitly restrict the abstract and conclusion's capability-retention wording to this benchmark aggregate?"
+    ],
+    "additional_materials_needed": [],
+    "external_verification_required": false,
+    "priority_for_verification": "normal",
+    "limitations": [
+      "GLUE table structure and task-to-score associations remain unverified.",
+      "This concern addresses interpretation of the stated metric, not a demonstrated arithmetic error or an assertion that other evaluations are absent.",
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+      "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+      "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+      "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+      "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+      "Source quality: reading_order_ambiguous",
+      "Source quality: section_mapping_incomplete",
+      "Source quality: human_reading_reference_missing",
+      "Source quality: human_page_reference_missing",
+      "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+      "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+      "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "human_reading_reference_missing",
+      "human_page_reference_missing",
+      "p2a_limited"
+    ],
+    "verification_status": "unverified"
+  },
+  {
+    "verification_task_id": "verify_971c70815eca43a1112d",
+    "consolidated_issue_id": "consolidated_63e4fcc89ffc9ebae2cf",
+    "central_question": "Does the complete paper compare pretraining distillation with task-specific-only distillation under sufficiently matched student architecture, initialization, data, and training budget?",
+    "related_claim_ids": [
+      "claim_4faebd9391822cb3",
+      "claim_99d4c1fba0a1e81c",
+      "claim_d15f98a55bba3ef7",
+      "claim_7c84cde1e814627a"
+    ],
+    "original_candidate_ids": [
+      "candidate_d3a08b0240d95640"
+    ],
+    "source_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_10",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_8",
+        "evidence_role": "supporting_result"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_3",
+        "evidence_role": "context"
+      }
+    ],
+    "counterevidence_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_0_5",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_10",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_3",
+        "evidence_role": "counterevidence"
+      }
+    ],
+    "original_document_snapshot": {
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "pdf_sha256": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1"
+    },
+    "required_checks": [
+      "Confirm the observed facts against the original PDF",
+      "Does the complete paper compare pretraining distillation with task-specific-only distillation under sufficiently matched student architecture, initialization, data, and training budget?",
+      "Does the surrounding original text make clear that 'beneficial ... rather than' describes the authors' design choice rather than comparative superiority?",
+      "If no stage-isolating comparison is provided, should the related-work statement be restricted to the demonstrated benefit of additional teacher signals during pretraining?",
+      "Does the two-stage SQuAD result qualify the relationship between general-purpose and task-specific distillation as complementary?"
+    ],
+    "additional_materials_needed": [],
+    "external_verification_required": false,
+    "priority_for_verification": "normal",
+    "limitations": [
+      "The full numerical comparison tables and some reading units are omitted.",
+      "The ablation table's row associations remain unverified; this concern relies on the prose description of its scope, not its extracted numerical values.",
+      "The cited prior papers are unavailable. This candidate concerns internal evidence-to-positioning fit and does not assert that those papers are mischaracterized.",
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+      "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+      "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+      "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+      "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+      "Source quality: reading_order_ambiguous",
+      "Source quality: section_mapping_incomplete",
+      "Source quality: human_reading_reference_missing",
+      "Source quality: human_page_reference_missing",
+      "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+      "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+      "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "human_reading_reference_missing",
+      "human_page_reference_missing",
+      "p2a_limited"
+    ],
+    "verification_status": "unverified"
+  },
+  {
+    "verification_task_id": "verify_dfbe623d060dfef68f22",
+    "consolidated_issue_id": "consolidated_84cf783ca167b1714267",
+    "central_question": "Inspect the original Table 3 and timing code for raw durations, the percentage calculation, framework version, numerical precision, CPU thread settings, and timing boundaries.",
+    "related_claim_ids": [
+      "claim_6d289ceb45a005b3",
+      "claim_b59fbbfe374999c6"
+    ],
+    "original_candidate_ids": [
+      "candidate_d4020475ec42754b"
+    ],
+    "source_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_5",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_6",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_3",
+        "evidence_role": "context"
+      }
+    ],
+    "counterevidence_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_6",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_1_2",
+        "evidence_role": "counterevidence"
+      }
+    ],
+    "original_document_snapshot": {
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "pdf_sha256": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1"
+    },
+    "required_checks": [
+      "Confirm the observed facts against the original PDF",
+      "Inspect the original Table 3 and timing code for raw durations, the percentage calculation, framework version, numerical precision, CPU thread settings, and timing boundaries.",
+      "For the mobile comparison, what examples, context lengths, truncation rules, backend, and device execution settings were used?",
+      "Were both models timed on identical inputs with matched runtime settings, and how were warm-up, repeated measurements, and averaging handled?",
+      "Does the released mobile application preserve the benchmark configuration used for the reported 71% improvement?"
+    ],
+    "additional_materials_needed": [
+      "External literature, code or dataset relevant to this question"
+    ],
+    "external_verification_required": true,
+    "priority_for_verification": "undetermined",
+    "limitations": [
+      "Table 3 is structurally incomplete and its numerical timing rows are not verified.",
+      "The mobile code-availability footnote is outside the supplied reading units; its target and contents have not been inspected.",
+      "Hardware, CPU batch size, workload identity, and mobile tokenization exclusion are explicitly supplied and should not be characterized as missing.",
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+      "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+      "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+      "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+      "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+      "Source quality: reading_order_ambiguous",
+      "Source quality: section_mapping_incomplete",
+      "Source quality: human_reading_reference_missing",
+      "Source quality: human_page_reference_missing",
+      "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+      "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+      "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "human_reading_reference_missing",
+      "human_page_reference_missing",
+      "p2a_limited"
+    ],
+    "verification_status": "unverified"
+  },
+  {
+    "verification_task_id": "verify_50d458e0b55de5345237",
+    "consolidated_issue_id": "consolidated_1ca04a734f00044fd43b",
+    "central_question": "Check the complete training and experiments sections and released scripts for the optimizer, learning-rate schedule, update count, effective batch schedule, sequence lengths, masking settings, and teacher checkpoint.",
+    "related_claim_ids": [
+      "claim_d7d146a7b6e07ad5",
+      "claim_d0de3244a9218171",
+      "claim_1987440a651a1aeb",
+      "claim_7c84cde1e814627a"
+    ],
+    "original_candidate_ids": [
+      "candidate_d66b4d629e17092d"
+    ],
+    "source_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_9",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_10",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_12",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_0",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_13",
+        "evidence_role": "context"
+      }
+    ],
+    "counterevidence_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_1_2",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_9",
+        "evidence_role": "counterevidence"
+      }
+    ],
+    "original_document_snapshot": {
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "pdf_sha256": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1"
+    },
+    "required_checks": [
+      "Confirm the observed facts against the original PDF",
+      "Check the complete training and experiments sections and released scripts for the optimizer, learning-rate schedule, update count, effective batch schedule, sequence lengths, masking settings, and teacher checkpoint.",
+      "Are corpus preprocessing and tokenizer settings sufficiently specified to reconstruct the training examples?",
+      "What fine-tuning settings, hyperparameter search procedure, and checkpoint-selection rule produced the five-seed GLUE results?",
+      "Are the same downstream protocol and comparable pretraining exposure used for the ablation models, and are their configurations available?"
+    ],
+    "additional_materials_needed": [
+      "External literature, code or dataset relevant to this question"
+    ],
+    "external_verification_required": true,
+    "priority_for_verification": "high",
+    "limitations": [
+      "The supplied passages provide several substantive training and evaluation details; this is a lead about the remaining configuration, not a claim that no protocol is provided.",
+      "Omitted units and the cited training-code release could resolve the apparent gaps.",
+      "Unverified GLUE and ablation table structures prevent independent numerical reconstruction.",
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+      "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+      "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+      "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+      "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+      "Source quality: reading_order_ambiguous",
+      "Source quality: section_mapping_incomplete",
+      "Source quality: human_reading_reference_missing",
+      "Source quality: human_page_reference_missing",
+      "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+      "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+      "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "human_reading_reference_missing",
+      "human_page_reference_missing",
+      "p2a_limited"
+    ],
+    "verification_status": "unverified"
+  },
+  {
+    "verification_task_id": "verify_fe4e7255711d6441943d",
+    "consolidated_issue_id": "consolidated_0caacb13a2bb7f01cbb8",
+    "central_question": "Does the complete paper report a compact-model baseline using masked language modeling alone with matched architecture, teacher-weight initialization, data, and training budget?",
+    "related_claim_ids": [
+      "claim_4faebd9391822cb3",
+      "claim_99d4c1fba0a1e81c",
+      "claim_416e38c43588f4f0",
+      "claim_e75bc9c26e77d103",
+      "claim_d15f98a55bba3ef7"
+    ],
+    "original_candidate_ids": [
+      "candidate_fb1bf9ee8ee47391"
+    ],
+    "source_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_10",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_8",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_2",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_1_12",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_9",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_3",
+        "evidence_role": "observed_statement"
+      }
+    ],
+    "counterevidence_refs_to_check": [
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_8",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_3_0",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_12",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_6724ca5dce54_2_13",
+        "evidence_role": "counterevidence"
+      }
+    ],
+    "original_document_snapshot": {
+      "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+      "pdf_sha256": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+      "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1"
+    },
+    "required_checks": [
+      "Confirm the observed facts against the original PDF",
+      "Does the complete paper report a compact-model baseline using masked language modeling alone with matched architecture, teacher-weight initialization, data, and training budget?",
+      "Do any experiments compare pretraining distillation with task-specific distillation under matched student and downstream evaluation conditions?",
+      "After verifying Table 4, which teacher-derived signals remain in each ablation, and do any rows remove both distillation losses together?",
+      "Is the phrase describing pretraining distillation as beneficial rather than task-specific distillation intended as an experimentally established comparison or as motivation for the chosen paradigm?"
+    ],
+    "additional_materials_needed": [],
+    "external_verification_required": false,
+    "priority_for_verification": "undetermined",
+    "limitations": [
+      "The extracted ablation table is structurally incomplete; configurations and numerical associations require checking against the original source.",
+      "Partial coverage prevents concluding that matched baselines or additional comparisons are absent from the whole paper.",
+      "The concern addresses the scope of the paper's own comparative evidence and does not assert that cited prior methods outperform or duplicate DistilBERT.",
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+      "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+      "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+      "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+      "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+      "Source quality: reading_order_ambiguous",
+      "Source quality: section_mapping_incomplete",
+      "Source quality: human_reading_reference_missing",
+      "Source quality: human_page_reference_missing",
+      "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+      "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+      "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+      "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "human_reading_reference_missing",
+      "human_page_reference_missing",
+      "p2a_limited"
+    ],
+    "verification_status": "unverified"
+  }
+]

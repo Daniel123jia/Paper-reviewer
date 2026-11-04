@@ -1,5 +1,6 @@
 """P2-C contracts: lossless consolidation of unverified P2-B candidates."""
 
+import itertools
 from typing import Literal
 
 from pydantic import Field, model_validator
@@ -199,6 +200,10 @@ class CandidateConsolidationResult(StrictModel):
     @model_validator(mode="after")
     def lineage_and_evidence_complete(self):
         original = {item.issue_id: item for item in self.inventory.candidates}
+        expected_pairs = set(itertools.combinations(sorted(original), 2))
+        actual_pairs = {(item.left_issue_id, item.right_issue_id) for item in self.relations}
+        if len(actual_pairs) != len(self.relations) or actual_pairs != expected_pairs:
+            raise ValueError("candidate relationship record is incomplete")
         issue_ids = [item.consolidated_issue_id for item in self.consolidated_issues]
         if len(set(issue_ids)) != len(issue_ids):
             raise ValueError("duplicate consolidated issue ID")
@@ -232,8 +237,27 @@ class CandidateConsolidationResult(StrictModel):
             if issue.original_impact_assessments != {item_id: original[item_id].potential_impact
                                                      for item_id in members}:
                 raise ValueError("original impact assessment lost")
-            if not set(issue.observed_facts).issubset({original[item_id].observed_fact for item_id in members}):
-                raise ValueError("new observed fact added during consolidation")
+            if set(issue.observed_facts) != {original[item_id].observed_fact for item_id in members}:
+                raise ValueError("original observed facts changed during consolidation")
+            if set(issue.verification_questions) != {question for item_id in members
+                                                     for question in original[item_id].verification_questions}:
+                raise ValueError("original verification questions changed")
+            if set(issue.source_limitations) != {limit for item_id in members
+                                                 for limit in original[item_id].source_limitations}:
+                raise ValueError("original source limitations changed")
+            if set(issue.source_dimension_ids) != {original[item_id].dimension_id for item_id in members}:
+                raise ValueError("source dimension lineage changed")
+            if set(issue.related_claim_ids) != {claim_id for item_id in members
+                                                for claim_id in original[item_id].claim_ids}:
+                raise ValueError("claim lineage changed")
+            flags = {original[item_id].external_verification_required for item_id in members}
+            if issue.external_verification_required != (True in flags) or \
+                    issue.external_flag_disagreement != (len(flags) > 1):
+                raise ValueError("external-verification disagreement lost")
+            if any(original[item_id].suspected_problem not in issue.suspected_problem or
+                   original[item_id].why_it_matters not in issue.scientific_significance
+                   for item_id in members):
+                raise ValueError("original scientific concern lost")
         tasks = {item.consolidated_issue_id for item in self.verification_tasks}
         if len(tasks) != len(self.verification_tasks) or tasks != set(issue_ids):
             raise ValueError("each consolidated issue needs one verification task")

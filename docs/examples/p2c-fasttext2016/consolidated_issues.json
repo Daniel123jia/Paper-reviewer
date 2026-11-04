@@ -1,0 +1,738 @@
+[
+  {
+    "consolidated_issue_id": "consolidated_8103558cbdda88bc3c6c",
+    "title": "Broad speed claims may conflate per-epoch speed with time to the reported accuracy",
+    "central_question": "Which comparator, dataset, model configuration, and timing calculation produce the stated 15,000-fold speedup?",
+    "observed_facts": [
+      "The abstract couples comparable accuracy with training and evaluation that are many orders of magnitude faster. The classification timing table explicitly reports single-epoch times, whereas fastText's reported classification results use five epochs. The timing discussion compares fastText on 20 CPU threads with convolutional models on a Tesla K40 GPU and GRNNs on one CPU thread, then states a speedup reaching at least 15,000-fold.",
+      "Table 2 is explicitly captioned as training time for a single epoch. The results text states that fastText uses five epochs, whereas the timing discussion compares fastText on a CPU with 20 threads against char-CNN and VDCNN on a Tesla K40 GPU and cites GRNN timing on a single CPU thread. The authors report several-orders-of-magnitude speed advantages and a speedup reaching at least 15,000-fold. They also acknowledge that newer CUDA convolution implementations could accelerate char-CNN by a factor of ten."
+    ],
+    "suspected_problem": "The broad summary may be read as a speedup in obtaining models at the reported accuracy, although the cited classification evidence measures per-epoch runtime under different hardware and parallelism conditions. The supplied passages do not establish whether the headline ratios also hold for the complete training schedules that produced the compared accuracies. / The reported ratios may describe particular implementations and per-epoch throughput rather than the complete time required to obtain the accuracy reported for each model. Differences in thread counts also enter the GRNN comparison. If the broad efficiency conclusion is interpreted as a model-level or time-to-quality advantage, these factors could materially affect its magnitude. Hardware heterogeneity alone does not invalidate a practical comparison, but the intended interpretation and training endpoints need verification.",
+    "scientific_significance": "Per-epoch speed and time to a particular predictive quality answer different scientific questions. If epoch counts or stopping criteria differ, the magnitude of the accuracy–runtime advantage cannot be inferred directly from the epoch-time ratios, even if fastText remains substantially faster. / Efficiency is a central empirical contribution. A single-epoch ratio need not equal the ratio of total training costs at the reported accuracies, and a 20-thread versus single-thread comparison cannot by itself isolate the contribution of the classification method.",
+    "source_candidate_ids": [
+      "candidate_14bf69eea0dbd1bc",
+      "candidate_f4b82c009ae294f8"
+    ],
+    "source_dimension_ids": [
+      "D3",
+      "D4"
+    ],
+    "related_claim_ids": [
+      "claim_b1536496726f40f8",
+      "claim_4ee5d311407a9fdc",
+      "claim_2d26dc6d784b4f2f",
+      "claim_1133d756d8934075",
+      "claim_67d50643162d3173"
+    ],
+    "related_contribution_ids": [
+      "contrib_97e74aec1af3cf15",
+      "contrib_79564b0c2f56215c"
+    ],
+    "original_source_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_0_3",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_2_9",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_2_16",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_2_17",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_12",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_2_16",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "table_ev_26739aba340e_2_9",
+        "evidence_role": "context"
+      }
+    ],
+    "counterevidence_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_2_17",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_20",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_17",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_18",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_2_9",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_1_22",
+        "evidence_role": "context"
+      }
+    ],
+    "verification_questions": [
+      "Which comparator, dataset, model configuration, and timing calculation produce the stated 15,000-fold speedup?",
+      "Are the headline classification speedups intended as per-epoch comparisons or complete-training comparisons at the reported accuracy?",
+      "What training schedules produced the baseline accuracy results, and do the ratios remain comparable when those schedules are included?",
+      "Does the full paper explicitly limit the broad efficiency conclusions to the disclosed hardware, thread counts, and implementations? The supplied discussion already discloses these differences and acknowledges a possible tenfold CUDA improvement.",
+      "Verify the original timing table, units, model configurations, and the exact dataset and comparator producing the 15,000-fold ratio.",
+      "Are reported speedup factors explicitly restricted to per-epoch throughput, or are they used to characterize complete training at the reported test accuracy?",
+      "What epoch counts and stopping criteria produced each baseline accuracy, and do total training times at those endpoints preserve the claimed magnitude of advantage?",
+      "Does the complete paper provide CPU specifications, timing boundaries, and measurements that separate parallelism and implementation effects from model effects?"
+    ],
+    "source_limitations": [
+      "The timing table has incomplete structure and must be checked before reconstructing numerical ratios.",
+      "Complete baseline training schedules and timing boundaries are not established by the supplied passages.",
+      "The tag-prediction experiment supplies separate evidence of faster training to better quality and uses matched thread counts; this limits the concern to the interpretation and magnitude of the broader classification claims.",
+      "Table 2 cell alignment and numerical ratios require original-document verification.",
+      "The speedup sentence crosses an extraction boundary, so its precise comparator must be checked.",
+      "The supplied context does not establish whether complete-training or matched-resource measurements occur elsewhere."
+    ],
+    "external_verification_required": false,
+    "external_flag_disagreement": false,
+    "original_impact_assessments": {
+      "candidate_14bf69eea0dbd1bc": "major_candidate",
+      "candidate_f4b82c009ae294f8": "major_candidate"
+    },
+    "potential_impact": "major_candidate",
+    "impact_rationale": "Original candidates agree; severity remains unverified",
+    "consolidation_rationale": "Both question whether the headline classification speedup ratios describe per-epoch throughput or complete training to the reported accuracy under the disclosed hardware and parallelism conditions. The same timing-table, comparator, training-schedule, and accuracy-endpoint checks address both.",
+    "verification_status": "unverified"
+  },
+  {
+    "consolidated_issue_id": "consolidated_456a6e99f6fb075f3912",
+    "title": "YFCC100M filtering and split rules may be insufficiently specified for exact reconstruction",
+    "central_question": "Do the original task description or accompanying reconstruction materials specify exact record IDs, a deterministic assignment rule, or a random seed for the splits?",
+    "observed_facts": [
+      "The task description says that words and tags occurring fewer than 100 times are removed and the data are then split into training, validation, and test sets. It provides exact set sizes, vocabulary size, and tag count, and promises a script that recreates the dataset. The supplied passage does not give the record-assignment rule or define whether frequency means token occurrences or record occurrences."
+    ],
+    "suspected_problem": "Counts alone may not identify the experimental dataset. Different frequency definitions, handling of records emptied by filtering, and split-assignment rules could yield materially different vocabulary, label frequencies, or evaluation examples. The promised reconstruction script may fully resolve these choices, so this remains a verification lead.",
+    "scientific_significance": "The experiment uses a very large corpus with a long-tailed output space. Changes to filtering and split assignment can alter both precision at one and Huffman-tree frequencies, affecting accuracy and inference cost as well as reproducibility of the stated corpus sizes.",
+    "source_candidate_ids": [
+      "candidate_31ec55257e7ac738"
+    ],
+    "source_dimension_ids": [
+      "D5"
+    ],
+    "related_claim_ids": [
+      "claim_71f8142f6a6fbd62",
+      "claim_4632b53f4de11555"
+    ],
+    "related_contribution_ids": [
+      "contrib_97e74aec1af3cf15"
+    ],
+    "original_source_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_3_19",
+        "evidence_role": "observed_statement"
+      }
+    ],
+    "counterevidence_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_3_19",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_0_11",
+        "evidence_role": "counterevidence"
+      }
+    ],
+    "verification_questions": [
+      "Do the original task description or accompanying reconstruction materials specify exact record IDs, a deterministic assignment rule, or a random seed for the splits?",
+      "How are word and tag frequencies counted, and how are records with empty text or empty tag sets handled?",
+      "Can the documented procedure reproduce the reported split sizes, vocabulary size, and number of tags?"
+    ],
+    "source_limitations": [
+      "Only the supplied dataset-description passage is available; exact reconstruction instructions may occur in omitted material.",
+      "The promise of a reconstruction script is observed, but its contents and availability have not been verified.",
+      "This concern does not establish inappropriate use of test information or a defect in the actual split."
+    ],
+    "external_verification_required": false,
+    "external_flag_disagreement": false,
+    "original_impact_assessments": {
+      "candidate_31ec55257e7ac738": "undetermined"
+    },
+    "potential_impact": "undetermined",
+    "impact_rationale": "Original candidates agree; severity remains unverified",
+    "consolidation_rationale": "Exact reconstruction of filtering and split membership requires frequency definitions, record-handling rules, and deterministic assignment details. This remains separate from whether filtering uses held-out frequencies and from how retained tags enter training.",
+    "verification_status": "unverified"
+  },
+  {
+    "consolidated_issue_id": "consolidated_64b696e6ae9642e79b3d",
+    "title": "Huffman training complexity needs an explicit averaging or depth assumption",
+    "central_question": "Does the original passage or surrounding material define this as expected complexity under the frequencies used to construct the Huffman tree?",
+    "observed_facts": [
+      "The hierarchical-softmax passage specifies a Huffman coding tree and states that training complexity drops from O(kh) to O(h log₂(k)). The supplied passage does not qualify this statement as an expectation over label frequencies or express the cost in terms of the target leaf's depth."
+    ],
+    "suspected_problem": "The stated bound may conflate frequency-weighted average code length with the depth of an individual target. A Huffman tree need not be balanced, so a per-example or worst-case logarithmic bound requires verification. This is an inference about the scope of the claim, not an established error in the algorithm.",
+    "scientific_significance": "The distinction determines whether the claimed scaling applies to average training throughput, every example, or rare labels. It affects how the efficiency mechanism should generalize to different label distributions.",
+    "source_candidate_ids": [
+      "candidate_45ae0b8b2e4c35bd"
+    ],
+    "source_dimension_ids": [
+      "D2"
+    ],
+    "related_claim_ids": [
+      "claim_33b526a261c6a73e"
+    ],
+    "related_contribution_ids": [
+      "contrib_97e74aec1af3cf15"
+    ],
+    "original_source_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_1_20",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_19",
+        "evidence_role": "context"
+      }
+    ],
+    "counterevidence_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_1_20",
+        "evidence_role": "counterevidence"
+      }
+    ],
+    "verification_questions": [
+      "Does the original passage or surrounding material define this as expected complexity under the frequencies used to construct the Huffman tree?",
+      "Which counts determine the tree, and does their distribution match the training sampling distribution?",
+      "Can the implementation and an independent derivation establish the cost in terms of target depth, average depth, and maximum depth?"
+    ],
+    "source_limitations": [
+      "The original document and implementation were not available for verification.",
+      "The supplied context may omit qualifications elsewhere in the paper.",
+      "This concern concerns the interpretation of a prose complexity statement, not a suspected transcription error in an equation."
+    ],
+    "external_verification_required": false,
+    "external_flag_disagreement": false,
+    "original_impact_assessments": {
+      "candidate_45ae0b8b2e4c35bd": "minor_candidate"
+    },
+    "potential_impact": "minor_candidate",
+    "impact_rationale": "Original candidates agree; severity remains unverified",
+    "consolidation_rationale": "This questions the averaging and target-depth assumptions behind the Huffman training-complexity statement. A depth-based derivation and verification of the relevant frequency distribution are separate from prediction-search analysis and runtime measurement.",
+    "verification_status": "unverified"
+  },
+  {
+    "consolidated_issue_id": "consolidated_1a30bff6ccc7941967da",
+    "title": "The contrast with averaged word2vec representations may exceed the demonstrated classification evidence",
+    "central_question": "Does the complete paper evaluate averaged word2vec features against the learned fastText features under a controlled downstream classifier?",
+    "observed_facts": [
+      "The architecture averages learned feature representations and trains them against document labels. The conclusion states that, unlike unsupervised word2vec vectors, the method's word features can be averaged to form good sentence representations. The supplied evaluations report supervised classification accuracy and tag-prediction precision at one.",
+      "The conclusion states, across two reading units, that unlike unsupervised word vectors from word2vec, fastText's word features can be averaged to form good sentence representations. The model description explicitly acknowledges similarity to CBOW, with a label replacing the middle word. The supplied experimental descriptions concern supervised classification and tag prediction; they do not directly establish the comparative quality of averaged word2vec representations.",
+      "The conclusion states that, unlike unsupervised word2vec vectors, fastText word features can be averaged to form good sentence representations. The architecture averages learned features into a hidden representation trained to predict document labels. The supplied experiments evaluate supervised classification and tag prediction, and the results explicitly include gains from adding n-gram features."
+    ],
+    "suspected_problem": "The conclusion may imply a comparative advantage of averaged fastText features over averaged word2vec features, or usefulness as sentence representations beyond the supervised tasks used to learn them. The supplied results establish the performance of the complete supervised classifier but do not independently establish that broader comparative representation claim. / The word2vec contrast may suggest a general limitation of averaging unsupervised word vectors, or a general sentence-representation advantage for fastText, beyond the demonstrated utility of representations trained for the evaluated supervised tasks. Whether that characterization fairly reflects the cited approach requires checking the prior literature and the complete paper. / Task-specific predictive performance may support useful representations for the trained classifier without establishing the broader contrast with averaged unsupervised word2vec vectors. The supplied context does not resolve whether this statement concerns supervised task adaptation, reusable sentence representations, or a directly evaluated advantage over word2vec averaging.",
+    "scientific_significance": "A representation optimized jointly with a task-specific classifier can support strong classification without demonstrating superior sentence representations under a controlled embedding comparison or in other tasks. The interpretation affects what readers can infer about representation reuse and the role of supervised feature learning. / A task-specific benefit from supervised representation learning does not by itself establish a general advantage of the averaging operation or of the resulting representations across sentence tasks. An overly broad contrast could misidentify the source of the contribution and mislead readers about the capabilities of the prior approach. / Readers could interpret the conclusion as evidence for a general sentence-representation contribution, although the demonstrated advantage may depend on task labels, the jointly trained classifier, and n-gram features.",
+    "source_candidate_ids": [
+      "candidate_7ac07ac2e077cb30",
+      "candidate_ba88ee299071334d",
+      "candidate_e32dddb167373ac1"
+    ],
+    "source_dimension_ids": [
+      "D1",
+      "D4",
+      "D6"
+    ],
+    "related_claim_ids": [
+      "claim_c65e802567c3ff8f",
+      "claim_8860fc3be607ecff",
+      "claim_ef81b34abfb26685"
+    ],
+    "related_contribution_ids": [
+      "contrib_79564b0c2f56215c",
+      "contrib_97e74aec1af3cf15"
+    ],
+    "original_source_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_3_23",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_4_1",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_0_10",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_1_8",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_19",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_1_22",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_2_16",
+        "evidence_role": "supporting_result"
+      }
+    ],
+    "counterevidence_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_2_16",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_20",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_1_8",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_4_1",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_0_4",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_2_2",
+        "evidence_role": "counterevidence"
+      }
+    ],
+    "verification_questions": [
+      "Does the complete paper evaluate averaged word2vec features against the learned fastText features under a controlled downstream classifier?",
+      "Is 'good sentence representations' intended only to describe the intermediate representation within the evaluated supervised classifiers?",
+      "Is there evidence elsewhere for reuse or transfer of the sentence representations, or should the conclusion's scope remain confined to the demonstrated tasks?",
+      "Does the complete paper provide a direct comparison with averaged unsupervised word2vec vectors under comparable classifier, feature, and training-data conditions?",
+      "Does the original wording and surrounding discussion restrict 'good sentence representations' to the supervised tasks evaluated here?",
+      "What do the relevant cited word2vec sources actually establish about averaging word vectors, and is the conclusion's contrast faithful to those sources?",
+      "Would the evidence support a narrower statement about task-supervised embeddings rather than a general contrast with unsupervised sentence representations?",
+      "Does the complete paper directly compare averaged word2vec vectors with fastText features under a matched downstream evaluation?",
+      "Is the conclusion explicitly limited to representations used for the supervised tasks on which they were trained?",
+      "Do word-only results support the intended claim independently of the reported improvements from n-gram features?"
+    ],
+    "source_limitations": [
+      "The supplied context is partial; a direct representation comparison elsewhere in the paper cannot be ruled out.",
+      "The conclusion continues across two extracted reading units, and its exact wording should be checked in the original document.",
+      "The supervised task results do provide evidence that averaging is useful within this model; the concern concerns the additional word2vec contrast and any broader interpretation.",
+      "The conclusion spans extracted reading units with unverified reading order, although the supplied fragments form a coherent sentence.",
+      "Partial experimental and reference coverage prevents establishing that a direct comparison is absent from the complete paper.",
+      "The cited word2vec publications have not been independently consulted.",
+      "No direct word2vec comparison is visible in the selected units; this does not establish its absence from the full paper.",
+      "The word-only results are present, but their numerical table associations remain unverified.",
+      "The conclusion crosses a page boundary and should be checked in the original document."
+    ],
+    "external_verification_required": true,
+    "external_flag_disagreement": true,
+    "original_impact_assessments": {
+      "candidate_7ac07ac2e077cb30": "minor_candidate",
+      "candidate_ba88ee299071334d": "minor_candidate",
+      "candidate_e32dddb167373ac1": "minor_candidate"
+    },
+    "potential_impact": "minor_candidate",
+    "impact_rationale": "Original candidates agree; severity remains unverified",
+    "consolidation_rationale": "Every pair questions the same conclusion's contrast between averaged fastText and word2vec representations. Checking the original wording, intended task scope, and matched representation comparisons substantially addresses all three. Their additional checks concerning cited literature, supervision, and n-gram features remain preserved, including the disagreement about whether external verification is required.",
+    "verification_status": "unverified"
+  },
+  {
+    "consolidated_issue_id": "consolidated_7065266f221bc62de86a",
+    "title": "Prediction scaling and top-T heap cost need separation from total search work",
+    "central_question": "Does the complete paper provide measurements of visited nodes or runtime across class counts, rather than only the large-tag benchmark?",
+    "observed_facts": [
+      "The authors describe depth-first search that tracks the highest leaf probability and prunes branches using parent-to-child probability monotonicity. They explicitly report O(h log₂(k)) test complexity as an observation in practice, then state that the approach extends to top-T targets at a cost of O(log(T)) using a binary heap. The large-tag experiment reports a substantial inference advantage over scoring every class."
+    ],
+    "suspected_problem": "Probability monotonicity supports a pruning bound but does not by itself establish how many nodes search will visit. Diffuse class probabilities could permit substantially more exploration. The O(log(T)) statement also leaves unresolved whether it denotes one heap update, multiplicative overhead per visited node, or total additional work. The practical logarithmic observation may therefore have a narrower scope than the wording suggests.",
+    "scientific_significance": "Fast inference is a central explanation for scalability to more than 300,000 labels. Its dependence on probability concentration, tree structure, and requested output count determines whether the reported advantage transfers to other datasets or top-T prediction settings.",
+    "source_candidate_ids": [
+      "candidate_83d093bda4b94e99"
+    ],
+    "source_dimension_ids": [
+      "D2"
+    ],
+    "related_claim_ids": [
+      "claim_6b3718ef93d4b460",
+      "claim_d8e226e6165d59e1",
+      "claim_806bb52fd416208b"
+    ],
+    "related_contribution_ids": [
+      "contrib_97e74aec1af3cf15"
+    ],
+    "original_source_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_1_21",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_1_4",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_20",
+        "evidence_role": "supporting_result"
+      }
+    ],
+    "counterevidence_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_1_4",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_20",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_17",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_18",
+        "evidence_role": "context"
+      }
+    ],
+    "verification_questions": [
+      "Does the complete paper provide measurements of visited nodes or runtime across class counts, rather than only the large-tag benchmark?",
+      "What traversal order, pruning threshold, and stopping rule does the implementation use, and does it return exact top-T predictions?",
+      "Does O(log(T)) refer to a single heap operation? What is total complexity in terms of visited nodes, representation dimension, and T?",
+      "How does search behave for diffuse leaf probabilities or strongly unbalanced trees, and are the reported practical conditions stated explicitly?"
+    ],
+    "source_limitations": [
+      "The authors explicitly qualify logarithmic prediction complexity as an empirical observation; this candidate does not treat it as a claimed worst-case theorem.",
+      "The hierarchical probability equation is fragmented, so pruning correctness cannot be checked from its transcription.",
+      "The supplied runtime table is structurally unverified, and no exact speedup calculation is used here.",
+      "Search code and additional scaling evidence may exist outside the supplied context."
+    ],
+    "external_verification_required": false,
+    "external_flag_disagreement": false,
+    "original_impact_assessments": {
+      "candidate_83d093bda4b94e99": "undetermined"
+    },
+    "potential_impact": "undetermined",
+    "impact_rationale": "Original candidates agree; severity remains unverified",
+    "consolidation_rationale": "This questions prediction-search work, pruning behavior, and the interpretation of top-T heap overhead. Verification requires traversal analysis and scaling evidence, independently of training-path complexity or the protocol used for reported wall-clock measurements.",
+    "verification_status": "unverified"
+  },
+  {
+    "consolidated_issue_id": "consolidated_9a9de1c8e6d1e38a43f6",
+    "title": "Timing boundaries and training-budget definitions need clarification for reproducing efficiency results",
+    "central_question": "Do the complete experimental sections or implementation documentation specify the CPU model and the operations included in each training and test timer?",
+    "observed_facts": [
+      "The sentiment timing caption explicitly reports a single epoch, while the accuracy experiments use five epochs. The text identifies a Tesla K40 for convolutional models and a CPU with 20 threads for fastText. For tag prediction, the authors specify five fastText epochs and state that both models use 20 training threads and one test thread; the supplied timing description does not identify the CPU model, timing boundaries, or Tagspace training budget."
+    ],
+    "suspected_problem": "The runtime protocol available here may be insufficient to reconstruct the measured workloads. In particular, it is unresolved whether tag-prediction training times cover a complete run or another unit, how Tagspace stopping was chosen, and whether preprocessing, feature hashing, tree construction, and data loading are timed.",
+    "scientific_significance": "The central efficiency claims depend on wall-clock measurements. Unclear timing boundaries or training budgets can change the interpretation of speed to obtain a reported-quality model, even when thread counts and hidden dimensions match. The distinction between per-epoch and full-run time also matters when connecting the sentiment accuracy and timing results.",
+    "source_candidate_ids": [
+      "candidate_971f36dc41e9d430"
+    ],
+    "source_dimension_ids": [
+      "D5"
+    ],
+    "related_claim_ids": [
+      "claim_1133d756d8934075",
+      "claim_4ee5d311407a9fdc",
+      "claim_67d50643162d3173",
+      "claim_ac132679a77fdbc7",
+      "claim_806bb52fd416208b",
+      "claim_8bc4f1e06b6ba6e3"
+    ],
+    "related_contribution_ids": [
+      "contrib_79564b0c2f56215c",
+      "contrib_97e74aec1af3cf15"
+    ],
+    "original_source_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_2_9",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_2_16",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_2_17",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_24",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_16",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_17",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_18",
+        "evidence_role": "observed_statement"
+      }
+    ],
+    "counterevidence_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_2_17",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_18",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_21",
+        "evidence_role": "context"
+      }
+    ],
+    "verification_questions": [
+      "Do the complete experimental sections or implementation documentation specify the CPU model and the operations included in each training and test timer?",
+      "Does Table 5 report complete five-epoch fastText training, and what training budget or stopping criterion produced the paired Tagspace accuracy and time?",
+      "Are the sentiment per-epoch measurements and full-run statements explicitly distinguished in the original source?",
+      "After verifying table headers and alignment, do the timing entries correspond to the same model configurations used for the reported accuracies?"
+    ],
+    "source_limitations": [
+      "Both timing tables have incomplete extracted structure; no numerical inconsistency or incorrect speedup calculation is asserted.",
+      "The complete timing captions, surrounding experimental text, and any implementation appendix must be checked before treating these details as author omissions.",
+      "The supplied text already reports hardware categories, thread counts, and a possible CUDA implementation speedup; those disclosures partially constrain interpretation."
+    ],
+    "external_verification_required": false,
+    "external_flag_disagreement": false,
+    "original_impact_assessments": {
+      "candidate_971f36dc41e9d430": "major_candidate"
+    },
+    "potential_impact": "major_candidate",
+    "impact_rationale": "Original candidates agree; severity remains unverified",
+    "consolidation_rationale": "This asks whether timer boundaries, CPU specifications, measured configurations, and tag-prediction training budgets permit runtime reproduction. Those protocol details can remain unresolved after the scope of the headline classification speedups is clarified.",
+    "verification_status": "unverified"
+  },
+  {
+    "consolidated_issue_id": "consolidated_bdd3cb2a8bdb123b2f43",
+    "title": "Broad efficiency comparisons may not isolate the algorithmic contribution from implementation and parallelism",
+    "central_question": "Does the complete paper distinguish end-to-end system efficiency from speed attributable to particular algorithmic components?",
+    "observed_facts": [
+      "The authors present fastText as combining a rank-constrained model with fast loss computation. They also state that the same model could be implemented in Vowpal Wabbit, with their tailored implementation running 2–5 times faster. The sentiment timing discussion compares fastText on 20 CPU threads with convolutional models on a K40 GPU and Tang et al.'s GRNN method on a single CPU thread. The tag-prediction comparison separately reports equal training thread counts and single-thread testing for both models."
+    ],
+    "suspected_problem": "The broad speed claims may establish the practical efficiency of the complete fastText system without isolating how much improvement comes from the model and inference mechanism versus parallelism and software implementation. This distinction needs verification before interpreting the headline speedups as evidence for the algorithmic component of the contribution.",
+    "scientific_significance": "The paper's central contribution is efficient classification. Attribution affects whether readers can expect the reported gains from adopting the mathematical model, the hierarchical inference procedure, or the released implementation and execution configuration.",
+    "source_candidate_ids": [
+      "candidate_9cd1bf4aa574a3c5"
+    ],
+    "source_dimension_ids": [
+      "D1"
+    ],
+    "related_claim_ids": [
+      "claim_4a3dc828381768d1",
+      "claim_b1536496726f40f8",
+      "claim_bae5cfbc7c8ffb5b",
+      "claim_4ee5d311407a9fdc",
+      "claim_806bb52fd416208b"
+    ],
+    "related_contribution_ids": [
+      "contrib_97e74aec1af3cf15",
+      "contrib_79564b0c2f56215c"
+    ],
+    "original_source_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_0_4",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_1_18",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_2_17",
+        "evidence_role": "observed_statement"
+      }
+    ],
+    "counterevidence_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_1_20",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_1_4",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_17",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_18",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_20",
+        "evidence_role": "counterevidence"
+      }
+    ],
+    "verification_questions": [
+      "Does the complete paper distinguish end-to-end system efficiency from speed attributable to particular algorithmic components?",
+      "Are there controlled comparisons of the same model across implementations or thread counts that quantify these contributions?",
+      "Does the equal-thread tag-prediction experiment substantiate a narrower mechanism-specific efficiency claim even if sentiment timing comparisons do not isolate that mechanism?"
+    ],
+    "source_limitations": [
+      "Complete timing tables and their alignments require verification.",
+      "Implementation benchmark details may occur in omitted material.",
+      "The supplied prose supports a practical system comparison; it does not by itself establish that the authors intend a causal attribution of every speedup to algorithm design."
+    ],
+    "external_verification_required": false,
+    "external_flag_disagreement": false,
+    "original_impact_assessments": {
+      "candidate_9cd1bf4aa574a3c5": "undetermined"
+    },
+    "potential_impact": "undetermined",
+    "impact_rationale": "Original candidates agree; severity remains unverified",
+    "consolidation_rationale": "This asks how efficiency gains are attributable to algorithmic components, implementation, and parallelism. Controlled component and execution comparisons are needed beyond clarification of training endpoints, timing protocols, or theoretical complexity.",
+    "verification_status": "unverified"
+  },
+  {
+    "consolidated_issue_id": "consolidated_23e6a7c956e176a37f5c",
+    "title": "Filtering YFCC100M before splitting may make the evaluation depend on held-out frequency information",
+    "central_question": "Does the original description or dataset script compute the frequency threshold over the whole corpus or only the training partition?",
+    "observed_facts": [
+      "The dataset description states that words and tags occurring fewer than 100 times are removed and the data are then split into training, validation, and test sets. The resulting task uses titles and captions, has 312,116 tags, and is evaluated with precision at one. The authors state that they will release a script recreating the dataset."
+    ],
+    "suspected_problem": "If the described order is literal, vocabulary and tag eligibility may be determined using validation and test frequencies. This would define a corpus-level filtered benchmark rather than a strictly training-derived preprocessing pipeline. The consequences depend on whether filtering only removes feature and label types or also removes examples or changes which tags count as correct. The source does not establish those consequences, and this is not evidence of direct test-label training.",
+    "scientific_significance": "Tag filtering can change the prediction space and the difficulty of precision-at-one evaluation, especially for examples whose original tags are rare or removed. Training-only filtering could produce a different label inventory, different eligible examples, and different absolute performance, affecting the scope and reproducibility of the scalability result.",
+    "source_candidate_ids": [
+      "candidate_a399dcbbab67a609"
+    ],
+    "source_dimension_ids": [
+      "D3"
+    ],
+    "related_claim_ids": [
+      "claim_71f8142f6a6fbd62",
+      "claim_4632b53f4de11555"
+    ],
+    "related_contribution_ids": [
+      "contrib_97e74aec1af3cf15"
+    ],
+    "original_source_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_3_19",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_16",
+        "evidence_role": "context"
+      }
+    ],
+    "counterevidence_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_3_19",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_24",
+        "evidence_role": "context"
+      }
+    ],
+    "verification_questions": [
+      "Does the original description or dataset script compute the frequency threshold over the whole corpus or only the training partition?",
+      "How are examples with no retained tags handled, and is precision at one computed against original tags or only retained tags?",
+      "Are all compared models trained and evaluated on exactly the same filtered examples and label inventory?",
+      "If filtering uses the full corpus, is this benchmark convention stated explicitly, and would training-only filtering materially change dataset composition or performance?"
+    ],
+    "source_limitations": [
+      "Only the prose description is available; the promised reconstruction script and exact preprocessing operations are not supplied.",
+      "The order of operations needs confirmation because reading order is unverified.",
+      "No conclusion about relative model rankings follows from the supplied filtering description."
+    ],
+    "external_verification_required": false,
+    "external_flag_disagreement": false,
+    "original_impact_assessments": {
+      "candidate_a399dcbbab67a609": "undetermined"
+    },
+    "potential_impact": "undetermined",
+    "impact_rationale": "Original candidates agree; severity remains unverified",
+    "consolidation_rationale": "This questions whether held-out frequencies determine filtering and thereby affect benchmark eligibility and evaluation scope. A reproducible reconstruction procedure or a specified multi-tag objective would not by itself resolve that dependence or its consequences.",
+    "verification_status": "unverified"
+  },
+  {
+    "consolidated_issue_id": "consolidated_4b0110cc826e3be3b84e",
+    "title": "The mapping from tag sets to the single-label training objective requires verification",
+    "central_question": "Do the complete model and tag-prediction sections specify how multiple tags are converted into training targets?",
+    "observed_facts": [
+      "The model description defines negative log-likelihood over document labels and identifies y_n as the label. The YFCC100M experiment predicts tags from titles and captions and reports precision at one. The supplied task description does not explain how examples with multiple retained tags are presented to this objective or how their reference tags enter precision at one."
+    ],
+    "suspected_problem": "The available specification may leave consequential choices unresolved: sampling one target tag, expanding an example into several training instances, or optimizing against all tags would weight examples and labels differently. The precision-at-one denominator and treatment of examples without retained tags also require confirmation.",
+    "scientific_significance": "These choices determine the effective training distribution, the number of updates in an epoch, and the interpretation of the reported tag-prediction precision and runtime. Implementations using different choices could produce different results despite matching the stated hidden dimensions and epoch count.",
+    "source_candidate_ids": [
+      "candidate_d4a548d8c7a42e0d"
+    ],
+    "source_dimension_ids": [
+      "D5"
+    ],
+    "related_claim_ids": [
+      "claim_51e7adc9b15d0e02",
+      "claim_71f8142f6a6fbd62",
+      "claim_ac132679a77fdbc7",
+      "claim_4632b53f4de11555"
+    ],
+    "related_contribution_ids": [
+      "contrib_97e74aec1af3cf15"
+    ],
+    "original_source_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_1_8",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_1_16",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_19",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_3_24",
+        "evidence_role": "context"
+      }
+    ],
+    "counterevidence_refs": [
+      {
+        "source_id": "ru_ev_26739aba340e_3_19",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_26739aba340e_0_11",
+        "evidence_role": "counterevidence"
+      }
+    ],
+    "verification_questions": [
+      "Do the complete model and tag-prediction sections specify how multiple tags are converted into training targets?",
+      "Does the dataset-reconstruction material define treatment of records with no retained tags and whether precision at one accepts any retained reference tag?",
+      "What constitutes an epoch when a record has several target tags, and is the target treatment consistent between fastText and Tagspace?"
+    ],
+    "source_limitations": [
+      "The exact loss equation is not recoverable from the supplied extraction.",
+      "The complete original model section, task section, and any accompanying implementation documentation must be inspected before concluding that this protocol is omitted.",
+      "The dataset script and linked code could resolve the ambiguity but are unavailable in the supplied context."
+    ],
+    "external_verification_required": false,
+    "external_flag_disagreement": false,
+    "original_impact_assessments": {
+      "candidate_d4a548d8c7a42e0d": "major_candidate"
+    },
+    "potential_impact": "major_candidate",
+    "impact_rationale": "Original candidates agree; severity remains unverified",
+    "consolidation_rationale": "This asks how multiple retained tags map to training targets, epochs, and precision-at-one references. These protocol choices require separate verification from filtering provenance, deterministic dataset reconstruction, and timing boundaries.",
+    "verification_status": "unverified"
+  }
+]

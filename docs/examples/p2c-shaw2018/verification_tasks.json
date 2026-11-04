@@ -1,0 +1,643 @@
+[
+  {
+    "verification_task_id": "verify_de54fcc35ed02354a988",
+    "consolidated_issue_id": "consolidated_9825c343099d3753e676",
+    "central_question": "Were the absolute-position and relative-position runs paired with exactly the same number of updates, random seeds, checkpoint selection, and decoding settings?",
+    "related_claim_ids": [
+      "claim_36dd8fff5585d58b",
+      "claim_e782a3ffa36482eb",
+      "claim_8059f7518ddd3306",
+      "claim_43b9b6ac4b37c7b1"
+    ],
+    "original_candidate_ids": [
+      "candidate_411d89d947fb55ec",
+      "candidate_e9f93ba5fdcc8f8a"
+    ],
+    "source_refs_to_check": [
+      {
+        "source_id": "ru_ev_886cadb1a708_3_16",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_3",
+        "evidence_role": "supporting_result"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_7",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_9",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_5",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_7",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_9",
+        "evidence_role": "context"
+      }
+    ],
+    "counterevidence_refs_to_check": [
+      {
+        "source_id": "ru_ev_886cadb1a708_3_2",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_16",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_5",
+        "evidence_role": "context"
+      }
+    ],
+    "original_document_snapshot": {
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "886cadb1a7084f458f387ce3b2315574",
+      "pdf_sha256": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "source_bundle_id": "sb_8086e2e5e139_886cadb1a7084f458f387ce3b2315574_v1"
+    },
+    "required_checks": [
+      "Confirm the observed facts against the original PDF",
+      "Were the absolute-position and relative-position runs paired with exactly the same number of updates, random seeds, checkpoint selection, and decoding settings?",
+      "Did both members of each comparison use the same hardware and data ordering, or were hardware differences irrelevant because only model outputs were compared?",
+      "Does the complete paper or released implementation document how the baseline results were generated and selected?",
+      "Are the BLEU differences reproduced over multiple runs or supported by additional checkpoints?",
+      "For each base and big result, were the absolute and relative models trained with identical data preprocessing, batch construction, optimization schedule, number of updates, dropout, hardware allocation, checkpoint selection or averaging, and decoding settings?",
+      "Were the reported baseline and relative-position scores obtained from matched random seeds or repeated runs?",
+      "Does the full Table 1 identify whether the displayed baseline scores are the matched in-house baselines described in the text?"
+    ],
+    "additional_materials_needed": [],
+    "external_verification_required": false,
+    "priority_for_verification": "undetermined",
+    "limitations": [
+      "The supplied units state the intended isolation procedure but do not provide all baseline-specific training details.",
+      "Table 1 numerical structure is only partially verified.",
+      "No repeated-run or seed information appears in the supplied units.",
+      "The context gives the authors' intent to generate matched baselines but not the complete baseline-specific training records.",
+      "Relevant details may occur in omitted reading units.",
+      "Table 1 is not independently verified.",
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+      "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+      "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+      "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+      "Source quality: reading_order_ambiguous",
+      "Source quality: section_mapping_incomplete",
+      "Source quality: source_mapping_partial",
+      "Source quality: human_reading_reference_missing",
+      "Source quality: human_page_reference_missing",
+      "table table_p2_0: visual_review_required",
+      "table table_ev_886cadb1a708_3_1: structure_incomplete",
+      "table table_p3_0: detected_unverified",
+      "table table_p4_0: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+      "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+      "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "source_mapping_partial",
+      "human_reading_reference_missing",
+      "human_page_reference_missing",
+      "p2a_limited"
+    ],
+    "verification_status": "unverified"
+  },
+  {
+    "verification_task_id": "verify_cfd16bf8c8b4d05c632f",
+    "consolidated_issue_id": "consolidated_105a91210515bf8f5b82",
+    "central_question": "Does the full paper report peak memory, wall-clock time, inference throughput, or scaling measurements for the relative-position implementation?",
+    "related_claim_ids": [
+      "claim_8059f7518ddd3306",
+      "claim_82ee884e768cdb0f",
+      "claim_54bab36257f80a99",
+      "claim_db4299cf9b91c9e5"
+    ],
+    "original_candidate_ids": [
+      "candidate_44ae8c725a2e4956",
+      "candidate_94105da03d98236b"
+    ],
+    "source_refs_to_check": [
+      {
+        "source_id": "ru_ev_886cadb1a708_2_24",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_2_33",
+        "evidence_role": "supporting_result"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_2_39",
+        "evidence_role": "observed_statement"
+      }
+    ],
+    "counterevidence_refs_to_check": [
+      {
+        "source_id": "ru_ev_886cadb1a708_2_13",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_2_24",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_7",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_9",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_16",
+        "evidence_role": "context"
+      }
+    ],
+    "original_document_snapshot": {
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "886cadb1a7084f458f387ce3b2315574",
+      "pdf_sha256": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "source_bundle_id": "sb_8086e2e5e139_886cadb1a7084f458f387ce3b2315574_v1"
+    },
+    "required_checks": [
+      "Confirm the observed facts against the original PDF",
+      "Does the full paper report peak memory, wall-clock time, inference throughput, or scaling measurements for the relative-position implementation?",
+      "Is the 7% steps-per-second comparison made against an implementation with matched software version, hardware utilization, precision, batch construction, and checkpoint behavior?",
+      "Do the reported complexity expressions account for all per-layer, per-head, and batch-dependent tensors used by the implementation?",
+      "What exact implementation and baseline are used for the reported 7% steps-per-second comparison?",
+      "Does the measurement include training, backward propagation, communication, and evaluation overhead, or only selected attention operations?",
+      "Are peak memory and wall-clock measurements reported for multiple sequence lengths, batch sizes, and head-sharing configurations?",
+      "Do the stated asymptotic storage terms correspond to materialized tensors in the actual implementation?"
+    ],
+    "additional_materials_needed": [],
+    "external_verification_required": false,
+    "priority_for_verification": "undetermined",
+    "limitations": [
+      "The supplied context includes the implementation description and one throughput result but may omit additional efficiency measurements.",
+      "The mathematical objects and implementation details are extracted from unverified formula and reading-order units.",
+      "Only one hardware and translation configuration is reported in the supplied units.",
+      "The formula and implementation objects are unverified.",
+      "The supplied units do not identify the runtime comparison baseline beyond the reference to Vaswani et al. (2017).",
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+      "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+      "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+      "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+      "Source quality: reading_order_ambiguous",
+      "Source quality: section_mapping_incomplete",
+      "Source quality: source_mapping_partial",
+      "Source quality: human_reading_reference_missing",
+      "Source quality: human_page_reference_missing",
+      "table table_p2_0: visual_review_required",
+      "table table_ev_886cadb1a708_3_1: structure_incomplete",
+      "table table_p3_0: detected_unverified",
+      "table table_p4_0: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+      "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+      "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "source_mapping_partial",
+      "human_reading_reference_missing",
+      "human_page_reference_missing",
+      "p2a_limited"
+    ],
+    "verification_status": "unverified"
+  },
+  {
+    "verification_task_id": "verify_c8e885ff405633dae2e0",
+    "consolidated_issue_id": "consolidated_fe5b94a19e9e06327e40",
+    "central_question": "Check the original Section 3.3 layout and surrounding text for an explicit restriction of the space analysis to representation storage.",
+    "related_claim_ids": [
+      "claim_54bab36257f80a99",
+      "claim_db4299cf9b91c9e5",
+      "claim_8059f7518ddd3306"
+    ],
+    "original_candidate_ids": [
+      "candidate_4e6dea2fd90f07da"
+    ],
+    "source_refs_to_check": [
+      {
+        "source_id": "ru_ev_886cadb1a708_2_39",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_2_10",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_7",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_9",
+        "evidence_role": "observed_statement"
+      }
+    ],
+    "counterevidence_refs_to_check": [
+      {
+        "source_id": "ru_ev_886cadb1a708_2_13",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_2_24",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_2_33",
+        "evidence_role": "counterevidence"
+      }
+    ],
+    "original_document_snapshot": {
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "886cadb1a7084f458f387ce3b2315574",
+      "pdf_sha256": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "source_bundle_id": "sb_8086e2e5e139_886cadb1a7084f458f387ce3b2315574_v1"
+    },
+    "required_checks": [
+      "Confirm the observed facts against the original PDF",
+      "Check the original Section 3.3 layout and surrounding text for an explicit restriction of the space analysis to representation storage.",
+      "Which tensors are retained during forward computation and training, and are the pairwise score and weight tensors materialized?",
+      "How does the memory accounting change for the base model's unique representations per head?",
+      "Does the implementation avoid broadcasting while still retaining an O(bhn²) attention tensor, and is this distinction documented?"
+    ],
+    "additional_materials_needed": [],
+    "external_verification_required": false,
+    "priority_for_verification": "normal",
+    "limitations": [
+      "The concern is based on the supplied prose complexity statement, not an independently verified implementation memory trace.",
+      "Omitted text and unverified technical objects may clarify the intended scope.",
+      "The reported ability to preserve model and batch sizes on P100 GPUs provides practical counterevidence to a severe memory limitation, but does not by itself define the asymptotic accounting.",
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+      "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+      "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+      "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+      "Source quality: reading_order_ambiguous",
+      "Source quality: section_mapping_incomplete",
+      "Source quality: source_mapping_partial",
+      "Source quality: human_reading_reference_missing",
+      "Source quality: human_page_reference_missing",
+      "table table_p2_0: visual_review_required",
+      "table table_ev_886cadb1a708_3_1: structure_incomplete",
+      "table table_p3_0: detected_unverified",
+      "table table_p4_0: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+      "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+      "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "source_mapping_partial",
+      "human_reading_reference_missing",
+      "human_page_reference_missing",
+      "p2a_limited"
+    ],
+    "verification_status": "unverified"
+  },
+  {
+    "verification_task_id": "verify_9ecbab2d89ac51599b54",
+    "consolidated_issue_id": "consolidated_e3eac49834cebb136759",
+    "central_question": "Does another supplied or omitted experiment evaluate test sequences longer than those seen during training?",
+    "related_claim_ids": [
+      "claim_1aee059429f33dca",
+      "claim_086b9f570ac28264",
+      "claim_9338aeb12b1467e6"
+    ],
+    "original_candidate_ids": [
+      "candidate_549cf495fe3bd6f9",
+      "candidate_633aeca7f9bd479d",
+      "candidate_b869e41b9495ceea",
+      "candidate_d0595236a2c0a091"
+    ],
+    "source_refs_to_check": [
+      {
+        "source_id": "ru_ev_886cadb1a708_1_16",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_2_18",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_6",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_8",
+        "evidence_role": "supporting_result"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_1_16",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_6",
+        "evidence_role": "supporting_result"
+      }
+    ],
+    "counterevidence_refs_to_check": [
+      {
+        "source_id": "ru_ev_886cadb1a708_1_16",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_8",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_2_18",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_4_17",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_8",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_2_23",
+        "evidence_role": "counterevidence"
+      }
+    ],
+    "original_document_snapshot": {
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "886cadb1a7084f458f387ce3b2315574",
+      "pdf_sha256": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "source_bundle_id": "sb_8086e2e5e139_886cadb1a7084f458f387ce3b2315574_v1"
+    },
+    "required_checks": [
+      "Confirm the observed facts against the original PDF",
+      "Does another supplied or omitted experiment evaluate test sequences longer than those seen during training?",
+      "Are training and evaluation length distributions reported for the WMT experiments?",
+      "Does the complete paper distinguish the representational invariance claim from an empirically demonstrated extrapolation claim?",
+      "If length extrapolation was tested, are results reported separately by sequence length or length bucket?",
+      "Does the complete paper provide training-length limits and an evaluation on sequences exceeding those limits?",
+      "In context, does 'enables the model to generalize' mean that position representations remain defined, or does it assert maintained predictive performance?",
+      "If empirical length extrapolation is claimed, is its evidence separated from the clipping-distance ablation and compared with the sinusoidal baseline?",
+      "Does the conclusion's narrower emphasis on machine translation improvements adequately qualify this ancillary generalization statement?",
+      "Does the full paper report evaluation on examples whose sequence lengths exceed the training range or otherwise differ in length distribution?",
+      "Were training and test length distributions measured, and does the clipping experiment distinguish length generalization from ordinary development-set performance?",
+      "If no such experiment exists, is the claim intended as a theoretical property rather than an empirical result?",
+      "Does the complete paper provide training-length limits, evaluation length distributions, or results specifically testing lengths outside the training range?",
+      "Does the surrounding original text use 'generalize' solely to mean that relation representations remain defined at unseen lengths, or does it claim preservation of predictive performance?",
+      "If no length-extrapolation evaluation is present, is the statement sufficiently qualified as an architectural capability or hypothesis?"
+    ],
+    "additional_materials_needed": [],
+    "external_verification_required": false,
+    "priority_for_verification": "undetermined",
+    "limitations": [
+      "Omitted reading units may contain additional length-generalization experiments.",
+      "The supplied units do not provide sequence-length distributions or length-stratified evaluation results.",
+      "The reported clipping table is detected but not independently verified.",
+      "Training configuration and other potentially relevant experimental passages are omitted; a length-generalization evaluation cannot be declared absent from the whole paper.",
+      "The clipping-distance table is unverified; this candidate relies on the prose description of the experiment rather than exact extracted scores.",
+      "The wording must be checked in the original layout because reading order and section mapping are incomplete.",
+      "The supplied context explicitly contains a provisional local gap for an unseen-length experiment, but omitted reading units may contain such an evaluation.",
+      "The cited clipping table is marked unverified.",
+      "Experimental setup units are omitted, so a length-based evaluation or qualification elsewhere cannot be excluded.",
+      "The clipping definition is available as extracted text, but its complete formula context has not been visually verified.",
+      "The supplied clipping-distance results concern aggregate development-set BLEU and cannot independently resolve unseen-length performance.",
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+      "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+      "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+      "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+      "Source quality: reading_order_ambiguous",
+      "Source quality: section_mapping_incomplete",
+      "Source quality: source_mapping_partial",
+      "Source quality: human_reading_reference_missing",
+      "Source quality: human_page_reference_missing",
+      "table table_p2_0: visual_review_required",
+      "table table_ev_886cadb1a708_3_1: structure_incomplete",
+      "table table_p3_0: detected_unverified",
+      "table table_p4_0: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+      "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+      "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "source_mapping_partial",
+      "human_reading_reference_missing",
+      "human_page_reference_missing",
+      "p2a_limited"
+    ],
+    "verification_status": "unverified"
+  },
+  {
+    "verification_task_id": "verify_a04fac62747054b4c898",
+    "consolidated_issue_id": "consolidated_c5155e1e615fb4a2358a",
+    "central_question": "Inspect the complete experimental setup, footnotes, and any supplementary material for the BLEU scorer, case handling, tokenization, reference processing, and word-piece reconstruction procedure.",
+    "related_claim_ids": [
+      "claim_36dd8fff5585d58b",
+      "claim_e782a3ffa36482eb",
+      "claim_43b9b6ac4b37c7b1"
+    ],
+    "original_candidate_ids": [
+      "candidate_7000f7ac462a95b7"
+    ],
+    "source_refs_to_check": [
+      {
+        "source_id": "ru_ev_886cadb1a708_2_37",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_2",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_5",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_1",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_3",
+        "evidence_role": "supporting_result"
+      }
+    ],
+    "counterevidence_refs_to_check": [
+      {
+        "source_id": "ru_ev_886cadb1a708_2_40",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_16",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_6",
+        "evidence_role": "context"
+      }
+    ],
+    "original_document_snapshot": {
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "886cadb1a7084f458f387ce3b2315574",
+      "pdf_sha256": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "source_bundle_id": "sb_8086e2e5e139_886cadb1a7084f458f387ce3b2315574_v1"
+    },
+    "required_checks": [
+      "Confirm the observed facts against the original PDF",
+      "Inspect the complete experimental setup, footnotes, and any supplementary material for the BLEU scorer, case handling, tokenization, reference processing, and word-piece reconstruction procedure.",
+      "Does a specified tensor2tensor revision, problem definition, configuration, or evaluation command uniquely recover the scoring pipeline?",
+      "Were baseline and relative-position outputs scored with identical processing and references?"
+    ],
+    "additional_materials_needed": [
+      "External literature, code or dataset relevant to this question"
+    ],
+    "external_verification_required": true,
+    "priority_for_verification": "normal",
+    "limitations": [
+      "The available experimental passages are partial; this is a local protocol gap, not a confirmed paper-wide omission.",
+      "The repository was not inspected, so defaults or released configurations may resolve the concern.",
+      "Numerical table associations remain unverified; the candidate uses the independently supplied results prose.",
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+      "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+      "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+      "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+      "Source quality: reading_order_ambiguous",
+      "Source quality: section_mapping_incomplete",
+      "Source quality: source_mapping_partial",
+      "Source quality: human_reading_reference_missing",
+      "Source quality: human_page_reference_missing",
+      "table table_p2_0: visual_review_required",
+      "table table_ev_886cadb1a708_3_1: structure_incomplete",
+      "table table_p3_0: detected_unverified",
+      "table table_p4_0: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+      "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+      "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "source_mapping_partial",
+      "human_reading_reference_missing",
+      "human_page_reference_missing",
+      "p2a_limited"
+    ],
+    "verification_status": "unverified"
+  },
+  {
+    "verification_task_id": "verify_4feb1a992b32da75a9c0",
+    "consolidated_issue_id": "consolidated_3a9cf1ce576dc3d2beda",
+    "central_question": "Does the full Table 1 or another table contain a combined relative-plus-sinusoidal condition?",
+    "related_claim_ids": [
+      "claim_43dea7dafe53a150",
+      "claim_2b641eaf7e9d42a4"
+    ],
+    "original_candidate_ids": [
+      "candidate_ea97b96233a7aa53"
+    ],
+    "source_refs_to_check": [
+      {
+        "source_id": "ru_ev_886cadb1a708_0_10",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_3",
+        "evidence_role": "observed_statement"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_0",
+        "evidence_role": "context"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_1",
+        "evidence_role": "context"
+      }
+    ],
+    "counterevidence_refs_to_check": [
+      {
+        "source_id": "ru_ev_886cadb1a708_3_3",
+        "evidence_role": "counterevidence"
+      },
+      {
+        "source_id": "ru_ev_886cadb1a708_3_16",
+        "evidence_role": "context"
+      }
+    ],
+    "original_document_snapshot": {
+      "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "snapshot_id": "886cadb1a7084f458f387ce3b2315574",
+      "pdf_sha256": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "source_bundle_id": "sb_8086e2e5e139_886cadb1a7084f458f387ce3b2315574_v1"
+    },
+    "required_checks": [
+      "Confirm the observed facts against the original PDF",
+      "Does the full Table 1 or another table contain a combined relative-plus-sinusoidal condition?",
+      "Was the combined condition trained with the same model size, dropout, update budget, checkpoint policy, and decoding settings as the two single-representation conditions?",
+      "Is the reported no-benefit result based on one run or repeated measurements, and are the underlying scores available?"
+    ],
+    "additional_materials_needed": [],
+    "external_verification_required": false,
+    "priority_for_verification": "normal",
+    "limitations": [
+      "Table 1 is incomplete and not visually verified in the supplied source state.",
+      "The context may omit a separate combined-position experiment.",
+      "The candidate is a traceability concern, not a confirmed missing control.",
+      "Legacy block order is not a verified reading order.",
+      "Formula transcription, table rows, figures, section boundaries and references require verification.",
+      "A missing object in this candidate inventory does not prove absence from the PDF.",
+      "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+      "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+      "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+      "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+      "Source quality: reading_order_ambiguous",
+      "Source quality: section_mapping_incomplete",
+      "Source quality: source_mapping_partial",
+      "Source quality: human_reading_reference_missing",
+      "Source quality: human_page_reference_missing",
+      "table table_p2_0: visual_review_required",
+      "table table_ev_886cadb1a708_3_1: structure_incomplete",
+      "table table_p3_0: detected_unverified",
+      "table table_p4_0: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+      "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+      "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+      "figure figure_ev_886cadb1a708_2_11: visual_review_required",
+      "reading_order_ambiguous",
+      "section_mapping_incomplete",
+      "source_mapping_partial",
+      "human_reading_reference_missing",
+      "human_page_reference_missing",
+      "p2a_limited"
+    ],
+    "verification_status": "unverified"
+  }
+]

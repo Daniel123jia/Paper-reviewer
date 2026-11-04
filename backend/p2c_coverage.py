@@ -36,7 +36,8 @@ def audit_coverage(bundle, plan, profile, mapping, review, inventory) -> Coverag
     gaps = []
     inspected = {claim_id: [] for claim_id in claims}
     for dimension in review.dimensions:
-        reported = dimension.execution_status in {"completed", "limited"}
+        reported = (dimension.execution_status in {"completed", "limited"} and
+                    dimension.coverage_status != "blocked")
         dimensions.append(DimensionCoverage(
             dimension_id=dimension.dimension_id,
             execution_status=dimension.execution_status,

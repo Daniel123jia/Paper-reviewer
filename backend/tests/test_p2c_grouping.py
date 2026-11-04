@@ -1,6 +1,7 @@
 import itertools
 import json
 
+from backend.p2a_engine import RunBudget
 from backend.p2b_engine import run_p2b
 from backend.p2c_grouping import consolidate_from_relations, run_semantic_grouping
 from backend.p2c_normalizer import normalize_candidates
@@ -116,3 +117,35 @@ def test_model_pair_and_reconciliation_contract():
     assert len(outcome.issues) == 1
     assert [stage for stage, _ in calls] == ["pair-1", "reconciliation"]
     assert outcome.call_count == 2
+
+
+def test_multiple_pair_batches_account_for_every_original_pair():
+    inventory, mapping = case()
+    seen = []
+    def model(stage, system, user):
+        payload = json.loads(user)
+        if stage.startswith("pair-"):
+            seen.extend(tuple(pair) for pair in payload["pairs"])
+            content = {"relations": [{"left_issue_id": a, "right_issue_id": b,
+                "relation": "semantic_duplicate", "rationale": "same check",
+                "shared_verification_need": "one test"} for a, b in payload["pairs"]]}
+        else:
+            content = {"groups": [{"issue_ids": sorted(payload["candidates"]),
+                                    "rationale": "one question"}]}
+        return {"content": json.dumps(content), "model_identifier": "mock",
+                "input_tokens": 100, "output_tokens": 50, "duration_ms": 1}
+    outcome = run_semantic_grouping(inventory, mapping, model, "mock", max_pairs_per_call=2)
+    assert len(seen) == len(outcome.relations) == 6
+    assert outcome.call_count == 4
+    assert len(outcome.issues) == 1
+
+
+def test_budget_exhaustion_preserves_all_candidates_as_uncertain_singletons():
+    inventory, mapping = case()
+    outcome = run_semantic_grouping(inventory, mapping,
+        lambda *args: (_ for _ in ()).throw(AssertionError("model must not be called")),
+        "mock", budget=RunBudget(max_calls=0))
+    assert outcome.status == "budget_exceeded"
+    assert len(outcome.relations) == 6
+    assert all(item.relation == "uncertain_relation" for item in outcome.relations)
+    assert len(outcome.issues) == len(outcome.lineage) == inventory.candidate_count

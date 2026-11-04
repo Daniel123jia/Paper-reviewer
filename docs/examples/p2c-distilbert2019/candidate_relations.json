@@ -1,0 +1,548 @@
+[
+  {
+    "left_issue_id": "candidate_2349c5cdd44540ee",
+    "right_issue_id": "candidate_35b744cc386ff5f3",
+    "relation": "exact_duplicate",
+    "rationale": "Both question whether the implemented triple objective is uniquely specified, identifying the same unresolved weights, temperature, token selection, hidden-state pairing, reductions, and ablation rescaling. The same source and experiment-configuration checks would resolve both; their impact and external-verification labels do not change this identity.",
+    "shared_verification_need": "Check the original objective description and experiment-specific code for loss coefficients, temperature and scaling, token masks, hidden-state pairing, reductions, and coefficient handling in ablations."
+  },
+  {
+    "left_issue_id": "candidate_2349c5cdd44540ee",
+    "right_issue_id": "candidate_4797eae58a0d02e4",
+    "relation": "distinct",
+    "rationale": "The left concerns implementation of the pretraining objective; the right concerns conflicting SQuAD adaptation scores and evaluation configurations. Objective reconstruction would not reconcile the reported scores.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_2349c5cdd44540ee",
+    "right_issue_id": "candidate_8cc2ac38dbe85ec5",
+    "relation": "distinct",
+    "rationale": "The left asks which training objective was implemented; the right asks whether SQuAD prose, table entries, and the stated gap to BERT agree. These require independent evidence.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_2349c5cdd44540ee",
+    "right_issue_id": "candidate_8ef728e15e00c987",
+    "relation": "distinct",
+    "rationale": "Objective specification and the accounting boundary and comparability of pretraining costs are different questions. Verifying loss settings would not establish a comparable computational saving.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_2349c5cdd44540ee",
+    "right_issue_id": "candidate_9a34220f56b4571f",
+    "relation": "distinct",
+    "rationale": "The left requires precise loss implementation details; the right requires training-cost accounting and matched workload comparisons. Neither verification resolves the other.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_2349c5cdd44540ee",
+    "right_issue_id": "candidate_b43a63c1120cd273",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern the triple loss and interpretation of its ablations, but the left asks how the losses are implemented, whereas the right asks whether a matched joint-removal control establishes their combined contribution. Fully specifying the objective does not supply that causal comparison.",
+    "shared_verification_need": "Inspect the ablation configurations for retained losses and coefficient handling; the right additionally requires a matched MLM-only control and assessment of attribution scope."
+  },
+  {
+    "left_issue_id": "candidate_2349c5cdd44540ee",
+    "right_issue_id": "candidate_bcbebaa303e3d372",
+    "relation": "distinct",
+    "rationale": "The left concerns training-objective reproducibility; the right concerns whether an aggregate GLUE score ratio supports broad capability-retention wording. They require different evidence and interpretation.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_2349c5cdd44540ee",
+    "right_issue_id": "candidate_cbff9281b140f698",
+    "relation": "related_but_distinct",
+    "rationale": "Both involve the loss ablations, but specifying loss weights, masks, and alignment does not establish the total benefit of distillation over a matched MLM-only student. The latter requires a separate experimental control.",
+    "shared_verification_need": "Inspect the verified ablation configurations, with separate checks for objective implementation and for a matched condition removing both distillation losses."
+  },
+  {
+    "left_issue_id": "candidate_2349c5cdd44540ee",
+    "right_issue_id": "candidate_d3a08b0240d95640",
+    "relation": "related_but_distinct",
+    "rationale": "Both touch evidence about pretraining distillation, but the left asks how its objective is defined and the right asks whether evidence supports an advantage over task-specific distillation. A stage comparison and contextual reading of the comparative wording are independent of objective specification.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_2349c5cdd44540ee",
+    "right_issue_id": "candidate_d4020475ec42754b",
+    "relation": "distinct",
+    "rationale": "The left concerns training-loss implementation; the right concerns CPU and mobile inference timing protocols. Loss-configuration checks cannot resolve runtime comparability or reproducibility.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_2349c5cdd44540ee",
+    "right_issue_id": "candidate_d66b4d629e17092d",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern reproducibility of training and ablations, but the left targets the mathematical and implementation details of the objective, while the right targets optimization, data exposure, preprocessing, fine-tuning, and checkpoint selection. Resolving either set of settings leaves the other open.",
+    "shared_verification_need": "Inspect experiment-specific training artifacts, separately verifying objective settings and the pretraining and downstream evaluation schedules."
+  },
+  {
+    "left_issue_id": "candidate_2349c5cdd44540ee",
+    "right_issue_id": "candidate_fb1bf9ee8ee47391",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern the distillation mechanism and its ablations, but the left asks which objective was implemented, while the right asks whether matched controls support joint mechanism attribution and comparisons between distillation stages. Exact objective details would not resolve those comparative claims.",
+    "shared_verification_need": "Inspect the ablation configurations; the right additionally requires matched MLM-only and distillation-stage comparisons and interpretation of the related-work wording."
+  },
+  {
+    "left_issue_id": "candidate_35b744cc386ff5f3",
+    "right_issue_id": "candidate_4797eae58a0d02e4",
+    "relation": "distinct",
+    "rationale": "The left asks for a reproducible specification of the triple loss; the right asks which SQuAD adaptation scores and evaluation settings are correct. These are independent verification tasks.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_35b744cc386ff5f3",
+    "right_issue_id": "candidate_8cc2ac38dbe85ec5",
+    "relation": "distinct",
+    "rationale": "Objective implementation details do not resolve the apparent SQuAD prose-table discrepancy or the baseline underlying the 'within three points' statement.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_35b744cc386ff5f3",
+    "right_issue_id": "candidate_8ef728e15e00c987",
+    "relation": "distinct",
+    "rationale": "The left concerns loss specification and reproduction; the right concerns whether resource comparisons support the claimed pretraining-cost advantage and which costs are included. Different evidence is needed.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_35b744cc386ff5f3",
+    "right_issue_id": "candidate_9a34220f56b4571f",
+    "relation": "distinct",
+    "rationale": "Reconstructing loss coefficients, masks, and hidden-state alignment would not establish teacher-cost accounting or comparability of the reported training runs. The scientific questions are different.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_35b744cc386ff5f3",
+    "right_issue_id": "candidate_b43a63c1120cd273",
+    "relation": "related_but_distinct",
+    "rationale": "Both examine the triple loss and its ablations, but the left asks what was implemented and how surviving losses were scaled; the right asks whether the experiment inventory isolates the combined effect of ongoing teacher supervision. A fully specified single-removal study could still leave the joint attribution unresolved.",
+    "shared_verification_need": "Verify Table 4 configurations and associated training settings; separately establish whether a matched teacher-initialized MLM-only control exists."
+  },
+  {
+    "left_issue_id": "candidate_35b744cc386ff5f3",
+    "right_issue_id": "candidate_bcbebaa303e3d372",
+    "relation": "distinct",
+    "rationale": "The left concerns objective specification, whereas the right concerns the interpretation and scope of the 97% GLUE aggregate ratio. Verifying one would not answer the other.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_35b744cc386ff5f3",
+    "right_issue_id": "candidate_cbff9281b140f698",
+    "relation": "related_but_distinct",
+    "rationale": "The candidates share an interest in loss ablations but question different things: exact objective implementation versus whether a matched MLM-only comparison establishes total distillation benefit. The required control cannot be replaced by precise implementation documentation.",
+    "shared_verification_need": "Inspect the experiment-specific ablation configurations, checking both loss implementation and the existence and matching of a joint-removal control."
+  },
+  {
+    "left_issue_id": "candidate_35b744cc386ff5f3",
+    "right_issue_id": "candidate_d3a08b0240d95640",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern pretraining distillation, but the left requires objective implementation details, while the right requires evidence comparing pretraining with task-specific distillation and clarification of comparative wording. These verification needs are independent.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_35b744cc386ff5f3",
+    "right_issue_id": "candidate_d4020475ec42754b",
+    "relation": "distinct",
+    "rationale": "One questions the definition of the training objective; the other questions the execution and timing protocol for CPU and mobile inference. Loss configurations and inference benchmark settings require independent verification.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_35b744cc386ff5f3",
+    "right_issue_id": "candidate_d66b4d629e17092d",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern reproducibility, but objective coefficients, temperature, and hidden-state alignment are separate from training exposure, optimization schedules, and downstream model selection. Resolving either configuration gap would not resolve the other.",
+    "shared_verification_need": "Inspect the released experiment configurations, with separate checks for objective specification and training/evaluation settings."
+  },
+  {
+    "left_issue_id": "candidate_35b744cc386ff5f3",
+    "right_issue_id": "candidate_fb1bf9ee8ee47391",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern the distillation mechanism, but specifying the implemented losses does not establish their combined causal benefit or superiority over another distillation stage. The latter requires matched comparison conditions and examination of comparative wording.",
+    "shared_verification_need": "Verify the loss composition of the reported full model and ablation configurations."
+  },
+  {
+    "left_issue_id": "candidate_4797eae58a0d02e4",
+    "right_issue_id": "candidate_8cc2ac38dbe85ec5",
+    "relation": "exact_duplicate",
+    "rationale": "Both question the same apparent conflict between SQuAD adaptation-distillation prose and Table 2, including metric ordering, evaluation configuration, and the gap to BERT. The same source reconciliation would resolve both.",
+    "shared_verification_need": "Check the original Table 2 and surrounding prose for EM/F1 values, model and evaluation correspondence, and the baseline supporting the within-three-points statement."
+  },
+  {
+    "left_issue_id": "candidate_4797eae58a0d02e4",
+    "right_issue_id": "candidate_8ef728e15e00c987",
+    "relation": "distinct",
+    "rationale": "Reconciling SQuAD accuracy values is independent of determining whether pretraining cost comparisons use comparable workloads and appropriate teacher-cost accounting.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_4797eae58a0d02e4",
+    "right_issue_id": "candidate_9a34220f56b4571f",
+    "relation": "distinct",
+    "rationale": "The first concerns conflicting downstream scores; the second concerns pretraining resource comparability and accounting boundaries. Neither verification task answers the other.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_4797eae58a0d02e4",
+    "right_issue_id": "candidate_b43a63c1120cd273",
+    "relation": "distinct",
+    "rationale": "The SQuAD concern requires reconciling reported results, whereas the ablation concern requires determining whether a matched MLM-only control isolates the joint contribution of pretraining distillation losses.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_4797eae58a0d02e4",
+    "right_issue_id": "candidate_bcbebaa303e3d372",
+    "relation": "distinct",
+    "rationale": "One questions the numerical correspondence of SQuAD results; the other questions whether a GLUE aggregate ratio supports broad capability-retention wording. They require different tables and different interpretive checks.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_4797eae58a0d02e4",
+    "right_issue_id": "candidate_cbff9281b140f698",
+    "relation": "distinct",
+    "rationale": "Resolving SQuAD prose/table scores does not determine whether pretraining ablations isolate the total benefit of teacher supervision. The latter needs a separate matched-control assessment.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_4797eae58a0d02e4",
+    "right_issue_id": "candidate_d3a08b0240d95640",
+    "relation": "related_but_distinct",
+    "rationale": "Both involve adaptation-stage distillation, but accurate SQuAD scores answer a result-consistency question, while the other concern asks whether evidence establishes an advantage of pretraining over task-specific-only distillation. Correcting the scores would not supply a stage-isolating comparison.",
+    "shared_verification_need": "Confirm the SQuAD experiment's two-stage configuration and its relationship to the reported baseline."
+  },
+  {
+    "left_issue_id": "candidate_4797eae58a0d02e4",
+    "right_issue_id": "candidate_d4020475ec42754b",
+    "relation": "distinct",
+    "rationale": "SQuAD score reconciliation and inference timing reproducibility concern different measurements and require independent source and protocol checks.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_4797eae58a0d02e4",
+    "right_issue_id": "candidate_d66b4d629e17092d",
+    "relation": "distinct",
+    "rationale": "The first asks which SQuAD values correspond to a reported setting; the second asks whether pretraining and GLUE optimization and selection settings are reproducible. Resolving the score conflict does not identify those settings.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_4797eae58a0d02e4",
+    "right_issue_id": "candidate_fb1bf9ee8ee47391",
+    "relation": "related_but_distinct",
+    "rationale": "The broader attribution concern uses the two-stage SQuAD experiment to assess comparative scope, but also requires matched MLM-only and stage comparisons. Reconciling SQuAD scores alone would not resolve those causal and comparative questions.",
+    "shared_verification_need": "Confirm what the SQuAD adaptation experiment compares and whether it adds task-specific distillation to an already distilled student."
+  },
+  {
+    "left_issue_id": "candidate_8cc2ac38dbe85ec5",
+    "right_issue_id": "candidate_8ef728e15e00c987",
+    "relation": "distinct",
+    "rationale": "The SQuAD prose/table conflict concerns downstream accuracy, while the cost concern addresses workload comparability and incremental versus total pretraining expense. Their verification needs are independent.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_8cc2ac38dbe85ec5",
+    "right_issue_id": "candidate_9a34220f56b4571f",
+    "relation": "distinct",
+    "rationale": "Checking original SQuAD values and metric ordering would not establish comparable pretraining budgets or clarify whether teacher costs are included.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_8cc2ac38dbe85ec5",
+    "right_issue_id": "candidate_b43a63c1120cd273",
+    "relation": "distinct",
+    "rationale": "One concerns inconsistent reporting of adaptation-distillation scores; the other concerns whether component removals establish the joint benefit of pretraining losses. They require separate result reconciliation and experimental-control checks.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_8cc2ac38dbe85ec5",
+    "right_issue_id": "candidate_bcbebaa303e3d372",
+    "relation": "distinct",
+    "rationale": "The SQuAD concern asks whether two sources report the same results, whereas the GLUE concern asks whether an aggregate benchmark ratio supports generalized capability wording. Neither verification resolves the other.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_8cc2ac38dbe85ec5",
+    "right_issue_id": "candidate_cbff9281b140f698",
+    "relation": "distinct",
+    "rationale": "Verifying SQuAD scores and the full-model gap does not answer whether a matched MLM-only pretraining control exists or isolates the combined effect of the distillation losses.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_8cc2ac38dbe85ec5",
+    "right_issue_id": "candidate_d3a08b0240d95640",
+    "relation": "related_but_distinct",
+    "rationale": "Both discuss task-specific adaptation distillation, but score reconciliation and evidence for choosing one distillation stage over another are independent questions. Even reconciled two-stage results would not establish superiority over task-specific-only distillation.",
+    "shared_verification_need": "Verify the SQuAD experiment's configuration and whether its comparison tests an added second stage."
+  },
+  {
+    "left_issue_id": "candidate_8cc2ac38dbe85ec5",
+    "right_issue_id": "candidate_d4020475ec42754b",
+    "relation": "distinct",
+    "rationale": "The first concerns SQuAD accuracy reporting; the second concerns CPU and mobile latency measurement conditions. They require different evidence and independent verification.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_8cc2ac38dbe85ec5",
+    "right_issue_id": "candidate_d66b4d629e17092d",
+    "relation": "distinct",
+    "rationale": "The first asks whether SQuAD prose and table scores describe consistent results; the second asks whether pretraining and GLUE configurations are reproducible. Reconciling SQuAD entries would not establish the missing training and evaluation settings.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_8cc2ac38dbe85ec5",
+    "right_issue_id": "candidate_fb1bf9ee8ee47391",
+    "relation": "related_but_distinct",
+    "rationale": "Both reference the second SQuAD distillation stage, but one questions numerical consistency and the other questions attribution and comparisons between training strategies. Verifying the SQuAD scores would not establish a matched comparison of distillation stages or the joint contribution of the losses.",
+    "shared_verification_need": "Inspect the original SQuAD discussion to establish which adaptation-distillation configuration is evaluated; numerical reconciliation and comparative-control verification remain separate."
+  },
+  {
+    "left_issue_id": "candidate_8ef728e15e00c987",
+    "right_issue_id": "candidate_9a34220f56b4571f",
+    "relation": "semantic_duplicate",
+    "rationale": "Both question whether the reported DistilBERT–RoBERTa resource comparison supports lower pretraining cost relative to a relevant counterpart, given unmatched workloads and unresolved teacher-cost accounting. Substantially the same accounting and comparison checks would resolve both concerns.",
+    "shared_verification_need": "Establish the intended cost boundary, whether the student duration includes teacher computation, whether teacher pretraining is assumed available, and whether a comparable training baseline supports the cost claim."
+  },
+  {
+    "left_issue_id": "candidate_8ef728e15e00c987",
+    "right_issue_id": "candidate_b43a63c1120cd273",
+    "relation": "distinct",
+    "rationale": "One questions training-cost accounting and baseline comparability; the other questions whether component ablations isolate the combined accuracy contribution of distillation losses. Cost records and a matched joint-removal control answer different questions.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_8ef728e15e00c987",
+    "right_issue_id": "candidate_bcbebaa303e3d372",
+    "relation": "distinct",
+    "rationale": "The cost concern requires resource accounting and comparable training workloads. The capability-retention concern requires verifying GLUE aggregation, task-level degradation, and the scope of the headline wording.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_8ef728e15e00c987",
+    "right_issue_id": "candidate_cbff9281b140f698",
+    "relation": "distinct",
+    "rationale": "The first asks whether lower pretraining cost is supported; the second asks whether a matched MLM-only student establishes the total performance benefit of distillation. Neither verification would resolve the other.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_8ef728e15e00c987",
+    "right_issue_id": "candidate_d3a08b0240d95640",
+    "relation": "distinct",
+    "rationale": "The first concerns resource comparisons and teacher-cost boundaries. The second concerns whether evidence supports an advantage of pretraining distillation over task-specific distillation. A stage-isolating performance comparison does not by itself resolve training-cost accounting.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_8ef728e15e00c987",
+    "right_issue_id": "candidate_d4020475ec42754b",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern practical efficiency evidence, but pretraining resource savings and CPU/mobile inference speed are separate quantities. Training-cost boundaries and workload comparability require different evidence from inference timing settings and matched execution conditions.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_8ef728e15e00c987",
+    "right_issue_id": "candidate_d66b4d629e17092d",
+    "relation": "related_but_distinct",
+    "rationale": "Training exposure and configuration matter to both concerns, but cost attribution additionally requires teacher-cost boundaries and a comparable baseline, while reproducibility requires detailed pretraining and downstream evaluation settings. Recovering one configuration would not fully resolve both.",
+    "shared_verification_need": "Inspect training artifacts for update counts, token exposure, sequence lengths, and the stages included in the reported student run."
+  },
+  {
+    "left_issue_id": "candidate_8ef728e15e00c987",
+    "right_issue_id": "candidate_fb1bf9ee8ee47391",
+    "relation": "distinct",
+    "rationale": "The cost candidate questions resource accounting and the relevance of the comparison baseline. The broader mechanism candidate questions performance attribution to teacher signals and distillation stage. Matched performance controls and cost accounting are independent verification needs.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_9a34220f56b4571f",
+    "right_issue_id": "candidate_b43a63c1120cd273",
+    "relation": "distinct",
+    "rationale": "The first questions whether training resources establish a comparable cost saving; the second questions whether single-component ablations establish the joint performance contribution of distillation losses. These require separate accounting evidence and experimental controls.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_9a34220f56b4571f",
+    "right_issue_id": "candidate_bcbebaa303e3d372",
+    "relation": "distinct",
+    "rationale": "Training-cost comparability and the interpretation of an aggregate GLUE score ratio concern different claims. Resource accounting cannot establish whether the 97% capability wording is appropriately bounded.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_9a34220f56b4571f",
+    "right_issue_id": "candidate_cbff9281b140f698",
+    "relation": "distinct",
+    "rationale": "One requires a clear computational-cost boundary and relevant training comparison; the other requires a matched student with both distillation losses removed. The respective evidence addresses cost savings and causal performance attribution independently.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_9a34220f56b4571f",
+    "right_issue_id": "candidate_d3a08b0240d95640",
+    "relation": "distinct",
+    "rationale": "The resource candidate concerns the cost of producing the student and the suitability of the RoBERTa comparison. The related-work candidate concerns whether pretraining and task-specific distillation have been compared in a way that supports the stated positioning.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_9a34220f56b4571f",
+    "right_issue_id": "candidate_d4020475ec42754b",
+    "relation": "related_but_distinct",
+    "rationale": "Both examine efficiency comparisons, but training-resource accounting and deployment inference latency require independent protocols. Verifying teacher computation and training exposure would not determine CPU threading, mobile inputs, or inference timing boundaries.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_9a34220f56b4571f",
+    "right_issue_id": "candidate_d66b4d629e17092d",
+    "relation": "related_but_distinct",
+    "rationale": "Both need information about the student training workload. However, the cost question also requires teacher accounting and a relevant comparison, while the reproducibility question extends to optimizer, preprocessing, fine-tuning, and checkpoint selection. Neither task fully resolves the other.",
+    "shared_verification_need": "Recover the actual pretraining workload, including steps or tokens, sequence lengths, effective batches, and training stages."
+  },
+  {
+    "left_issue_id": "candidate_9a34220f56b4571f",
+    "right_issue_id": "candidate_fb1bf9ee8ee47391",
+    "relation": "distinct",
+    "rationale": "The first asks whether a computational saving is established under a clear cost boundary. The second asks whether matched controls establish the performance contribution of distillation signals or training stage. Shared references to teacher initialization do not make those verification tasks equivalent.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_b43a63c1120cd273",
+    "right_issue_id": "candidate_bcbebaa303e3d372",
+    "relation": "distinct",
+    "rationale": "The ablation concern asks what causes the student's performance and requires a matched joint-removal control. The headline concern asks what an aggregate GLUE ratio means and requires task-level scores and contextual wording. Verifying either would leave the other unresolved.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_b43a63c1120cd273",
+    "right_issue_id": "candidate_cbff9281b140f698",
+    "relation": "semantic_duplicate",
+    "rationale": "Both question whether individual loss removals isolate the combined benefit of the two distillation losses over an otherwise matched, teacher-initialized MLM-only student. Both require the same control inventory, matching checks, and interpretation of the attribution language.",
+    "shared_verification_need": "Verify Table 4 and other materials for a condition removing both distillation losses while retaining MLM and teacher initialization, check matched training and downstream protocols, and establish whether the authors claim conditional component effects or a combined contribution."
+  },
+  {
+    "left_issue_id": "candidate_b43a63c1120cd273",
+    "right_issue_id": "candidate_d3a08b0240d95640",
+    "relation": "related_but_distinct",
+    "rationale": "Both question conclusions drawn from the component ablations, but one concerns the joint contribution of teacher-supervised losses and the other concerns comparative claims about pretraining versus task-specific distillation. An MLM-only joint-removal control would not establish which distillation stage is preferable.",
+    "shared_verification_need": "Verify the scope of the ablation experiments and the claims attributed to them; resolving the concerns additionally requires different matched controls."
+  },
+  {
+    "left_issue_id": "candidate_b43a63c1120cd273",
+    "right_issue_id": "candidate_d4020475ec42754b",
+    "relation": "distinct",
+    "rationale": "The first questions attribution of performance to the combined distillation losses; the second questions reproducibility and matching of inference timing conditions. Loss-control experiments and runtime protocol inspection answer different questions.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_b43a63c1120cd273",
+    "right_issue_id": "candidate_d66b4d629e17092d",
+    "relation": "related_but_distinct",
+    "rationale": "Both involve training and ablation configurations, but the first requires a matched MLM-only control to isolate joint distillation effects, while the second requires sufficient configuration details to reproduce pretraining and downstream evaluation. Complete configuration documentation would not itself supply the missing causal comparison.",
+    "shared_verification_need": "Inspect ablation configurations for matched initialization, training exposure, and downstream evaluation settings."
+  },
+  {
+    "left_issue_id": "candidate_b43a63c1120cd273",
+    "right_issue_id": "candidate_fb1bf9ee8ee47391",
+    "relation": "related_but_distinct",
+    "rationale": "Both question whether individual loss removals establish the combined benefit of distillation over a matched MLM-only student. The broader candidate also independently questions superiority over task-specific distillation, which requires a stage comparison and interpretation of the related-work wording.",
+    "shared_verification_need": "Verify whether a matched teacher-initialized MLM-only student removes both distillation losses and supports the claimed combined contribution."
+  },
+  {
+    "left_issue_id": "candidate_bcbebaa303e3d372",
+    "right_issue_id": "candidate_cbff9281b140f698",
+    "relation": "distinct",
+    "rationale": "The first questions interpreting a GLUE aggregate ratio as general capability retention; the second questions causal attribution of performance to distillation losses. Checking aggregation and task-level degradation would not resolve the need for a matched MLM-only control.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_bcbebaa303e3d372",
+    "right_issue_id": "candidate_d3a08b0240d95640",
+    "relation": "distinct",
+    "rationale": "These concern separate claims: general capability retention from an aggregate benchmark ratio and comparative advantage of pretraining over task-specific distillation. They require different numerical and experimental evidence.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_bcbebaa303e3d372",
+    "right_issue_id": "candidate_d4020475ec42754b",
+    "relation": "distinct",
+    "rationale": "The first concerns the meaning and scope of a performance-retention metric; the second concerns inference timing workloads and runtime settings. Each requires independent verification.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_bcbebaa303e3d372",
+    "right_issue_id": "candidate_d66b4d629e17092d",
+    "relation": "related_but_distinct",
+    "rationale": "Both bear on the reported GLUE retention result, but the first asks what the aggregate ratio justifies, while the second asks whether training and evaluation can be reproduced. A reproducible experiment can still leave broad capability wording unsupported, and checking the ratio does not recover the experiment configuration.",
+    "shared_verification_need": "Inspect the GLUE reporting and evaluation protocol underlying the retained-performance result."
+  },
+  {
+    "left_issue_id": "candidate_bcbebaa303e3d372",
+    "right_issue_id": "candidate_fb1bf9ee8ee47391",
+    "relation": "distinct",
+    "rationale": "The first questions the scope of the 97% capability-retention headline; the second questions attribution to distillation and comparisons between training strategies. Metric interpretation and matched training controls are independent verification tasks.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_cbff9281b140f698",
+    "right_issue_id": "candidate_d3a08b0240d95640",
+    "relation": "related_but_distinct",
+    "rationale": "Both question what the component ablations establish about pretraining distillation. The first requires a joint-removal MLM-only control, while the second requires a matched comparison between pretraining and task-specific distillation or clarification of the comparative wording. Either concern could remain after the other is resolved.",
+    "shared_verification_need": "Verify the scope of the ablations and the claims attributed to them in the surrounding text."
+  },
+  {
+    "left_issue_id": "candidate_cbff9281b140f698",
+    "right_issue_id": "candidate_d4020475ec42754b",
+    "relation": "distinct",
+    "rationale": "The first concerns causal controls for the total performance benefit of distillation; the second concerns measured inference latency and execution conditions. Their evidence needs are independent.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_cbff9281b140f698",
+    "right_issue_id": "candidate_d66b4d629e17092d",
+    "relation": "related_but_distinct",
+    "rationale": "Both require inspecting training and ablation settings, but the first asks whether the experimental comparisons isolate total distillation benefit, while the second asks whether the procedure is sufficiently specified for reproduction. Documentation alone would not establish the required MLM-only comparison.",
+    "shared_verification_need": "Check ablation configurations for comparable pretraining exposure and identical downstream evaluation procedures."
+  },
+  {
+    "left_issue_id": "candidate_cbff9281b140f698",
+    "right_issue_id": "candidate_fb1bf9ee8ee47391",
+    "relation": "related_but_distinct",
+    "rationale": "The broader candidate contains the first candidate's question about a matched MLM-only baseline, but also raises an independent comparison between pretraining and task-specific distillation. Resolving the joint-loss control would address their overlap without resolving the broader candidate's stage-comparison concern.",
+    "shared_verification_need": "Inspect Table 4 and other experiments for a matched student trained with MLM alone while retaining teacher initialization."
+  },
+  {
+    "left_issue_id": "candidate_d3a08b0240d95640",
+    "right_issue_id": "candidate_d4020475ec42754b",
+    "relation": "distinct",
+    "rationale": "The first questions evidence for a comparative claim about distillation stages; the second questions reproducibility of CPU and mobile speed measurements. They require unrelated experimental checks.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_d3a08b0240d95640",
+    "right_issue_id": "candidate_d66b4d629e17092d",
+    "relation": "related_but_distinct",
+    "rationale": "Training configuration details help assess whether a stage comparison is matched, but the first asks whether such a comparison exists and supports the wording. The second asks whether the reported training and evaluation procedures can be reconstructed, which does not establish comparative superiority.",
+    "shared_verification_need": "Inspect available training and evaluation configurations for matching of architecture, initialization, data exposure, and budget in any relevant comparisons."
+  },
+  {
+    "left_issue_id": "candidate_d3a08b0240d95640",
+    "right_issue_id": "candidate_fb1bf9ee8ee47391",
+    "relation": "related_but_distinct",
+    "rationale": "Both question whether the paper establishes an advantage of pretraining over task-specific distillation and whether the wording instead describes a design choice. The broader candidate additionally requires a matched MLM-only control to isolate the joint contribution of teacher-derived losses, an independent verification need.",
+    "shared_verification_need": "Check for a matched comparison of distillation stages, interpret the related-work wording, and assess whether the SQuAD experiment demonstrates complementarity rather than an alternative-stage comparison."
+  },
+  {
+    "left_issue_id": "candidate_d4020475ec42754b",
+    "right_issue_id": "candidate_d66b4d629e17092d",
+    "relation": "related_but_distinct",
+    "rationale": "Both concern reproducibility, but one targets inference latency under specified workloads and runtime settings, while the other targets pretraining exposure and downstream score generation. Timing code and training configurations would resolve different protocol questions.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_d4020475ec42754b",
+    "right_issue_id": "candidate_fb1bf9ee8ee47391",
+    "relation": "distinct",
+    "rationale": "Inference timing reproducibility is separate from attributing predictive performance to distillation losses or training stage. Matched timing conditions would not resolve either causal comparison in the broader candidate.",
+    "shared_verification_need": null
+  },
+  {
+    "left_issue_id": "candidate_d66b4d629e17092d",
+    "right_issue_id": "candidate_fb1bf9ee8ee47391",
+    "relation": "related_but_distinct",
+    "rationale": "Both involve inspecting training configurations and comparative conditions. The first asks whether experiments are reproducible; the second asks whether specific controls establish the contribution of distillation and the advantage of its training stage. Fully documented experiments could still lack those controls.",
+    "shared_verification_need": "Inspect released configurations for matched initialization, data exposure, training budget, and downstream evaluation across relevant baselines and ablations."
+  }
+]

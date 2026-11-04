@@ -1,0 +1,1462 @@
+{
+  "dimensions": [
+    {
+      "dimension_id": "D1",
+      "execution_status": "limited",
+      "applicability_status": "applicable",
+      "coverage_status": "partial",
+      "candidate_count": 1,
+      "no_issue_explanation": null,
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+        "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+        "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+        "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+        "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+        "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+        "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+        "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+        "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:52",
+        "Coverage is partial; omitted reading units and references may contain relevant comparisons or qualifications.",
+        "Reading order and section mapping are uncertain, and verified human reading and page references are unavailable.",
+        "The GLUE and ablation tables have incomplete, unverified structures. Exact numerical effects and row associations cannot be treated as independently established.",
+        "The supplied related-work descriptions do not independently establish the methods or chronology of cited work; no external novelty or priority conclusion is drawn."
+      ]
+    },
+    {
+      "dimension_id": "D2",
+      "execution_status": "limited",
+      "applicability_status": "applicable",
+      "coverage_status": "partial",
+      "candidate_count": 2,
+      "no_issue_explanation": null,
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+        "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+        "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+        "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+        "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+        "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+        "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+        "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+        "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:47",
+        "Coverage is partial, with 47 reading units omitted; absence from the supplied excerpts does not establish absence from the paper or released implementation.",
+        "Reading order and section mapping remain uncertain, and verified human reading and page references are unavailable.",
+        "The distillation and temperature equations are fragmented and unverified. Their extracted signs and normalization cannot support an allegation of a mathematical error.",
+        "Table 4 has an incomplete, unverified structure. Its apparent row associations and numerical deltas require inspection of the original table.",
+        "The authors state that training code and weights are available, but neither the implementation nor its correspondence to the reported experiments has been inspected."
+      ]
+    },
+    {
+      "dimension_id": "D3",
+      "execution_status": "limited",
+      "applicability_status": "partially_applicable",
+      "coverage_status": "partial",
+      "candidate_count": 3,
+      "no_issue_explanation": null,
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+        "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+        "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+        "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+        "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+        "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+        "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+        "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+        "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:54",
+        "Coverage is partial, with 54 reading units omitted. Absence from this context does not establish absence from the paper or released implementation.",
+        "Reading order and section mapping are uncertain; verified human reading and page references are unavailable.",
+        "All four supplied table structures are incomplete. Numerical model-by-metric and ablation-label associations require checking against the original PDF.",
+        "The available text establishes five-seed medians for the main GLUE comparison, but does not establish whether the same aggregation applies to the ablations.",
+        "The supplied text does provide CPU hardware, workload, batch size, mobile device, and the exclusion of mobile tokenization time; these are not treated as missing protocols."
+      ]
+    },
+    {
+      "dimension_id": "D4",
+      "execution_status": "limited",
+      "applicability_status": "applicable",
+      "coverage_status": "partial",
+      "candidate_count": 3,
+      "no_issue_explanation": null,
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+        "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+        "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+        "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+        "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+        "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+        "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+        "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+        "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:11",
+        "Coverage is partial, with 11 reading units omitted; absence from the supplied context cannot establish absence from the paper.",
+        "Reading order and section mapping are unresolved, and human reading and page references are marked unavailable in the quality state.",
+        "All four supplied table structures are incomplete. Numerical row associations, including SQuAD results and ablation deltas, require verification against the original PDF.",
+        "The supplied source conflict is treated as a verification lead, not as an established inconsistency.",
+        "The CPU and mobile timing results describe different workloads and devices; their reported speed improvements do not themselves constitute a contradiction.",
+        "The introduction's statement that all loss components contribute to best performance is compatible with the later statement that removing masked language modeling has little impact; the supplied evidence does not establish a contradiction."
+      ]
+    },
+    {
+      "dimension_id": "D5",
+      "execution_status": "limited",
+      "applicability_status": "applicable",
+      "coverage_status": "partial",
+      "candidate_count": 3,
+      "no_issue_explanation": null,
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+        "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+        "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+        "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+        "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+        "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+        "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+        "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+        "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:50",
+        "Coverage is partial, with 50 reading units omitted. Apparent documentation gaps cannot establish absence from the complete paper or released implementation.",
+        "Reading order is ambiguous, section mapping is incomplete, and verified human reading and page references are unavailable.",
+        "The distillation equations are fragmented and their signs and normalization are unverified; no concern is based on an apparent formula transcription error.",
+        "All four supplied tables have incomplete, unverified structures. Exact score associations, timing values, and ablation deltas cannot be independently established from these extractions.",
+        "The paper states that training code and weights are released, and separately states that mobile code is available. Those implementations and their experiment configurations were not supplied or inspected."
+      ]
+    },
+    {
+      "dimension_id": "D6",
+      "execution_status": "limited",
+      "applicability_status": "applicable",
+      "coverage_status": "partial",
+      "candidate_count": 1,
+      "no_issue_explanation": null,
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+        "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+        "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+        "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+        "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+        "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+        "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+        "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+        "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "omitted_reading_units:53",
+        "Coverage is partial, and the reference-list entries and original texts of cited prior studies are not supplied. Citation accuracy, chronology, and external novelty cannot be independently assessed.",
+        "Reading order is ambiguous and section mapping is incomplete; human reading and page references are unavailable.",
+        "The ablation table has incomplete, unverified structure. Exact numerical effects cannot be established from the extracted rows.",
+        "Omitted reading units may contain additional comparisons or qualifications; their absence from this context does not establish absence from the paper."
+      ]
+    }
+  ],
+  "contributions": [
+    {
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "claim_ids": [
+        "claim_4faebd9391822cb3",
+        "claim_76e0d94dda492765",
+        "claim_a43f23cbeb41a5e9",
+        "claim_7afee7b51da8ee9e",
+        "claim_d7d146a7b6e07ad5",
+        "claim_d0de3244a9218171",
+        "claim_d15f98a55bba3ef7",
+        "claim_4263e8efb6d8eecd"
+      ],
+      "inspected_claim_ids": [
+        "claim_4faebd9391822cb3",
+        "claim_76e0d94dda492765",
+        "claim_a43f23cbeb41a5e9",
+        "claim_7afee7b51da8ee9e",
+        "claim_d7d146a7b6e07ad5",
+        "claim_d0de3244a9218171",
+        "claim_d15f98a55bba3ef7",
+        "claim_4263e8efb6d8eecd"
+      ],
+      "candidate_ids": [
+        "candidate_fb1bf9ee8ee47391",
+        "candidate_9a34220f56b4571f",
+        "candidate_4797eae58a0d02e4",
+        "candidate_8cc2ac38dbe85ec5",
+        "candidate_bcbebaa303e3d372",
+        "candidate_8ef728e15e00c987",
+        "candidate_d66b4d629e17092d",
+        "candidate_d3a08b0240d95640"
+      ],
+      "status": "source_limited",
+      "limitations": [
+        "The supplied local reading units state downstream fine-tuning performance but do not include task-level measurements or evaluation protocols.",
+        "The supplied local reading units do not quantify pretraining compute savings or specify the accounting used for the training-budget comparison.",
+        "The unverified downstream table extraction lists different values for the additional-distillation variant than the prose. The supplied local evidence does not resolve the numerical correspondence."
+      ]
+    },
+    {
+      "contribution_id": "contrib_dcc40454a6f92faa",
+      "claim_ids": [
+        "claim_7bcad7997d656581",
+        "claim_cc3f6207a3c8e47a",
+        "claim_f97393e2bc593bcb",
+        "claim_14129f2bafeca287",
+        "claim_7b91b671ff8d6708",
+        "claim_416e38c43588f4f0",
+        "claim_99d4c1fba0a1e81c"
+      ],
+      "inspected_claim_ids": [
+        "claim_7bcad7997d656581",
+        "claim_cc3f6207a3c8e47a",
+        "claim_f97393e2bc593bcb",
+        "claim_14129f2bafeca287",
+        "claim_7b91b671ff8d6708",
+        "claim_416e38c43588f4f0",
+        "claim_99d4c1fba0a1e81c"
+      ],
+      "candidate_ids": [
+        "candidate_fb1bf9ee8ee47391",
+        "candidate_2349c5cdd44540ee",
+        "candidate_b43a63c1120cd273",
+        "candidate_cbff9281b140f698",
+        "candidate_35b744cc386ff5f3",
+        "candidate_d3a08b0240d95640"
+      ],
+      "status": "source_limited",
+      "limitations": [
+        "The supplied local reading units do not include measurements isolating the performance benefit of the cosine embedding loss.",
+        "The local support is an incomplete ablation-table extraction. The supplied reading units do not include the objective definitions or the explanation of how the triple loss transfers inductive biases.",
+        "The local prose summarizes Table 4, but numerical ablation deltas are not supplied in these reading units. The listed table extraction is structurally incomplete and does not establish verified values here.",
+        "Verified numerical results for the individual distillation-loss ablations are unavailable in this local part; the qualitative author statement is present."
+      ]
+    },
+    {
+      "contribution_id": "contrib_f7537eea16119ebb",
+      "claim_ids": [
+        "claim_dc9f062d58286e85",
+        "claim_1987440a651a1aeb",
+        "claim_3cb5a19341f0e7d4",
+        "claim_ef47e5a973fd33fb",
+        "claim_86362eb48edd93b9",
+        "claim_6d289ceb45a005b3"
+      ],
+      "inspected_claim_ids": [
+        "claim_1987440a651a1aeb",
+        "claim_3cb5a19341f0e7d4",
+        "claim_6d289ceb45a005b3"
+      ],
+      "candidate_ids": [
+        "candidate_bcbebaa303e3d372",
+        "candidate_d66b4d629e17092d",
+        "candidate_d4020475ec42754b"
+      ],
+      "status": "not_reported_inspected",
+      "limitations": [
+        "The supplied local reading units do not provide model-size counts or the measurement basis underlying the reported 40% reduction.",
+        "These local reading units state the percentage reduction but do not provide parameter counts or the size measurement underlying it.",
+        "The supplied local reading units do not provide benchmark scores or the aggregation calculation underlying the reported 97% retention.",
+        "The prose supports the authors' performance-retention claim, but the incomplete GLUE table prevents independent verification of its numerical column associations from this extraction.",
+        "These local reading units do not provide the benchmark scores or aggregation calculation underlying the reported 97% retention.",
+        "The supplied local reading units do not provide inference timings, hardware, workloads, or the calculation underlying the reported 60% speed improvement.",
+        "These local reading units do not provide timing measurements, hardware, workload, or the speed comparison protocol supporting the reported percentage."
+      ]
+    },
+    {
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "claim_ids": [
+        "claim_be0f5cdb90c70ed6",
+        "claim_6a21f05949707aee",
+        "claim_887f99086635919c",
+        "claim_9a9e74106b30d644",
+        "claim_b59fbbfe374999c6",
+        "claim_7c84cde1e814627a",
+        "claim_e75bc9c26e77d103",
+        "claim_64af9002feb02b23"
+      ],
+      "inspected_claim_ids": [
+        "claim_be0f5cdb90c70ed6",
+        "claim_887f99086635919c",
+        "claim_9a9e74106b30d644",
+        "claim_b59fbbfe374999c6",
+        "claim_7c84cde1e814627a",
+        "claim_e75bc9c26e77d103",
+        "claim_64af9002feb02b23"
+      ],
+      "candidate_ids": [
+        "candidate_fb1bf9ee8ee47391",
+        "candidate_b43a63c1120cd273",
+        "candidate_cbff9281b140f698",
+        "candidate_35b744cc386ff5f3",
+        "candidate_d66b4d629e17092d",
+        "candidate_d4020475ec42754b",
+        "candidate_d3a08b0240d95640"
+      ],
+      "status": "not_reported_inspected",
+      "limitations": [
+        "The supplied local reading units do not include ablation configurations or results for removing individual loss components.",
+        "The supplied local reading units do not include the mobile-device setup, deployment measurements, or comparative on-device results.",
+        "The ablation table is marked structure_incomplete; the loss-removal labels and numerical changes require source verification.",
+        "The random-initialization result comes from the incomplete ablation-table extraction and remains unverified.",
+        "The local discussion states substantial gains but supplies no verified numerical initialization-ablation results or separate effect estimates for initialization and additional losses.",
+        "The local conclusion asserts edge applicability, but device-specific deployment results and evaluation conditions are not included in these reading units."
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "claim_4faebd9391822cb3",
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "inspected_by_dimensions": [
+        "D1",
+        "D6"
+      ],
+      "candidate_ids": [
+        "candidate_fb1bf9ee8ee47391",
+        "candidate_d3a08b0240d95640"
+      ],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The supplied local reading units state downstream fine-tuning performance but do not include task-level measurements or evaluation protocols."
+      ]
+    },
+    {
+      "claim_id": "claim_76e0d94dda492765",
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2"
+      ],
+      "candidate_ids": [],
+      "status": "reported_inspected_no_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_a43f23cbeb41a5e9",
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "inspected_by_dimensions": [
+        "D3",
+        "D4"
+      ],
+      "candidate_ids": [
+        "candidate_9a34220f56b4571f",
+        "candidate_8ef728e15e00c987"
+      ],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The supplied local reading units do not quantify pretraining compute savings or specify the accounting used for the training-budget comparison."
+      ]
+    },
+    {
+      "claim_id": "claim_7bcad7997d656581",
+      "contribution_id": "contrib_dcc40454a6f92faa",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2",
+        "D5"
+      ],
+      "candidate_ids": [
+        "candidate_2349c5cdd44540ee",
+        "candidate_35b744cc386ff5f3"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_cc3f6207a3c8e47a",
+      "contribution_id": "contrib_dcc40454a6f92faa",
+      "inspected_by_dimensions": [
+        "D2",
+        "D5"
+      ],
+      "candidate_ids": [
+        "candidate_2349c5cdd44540ee",
+        "candidate_35b744cc386ff5f3"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_f97393e2bc593bcb",
+      "contribution_id": "contrib_dcc40454a6f92faa",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2",
+        "D5"
+      ],
+      "candidate_ids": [
+        "candidate_2349c5cdd44540ee",
+        "candidate_35b744cc386ff5f3"
+      ],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The supplied local reading units do not include measurements isolating the performance benefit of the cosine embedding loss."
+      ]
+    },
+    {
+      "claim_id": "claim_dc9f062d58286e85",
+      "contribution_id": "contrib_f7537eea16119ebb",
+      "inspected_by_dimensions": [],
+      "candidate_ids": [],
+      "status": "not_reported_inspected",
+      "evidence_level": "not_reported",
+      "limitations": [
+        "The supplied local reading units do not provide model-size counts or the measurement basis underlying the reported 40% reduction.",
+        "These local reading units state the percentage reduction but do not provide parameter counts or the size measurement underlying it."
+      ]
+    },
+    {
+      "claim_id": "claim_1987440a651a1aeb",
+      "contribution_id": "contrib_f7537eea16119ebb",
+      "inspected_by_dimensions": [
+        "D3",
+        "D4",
+        "D5"
+      ],
+      "candidate_ids": [
+        "candidate_bcbebaa303e3d372",
+        "candidate_d66b4d629e17092d"
+      ],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The supplied local reading units do not provide benchmark scores or the aggregation calculation underlying the reported 97% retention.",
+        "The prose supports the authors' performance-retention claim, but the incomplete GLUE table prevents independent verification of its numerical column associations from this extraction.",
+        "These local reading units do not provide the benchmark scores or aggregation calculation underlying the reported 97% retention."
+      ]
+    },
+    {
+      "claim_id": "claim_3cb5a19341f0e7d4",
+      "contribution_id": "contrib_f7537eea16119ebb",
+      "inspected_by_dimensions": [
+        "D4"
+      ],
+      "candidate_ids": [],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The supplied local reading units do not provide inference timings, hardware, workloads, or the calculation underlying the reported 60% speed improvement.",
+        "These local reading units do not provide timing measurements, hardware, workload, or the speed comparison protocol supporting the reported percentage."
+      ]
+    },
+    {
+      "claim_id": "claim_be0f5cdb90c70ed6",
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2",
+        "D3",
+        "D4"
+      ],
+      "candidate_ids": [],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The supplied local reading units do not include ablation configurations or results for removing individual loss components."
+      ]
+    },
+    {
+      "claim_id": "claim_6a21f05949707aee",
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "inspected_by_dimensions": [],
+      "candidate_ids": [],
+      "status": "not_reported_inspected",
+      "evidence_level": "not_reported",
+      "limitations": [
+        "The supplied local reading units do not include the mobile-device setup, deployment measurements, or comparative on-device results."
+      ]
+    },
+    {
+      "claim_id": "claim_7afee7b51da8ee9e",
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2",
+        "D5"
+      ],
+      "candidate_ids": [],
+      "status": "reported_inspected_no_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_d7d146a7b6e07ad5",
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2",
+        "D5"
+      ],
+      "candidate_ids": [
+        "candidate_d66b4d629e17092d"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_d0de3244a9218171",
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "inspected_by_dimensions": [
+        "D4",
+        "D5"
+      ],
+      "candidate_ids": [
+        "candidate_bcbebaa303e3d372",
+        "candidate_d66b4d629e17092d"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_d15f98a55bba3ef7",
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "inspected_by_dimensions": [
+        "D1",
+        "D3",
+        "D4",
+        "D6"
+      ],
+      "candidate_ids": [
+        "candidate_fb1bf9ee8ee47391",
+        "candidate_4797eae58a0d02e4",
+        "candidate_8cc2ac38dbe85ec5",
+        "candidate_d3a08b0240d95640"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_4263e8efb6d8eecd",
+      "contribution_id": "contrib_5f7cdbd91720f0a0",
+      "inspected_by_dimensions": [
+        "D3",
+        "D4"
+      ],
+      "candidate_ids": [
+        "candidate_4797eae58a0d02e4",
+        "candidate_8cc2ac38dbe85ec5"
+      ],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The unverified downstream table extraction lists different values for the additional-distillation variant than the prose. The supplied local evidence does not resolve the numerical correspondence."
+      ]
+    },
+    {
+      "claim_id": "claim_14129f2bafeca287",
+      "contribution_id": "contrib_dcc40454a6f92faa",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2",
+        "D3"
+      ],
+      "candidate_ids": [],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The local support is an incomplete ablation-table extraction. The supplied reading units do not include the objective definitions or the explanation of how the triple loss transfers inductive biases."
+      ]
+    },
+    {
+      "claim_id": "claim_ef47e5a973fd33fb",
+      "contribution_id": "contrib_f7537eea16119ebb",
+      "inspected_by_dimensions": [],
+      "candidate_ids": [],
+      "status": "not_reported_inspected",
+      "evidence_level": "not_reported",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_86362eb48edd93b9",
+      "contribution_id": "contrib_f7537eea16119ebb",
+      "inspected_by_dimensions": [],
+      "candidate_ids": [],
+      "status": "not_reported_inspected",
+      "evidence_level": "not_reported",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_6d289ceb45a005b3",
+      "contribution_id": "contrib_f7537eea16119ebb",
+      "inspected_by_dimensions": [
+        "D3",
+        "D4",
+        "D5"
+      ],
+      "candidate_ids": [
+        "candidate_d4020475ec42754b"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_887f99086635919c",
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "inspected_by_dimensions": [
+        "D2",
+        "D3"
+      ],
+      "candidate_ids": [],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The ablation table is marked structure_incomplete; the loss-removal labels and numerical changes require source verification."
+      ]
+    },
+    {
+      "claim_id": "claim_9a9e74106b30d644",
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "inspected_by_dimensions": [
+        "D2",
+        "D3"
+      ],
+      "candidate_ids": [],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The random-initialization result comes from the incomplete ablation-table extraction and remains unverified."
+      ]
+    },
+    {
+      "claim_id": "claim_b59fbbfe374999c6",
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "inspected_by_dimensions": [
+        "D3",
+        "D4",
+        "D5"
+      ],
+      "candidate_ids": [
+        "candidate_d4020475ec42754b"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_7b91b671ff8d6708",
+      "contribution_id": "contrib_dcc40454a6f92faa",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2",
+        "D3",
+        "D4"
+      ],
+      "candidate_ids": [],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The local prose summarizes Table 4, but numerical ablation deltas are not supplied in these reading units. The listed table extraction is structurally incomplete and does not establish verified values here."
+      ]
+    },
+    {
+      "claim_id": "claim_416e38c43588f4f0",
+      "contribution_id": "contrib_dcc40454a6f92faa",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2",
+        "D3"
+      ],
+      "candidate_ids": [
+        "candidate_fb1bf9ee8ee47391",
+        "candidate_b43a63c1120cd273",
+        "candidate_cbff9281b140f698"
+      ],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "Verified numerical results for the individual distillation-loss ablations are unavailable in this local part; the qualitative author statement is present."
+      ]
+    },
+    {
+      "claim_id": "claim_99d4c1fba0a1e81c",
+      "contribution_id": "contrib_dcc40454a6f92faa",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2",
+        "D3",
+        "D6"
+      ],
+      "candidate_ids": [
+        "candidate_fb1bf9ee8ee47391",
+        "candidate_b43a63c1120cd273",
+        "candidate_cbff9281b140f698",
+        "candidate_d3a08b0240d95640"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_7c84cde1e814627a",
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "inspected_by_dimensions": [
+        "D1",
+        "D5",
+        "D6"
+      ],
+      "candidate_ids": [
+        "candidate_35b744cc386ff5f3",
+        "candidate_d66b4d629e17092d",
+        "candidate_d3a08b0240d95640"
+      ],
+      "status": "reported_inspected_with_issue",
+      "evidence_level": "model_report_only",
+      "limitations": []
+    },
+    {
+      "claim_id": "claim_e75bc9c26e77d103",
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "inspected_by_dimensions": [
+        "D1",
+        "D2",
+        "D3",
+        "D6"
+      ],
+      "candidate_ids": [
+        "candidate_fb1bf9ee8ee47391",
+        "candidate_b43a63c1120cd273",
+        "candidate_cbff9281b140f698"
+      ],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The local discussion states substantial gains but supplies no verified numerical initialization-ablation results or separate effect estimates for initialization and additional losses."
+      ]
+    },
+    {
+      "claim_id": "claim_64af9002feb02b23",
+      "contribution_id": "contrib_507de8d3af4b3f42",
+      "inspected_by_dimensions": [
+        "D4"
+      ],
+      "candidate_ids": [],
+      "status": "source_limited",
+      "evidence_level": "model_report_only",
+      "limitations": [
+        "The local conclusion asserts edge applicability, but device-specific deployment results and evaluation conditions are not included in these reading units."
+      ]
+    }
+  ],
+  "professional_focus": [
+    {
+      "focus_id": "D1:1",
+      "dimension_id": "D1",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D1:2",
+      "dimension_id": "D1",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D1:3",
+      "dimension_id": "D1",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D2:1",
+      "dimension_id": "D2",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D2:2",
+      "dimension_id": "D2",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D2:3",
+      "dimension_id": "D2",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D3:1",
+      "dimension_id": "D3",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D3:2",
+      "dimension_id": "D3",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D3:3",
+      "dimension_id": "D3",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D4:1",
+      "dimension_id": "D4",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D4:2",
+      "dimension_id": "D4",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D4:3",
+      "dimension_id": "D4",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D5:1",
+      "dimension_id": "D5",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D5:2",
+      "dimension_id": "D5",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D5:3",
+      "dimension_id": "D5",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D6:1",
+      "dimension_id": "D6",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D6:2",
+      "dimension_id": "D6",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    },
+    {
+      "focus_id": "D6:3",
+      "dimension_id": "D6",
+      "status": "reported_partial",
+      "explanation": "Dimension reported inspection with partial source coverage; focus-specific completeness is unproven"
+    }
+  ],
+  "gaps": [
+    {
+      "gap_id": "coverage_gap_d6bdde109fcbfe6229fb",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_5f7cdbd91720f0a0"
+      ],
+      "affected_claim_ids": [
+        "claim_4faebd9391822cb3"
+      ],
+      "affected_dimension_ids": [
+        "D1",
+        "D6"
+      ],
+      "description": "Claim claim_4faebd9391822cb3 has unresolved source evidence: The supplied local reading units state downstream fine-tuning performance but do not include task-level measurements or evaluation protocols.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The supplied local reading units state downstream fine-tuning performance but do not include task-level measurements or evaluation protocols."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_af4064e911bdf8a0d5e0",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_5f7cdbd91720f0a0"
+      ],
+      "affected_claim_ids": [
+        "claim_a43f23cbeb41a5e9"
+      ],
+      "affected_dimension_ids": [
+        "D3",
+        "D4"
+      ],
+      "description": "Claim claim_a43f23cbeb41a5e9 has unresolved source evidence: The supplied local reading units do not quantify pretraining compute savings or specify the accounting used for the training-budget comparison.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The supplied local reading units do not quantify pretraining compute savings or specify the accounting used for the training-budget comparison."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_9102a0bb09f50304b1cd",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_dcc40454a6f92faa"
+      ],
+      "affected_claim_ids": [
+        "claim_f97393e2bc593bcb"
+      ],
+      "affected_dimension_ids": [
+        "D1",
+        "D2",
+        "D5"
+      ],
+      "description": "Claim claim_f97393e2bc593bcb has unresolved source evidence: The supplied local reading units do not include measurements isolating the performance benefit of the cosine embedding loss.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The supplied local reading units do not include measurements isolating the performance benefit of the cosine embedding loss."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_f16782c5ab6394f61a75",
+      "gap_type": "claim_not_inspected",
+      "affected_contribution_ids": [
+        "contrib_f7537eea16119ebb"
+      ],
+      "affected_claim_ids": [
+        "claim_dc9f062d58286e85"
+      ],
+      "affected_dimension_ids": [],
+      "description": "Claim claim_dc9f062d58286e85 has no completed inspection record",
+      "cause": "no_model_report",
+      "source_limitations": [
+        "The supplied local reading units do not provide model-size counts or the measurement basis underlying the reported 40% reduction.",
+        "These local reading units state the percentage reduction but do not provide parameter counts or the size measurement underlying it."
+      ],
+      "next_action": "Inspect the claim using its original source evidence",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_004b3968bb17c7da66f7",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_f7537eea16119ebb"
+      ],
+      "affected_claim_ids": [
+        "claim_dc9f062d58286e85"
+      ],
+      "affected_dimension_ids": [],
+      "description": "Claim claim_dc9f062d58286e85 has unresolved source evidence: The supplied local reading units do not provide model-size counts or the measurement basis underlying the reported 40% reduction.; These local reading units state the percentage reduction but do not provide parameter counts or the size measurement underlying it.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The supplied local reading units do not provide model-size counts or the measurement basis underlying the reported 40% reduction.",
+        "These local reading units state the percentage reduction but do not provide parameter counts or the size measurement underlying it."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_46fc903f583b6356acaf",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_f7537eea16119ebb"
+      ],
+      "affected_claim_ids": [
+        "claim_1987440a651a1aeb"
+      ],
+      "affected_dimension_ids": [
+        "D3",
+        "D4",
+        "D5"
+      ],
+      "description": "Claim claim_1987440a651a1aeb has unresolved source evidence: The supplied local reading units do not provide benchmark scores or the aggregation calculation underlying the reported 97% retention.; The prose supports the authors' performance-retention claim, but the incomplete GLUE table prevents independent verification of its numerical column associations from this extraction.; These local reading units do not provide the benchmark scores or aggregation calculation underlying the reported 97% retention.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The supplied local reading units do not provide benchmark scores or the aggregation calculation underlying the reported 97% retention.",
+        "The prose supports the authors' performance-retention claim, but the incomplete GLUE table prevents independent verification of its numerical column associations from this extraction.",
+        "These local reading units do not provide the benchmark scores or aggregation calculation underlying the reported 97% retention."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_28a383f0c4641e8b9d88",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_f7537eea16119ebb"
+      ],
+      "affected_claim_ids": [
+        "claim_3cb5a19341f0e7d4"
+      ],
+      "affected_dimension_ids": [
+        "D4"
+      ],
+      "description": "Claim claim_3cb5a19341f0e7d4 has unresolved source evidence: The supplied local reading units do not provide inference timings, hardware, workloads, or the calculation underlying the reported 60% speed improvement.; These local reading units do not provide timing measurements, hardware, workload, or the speed comparison protocol supporting the reported percentage.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The supplied local reading units do not provide inference timings, hardware, workloads, or the calculation underlying the reported 60% speed improvement.",
+        "These local reading units do not provide timing measurements, hardware, workload, or the speed comparison protocol supporting the reported percentage."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_fc9a58bcbba225453526",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_507de8d3af4b3f42"
+      ],
+      "affected_claim_ids": [
+        "claim_be0f5cdb90c70ed6"
+      ],
+      "affected_dimension_ids": [
+        "D1",
+        "D2",
+        "D3",
+        "D4"
+      ],
+      "description": "Claim claim_be0f5cdb90c70ed6 has unresolved source evidence: The supplied local reading units do not include ablation configurations or results for removing individual loss components.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The supplied local reading units do not include ablation configurations or results for removing individual loss components."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_a187fd8a74a179871557",
+      "gap_type": "claim_not_inspected",
+      "affected_contribution_ids": [
+        "contrib_507de8d3af4b3f42"
+      ],
+      "affected_claim_ids": [
+        "claim_6a21f05949707aee"
+      ],
+      "affected_dimension_ids": [],
+      "description": "Claim claim_6a21f05949707aee has no completed inspection record",
+      "cause": "no_model_report",
+      "source_limitations": [
+        "The supplied local reading units do not include the mobile-device setup, deployment measurements, or comparative on-device results."
+      ],
+      "next_action": "Inspect the claim using its original source evidence",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_a49ff557415898553ac1",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_507de8d3af4b3f42"
+      ],
+      "affected_claim_ids": [
+        "claim_6a21f05949707aee"
+      ],
+      "affected_dimension_ids": [],
+      "description": "Claim claim_6a21f05949707aee has unresolved source evidence: The supplied local reading units do not include the mobile-device setup, deployment measurements, or comparative on-device results.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The supplied local reading units do not include the mobile-device setup, deployment measurements, or comparative on-device results."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_fa3839173523a4411b11",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_5f7cdbd91720f0a0"
+      ],
+      "affected_claim_ids": [
+        "claim_4263e8efb6d8eecd"
+      ],
+      "affected_dimension_ids": [
+        "D3",
+        "D4"
+      ],
+      "description": "Claim claim_4263e8efb6d8eecd has unresolved source evidence: The unverified downstream table extraction lists different values for the additional-distillation variant than the prose. The supplied local evidence does not resolve the numerical correspondence.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The unverified downstream table extraction lists different values for the additional-distillation variant than the prose. The supplied local evidence does not resolve the numerical correspondence."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_b4300674ab78d1562758",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_dcc40454a6f92faa"
+      ],
+      "affected_claim_ids": [
+        "claim_14129f2bafeca287"
+      ],
+      "affected_dimension_ids": [
+        "D1",
+        "D2",
+        "D3"
+      ],
+      "description": "Claim claim_14129f2bafeca287 has unresolved source evidence: The local support is an incomplete ablation-table extraction. The supplied reading units do not include the objective definitions or the explanation of how the triple loss transfers inductive biases.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The local support is an incomplete ablation-table extraction. The supplied reading units do not include the objective definitions or the explanation of how the triple loss transfers inductive biases."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_2e292591ac3f6b4959b2",
+      "gap_type": "claim_not_inspected",
+      "affected_contribution_ids": [
+        "contrib_f7537eea16119ebb"
+      ],
+      "affected_claim_ids": [
+        "claim_ef47e5a973fd33fb"
+      ],
+      "affected_dimension_ids": [],
+      "description": "Claim claim_ef47e5a973fd33fb has no completed inspection record",
+      "cause": "no_model_report",
+      "source_limitations": [],
+      "next_action": "Inspect the claim using its original source evidence",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_d2aff15e0cd3091a496f",
+      "gap_type": "claim_not_inspected",
+      "affected_contribution_ids": [
+        "contrib_f7537eea16119ebb"
+      ],
+      "affected_claim_ids": [
+        "claim_86362eb48edd93b9"
+      ],
+      "affected_dimension_ids": [],
+      "description": "Claim claim_86362eb48edd93b9 has no completed inspection record",
+      "cause": "no_model_report",
+      "source_limitations": [],
+      "next_action": "Inspect the claim using its original source evidence",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_55c0ab31614128e7e3ed",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_507de8d3af4b3f42"
+      ],
+      "affected_claim_ids": [
+        "claim_887f99086635919c"
+      ],
+      "affected_dimension_ids": [
+        "D2",
+        "D3"
+      ],
+      "description": "Claim claim_887f99086635919c has unresolved source evidence: The ablation table is marked structure_incomplete; the loss-removal labels and numerical changes require source verification.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The ablation table is marked structure_incomplete; the loss-removal labels and numerical changes require source verification."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_69fec4c66b4cff2b17b9",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_507de8d3af4b3f42"
+      ],
+      "affected_claim_ids": [
+        "claim_9a9e74106b30d644"
+      ],
+      "affected_dimension_ids": [
+        "D2",
+        "D3"
+      ],
+      "description": "Claim claim_9a9e74106b30d644 has unresolved source evidence: The random-initialization result comes from the incomplete ablation-table extraction and remains unverified.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The random-initialization result comes from the incomplete ablation-table extraction and remains unverified."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_44c7d378b84a6c312778",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_dcc40454a6f92faa"
+      ],
+      "affected_claim_ids": [
+        "claim_7b91b671ff8d6708"
+      ],
+      "affected_dimension_ids": [
+        "D1",
+        "D2",
+        "D3",
+        "D4"
+      ],
+      "description": "Claim claim_7b91b671ff8d6708 has unresolved source evidence: The local prose summarizes Table 4, but numerical ablation deltas are not supplied in these reading units. The listed table extraction is structurally incomplete and does not establish verified values here.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The local prose summarizes Table 4, but numerical ablation deltas are not supplied in these reading units. The listed table extraction is structurally incomplete and does not establish verified values here."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_c182169fde1f3bccaf86",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_dcc40454a6f92faa"
+      ],
+      "affected_claim_ids": [
+        "claim_416e38c43588f4f0"
+      ],
+      "affected_dimension_ids": [
+        "D1",
+        "D2",
+        "D3"
+      ],
+      "description": "Claim claim_416e38c43588f4f0 has unresolved source evidence: Verified numerical results for the individual distillation-loss ablations are unavailable in this local part; the qualitative author statement is present.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "Verified numerical results for the individual distillation-loss ablations are unavailable in this local part; the qualitative author statement is present."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_b1b5f0460fb999ac5ea3",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_507de8d3af4b3f42"
+      ],
+      "affected_claim_ids": [
+        "claim_e75bc9c26e77d103"
+      ],
+      "affected_dimension_ids": [
+        "D1",
+        "D2",
+        "D3",
+        "D6"
+      ],
+      "description": "Claim claim_e75bc9c26e77d103 has unresolved source evidence: The local discussion states substantial gains but supplies no verified numerical initialization-ablation results or separate effect estimates for initialization and additional losses.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The local discussion states substantial gains but supplies no verified numerical initialization-ablation results or separate effect estimates for initialization and additional losses."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_b8ce53a6eee5e2537a94",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [
+        "contrib_507de8d3af4b3f42"
+      ],
+      "affected_claim_ids": [
+        "claim_64af9002feb02b23"
+      ],
+      "affected_dimension_ids": [
+        "D4"
+      ],
+      "description": "Claim claim_64af9002feb02b23 has unresolved source evidence: The local conclusion asserts edge applicability, but device-specific deployment results and evaluation conditions are not included in these reading units.",
+      "cause": "p2a_evidence_gap_or_visual_object",
+      "source_limitations": [
+        "The local conclusion asserts edge applicability, but device-specific deployment results and evaluation conditions are not included in these reading units."
+      ],
+      "next_action": "Verify the cited PDF region before relying on this claim",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_e959e307fa7c891a8a46",
+      "gap_type": "source_quality",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "D5",
+        "D6"
+      ],
+      "description": "P2-B input has unresolved source limitations",
+      "cause": "frozen_source_or_p2a_limit",
+      "source_limitations": [
+        "Legacy block order is not a verified reading order.",
+        "Formula transcription, table rows, figures, section boundaries and references require verification.",
+        "A missing object in this candidate inventory does not prove absence from the PDF.",
+        "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+        "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+        "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+        "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+        "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+        "Source quality: reading_order_ambiguous",
+        "Source quality: section_mapping_incomplete",
+        "Source quality: human_reading_reference_missing",
+        "Source quality: human_page_reference_missing",
+        "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+        "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+        "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+        "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+        "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+        "reading_order_ambiguous",
+        "section_mapping_incomplete",
+        "human_reading_reference_missing",
+        "human_page_reference_missing",
+        "p2a_limited",
+        "source_quality_status:needs_review"
+      ],
+      "next_action": "Review original PDF and omitted/visual regions as needed",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_cd5ebcac34732c82089d",
+      "gap_type": "required_material_missing",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [],
+      "affected_dimension_ids": [],
+      "description": "ReviewPlan lists required materials not available in this run",
+      "cause": "missing_materials",
+      "source_limitations": [
+        "Human reading and page references are marked missing in the supplied quality state; reading order remains ambiguous and section mapping incomplete",
+        "Verified table structures are unavailable for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0",
+        "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified",
+        "The planning sample does not provide the complete quantitative results or detailed protocols needed to assess the reported performance, efficiency, and ablation claims; these must be located in the remaining available units before treating them as absent"
+      ],
+      "next_action": "Obtain or explicitly scope out the required material",
+      "status": "unresolved"
+    },
+    {
+      "gap_id": "coverage_gap_777bf1d17a6e3e691f39",
+      "gap_type": "external_material",
+      "affected_contribution_ids": [],
+      "affected_claim_ids": [
+        "claim_7bcad7997d656581",
+        "claim_cc3f6207a3c8e47a",
+        "claim_f97393e2bc593bcb",
+        "claim_7c84cde1e814627a",
+        "claim_d7d146a7b6e07ad5",
+        "claim_d0de3244a9218171",
+        "claim_1987440a651a1aeb",
+        "claim_6d289ceb45a005b3",
+        "claim_b59fbbfe374999c6"
+      ],
+      "affected_dimension_ids": [
+        "D5"
+      ],
+      "description": "Candidate questions require external material",
+      "cause": "candidate_external_verification_flag",
+      "source_limitations": [],
+      "next_action": "Check cited literature, code or data in P3",
+      "status": "unresolved"
+    }
+  ],
+  "limitations": [
+    "Legacy block order is not a verified reading order.",
+    "Formula transcription, table rows, figures, section boundaries and references require verification.",
+    "A missing object in this candidate inventory does not prove absence from the PDF.",
+    "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+    "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+    "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+    "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+    "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+    "Source quality: reading_order_ambiguous",
+    "Source quality: section_mapping_incomplete",
+    "Source quality: human_reading_reference_missing",
+    "Source quality: human_page_reference_missing",
+    "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+    "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+    "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+    "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+    "figure figure_ev_6724ca5dce54_0_9: detected_unverified",
+    "reading_order_ambiguous",
+    "section_mapping_incomplete",
+    "human_reading_reference_missing",
+    "human_page_reference_missing",
+    "p2a_limited",
+    "source_quality_status:needs_review"
+  ],
+  "evidence_level": "model_report_only"
+}
