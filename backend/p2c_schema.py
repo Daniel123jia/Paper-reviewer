@@ -124,7 +124,7 @@ class ContributionCoverage(StrictModel):
 class FocusCoverage(StrictModel):
     focus_id: str
     dimension_id: str
-    status: Literal["reported_inspected", "coverage_gap", "not_applicable"]
+    status: Literal["reported_inspected", "reported_partial", "coverage_gap", "not_applicable"]
     explanation: str
 
 
