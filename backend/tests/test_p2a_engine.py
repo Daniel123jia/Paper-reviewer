@@ -101,20 +101,25 @@ def test_long_input_uses_global_synthesis_and_preserves_coverage():
 
     def model_call(stage, system, user):
         calls.append((stage, user))
+        if stage == "paper-understanding" and "Global synthesis" not in user:
+            part_number = sum(item[0] == stage for item in calls)
+            return _reply({**PROFILE, "main_results": [{"text": f"Part {part_number} result",
+                                                       "evidence_ref_ids": [f"ru{part_number}"]}]})
         return _reply({"paper-type-planner": PLAN, "paper-understanding": PROFILE,
                        "contribution-evidence-mapper": MAP}[stage])
 
     bundle = _bundle()
     plan, profile, mapping, traces = run_p2a(bundle, "run3", model_call, "model", chunk_chars=60)
     assert len([item for item in calls if item[0] == "paper-understanding"]) == 3
-    assert len([item for item in calls if item[0] == "contribution-evidence-mapper"]) == 3
-    assert any("Global synthesis of both parts" in user for _, user in calls)
+    assert len([item for item in calls if item[0] == "contribution-evidence-mapper"]) == 2
+    assert any("Global synthesis of all parts" in user for _, user in calls)
     assert profile.input_coverage.included_unit_count == 2
+    assert {item.text for item in profile.main_results} == {"Part 1 result", "Part 2 result"}
     assert mapping.input_coverage.included_unit_count == 2
     assert all(trace.status == "completed" for trace in traces)
 
 
-def test_four_chunks_merge_hierarchically_with_full_final_coverage():
+def test_four_chunks_preserve_full_final_coverage_and_unique_map_ids():
     bundle = _bundle()
     for number in (3, 4):
         unit = {**bundle["reading_units"][0], "id": f"ru{number}"}
@@ -127,10 +132,29 @@ def test_four_chunks_merge_hierarchically_with_full_final_coverage():
                        "contribution-evidence-mapper": MAP}[stage])
 
     _, profile, mapping, _ = run_p2a(bundle, "run5", model_call, "model", chunk_chars=60)
-    assert len([stage for stage, _ in calls if stage == "paper-understanding"]) == 7
-    assert len([stage for stage, _ in calls if stage == "contribution-evidence-mapper"]) == 7
+    assert len([stage for stage, _ in calls if stage == "paper-understanding"]) == 5
+    assert len([stage for stage, _ in calls if stage == "contribution-evidence-mapper"]) == 4
     assert profile.input_coverage.included_unit_count == 4
     assert mapping.input_coverage.included_unit_count == 4
+    assert len(mapping.contributions) == 4
+    assert len({item.id for item in mapping.contributions}) == 4
+
+
+def test_global_model_failure_keeps_partial_facts_and_marks_gap():
+    bundle = _bundle()
+
+    def model_call(stage, system, user):
+        if stage == "paper-understanding" and "Global synthesis" in user:
+            raise RuntimeError("upstream unavailable")
+        return _reply({"paper-type-planner": PLAN, "paper-understanding": PROFILE,
+                       "contribution-evidence-mapper": MAP}[stage])
+
+    _, profile, mapping, traces = run_p2a(bundle, "run6", model_call, "model", chunk_chars=60)
+    assert profile.input_coverage.included_unit_count == 2
+    assert profile.main_results[0].evidence_ref_ids == ["ru2"]
+    assert any("Global scalar synthesis failed" in gap for gap in profile.unresolved_source_gaps)
+    assert len(mapping.contributions) == 2
+    assert [trace.status for trace in traces].count("failed") == 2
 
 
 def test_model_error_never_enters_diagnostic_traces():

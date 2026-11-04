@@ -278,6 +278,9 @@ def create_app(data_dir: Path) -> FastAPI:
                 SELECT 'review', model, input_tokens, output_tokens, cost_usd, duration_ms, status FROM review_model_calls
                 UNION ALL
                 SELECT 'draft', model, input_tokens, output_tokens, cost_usd, duration_ms, status FROM draft_model_calls
+                UNION ALL
+                SELECT 'understanding', COALESCE(actual_model, requested_model), input_tokens,
+                       output_tokens, NULL, duration_ms, status FROM paper_understanding_model_calls
             """)]
 
         def summarize(items):
@@ -433,7 +436,6 @@ def create_app(data_dir: Path) -> FastAPI:
         return assess_parse_quality(source_bundle_for_document(document_id))
 
     def run_understanding(document_id: str, run_id: str, request: UnderstandingRunRequest):
-        traces = []
         try:
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET status = 'running' WHERE id = ?", (run_id,))
@@ -463,14 +465,20 @@ def create_app(data_dir: Path) -> FastAPI:
                     db.execute(f"UPDATE paper_understanding_runs SET {column} = ? WHERE id = ?",
                                (result.model_dump_json(), run_id))
 
-            plan, profile, mapping, traces = run_p2a(
+            def persist_trace(trace):
+                with connect() as db:
+                    db.execute("INSERT INTO paper_understanding_model_calls VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                               (uuid.uuid4().hex, run_id, trace.stage, trace.prompt_version,
+                                trace.requested_model, trace.actual_model, trace.input_tokens,
+                                trace.output_tokens, trace.duration_ms, trace.status, trace.error))
+
+            run_p2a(
                 bundle, run_id, model_call, model, request.target_journal,
-                request.special_requirements, on_result=persist_result)
+                request.special_requirements, on_result=persist_result, on_trace=persist_trace)
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET status = 'completed', "
                            "finished_at = datetime('now') WHERE id = ?", (run_id,))
         except P2AError as exc:
-            traces = exc.traces
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET status = 'failed', error = ?, "
                            "finished_at = datetime('now') WHERE id = ?",
@@ -480,13 +488,6 @@ def create_app(data_dir: Path) -> FastAPI:
                 db.execute("UPDATE paper_understanding_runs SET status = 'failed', error = ?, "
                            "finished_at = datetime('now') WHERE id = ?",
                            (f"source: {type(exc).__name__}", run_id))
-        finally:
-            with connect() as db:
-                for trace in traces:
-                    db.execute("INSERT INTO paper_understanding_model_calls VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               (uuid.uuid4().hex, run_id, trace.stage, trace.prompt_version,
-                                trace.requested_model, trace.actual_model, trace.input_tokens,
-                                trace.output_tokens, trace.duration_ms, trace.status, trace.error))
 
     @app.post("/api/documents/{document_id}/understanding-runs", status_code=202)
     def create_understanding_run(document_id: str, payload: UnderstandingRunRequest,

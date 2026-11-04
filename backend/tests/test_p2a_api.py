@@ -97,6 +97,8 @@ def test_understanding_run_persists_scoped_results_without_changing_review_basel
         "paper-type-planner", "paper-understanding", "contribution-evidence-mapper"]
     assert all(item["actual_model"] == "actual-model" and item["input_tokens"] == 80
                for item in result["model_calls"])
+    usage = client.get("/api/usage/summary").json()
+    assert next(item for item in usage["by_category"] if item["category"] == "understanding")["calls"] == 3
     assert client.get("/api/review-cases").json() == []
 
 
@@ -140,6 +142,8 @@ def test_completed_plan_survives_downstream_model_failure(tmp_path, monkeypatch)
         def chat(self):
             def create(**kwargs):
                 if "paper-understanding/v1" in kwargs["messages"][0]["content"]:
+                    with sqlite3.connect(tmp_path / "review.db") as db:
+                        assert db.execute("SELECT count(*) FROM paper_understanding_model_calls").fetchone()[0] == 1
                     raise RuntimeError("secret-bearing upstream message")
                 return _fake_completion(kwargs["messages"])
             return SimpleNamespace(completions=SimpleNamespace(create=create))

@@ -19,6 +19,11 @@ VERSIONS = {"paper-type-planner": "paper-type-planner/v1",
 RESULT_METADATA = {"document_id", "source_bundle_id", "review_run_id", "prompt_version",
                    "schema_version", "model_identifier", "input_coverage", "execution_status",
                    "evidence_refs"}
+SCALAR_FACTS = ("research_problem", "research_motivation",
+                "research_gap_claimed_by_authors", "proposed_method")
+LIST_FACTS = ("method_components", "theoretical_assumptions", "experimental_setup",
+              "datasets_and_metrics", "main_results", "author_claimed_contributions",
+              "conclusions", "author_stated_limitations")
 
 
 @dataclass
@@ -58,6 +63,15 @@ def chunk_reading_units(units: list[dict], max_chars: int = 12000) -> list[list[
     return chunks
 
 
+def _planning_units(chunks):
+    if len(chunks) == 1:
+        return chunks[0]
+    candidates = chunks[0][:12]
+    for part in chunks[1:]:
+        candidates.extend(part[:2] + part[-2:])
+    return list({unit["id"]: unit for unit in candidates}.values())
+
+
 def _unit_line(unit):
     detail = f' table={unit["table_id"]}' if unit.get("table_id") else ""
     return (f'[{unit["id"]}] page={unit["page_index"] + 1} section={unit.get("section_id")}'
@@ -71,29 +85,6 @@ def _source_text(units):
 
 def _content_json(result):
     return json.dumps(result.model_dump(exclude=RESULT_METADATA), ensure_ascii=False)
-
-
-def _combine_partials(stage, parts, context, bundle, run_id, quality, requested_model,
-                      model_call, traces, result_type):
-    """Merge two source-grounded outputs at a time so global synthesis stays bounded."""
-    while len(parts) > 1:
-        next_parts = []
-        for index in range(0, len(parts), 2):
-            if index + 1 == len(parts):
-                next_parts.append(parts[index])
-                continue
-            left, right = parts[index:index + 2]
-            units = left[1] + right[1]
-            merged = _invoke(
-                stage, context + "\nGlobal synthesis of both parts. Merge duplicate facts, "
-                "preserve distinct facts, source IDs and unresolved gaps. For claim maps, "
-                "use unique contribution and claim IDs and preserve valid relations:\n" +
-                json.dumps([json.loads(_content_json(left[0])),
-                            json.loads(_content_json(right[0]))], ensure_ascii=False),
-                bundle, run_id, units, quality, requested_model, model_call, traces, result_type)
-            next_parts.append((merged, units))
-        parts = next_parts
-    return parts[0][0]
 
 
 def _object_catalog(bundle):
@@ -150,7 +141,7 @@ def _with_references(payload, bundle):
 
 def _invoke(stage: str, user_text: str, bundle: dict, run_id: str, included_units: list[dict],
             quality: dict, requested_model: str, model_call: Callable, traces: list[CallTrace],
-            result_type):
+            result_type, on_trace: Callable | None = None):
     system = (PROMPTS / f"{stage}.v1.txt").read_text(encoding="utf-8")
     for attempt in range(2):
         reply = None
@@ -172,39 +163,118 @@ def _invoke(stage: str, user_text: str, bundle: dict, run_id: str, included_unit
                 bundle, run_id, stage, actual, included_units, quality)})
             if result_type is not ReviewPlan:
                 validate_source_references(result, bundle)
-            traces.append(CallTrace(stage, VERSIONS[stage], requested_model, actual,
-                                    reply.get("input_tokens"), reply.get("output_tokens"),
-                                    reply.get("duration_ms", 0), "completed"))
+            trace = CallTrace(stage, VERSIONS[stage], requested_model, actual,
+                              reply.get("input_tokens"), reply.get("output_tokens"),
+                              reply.get("duration_ms", 0), "completed")
+            traces.append(trace)
+            if on_trace:
+                on_trace(trace)
             return result
         except Exception as exc:
             error_code = (f"invalid_output:{type(exc).__name__}" if
                           isinstance(exc, (ValueError, TypeError)) else
                           f"model_call_failed:{type(exc).__name__}")
-            traces.append(CallTrace(stage, VERSIONS[stage], requested_model,
-                                    reply.get("model_identifier") if "reply" in locals() and
-                                    isinstance(reply, dict) else None,
-                                    reply.get("input_tokens") if "reply" in locals() and
-                                    isinstance(reply, dict) else None,
-                                    reply.get("output_tokens") if "reply" in locals() and
-                                    isinstance(reply, dict) else None,
-                                    reply.get("duration_ms", 0) if isinstance(reply, dict) else
-                                    round((time.perf_counter() - started) * 1000),
-                                    "invalid_output" if error_code.startswith("invalid_output") else "failed",
-                                    error_code))
+            trace = CallTrace(stage, VERSIONS[stage], requested_model,
+                              reply.get("model_identifier") if isinstance(reply, dict) else None,
+                              reply.get("input_tokens") if isinstance(reply, dict) else None,
+                              reply.get("output_tokens") if isinstance(reply, dict) else None,
+                              reply.get("duration_ms", 0) if isinstance(reply, dict) else
+                              round((time.perf_counter() - started) * 1000),
+                              "invalid_output" if error_code.startswith("invalid_output") else "failed",
+                              error_code)
+            traces.append(trace)
+            if on_trace:
+                on_trace(trace)
             if attempt == 1:
                 raise P2AError(stage, error_code, traces) from exc
 
 
+def _global_profile(partials, context, bundle, run_id, quality, requested_model,
+                    model_call, traces, on_trace):
+    if len(partials) == 1:
+        return partials[0]
+    summaries = [{**{field: (getattr(profile, field).model_dump() if getattr(profile, field)
+                             else None) for field in SCALAR_FACTS},
+                  "selected_facts": {field: [fact.model_dump() for fact in getattr(profile, field)[:2]]
+                                     for field in ("method_components", "main_results",
+                                                   "author_claimed_contributions", "conclusions")}}
+                 for profile in partials]
+    fallback = False
+    try:
+        global_result = _invoke(
+            "paper-understanding", context +
+            "\nGlobal synthesis of all parts. Reconcile only the first four scalar facts. "
+            "Return empty arrays for fact lists; the server preserves all part-level facts. "
+            "Cite the provided source IDs.\n" + json.dumps(summaries, ensure_ascii=False),
+            bundle, run_id, bundle["reading_units"], quality, requested_model,
+            model_call, traces, PaperProfile, on_trace)
+    except P2AError:
+        global_result = partials[0]
+        fallback = True
+    payload = global_result.model_dump(exclude=RESULT_METADATA)
+    for field in LIST_FACTS:
+        unique = {}
+        for profile in partials:
+            for fact in getattr(profile, field):
+                key = fact.text.casefold().strip()
+                if key not in unique:
+                    unique[key] = fact.model_copy(deep=True)
+                else:
+                    unique[key].evidence_ref_ids = list(dict.fromkeys(
+                        unique[key].evidence_ref_ids + fact.evidence_ref_ids))
+        payload[field] = [fact.model_dump() for fact in unique.values()]
+    gaps = [gap for profile in partials for gap in profile.unresolved_source_gaps]
+    gaps.extend(global_result.unresolved_source_gaps)
+    if fallback:
+        gaps.append("Global scalar synthesis failed; scalar fields use the first part only.")
+    payload["unresolved_source_gaps"] = list(dict.fromkeys(gaps))
+    metadata = _metadata(bundle, run_id, "paper-understanding", global_result.model_identifier,
+                         bundle["reading_units"], quality)
+    if fallback:
+        metadata["execution_status"] = "limited"
+    result = PaperProfile.model_validate({**_with_references(payload, bundle),
+                                          **metadata})
+    validate_source_references(result, bundle)
+    return result
+
+
+def _merge_claim_maps(partials, bundle, run_id, quality):
+    if len(partials) == 1:
+        return partials[0]
+    payload = {"contributions": [], "claims": [], "support_relations": [], "evidence_gaps": []}
+    for index, mapping in enumerate(partials, start=1):
+        contribution_ids = {item.id: f"part{index}_{item.id}" for item in mapping.contributions}
+        claim_ids = {item.id: f"part{index}_{item.id}" for item in mapping.claims}
+        payload["contributions"].extend({**item.model_dump(), "id": contribution_ids[item.id]}
+                                        for item in mapping.contributions)
+        payload["claims"].extend({**item.model_dump(), "id": claim_ids[item.id],
+                                  "contribution_id": contribution_ids[item.contribution_id]}
+                                 for item in mapping.claims)
+        payload["support_relations"].extend({**item.model_dump(),
+                                             "claim_id": claim_ids[item.claim_id]}
+                                            for item in mapping.support_relations)
+        payload["evidence_gaps"].extend({**item.model_dump(), "claim_id": claim_ids[item.claim_id]}
+                                        for item in mapping.evidence_gaps)
+    result = ClaimEvidenceMap.model_validate({**_with_references(payload, bundle),
+                                              **_metadata(bundle, run_id,
+                                                          "contribution-evidence-mapper",
+                                                          partials[-1].model_identifier,
+                                                          bundle["reading_units"], quality)})
+    validate_source_references(result, bundle)
+    return result
+
+
 def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: str,
             target_journal: str | None = None, special_requirements: str | None = None,
-            chunk_chars: int = 12000, on_result: Callable | None = None):
+            chunk_chars: int = 12000, on_result: Callable | None = None,
+            on_trace: Callable | None = None):
     """Run N1–N3; caller persists results and trace metadata in private storage."""
     units = bundle["reading_units"]
     if not units:
         raise P2AError("source", "no readable reading units", [])
     quality = assess_input_readiness(bundle, "section_summary")
     chunks = chunk_reading_units(units, chunk_chars)
-    plan_units = units if len(chunks) == 1 else chunks[0] + [part[-1] for part in chunks[1:]]
+    plan_units = _planning_units(chunks)
     traces = []
     context = (f'Document {bundle["document"]["id"]}; Source Bundle {bundle["bundle_id"]}.\n'
                f'Quality: {json.dumps(quality, ensure_ascii=False)}\n'
@@ -213,31 +283,34 @@ def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: st
                f'Sections: {json.dumps([item["title"] for item in bundle["sections"]], ensure_ascii=False)}\n'
                f'Technical object status:\n{_object_catalog(bundle)}\n')
     plan = _invoke("paper-type-planner", context + "\nReading units:\n" + _source_text(plan_units),
-                   bundle, run_id, plan_units, quality, requested_model, model_call, traces, ReviewPlan)
+                   bundle, run_id, plan_units, quality, requested_model, model_call, traces,
+                   ReviewPlan, on_trace)
     if on_result:
         on_result("review_plan", plan)
     profile_context = context + "\nReview plan:\n" + _content_json(plan)
     partial_profiles = []
     for index, part in enumerate(chunks):
-        partial_profiles.append((_invoke(
+        partial_profiles.append(_invoke(
             "paper-understanding", profile_context + f"\nPart {index + 1}/{len(chunks)}.\n" +
             _source_text(part), bundle, run_id, part, quality, requested_model, model_call, traces,
-            PaperProfile), part))
-    profile = _combine_partials("paper-understanding", partial_profiles, profile_context,
-                                bundle, run_id, quality, requested_model, model_call, traces,
-                                PaperProfile)
+            PaperProfile, on_trace))
+    profile = _global_profile(partial_profiles, profile_context, bundle, run_id, quality,
+                              requested_model, model_call, traces, on_trace)
     if on_result:
         on_result("paper_profile", profile)
     map_context = context + "\nPaper profile:\n" + _content_json(profile)
     partial_maps = []
     for index, part in enumerate(chunks):
-        partial_maps.append((_invoke(
-            "contribution-evidence-mapper", map_context + f"\nPart {index + 1}/{len(chunks)}.\n" +
+        partial_maps.append(_invoke(
+            "contribution-evidence-mapper", map_context +
+            f"\nPart {index + 1}/{len(chunks)}. Map claims from these reading units; "
+            "use the full profile only for context.\n" +
             _source_text(part), bundle, run_id, part, quality, requested_model, model_call, traces,
-            ClaimEvidenceMap), part))
-    mapping = _combine_partials("contribution-evidence-mapper", partial_maps, map_context,
-                                bundle, run_id, quality, requested_model, model_call, traces,
-                                ClaimEvidenceMap)
+            ClaimEvidenceMap, on_trace))
+    mapping = _merge_claim_maps(partial_maps, bundle, run_id, quality)
+    if any(gap.startswith("Global scalar synthesis failed") for gap in profile.unresolved_source_gaps):
+        mapping.execution_status = "limited"
+        mapping.input_coverage.limitations.append("upstream_global_synthesis_failed")
     if on_result:
         on_result("claim_evidence_map", mapping)
     return plan, profile, mapping, traces
