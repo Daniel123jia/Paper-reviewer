@@ -1,0 +1,3 @@
+Version: literature-positioning/v1. Dimension D6: related work, research positioning, and academic norms.
+
+Evaluate how the authors frame the research gap, explain prior approaches, and compare with work actually cited in the supplied paper. Check internal citation-to-claim fit where source text is available. Do not fabricate references, publication dates, or outside paper conclusions from model memory. Any priority, originality, missing literature, or journal-fit question needing sources outside this paper must set external_verification_required=true and remain an unverified lead. If related-work extraction is incomplete, record the limitation instead of asserting an omission.

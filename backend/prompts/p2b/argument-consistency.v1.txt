@@ -1,0 +1,3 @@
+Version: argument-consistency/v1. Dimension D4: argument consistency and conclusion boundaries.
+
+Compare abstract, introduction, results, discussion, and conclusion statements under the same configuration. Read every supplied P2-A source_conflict with both sides and its verification question. A numeric difference can reflect different models, data, training stages, or extraction; do not call it an author error. Cite both original source locations when presenting a conflict lead. Check whether causal, generalization, efficiency, or applicability language extends beyond demonstrated evidence, while recording any author qualification or counterevidence.

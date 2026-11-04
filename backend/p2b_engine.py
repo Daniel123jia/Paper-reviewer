@@ -53,15 +53,11 @@ def validate_understanding_snapshot(bundle: dict, plan: ReviewPlan, profile: Pap
     validate_source_references(mapping, bundle)
 
 
-def _prompt(rule):
-    path = PROMPTS / f"{rule.prompt_name}.v1.txt"
-    if path.exists():
-        return path.read_text(encoding="utf-8"), f"{rule.prompt_name}/v1"
-    return (("You are reviewing one bounded academic dimension. Return a JSON object with "
-             "inspection_focus, inspected_claim_ids, inspected_source_refs, limitations, "
-             "candidates and no_issue_explanation. Cite only supplied source IDs. "
-             "Candidates are unverified leads, not findings. Do not infer absence from omitted text."),
-            f"{rule.prompt_name}/v0")
+def _prompt(rule, config_name):
+    dimension = (PROMPTS / f"{rule.prompt_name}.v1.txt").read_text(encoding="utf-8")
+    shared = (PROMPTS / "shared-rules.v1.txt").read_text(encoding="utf-8")
+    domain = (PROMPTS / f"{config_name.replace('/', '.')}.txt").read_text(encoding="utf-8")
+    return "\n\n".join((shared, domain, dimension)), f"{rule.prompt_name}/v1"
 
 
 def _dimension_record(rule, bundle, understanding_run_id, run_id, prompt_version,
@@ -139,7 +135,7 @@ def run_p2b(bundle: dict, plan: ReviewPlan, profile: PaperProfile, mapping: Clai
 
     for rule in DIMENSIONS:
         status, reason = applicability(rule, plan)
-        system, version = _prompt(rule)
+        system, version = _prompt(rule, config_name)
         if status == "not_applicable":
             record(_dimension_record(rule, bundle, understanding_run_id, run_id, version,
                 None, status, reason, "blocked", input_limits, "skipped",

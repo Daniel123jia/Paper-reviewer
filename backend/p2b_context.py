@@ -63,17 +63,22 @@ def assemble_context(dimension_id, bundle, plan, profile, mapping, max_chars=280
     canonical = source_reference_index(bundle)
     units = bundle["reading_units"]
     sections = {item["id"]: item["title"] for item in bundle["sections"]}
-    anchors = set(_fact_refs(profile, dimension_id))
-    anchors.update(ref for claim in mapping.claims for ref in claim.evidence_ref_ids)
-    anchors.update(relation.evidence_ref_id for relation in mapping.support_relations)
-    evidence_ids = {evidence_id for ref in anchors if ref in canonical
-                    for evidence_id in canonical[ref].evidence_ids}
+    fact_anchors = set(_fact_refs(profile, dimension_id))
+    claim_anchors = {ref for claim in mapping.claims for ref in claim.evidence_ref_ids}
+    claim_anchors.update(relation.evidence_ref_id for relation in mapping.support_relations)
+    fact_evidence = {evidence_id for ref in fact_anchors if ref in canonical
+                     for evidence_id in canonical[ref].evidence_ids}
+    claim_evidence = {evidence_id for ref in claim_anchors if ref in canonical
+                      for evidence_id in canonical[ref].evidence_ids}
     terms = TERMS[dimension_id]
     scored = []
     for index, unit in enumerate(units):
         section = sections.get(unit.get("section_id"), "").casefold()
         text = unit["text"].casefold()
-        score = (100 if unit["id"] in anchors or evidence_ids.intersection(unit["evidence_ids"]) else 0)
+        score = (200 if unit["id"] in fact_anchors or
+                 fact_evidence.intersection(unit["evidence_ids"]) else 0)
+        score += 80 if unit["id"] in claim_anchors or \
+            claim_evidence.intersection(unit["evidence_ids"]) else 0
         score += 30 if any(term in section for term in terms) else 0
         score += min(3, sum(bool(re.search(r"\b" + re.escape(term) + r"\b", text)) for term in terms)) * 5
         if score:

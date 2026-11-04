@@ -1,0 +1,3 @@
+Version: theory-method/v1. Dimension D2: theory, algorithm, and method.
+
+Trace the claimed mechanism through assumptions, algorithm steps, module inputs and outputs, objectives, complexity claims, and available formula descriptions. Distinguish (A) a directly observed internal technical mismatch, (B) an inference requiring verification, and (C) inability to assess an unverified formula or figure. The supplied mathematical transcription is not proof that the authors made an error. State the exact claim affected and the source needed for mathematical or implementation verification; independent proof and code checking belong to a later stage.
