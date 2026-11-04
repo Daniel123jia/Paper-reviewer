@@ -69,6 +69,7 @@ def test_pipeline_uses_all_units_and_retries_invalid_source_ids():
 
     assert [item[0] for item in calls] == ["paper-type-planner", "paper-understanding",
                                           "paper-understanding", "contribution-evidence-mapper"]
+    assert "planning sample only" in calls[0][2]
     assert "[ru1]" in calls[1][2] and "[ru2]" in calls[1][2]
     assert profile.input_coverage.included_unit_count == 2
     assert profile.input_coverage.excluded_unit_ids == []
@@ -104,7 +105,8 @@ def test_long_input_uses_global_synthesis_and_preserves_coverage():
         if stage == "paper-understanding" and "Global synthesis" not in user:
             part_number = sum(item[0] == stage for item in calls)
             return _reply({**PROFILE, "main_results": [{"text": f"Part {part_number} result",
-                                                       "evidence_ref_ids": [f"ru{part_number}"]}]})
+                                                       "evidence_ref_ids": [f"ru{part_number}"]}],
+                           "unresolved_source_gaps": [f"Only Part {part_number} supplied"]})
         return _reply({"paper-type-planner": PLAN, "paper-understanding": PROFILE,
                        "contribution-evidence-mapper": MAP}[stage])
 
@@ -114,8 +116,14 @@ def test_long_input_uses_global_synthesis_and_preserves_coverage():
     assert len([item for item in calls if item[0] == "contribution-evidence-mapper"]) == 2
     assert any("Global synthesis of all parts" in user for _, user in calls)
     assert profile.input_coverage.included_unit_count == 2
+    assert profile.research_problem.provenance == "model_interpretation"
     assert {item.text for item in profile.main_results} == {"Part 1 result", "Part 2 result"}
+    assert "formula not verified" in profile.unresolved_source_gaps
+    assert not any("Only Part" in gap for gap in profile.unresolved_source_gaps)
     assert mapping.input_coverage.included_unit_count == 2
+    map_inputs = [user for stage, user in calls if stage == "contribution-evidence-mapper"]
+    assert "Part 1 result" in map_inputs[0] and "Part 2 result" not in map_inputs[0]
+    assert "Part 2 result" in map_inputs[1] and "Part 1 result" not in map_inputs[1]
     assert all(trace.status == "completed" for trace in traces)
 
 
@@ -140,6 +148,22 @@ def test_four_chunks_preserve_full_final_coverage_and_unique_map_ids():
     assert len({item.id for item in mapping.contributions}) == 4
 
 
+def test_planning_samples_each_available_section():
+    bundle = _bundle()
+    bundle["reading_units"][1]["section_id"] = "s2"
+    bundle["sections"].append({"id": "s2", "title": "2 Results", "page_index": 0,
+                               "evidence_id": "ev2"})
+    calls = []
+
+    def model_call(stage, system, user):
+        calls.append((stage, user))
+        return _reply({"paper-type-planner": PLAN, "paper-understanding": PROFILE,
+                       "contribution-evidence-mapper": MAP}[stage])
+
+    run_p2a(bundle, "run-section-plan", model_call, "model", chunk_chars=60)
+    assert "[ru1]" in calls[0][1] and "[ru2]" in calls[0][1]
+
+
 def test_global_model_failure_keeps_partial_facts_and_marks_gap():
     bundle = _bundle()
 
@@ -157,8 +181,44 @@ def test_global_model_failure_keeps_partial_facts_and_marks_gap():
     assert [trace.status for trace in traces].count("failed") == 2
 
 
+def test_mapping_splits_source_part_after_repeated_connection_failure():
+    class APIConnectionError(RuntimeError):
+        pass
+
+    calls = []
+
+    def model_call(stage, system, user):
+        calls.append((stage, user))
+        if stage == "contribution-evidence-mapper" and "[ru1]" in user and "[ru2]" in user:
+            raise APIConnectionError("relay dropped connection")
+        return _reply({"paper-type-planner": PLAN, "paper-understanding": PROFILE,
+                       "contribution-evidence-mapper": MAP}[stage])
+
+    _, _, mapping, traces = run_p2a(_bundle(), "run7", model_call, "model", chunk_chars=10000)
+    assert len(mapping.contributions) == 2
+    assert mapping.input_coverage.included_unit_count == 2
+    assert [trace.status for trace in traces].count("failed") == 2
+
+
+def test_understanding_splits_source_part_after_repeated_connection_failure():
+    class APIConnectionError(RuntimeError):
+        pass
+
+    def model_call(stage, system, user):
+        if (stage == "paper-understanding" and "Global synthesis" not in user and
+                "[ru1]" in user and "[ru2]" in user):
+            raise APIConnectionError("relay dropped connection")
+        return _reply({"paper-type-planner": PLAN, "paper-understanding": PROFILE,
+                       "contribution-evidence-mapper": MAP}[stage])
+
+    _, profile, mapping, traces = run_p2a(_bundle(), "run9", model_call, "model", chunk_chars=10000)
+    assert profile.input_coverage.included_unit_count == 2
+    assert mapping.input_coverage.included_unit_count == 2
+    assert [trace.status for trace in traces].count("failed") == 2
+
+
 def test_model_error_never_enters_diagnostic_traces():
-    secret = "sk-super-secret-marker"
+    secret = "private-credential-marker"
 
     def model_call(stage, system, user):
         raise RuntimeError(f"provider failure containing {secret}")
@@ -167,3 +227,17 @@ def test_model_error_never_enters_diagnostic_traces():
         run_p2a(_bundle(), "run4", model_call, "model")
     assert secret not in str(failure.value)
     assert all(secret not in str(trace) for trace in failure.value.traces)
+
+
+def test_blocked_page_stops_before_model_call():
+    bundle = _bundle()
+    bundle["pages"].append({"page_index": 1, "status": "needs_ocr", "evidence_ids": []})
+    calls = []
+
+    def model_call(stage, system, user):
+        calls.append(stage)
+        return _reply(PLAN)
+
+    with pytest.raises(P2AError, match="source"):
+        run_p2a(bundle, "run8", model_call, "model")
+    assert calls == []

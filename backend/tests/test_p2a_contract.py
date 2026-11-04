@@ -66,3 +66,7 @@ def test_claim_map_references_resolve_to_snapshot_and_original_evidence():
     bad.claims[0].evidence_ref_ids = ["missing"]
     with pytest.raises(ValueError, match="missing"):
         validate_source_references(bad, _bundle())
+    bad = valid.model_copy(deep=True)
+    bad.support_relations = []
+    with pytest.raises(ValueError, match="unaccounted claim"):
+        validate_source_references(bad, _bundle())

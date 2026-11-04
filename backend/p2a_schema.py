@@ -190,6 +190,10 @@ def validate_source_references(result: PaperProfile | ClaimEvidenceMap, bundle: 
         for gap in result.evidence_gaps:
             if gap.claim_id not in claims:
                 raise ValueError(f"missing claim: {gap.claim_id}")
+        accounted = ({relation.claim_id for relation in result.support_relations} |
+                     {gap.claim_id for gap in result.evidence_gaps})
+        if claims - accounted:
+            raise ValueError(f"unaccounted claim: {sorted(claims - accounted)[0]}")
     for reference_id in required:
         if reference_id not in cited:
             raise ValueError(f"missing evidence reference: {reference_id}")

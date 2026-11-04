@@ -63,13 +63,20 @@ def chunk_reading_units(units: list[dict], max_chars: int = 12000) -> list[list[
     return chunks
 
 
-def _planning_units(chunks):
+def _planning_units(bundle, chunks):
     if len(chunks) == 1:
         return chunks[0]
-    candidates = chunks[0][:12]
-    for part in chunks[1:]:
-        candidates.extend(part[:2] + part[-2:])
-    return list({unit["id"]: unit for unit in candidates}.values())
+    units = bundle["reading_units"]
+    selected = set()
+    for section in bundle["sections"]:
+        candidates = [unit for unit in units if unit.get("section_id") == section["id"] and
+                      unit["text"].strip() != section["title"].strip()]
+        selected.update(unit["id"] for unit in candidates[:2])
+    selected.update(unit["id"] for unit in units if unit.get("section_id") is None and
+                    unit["page_index"] == 0)
+    if not selected:
+        selected.update(unit["id"] for unit in chunks[0])
+    return [unit for unit in units if unit["id"] in selected]
 
 
 def _unit_line(unit):
@@ -197,13 +204,15 @@ def _global_profile(partials, context, bundle, run_id, quality, requested_model,
                              else None) for field in SCALAR_FACTS},
                   "selected_facts": {field: [fact.model_dump() for fact in getattr(profile, field)[:2]]
                                      for field in ("method_components", "main_results",
-                                                   "author_claimed_contributions", "conclusions")}}
+                                                   "author_claimed_contributions", "conclusions")},
+                  "source_gaps": profile.unresolved_source_gaps[:4]}
                  for profile in partials]
     fallback = False
     try:
         global_result = _invoke(
             "paper-understanding", context +
-            "\nGlobal synthesis of all parts. Reconcile only the first four scalar facts. "
+            "\nGlobal synthesis of all parts. Reconcile only the first four scalar facts "
+            "and unresolved source gaps. Remove gaps caused only by chunk partitioning. "
             "Return empty arrays for fact lists; the server preserves all part-level facts. "
             "Cite the provided source IDs.\n" + json.dumps(summaries, ensure_ascii=False),
             bundle, run_id, bundle["reading_units"], quality, requested_model,
@@ -212,19 +221,28 @@ def _global_profile(partials, context, bundle, run_id, quality, requested_model,
         global_result = partials[0]
         fallback = True
     payload = global_result.model_dump(exclude=RESULT_METADATA)
+    if not fallback:
+        for field in SCALAR_FACTS:
+            if payload[field]:
+                payload[field]["provenance"] = "model_interpretation"
     for field in LIST_FACTS:
         unique = {}
         for profile in partials:
             for fact in getattr(profile, field):
-                key = fact.text.casefold().strip()
+                key = (fact.text.casefold().strip(), fact.provenance)
                 if key not in unique:
                     unique[key] = fact.model_copy(deep=True)
                 else:
                     unique[key].evidence_ref_ids = list(dict.fromkeys(
                         unique[key].evidence_ref_ids + fact.evidence_ref_ids))
         payload[field] = [fact.model_dump() for fact in unique.values()]
-    gaps = [gap for profile in partials for gap in profile.unresolved_source_gaps]
-    gaps.extend(global_result.unresolved_source_gaps)
+    gaps = ([gap for profile in partials for gap in profile.unresolved_source_gaps]
+            if fallback else list(global_result.unresolved_source_gaps))
+    gaps.extend(f"Source quality: {reason}" for reason in quality["reasons"])
+    for kind, objects in (("table", bundle["tables"]), ("formula", bundle["formulas"]),
+                          ("figure", bundle["figures"])):
+        gaps.extend(f"{kind} {item['id']}: {item.get('usability_status', 'unverified')}"
+                    for item in objects if item.get("usability_status") != "verified")
     if fallback:
         gaps.append("Global scalar synthesis failed; scalar fields use the first part only.")
     payload["unresolved_source_gaps"] = list(dict.fromkeys(gaps))
@@ -264,6 +282,25 @@ def _merge_claim_maps(partials, bundle, run_id, quality):
     return result
 
 
+def _profile_context_for_part(profile, part):
+    """Use every profile fact in its source part, plus global contribution context."""
+    unit_ids = {unit["id"] for unit in part}
+    evidence_ids = {source_id for unit in part for source_id in unit["evidence_ids"]}
+    references = {item.id: item for item in profile.evidence_refs}
+
+    def local(fact):
+        return any(source_id in unit_ids or source_id in evidence_ids or
+                   evidence_ids.intersection(references[source_id].evidence_ids)
+                   for source_id in fact.evidence_ref_ids if source_id in references)
+
+    payload = {field: (getattr(profile, field).model_dump() if getattr(profile, field) else None)
+               for field in SCALAR_FACTS}
+    for field in LIST_FACTS:
+        payload[field] = [fact.model_dump() for fact in getattr(profile, field)
+                          if field == "author_claimed_contributions" or local(fact)]
+    return json.dumps(payload, ensure_ascii=False)
+
+
 def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: str,
             target_journal: str | None = None, special_requirements: str | None = None,
             chunk_chars: int = 12000, on_result: Callable | None = None,
@@ -273,8 +310,10 @@ def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: st
     if not units:
         raise P2AError("source", "no readable reading units", [])
     quality = assess_input_readiness(bundle, "section_summary")
+    if quality["status"] == "blocked":
+        raise P2AError("source", "required source scope is blocked", [])
     chunks = chunk_reading_units(units, chunk_chars)
-    plan_units = _planning_units(chunks)
+    plan_units = _planning_units(bundle, chunks)
     traces = []
     context = (f'Document {bundle["document"]["id"]}; Source Bundle {bundle["bundle_id"]}.\n'
                f'Quality: {json.dumps(quality, ensure_ascii=False)}\n'
@@ -282,31 +321,61 @@ def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: st
                f'User requirements: {special_requirements or "not supplied"}\n'
                f'Sections: {json.dumps([item["title"] for item in bundle["sections"]], ensure_ascii=False)}\n'
                f'Technical object status:\n{_object_catalog(bundle)}\n')
-    plan = _invoke("paper-type-planner", context + "\nReading units:\n" + _source_text(plan_units),
+    section_counts = {item["id"]: sum(unit["section_id"] == item["id"] for unit in units)
+                      for item in bundle["sections"]}
+    planning_context = (context + "\nThese reading units are a planning sample only; N2 will read all "
+                        "available units. Do not call an unshown section missing. "
+                        f"Full Source Bundle unit counts by section: {json.dumps(section_counts)}\n")
+    plan = _invoke("paper-type-planner", planning_context + "\nReading units:\n" + _source_text(plan_units),
                    bundle, run_id, plan_units, quality, requested_model, model_call, traces,
                    ReviewPlan, on_trace)
     if on_result:
         on_result("review_plan", plan)
     profile_context = context + "\nReview plan:\n" + _content_json(plan)
     partial_profiles = []
+
+    def profile_part(part, label):
+        try:
+            return [_invoke(
+                "paper-understanding", profile_context + f"\nPart {label}. "
+                "Other parts will be processed separately; do not call them missing.\n" +
+                _source_text(part), bundle, run_id, part, quality, requested_model,
+                model_call, traces, PaperProfile, on_trace)]
+        except P2AError as exc:
+            if len(part) < 2 or not any(code in str(exc) for code in
+                                         ("APIConnectionError", "APITimeoutError")):
+                raise
+            middle = len(part) // 2
+            return profile_part(part[:middle], label + "a") + profile_part(part[middle:], label + "b")
+
     for index, part in enumerate(chunks):
-        partial_profiles.append(_invoke(
-            "paper-understanding", profile_context + f"\nPart {index + 1}/{len(chunks)}.\n" +
-            _source_text(part), bundle, run_id, part, quality, requested_model, model_call, traces,
-            PaperProfile, on_trace))
+        partial_profiles.extend(profile_part(part, f"{index + 1}/{len(chunks)}"))
     profile = _global_profile(partial_profiles, profile_context, bundle, run_id, quality,
                               requested_model, model_call, traces, on_trace)
     if on_result:
         on_result("paper_profile", profile)
-    map_context = context + "\nPaper profile:\n" + _content_json(profile)
+    map_context = context
+    map_chunks = chunk_reading_units(units, min(chunk_chars, 6000))
     partial_maps = []
-    for index, part in enumerate(chunks):
-        partial_maps.append(_invoke(
-            "contribution-evidence-mapper", map_context +
-            f"\nPart {index + 1}/{len(chunks)}. Map claims from these reading units; "
-            "use the full profile only for context.\n" +
-            _source_text(part), bundle, run_id, part, quality, requested_model, model_call, traces,
-            ClaimEvidenceMap, on_trace))
+
+    def map_part(part, label):
+        try:
+            return [_invoke(
+                "contribution-evidence-mapper", map_context +
+                f"\nPart {label}. Map claims from these reading units; "
+                "the PaperProfile facts below are projected by their source IDs.\n" +
+                _profile_context_for_part(profile, part) + "\nReading units:\n" +
+                _source_text(part), bundle, run_id, part, quality, requested_model,
+                model_call, traces, ClaimEvidenceMap, on_trace)]
+        except P2AError as exc:
+            if len(part) < 2 or not any(code in str(exc) for code in
+                                         ("APIConnectionError", "APITimeoutError")):
+                raise
+            middle = len(part) // 2
+            return map_part(part[:middle], label + "a") + map_part(part[middle:], label + "b")
+
+    for index, part in enumerate(map_chunks):
+        partial_maps.extend(map_part(part, f"{index + 1}/{len(map_chunks)}"))
     mapping = _merge_claim_maps(partial_maps, bundle, run_id, quality)
     if any(gap.startswith("Global scalar synthesis failed") for gap in profile.unresolved_source_gaps):
         mapping.execution_status = "limited"

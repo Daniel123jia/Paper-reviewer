@@ -444,16 +444,24 @@ def create_app(data_dir: Path) -> FastAPI:
                 db.execute("UPDATE paper_understanding_runs SET source_bundle_id = ?, source_bundle_json = ? "
                            "WHERE id = ?", (bundle["bundle_id"], json.dumps(bundle), run_id))
             model = os.environ.get("OPENAI_MODEL", "gpt-6.1-sol")
-            client = OpenAI(base_url=model_base_url(), timeout=180, max_retries=1)
+            client = OpenAI(base_url=model_base_url(), timeout=180, max_retries=0)
 
             def model_call(stage, system, user):
                 started = time.perf_counter()
-                completion = client.chat.completions.create(
+                stream = client.chat.completions.create(
                     model=model, messages=[{"role": "system", "content": system},
-                                           {"role": "user", "content": user}])
-                usage = completion.usage
-                return {"content": completion.choices[0].message.content or "",
-                        "model_identifier": completion.model,
+                                           {"role": "user", "content": user}],
+                    stream=True, stream_options={"include_usage": True})
+                pieces = []
+                actual_model = None
+                usage = None
+                for chunk in stream:
+                    actual_model = chunk.model or actual_model
+                    usage = chunk.usage or usage
+                    if chunk.choices and chunk.choices[0].delta.content:
+                        pieces.append(chunk.choices[0].delta.content)
+                return {"content": "".join(pieces),
+                        "model_identifier": actual_model,
                         "input_tokens": getattr(usage, "prompt_tokens", None),
                         "output_tokens": getattr(usage, "completion_tokens", None),
                         "duration_ms": round((time.perf_counter() - started) * 1000)}
@@ -482,7 +490,7 @@ def create_app(data_dir: Path) -> FastAPI:
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET status = 'failed', error = ?, "
                            "finished_at = datetime('now') WHERE id = ?",
-                           (f"{exc.stage}: {type(exc.__cause__).__name__}", run_id))
+                           (str(exc), run_id))
         except Exception as exc:
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET status = 'failed', error = ?, "

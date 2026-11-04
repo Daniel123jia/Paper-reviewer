@@ -21,6 +21,13 @@ def test_existing_p2a_run_table_receives_source_snapshot_column(tmp_path):
     assert "source_bundle_json" in columns
 
 
+def test_understanding_results_require_existing_session_guard(tmp_path, monkeypatch):
+    monkeypatch.setenv("PAPER_REVIEW_ACCESS_TOKEN", "local-private-access-token")
+    client = TestClient(create_app(tmp_path))
+    assert client.get("/api/understanding-runs/example").status_code == 401
+    assert client.get("/api/understanding-runs/example/source-bundle").status_code == 401
+
+
 def _pdf():
     pdf = fitz.open()
     page = pdf.new_page()
@@ -58,9 +65,14 @@ def _fake_completion(messages):
                                           "relation": "direct_source", "explanation": "Direct text"}],
                    "evidence_gaps": []}
     import json
-    return SimpleNamespace(model="actual-model", choices=[SimpleNamespace(
-        message=SimpleNamespace(content=json.dumps(payload)))],
-        usage=SimpleNamespace(prompt_tokens=80, completion_tokens=20))
+    content = json.dumps(payload)
+    middle = len(content) // 2
+    return [SimpleNamespace(model="actual-model", choices=[SimpleNamespace(
+        delta=SimpleNamespace(content=content[:middle]))], usage=None),
+        SimpleNamespace(model="actual-model", choices=[SimpleNamespace(
+            delta=SimpleNamespace(content=content[middle:]))], usage=None),
+        SimpleNamespace(model="actual-model", choices=[],
+                        usage=SimpleNamespace(prompt_tokens=80, completion_tokens=20))]
 
 
 def test_understanding_run_persists_scoped_results_without_changing_review_baseline(tmp_path, monkeypatch):
@@ -125,7 +137,7 @@ def test_understanding_run_reports_model_failure_and_missing_key(tmp_path, monke
     assert created.status_code == 202
     result = client.get(f'/api/understanding-runs/{created.json()["id"]}').json()
     assert result["status"] == "failed"
-    assert "paper-type-planner" in result["error"]
+    assert result["error"] == "paper-type-planner: model_call_failed:RuntimeError"
     assert len(result["model_calls"]) == 2
     assert all(call["status"] == "failed" for call in result["model_calls"])
 
