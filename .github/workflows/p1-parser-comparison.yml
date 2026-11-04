@@ -1,6 +1,8 @@
 name: P1 parser comparison
 
 on:
+  push:
+    branches: [codex/p1-structured-pdf-quality]
   workflow_dispatch:
 
 permissions:
