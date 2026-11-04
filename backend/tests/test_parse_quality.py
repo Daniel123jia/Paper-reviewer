@@ -55,3 +55,13 @@ def test_column_detection_handles_narrow_gutter():
               "references": [], "limitations": []}
     report = assess_parse_quality(bundle)
     assert "reading_order_unverified" in report["pages"][0]["issues"]
+
+
+def test_wrapped_table_header_does_not_imply_collapsed_data_rows():
+    bundle = {"bundle_id": "bundle3", "pages": [], "body": [], "sections": [],
+              "tables": [{"id": "table1", "page_index": 0, "row_count": 3, "col_count": 2,
+                          "cells": [["Model\nversion", "Score"], ["A", "1.0"], ["B", "2.0"]],
+                          "caption_evidence_id": "cap", "status": "candidate"}],
+              "formulas": [], "figures": [], "references": [], "limitations": []}
+    report = assess_parse_quality(bundle)
+    assert "row_alignment_unverified" not in report["tables"][0]["issues"]

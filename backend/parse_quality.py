@@ -31,8 +31,9 @@ def assess_parse_quality(bundle: dict) -> dict:
     tables = []
     for table in bundle["tables"]:
         cells = table["cells"]
+        data_rows = cells if table["row_count"] <= 2 else cells[1:]
         has_stacked_values = any(isinstance(cell, str) and len([line for line in cell.splitlines() if line.strip()]) > 1
-                                 for row in cells for cell in row)
+                                 for row in data_rows for cell in row)
         issues = ["row_alignment_unverified"] if has_stacked_values else []
         if table["status"] == "missing_structure":
             issues.append("table_structure_missing")
