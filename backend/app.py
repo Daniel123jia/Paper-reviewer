@@ -23,6 +23,8 @@ from backend.algorithmcheck import check_matmul_description
 from backend.drafts import compose_draft
 from backend.exporter import render_export
 from backend.access import AccessPolicy, COOKIE_NAME, SESSION_SECONDS
+from backend.source_bundle import build_source_bundle
+from backend.parse_quality import assess_parse_quality
 
 
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
@@ -389,6 +391,21 @@ def create_app(data_dir: Path) -> FastAPI:
         with connect() as db:
             document_or_404(db, document_id)
         return FileResponse(files_dir / f"{document_id}.pdf", media_type="application/pdf")
+
+    def source_bundle_for_document(document_id: str):
+        with connect() as db:
+            document = document_or_404(db, document_id)
+            rows = db.execute("SELECT * FROM evidence WHERE document_id = ? ORDER BY page_index, rowid",
+                              (document_id,)).fetchall()
+            return build_source_bundle(document, rows, files_dir / f"{document_id}.pdf")
+
+    @app.get("/api/documents/{document_id}/source-bundle")
+    def get_source_bundle(document_id: str):
+        return source_bundle_for_document(document_id)
+
+    @app.get("/api/documents/{document_id}/parse-quality")
+    def get_parse_quality(document_id: str):
+        return assess_parse_quality(source_bundle_for_document(document_id))
 
     @app.post("/api/review-cases", status_code=201)
     def create_review_case(payload: ReviewCaseRequest):

@@ -2,6 +2,10 @@
 
 P0–P2 已验收。真实 PDF 可上传、阅读、检索并跳转高亮证据；论文对话支持中转站流式回答。P3 已实现审稿任务与抽样候选问题筛查，测试结果和限制见 `docs/phase3-acceptance.md`。P4 的核心本地验收已通过：自动关联明确引用的公式、离线标量推导与反例、算法矩阵维度核查、实验数值与结论核对、扩展原文反证；支持范围和遗留问题见 `docs/phase4-acceptance.md`。P5 已实现可编辑的中英文完整报告与正式意见，支持 Markdown、Word、PDF 导出；本地验收与限制见 `docs/phase5-acceptance.md`。P6 的本地集成、单账号保护、恢复、并发及用量检查见 `docs/phase6-acceptance.md`。尚未部署到服务器。
 
+P1 结构化解析诊断已加入只读的 Source Bundle 与解析质量 API。它保留现有 Evidence ID 和审稿 Baseline，不改变模型 Prompt 或报告流程；结构候选及未可靠解析的内容会明确标记。接口契约与限制见 `docs/p1-source-bundle-schema.md`，三种解析器的隔离对照见 `docs/p1-parser-comparison.md`。
+
+P1.1 增加候选 `reading_units[]`、章节映射和按任务范围判断的输入质量门槛；这些结果仍需原始 PDF 参照，不能自动当作可靠全文。实际验收见 `docs/p1.1-reading-acceptance.md`。
+
 ## 本地运行
 
 需要 Python 3.11、Node.js 20 以上，以及 Pandoc。PDF 导出使用 Playwright Chromium，首次安装前端依赖后执行 `cd frontend && npx playwright install chromium`。
