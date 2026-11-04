@@ -176,6 +176,12 @@ def build_source_bundle(document, evidence_rows, pdf_path: Path) -> dict:
         formula["section_id"] = linked[0]["section_id"] if linked else None
         formula["reading_unit_ids"] = [unit["id"] for unit in reading_units if
                                        set(formula["evidence_ids"]).intersection(unit["evidence_ids"])]
+    for item in formulas + tables + figures:
+        item["document_id"] = doc["id"]
+        if "section_id" not in item:
+            anchor = item.get("caption_evidence_id") or next(iter(item.get("evidence_ids", [])), None)
+            linked = next((unit for unit in reading_units if anchor in unit["evidence_ids"]), None)
+            item["section_id"] = linked["section_id"] if linked else None
     references = [{"id": f'reference_{unit["id"]}', "text": unit["text"],
                    "evidence_ids": unit["evidence_ids"], "page_index": unit["page_index"],
                    "status": "candidate"}

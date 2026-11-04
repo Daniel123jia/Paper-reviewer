@@ -1,6 +1,7 @@
 """Conservative geometric ordering of existing Evidence blocks."""
 
 import re
+from collections import Counter
 
 
 def _heading_key(value):
@@ -54,11 +55,31 @@ def build_reading_units(pages, body, sections, tables, parser_version):
         ordered.extend(blocks)
         page_states[page["page_index"]] = state
 
+    blocks_by_id = {block["evidence_id"]: block for block in body}
     table_for_evidence = {}
     for table in tables:
         if table.get("structure_status") == "aligned_text_candidate" and table.get("caption_evidence_id"):
+            table_tokens = Counter(token for row in table["structured_rows"]
+                                   for cell in row if isinstance(cell, str) for token in cell.split())
+            source_tokens = Counter(token for evidence_id in table["evidence_ids"]
+                                    if evidence_id in blocks_by_id
+                                    for token in blocks_by_id[evidence_id]["text"].split())
+            remaining = table_tokens.copy()
+            uncovered = []
             for evidence_id in table["evidence_ids"]:
-                table_for_evidence[evidence_id] = table
+                block = blocks_by_id.get(evidence_id)
+                block_tokens = Counter(block["text"].split()) if block is not None else Counter()
+                if block is None or block_tokens - remaining:
+                    uncovered.append(evidence_id)
+                remaining -= block_tokens
+            if source_tokens == table_tokens and not uncovered:
+                table["reading_unit_status"] = "structured_rows"
+                table["uncovered_evidence_ids"] = []
+                for evidence_id in table["evidence_ids"]:
+                    table_for_evidence[evidence_id] = table
+            else:
+                table["reading_unit_status"] = "raw_evidence_fallback"
+                table["uncovered_evidence_ids"] = uncovered or list(table["evidence_ids"])
     units = []
     emitted_tables = set()
     for block in ordered:
@@ -68,7 +89,8 @@ def build_reading_units(pages, body, sections, tables, parser_version):
                 continue
             emitted_tables.add(table["id"])
             for row_index, row in enumerate(table["structured_rows"]):
-                units.append({"id": f'ru_{table["id"]}_row_{row_index}', "text": " | ".join(row),
+                units.append({"id": f'ru_{table["id"]}_row_{row_index}',
+                              "text": " | ".join(cell or "" for cell in row),
                               "page_index": table["page_index"], "bbox": table["bbox"],
                               "evidence_ids": table["evidence_ids"], "table_id": table["id"],
                               "table_row_index": row_index, "evidence_mapping_status": "source_block_partial",

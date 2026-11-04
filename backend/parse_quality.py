@@ -11,11 +11,15 @@ def assess_input_readiness(bundle: dict, node: str, scope: dict | None = None,
     scope = scope or {}
     selected_pages = set(scope.get("page_indices", [page["page_index"] for page in bundle["pages"]]))
     selected_sections = set(scope.get("section_ids", []))
+    document_id = bundle.get("document", {}).get("id")
     units = [unit for unit in bundle.get("reading_units", [])
              if unit["page_index"] in selected_pages and
              (not selected_sections or unit["section_id"] in selected_sections)]
     pages = [page for page in bundle["pages"] if page["page_index"] in selected_pages]
     reasons = []
+    if (scope.get("document_id", document_id) != document_id or
+        not selected_pages.issubset({page["page_index"] for page in bundle["pages"]})):
+        reasons.append("requested_scope_invalid")
     all_page_units = [unit for unit in bundle.get("reading_units", []) if unit["page_index"] in selected_pages]
     mapped_ids = {evidence_id for unit in all_page_units for evidence_id in unit["evidence_ids"]}
     if any(evidence_id not in mapped_ids for page in pages for evidence_id in page["evidence_ids"]):
@@ -35,6 +39,13 @@ def assess_input_readiness(bundle: dict, node: str, scope: dict | None = None,
     selected_objects = set(scope.get("object_ids", []))
     if selected_objects:
         objects = [item for item in objects if item["id"] in selected_objects]
+    objects = [item for item in objects if
+               (document_id is None or item.get("document_id", document_id) == document_id) and
+               (not selected_sections or item.get("section_id") in selected_sections)]
+    if selected_objects and (len(objects) != len(selected_objects) or
+                             {item["id"] for item in objects} != selected_objects):
+        reasons.append("required_object_not_in_scope")
+    if selected_objects:
         if node == "table_review":
             relevant_ids = {item.get("caption_evidence_id") for item in objects}
             units = [unit for unit in units if unit.get("table_id") in selected_objects or
@@ -56,6 +67,9 @@ def assess_input_readiness(bundle: dict, node: str, scope: dict | None = None,
     if any(item.get("structure_status") in {"structure_incomplete", "possible_false_positive"}
            for item in objects):
         reasons.append("required_structure_incomplete")
+    if node == "table_review" and any(item.get("reading_unit_status") == "raw_evidence_fallback"
+                                      for item in objects):
+        reasons.append("table_source_text_uncovered")
     valid_reference = bool(reference and reference.get("source") == "human_pdf_review" and
                            reference.get("reference_id"))
     verified_units = set(reference.get("verified_unit_ids", [])) if valid_reference else set()
@@ -73,10 +87,11 @@ def assess_input_readiness(bundle: dict, node: str, scope: dict | None = None,
     if verified_key and not selected_objects and (not valid_reference or
         node not in reference.get("verified_inventory_nodes", [])):
         reasons.append("human_inventory_reference_missing")
-    blocking = {"required_text_unreadable", "required_object_not_detected", "source_evidence_unmapped"}
+    blocking = {"required_text_unreadable", "required_object_not_detected", "source_evidence_unmapped",
+                "requested_scope_invalid", "required_object_not_in_scope"}
     if node in {"formula_check", "table_review", "figure_review"}:
         blocking |= {"required_structure_incomplete", "human_object_reference_missing",
-                     "human_inventory_reference_missing"}
+                     "human_inventory_reference_missing", "table_source_text_uncovered"}
     status = "blocked" if blocking.intersection(reasons) else "needs_review" if reasons else "ready"
     return {"node": node, "scope": scope, "status": status, "reasons": reasons,
             "reference_id": reference["reference_id"] if valid_reference else None}
@@ -129,6 +144,8 @@ def assess_parse_quality(bundle: dict) -> dict:
             issues.append("possible_false_positive")
         if table.get("structure_status") == "aligned_text_candidate":
             issues.append("split_rows_require_pdf_check")
+        if table.get("reading_unit_status") == "raw_evidence_fallback":
+            issues.append("table_source_text_uncovered")
         if not table.get("caption_evidence_id"):
             issues.append("caption_link_unverified")
         tables.append({"id": table["id"], "page_index": table["page_index"],
@@ -136,6 +153,7 @@ def assess_parse_quality(bundle: dict) -> dict:
                                  ("needs_review" if issues else "candidate"),
                        "caption_evidence_id": table.get("caption_evidence_id"),
                        "structure_status": table.get("structure_status", "unverified"),
+                       "reading_unit_status": table.get("reading_unit_status", "not_applicable"),
                        "usability_status": table.get("usability_status", "detected_unverified"),
                        "issues": issues})
 

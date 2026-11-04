@@ -84,9 +84,43 @@ def test_collapsed_table_rows_are_split_only_with_aligned_columns(tmp_path):
     assert table["structure_status"] == "aligned_text_candidate"
     row_units = [unit for unit in bundle["reading_units"] if unit.get("table_id") == table["id"]]
     assert len(row_units) == 5
+    assert not any(unit["id"] == "ru_values" for unit in bundle["reading_units"])
+    assert sum("25.8" in unit["text"] for unit in bundle["reading_units"]) == 2
     assert row_units[1]["evidence_ids"] == ["values"]
     assert row_units[1]["evidence_mapping_status"] == "source_block_partial"
     assert row_units[1]["bbox"] == table["bbox"]
+
+
+def test_table_with_extra_note_keeps_original_text_without_duplicate_rows(tmp_path):
+    from backend.reading_order import build_reading_units
+
+    table = {"id": "table_1", "page_index": 0, "structure_status": "aligned_text_candidate",
+             "caption_evidence_id": "caption", "evidence_ids": ["values", "note"],
+             "bbox": [50, 100, 480, 250],
+             "structured_rows": [["A", "Score"], ["Yes", "25.8"], ["No", "12.5"]]}
+    body = [{"evidence_id": "values", "page_index": 0, "bbox": [50, 110, 400, 210],
+             "text": "A Score Yes 25.8 No 12.5"},
+            {"evidence_id": "note", "page_index": 0, "bbox": [50, 215, 400, 240],
+             "text": "Footnote: scores are rounded."},
+            {"evidence_id": "caption", "page_index": 0, "bbox": [50, 260, 300, 280],
+             "text": "Table 1: Results"}]
+    pages = [{"page_index": 0, "width": 600}]
+
+    units = build_reading_units(pages, body, [], [table], "1.28.2")
+
+    assert table["reading_unit_status"] == "raw_evidence_fallback"
+    assert set(table["uncovered_evidence_ids"]) == {"note"}
+    assert [unit["text"] for unit in units] == [item["text"] for item in body]
+    assert all(unit.get("table_id") is None for unit in units)
+    assert sum("25.8" in unit["text"] for unit in units) == 1
+
+    mixed_table = {**table, "evidence_ids": ["values"]}
+    mixed_body = [{**body[0], "text": body[0]["text"] + " Footnote: scores are rounded."}, body[2]]
+    mixed_units = build_reading_units(pages, mixed_body, [], [mixed_table], "1.28.2")
+    assert mixed_table["reading_unit_status"] == "raw_evidence_fallback"
+    assert mixed_table["uncovered_evidence_ids"] == ["values"]
+    assert [unit["text"] for unit in mixed_units] == [item["text"] for item in mixed_body]
+    assert sum("25.8" in unit["text"] for unit in mixed_units) == 1
 
 
 def test_unmatched_or_scanned_content_does_not_become_ready(tmp_path):

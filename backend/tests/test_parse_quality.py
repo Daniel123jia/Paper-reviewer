@@ -1,4 +1,4 @@
-from backend.parse_quality import assess_parse_quality
+from backend.parse_quality import assess_parse_quality, assess_input_readiness
 
 
 def test_quality_report_does_not_claim_accuracy_without_human_reference():
@@ -80,3 +80,43 @@ def test_table_false_positive_and_missing_structure_are_explicit():
     assert "possible_false_positive" in report["tables"][0]["issues"]
     assert "table_structure_missing" in report["tables"][1]["issues"]
     assert report["input_readiness"]["table_review"]["status"] == "blocked"
+
+
+def test_scoped_objects_require_every_id_on_the_selected_document_page_and_section():
+    bundle = {"document": {"id": "doc1"},
+              "pages": [{"page_index": 0, "status": "text_extracted", "evidence_ids": ["e1"]},
+                        {"page_index": 1, "status": "text_extracted", "evidence_ids": ["e2"]}],
+              "reading_units": [{"id": "u1", "page_index": 0, "section_id": "s1",
+                                 "evidence_ids": ["e1"], "evidence_mapping_status": "exact_block",
+                                 "reading_order_status": "geometric_candidate", "text": "Table 1"},
+                                {"id": "u2", "page_index": 1, "section_id": "s2",
+                                 "evidence_ids": ["e2"], "evidence_mapping_status": "exact_block",
+                                 "reading_order_status": "geometric_candidate", "text": "Table 2"}],
+              "tables": [{"id": "t1", "document_id": "doc1", "page_index": 0,
+                          "section_id": "s1", "caption_evidence_id": "e1",
+                          "structure_status": "detected_unverified"},
+                         {"id": "t2", "document_id": "doc1", "page_index": 1,
+                          "section_id": "s2", "caption_evidence_id": "e2",
+                          "structure_status": "detected_unverified"},
+                         {"id": "foreign", "document_id": "doc2", "page_index": 0,
+                          "section_id": "s1", "caption_evidence_id": "e1",
+                          "structure_status": "detected_unverified"}],
+              "formulas": [], "figures": []}
+    reference = {"source": "human_pdf_review", "reference_id": "check1",
+                 "verified_unit_ids": ["u1", "u2"],
+                 "verified_table_ids": ["t1", "t2", "foreign"]}
+
+    def status(ids, page_indices=(0,), section_ids=("s1",), document_id="doc1"):
+        return assess_input_readiness(bundle, "table_review",
+                                      {"object_ids": ids, "page_indices": page_indices,
+                                       "section_ids": section_ids, "document_id": document_id},
+                                      reference)["status"]
+
+    assert status(["t1"]) == "ready"
+    assert status(["t1", "missing"]) == "blocked"
+    assert status(["t1", "t2"]) == "blocked"
+    assert status(["t1", "foreign"]) == "blocked"
+    assert status(["t1"], section_ids=("s2",)) == "blocked"
+    assert status(["t1"], document_id="doc2") == "blocked"
+    bundle["tables"][0]["reading_unit_status"] = "raw_evidence_fallback"
+    assert status(["t1"]) == "blocked"
