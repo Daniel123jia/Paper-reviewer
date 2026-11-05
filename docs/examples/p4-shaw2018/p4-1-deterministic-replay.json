@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.1",
+  "admission_rule_version": "p4.1",
+  "replay_mode": "deterministic_from_frozen_sources",
+  "new_model_calls": 0,
+  "internal_selected_issue_count": 6,
+  "internal_group_count": 6,
+  "author_selected_issue_count": 1,
+  "author_group_count": 1,
+  "merged_groups": [],
+  "external_dependencies": [
+    {
+      "issue_id": "consolidated_c5155e1e615fb4a2358a",
+      "status": "noncritical_unresolved",
+      "constraint": "External material remains unchecked; restrict wording to the paper's own claims and do not imply external verification."
+    }
+  ]
+}

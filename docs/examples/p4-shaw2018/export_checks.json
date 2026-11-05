@@ -1,0 +1,94 @@
+{
+  "internal-zh": {
+    "md": {
+      "status": 200,
+      "bytes": 21157,
+      "draft_marked": true,
+      "body_present": false
+    },
+    "docx": {
+      "status": 200,
+      "bytes": 31922,
+      "paragraphs": 66,
+      "draft_marked": true
+    },
+    "pdf": {
+      "status": 200,
+      "bytes": 679276,
+      "pages": 8,
+      "draft_marked": true,
+      "replacement_chars": 0,
+      "extracted_chars": 14334,
+      "a4_pages": true
+    }
+  },
+  "internal-en": {
+    "md": {
+      "status": 200,
+      "bytes": 21709,
+      "draft_marked": true,
+      "body_present": false
+    },
+    "docx": {
+      "status": 200,
+      "bytes": 29981,
+      "paragraphs": 66,
+      "draft_marked": true
+    },
+    "pdf": {
+      "status": 200,
+      "bytes": 146962,
+      "pages": 8,
+      "draft_marked": true,
+      "replacement_chars": 0,
+      "extracted_chars": 21792,
+      "a4_pages": true
+    }
+  },
+  "author-zh": {
+    "md": {
+      "status": 200,
+      "bytes": 1572,
+      "draft_marked": true,
+      "body_present": false
+    },
+    "docx": {
+      "status": 200,
+      "bytes": 24692,
+      "paragraphs": 9,
+      "draft_marked": true
+    },
+    "pdf": {
+      "status": 200,
+      "bytes": 324710,
+      "pages": 1,
+      "draft_marked": true,
+      "replacement_chars": 0,
+      "extracted_chars": 644,
+      "a4_pages": true
+    }
+  },
+  "author-en": {
+    "md": {
+      "status": 200,
+      "bytes": 1848,
+      "draft_marked": true,
+      "body_present": false
+    },
+    "docx": {
+      "status": 200,
+      "bytes": 24441,
+      "paragraphs": 9,
+      "draft_marked": true
+    },
+    "pdf": {
+      "status": 200,
+      "bytes": 104636,
+      "pages": 1,
+      "draft_marked": true,
+      "replacement_chars": 0,
+      "extracted_chars": 1844,
+      "a4_pages": true
+    }
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "schema_version": "1.0",
+  "source": {
+    "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+    "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
+    "pdf_sha256": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+    "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
+    "understanding_run_id": "38fa583bb278414998f1bb16cca0be05",
+    "professional_review_run_id": "3b948d9c2406422db00955223fac9ad5",
+    "consolidation_run_id": "d204774e750b454e94464dc14bdf2b7f",
+    "evidence_verification_run_id": "replay_bacc58d77e084acb874def52dd34ca4e",
+    "p3_result_sha256": "efc0e73a8d733fe7cede894942b57cc8192033cd8771007f5a86a768854e140b",
+    "p3_schema_version": "1.1",
+    "p3_execution_mode": "recorded_model_replay"
+  },
+  "report_kind": "internal",
+  "language": "en",
+  "selected_issue_ids": [
+    "consolidated_8103558cbdda88bc3c6c",
+    "consolidated_456a6e99f6fb075f3912",
+    "consolidated_64b696e6ae9642e79b3d",
+    "consolidated_1a30bff6ccc7941967da",
+    "consolidated_7065266f221bc62de86a",
+    "consolidated_9a9de1c8e6d1e38a43f6",
+    "consolidated_bdd3cb2a8bdb123b2f43",
+    "consolidated_23e6a7c956e176a37f5c",
+    "consolidated_4b0110cc826e3be3b84e"
+  ],
+  "internal_only_issue_ids": [],
+  "excluded_issue_ids": [],
+  "groups": [
+    {
+      "group_id": "report_group_700ee9af78507afb",
+      "source_issue_ids": [
+        "consolidated_8103558cbdda88bc3c6c"
+      ],
+      "scientific_question": "For the sentiment-classification comparisons, which verified dataset and model configuration yield the stated at-least-15,000-fold speedup, and what complete-training ratio follows when the baseline schedules and five fastText epochs used for the reported accuracies are included? If that ratio is not established, should the classification speedup statement be explicitly limited to single-epoch timing under the disclosed execution conditions?",
+      "category": "clarification",
+      "order": 0,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_1970bc4f54da0e3e",
+      "source_issue_ids": [
+        "consolidated_456a6e99f6fb075f3912"
+      ],
+      "scientific_question": "Do the original task description or accompanying reconstruction materials specify exact record IDs, a deterministic assignment rule, or a random seed for the splits?",
+      "category": "clarification",
+      "order": 1,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_7cc42dcc0235d68b",
+      "source_issue_ids": [
+        "consolidated_64b696e6ae9642e79b3d"
+      ],
+      "scientific_question": "Does the original passage or surrounding material define this as expected complexity under the frequencies used to construct the Huffman tree?",
+      "category": "clarification",
+      "order": 2,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_e06db754966809d9",
+      "source_issue_ids": [
+        "consolidated_1a30bff6ccc7941967da"
+      ],
+      "scientific_question": "Could the conclusion clarify that the demonstrated usefulness of averaged fastText features concerns the evaluated supervised classifiers, and identify the evidence or intended qualification for its contrast with averaged unsupervised word2vec vectors?",
+      "category": "clarification",
+      "order": 3,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_0a1a5dfccbf23a08",
+      "source_issue_ids": [
+        "consolidated_7065266f221bc62de86a"
+      ],
+      "scientific_question": "Does the complete paper provide measurements of visited nodes or runtime across class counts, rather than only the large-tag benchmark?",
+      "category": "clarification",
+      "order": 4,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_eb055e6e93584ebe",
+      "source_issue_ids": [
+        "consolidated_9a9de1c8e6d1e38a43f6"
+      ],
+      "scientific_question": "Do the complete experimental sections or implementation documentation specify the CPU model and the operations included in each training and test timer?",
+      "category": "clarification",
+      "order": 5,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_e9fbc406a31bb828",
+      "source_issue_ids": [
+        "consolidated_bdd3cb2a8bdb123b2f43"
+      ],
+      "scientific_question": "Does the complete paper distinguish end-to-end system efficiency from speed attributable to particular algorithmic components?",
+      "category": "clarification",
+      "order": 6,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_7b596c2aa6643be7",
+      "source_issue_ids": [
+        "consolidated_23e6a7c956e176a37f5c"
+      ],
+      "scientific_question": "Does the original description or dataset script compute the frequency threshold over the whole corpus or only the training partition?",
+      "category": "clarification",
+      "order": 7,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_12fa93078e8fb169",
+      "source_issue_ids": [
+        "consolidated_4b0110cc826e3be3b84e"
+      ],
+      "scientific_question": "Do the complete model and tag-prediction sections specify how multiple tags are converted into training targets?",
+      "category": "clarification",
+      "order": 8,
+      "grouping_rationale": "Separate scientific question"
+    }
+  ],
+  "source_limitations": [
+    "coverage_gap_a0627c837dcfd6239e46",
+    "coverage_gap_e91477898d544fd05bd0",
+    "coverage_gap_09596e1bf7c466ecb220",
+    "coverage_gap_7f97c48ac6966e07a183",
+    "coverage_gap_2f5b8ffd11674469a1e5",
+    "coverage_gap_026feab393ae112a42b2",
+    "coverage_gap_40f3fafeb15ac653b4c4",
+    "coverage_gap_c7f213240b0b56cbb9b4",
+    "coverage_gap_67c3f15ecc346c31a0b8",
+    "coverage_gap_a2c0b02bb87b2a24f828",
+    "coverage_gap_3ee99ee7e99059844358",
+    "coverage_gap_d52f55e4e69d406c3fe0",
+    "coverage_gap_f1a99e9fe14aa5afb946",
+    "coverage_gap_712f833b4e546a8a047a",
+    "coverage_gap_1f2389f839eb3f1150f7",
+    "coverage_gap_70554e6a1e1719f1117e",
+    "coverage_gap_d035ee2d84c45f796854",
+    "coverage_gap_8058b7d2ba6e6e988380",
+    "coverage_gap_5bcd4effabc474e984eb",
+    "coverage_gap_a13ae66c7b83a640e8fe",
+    "coverage_gap_272e53a393f5facf01e5",
+    "coverage_gap_b5ed60eca2dafb66e91f",
+    "coverage_gap_3aa1f24a5226e39af2b0",
+    "coverage_gap_5c02bccc54fed036ece4",
+    "coverage_gap_2bafa9a335d80b10a333",
+    "coverage_gap_2b3e43809b7d559a3bbd",
+    "coverage_gap_78e8772f97f998108c68",
+    "coverage_gap_a0f6fe73be3961d77682",
+    "coverage_gap_66ada5c4ae51f871189b",
+    "coverage_gap_519b13d214705b7165b2",
+    "coverage_gap_71621ee16a0e7c8a6c6a",
+    "coverage_gap_abbc9bf8f6fc7e40e404",
+    "coverage_gap_ca3207435c8b9719cd62",
+    "coverage_gap_336e5b04a5b4b41b12ee",
+    "coverage_gap_21a36e055f28d13130ea",
+    "The supplied quality state identifies ambiguous reading order and incomplete section mapping. A human-readable reference document and reliable human page references are unavailable, preventing verification against the original document.",
+    "The loss and hierarchical probability equations are fragmented in the supplied extraction; their exact transcription remains unverified.",
+    "All six flagged tables have incomplete structure: table_p1_0, table_ev_26739aba340e_2_3, table_ev_26739aba340e_2_9, table_ev_26739aba340e_2_14, table_ev_26739aba340e_3_8, and table_ev_26739aba340e_3_16. Their layouts, cell alignment, captions, units, and numerical comparisons remain unverified.",
+    "Figure figure_ev_26739aba340e_1_3 requires visual review. Its extracted caption and surrounding prose describe feature embedding and averaging, but its visual meaning remains unverified.",
+    "Results prose refers to Figure 1 and Figure 3 while supplied result captions identify tables; these object references cannot be reconciled from the supplied evidence.",
+    "Source quality: reading_order_ambiguous",
+    "Source quality: section_mapping_incomplete",
+    "Source quality: human_reading_reference_missing",
+    "Source quality: human_page_reference_missing",
+    "table table_p1_0: structure_incomplete",
+    "table table_ev_26739aba340e_2_3: structure_incomplete",
+    "table table_ev_26739aba340e_2_9: structure_incomplete",
+    "table table_ev_26739aba340e_2_14: structure_incomplete",
+    "table table_ev_26739aba340e_3_8: structure_incomplete",
+    "table table_ev_26739aba340e_3_16: structure_incomplete",
+    "figure figure_ev_26739aba340e_1_3: visual_review_required"
+  ]
+}

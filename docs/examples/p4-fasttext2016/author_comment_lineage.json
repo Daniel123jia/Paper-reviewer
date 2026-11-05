@@ -1,0 +1,48 @@
+{
+  "author-zh": [
+    {
+      "report_comment_id": "report_group_700ee9af78507afb",
+      "source_issue_ids": [
+        "consolidated_8103558cbdda88bc3c6c"
+      ],
+      "p3_records": [
+        {
+          "issue_id": "consolidated_8103558cbdda88bc3c6c",
+          "verification_task_id": "verify_1763c10f94e264329e44",
+          "verdict": "concern_narrowed",
+          "report_eligibility": "eligible_with_qualification"
+        }
+      ],
+      "evidence_refs": [
+        "ru_ev_26739aba340e_2_9",
+        "ru_ev_26739aba340e_2_16",
+        "ru_ev_26739aba340e_2_17",
+        "table_ev_26739aba340e_2_9"
+      ],
+      "reviewer_approval_status": "pending"
+    }
+  ],
+  "author-en": [
+    {
+      "report_comment_id": "report_group_700ee9af78507afb",
+      "source_issue_ids": [
+        "consolidated_8103558cbdda88bc3c6c"
+      ],
+      "p3_records": [
+        {
+          "issue_id": "consolidated_8103558cbdda88bc3c6c",
+          "verification_task_id": "verify_1763c10f94e264329e44",
+          "verdict": "concern_narrowed",
+          "report_eligibility": "eligible_with_qualification"
+        }
+      ],
+      "evidence_refs": [
+        "ru_ev_26739aba340e_2_9",
+        "ru_ev_26739aba340e_2_16",
+        "ru_ev_26739aba340e_2_17",
+        "table_ev_26739aba340e_2_9"
+      ],
+      "reviewer_approval_status": "pending"
+    }
+  ]
+}

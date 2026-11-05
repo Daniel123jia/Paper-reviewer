@@ -1,0 +1,32 @@
+import {test, expect} from '@playwright/test';
+import {readFile} from 'node:fs/promises';
+
+test('P4 report opens saved draft, locates PDF evidence, edits, reloads and downloads', async ({page}) => {
+  await page.goto('http://127.0.0.1:5173/');
+  await page.getByRole('button', {name: '审稿文档'}).click();
+  await expect(page.getByRole('heading', {name: '从已核验的问题形成审稿意见'})).toBeVisible();
+  await expect(page.getByLabel('已有 P4 报告项目')).not.toHaveValue('');
+  await expect(page.locator('.p4-issue').first()).toBeVisible();
+  await page.getByRole('button', {name: /原文第 1 页/}).first().click();
+  await expect(page.getByTestId('evidence-highlight')).toBeVisible();
+  await page.getByRole('button', {name: /author · en · 修订 1/}).click();
+  const editor = page.getByLabel('P4 报告正文');
+  await expect(editor).toHaveValue(/Scope of the method claim/);
+  await editor.fill((await editor.inputValue()) + '\nThe wording remains a request for clarification.\n');
+  await page.getByRole('button', {name: '保存当前编辑'}).click();
+  await expect(page.getByText('修改已保存；此版本需要重新审核')).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', {name: '审稿文档'}).click();
+  await page.getByRole('button', {name: /author · en · 修订 2/}).click();
+  await expect(page.getByLabel('P4 报告正文')).toHaveValue(/The wording remains/);
+  await expect(page.getByText('待审核草稿（带 Draft 标识）：')).toBeVisible();
+  const markdownDownload = page.waitForEvent('download');
+  await page.getByRole('link', {name: 'MD'}).click();
+  const markdown = await markdownDownload;
+  const markdownBytes = await readFile(await markdown.path());
+  expect(markdownBytes.toString('utf8')).toContain('DRAFT — NOT APPROVED');
+  const pdfDownload = page.waitForEvent('download');
+  await page.getByRole('link', {name: 'PDF'}).click();
+  const pdf = await pdfDownload;
+  expect((await readFile(await pdf.path())).subarray(0, 5).toString()).toBe('%PDF-');
+});

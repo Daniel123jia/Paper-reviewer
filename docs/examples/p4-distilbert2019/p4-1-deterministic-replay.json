@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.1",
+  "admission_rule_version": "p4.1",
+  "replay_mode": "deterministic_from_frozen_sources",
+  "new_model_calls": 0,
+  "internal_selected_issue_count": 9,
+  "internal_group_count": 8,
+  "author_selected_issue_count": 0,
+  "author_group_count": 0,
+  "merged_groups": [
+    [
+      "consolidated_8e8e2b5dcfc41219ae35",
+      "consolidated_0caacb13a2bb7f01cbb8"
+    ]
+  ],
+  "external_dependencies": [
+    {
+      "issue_id": "consolidated_c9750ce2c32914386e93",
+      "status": "critical_unresolved",
+      "constraint": "External support is a critical dependency and remains unverified; do not state the external fact or comparison."
+    },
+    {
+      "issue_id": "consolidated_84cf783ca167b1714267",
+      "status": "critical_unresolved",
+      "constraint": "External support is a critical dependency and remains unverified; do not state the external fact or comparison."
+    },
+    {
+      "issue_id": "consolidated_1ca04a734f00044fd43b",
+      "status": "critical_unresolved",
+      "constraint": "External support is a critical dependency and remains unverified; do not state the external fact or comparison."
+    }
+  ]
+}
