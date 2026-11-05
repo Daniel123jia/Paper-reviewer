@@ -1767,7 +1767,8 @@ def create_app(data_dir: Path) -> FastAPI:
                  "pdf": "application/pdf"}[format]
         return Response(data, media_type=media, headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
-    register_p4_routes(app, connect, files_dir, load_p3_inputs)
+    register_p4_routes(app, connect, files_dir, load_p3_inputs,
+                       lambda: OpenAI(base_url=model_base_url(), timeout=180, max_retries=0))
     return app
 
 

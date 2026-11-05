@@ -1,6 +1,7 @@
 import json
 import sqlite3
 
+import fitz
 from fastapi.testclient import TestClient
 
 from backend.app import create_app
@@ -20,9 +21,17 @@ def seeded_p4_client(tmp_path, *, reportable=False):
         adjudication.report_eligibility = "eligible_with_qualification"
     client = TestClient(create_app(tmp_path))
     (tmp_path / "files" / "doc1.pdf").write_bytes(pdf_path.read_bytes())
+    with fitz.open(pdf_path) as pdf:
+        pages = [{"page_index": 0, "width": pdf[0].rect.width,
+                  "height": pdf[0].rect.height, "rotation": 0, "needs_ocr": False}]
     with sqlite3.connect(tmp_path / "review.db") as db:
         db.execute("INSERT INTO documents VALUES (?, ?, ?, ?, ?, ?, ?)",
-                   ("doc1", "paper.pdf", bundle["document"]["sha256"], "snap1", 1, "[]", "[]"))
+                   ("doc1", "paper.pdf", bundle["document"]["sha256"], "snap1", 1,
+                    "[]", json.dumps(pages)))
+        for evidence in bundle["body"]:
+            db.execute("INSERT INTO evidence VALUES (?, ?, ?, ?, ?, ?)",
+                       (evidence["evidence_id"], "doc1", evidence["page_index"],
+                        evidence["text"], json.dumps(evidence["bbox"]), "block"))
         db.execute("INSERT INTO paper_understanding_runs "
                    "(id, document_id, source_bundle_id, source_bundle_json, status, "
                    "review_plan, paper_profile, claim_evidence_map, created_at) "

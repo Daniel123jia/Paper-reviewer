@@ -1,0 +1,24 @@
+.p4-pane {max-width: 880px; padding-bottom: 40px;}
+.p4-card {margin: 18px 0; padding: 16px; border: 1px solid #d7e4e4; border-radius: 6px; background: #fff;}
+.p4-card h3 {margin: 0 0 12px; color: #234a56; font-size: 14px;}
+.p4-card label {display: grid; gap: 5px; margin: 10px 0; color: #355b65; font-size: 11px; font-weight: 700;}
+.p4-card input:not([type=checkbox]), .p4-card select, .p4-card textarea {box-sizing: border-box; width: 100%; padding: 8px; border: 1px solid #bfd0d0; border-radius: 4px; background: #fff; color: #203d49; font: inherit; font-weight: 400;}
+.p4-card textarea {min-height: 62px; resize: vertical;}
+.p4-card button {padding: 7px 10px; border: 1px solid #a6c8c5; border-radius: 4px; color: #285e62; background: #f4faf8; font: inherit; font-size: 11px; cursor: pointer;}
+.p4-card button:disabled {opacity: .48; cursor: not-allowed;}
+.p4-meta {color: #617b80; font-size: 11px; line-height: 1.6;}
+.p4-issue {padding: 14px 0; border-top: 1px solid #e2ebea; color: #294955; font-size: 12px;}
+.p4-issue > strong {font-size: 13px;}
+.p4-issue p {line-height: 1.65;}
+.p4-badges, .p4-actions, .p4-sources, .p4-controls, .p4-drafts {display: flex; flex-wrap: wrap; gap: 6px; align-items: center;}
+.p4-badges span {padding: 4px 6px; border-radius: 3px; background: #eaf1f0; font-size: 10px;}
+.p4-sources {margin: 12px 0;}
+.p4-issue details {margin: 10px 0; line-height: 1.6;}
+.p4-issue summary, .p4-manual summary {cursor: pointer; color: #2c6a6c; font-weight: 700;}
+.p4-visual, .p4-manual {padding: 10px; border: 1px solid #dae9e6; border-radius: 4px; background: #f9fcfb;}
+.p4-controls {align-items: end;}
+.p4-controls label {min-width: 140px; flex: 1;}
+.p4-drafts {margin: 15px 0;}
+.p4-drafts strong {width: 100%; font-size: 11px;}
+.p4-confirm {display: flex !important; flex-direction: row; align-items: center; font-weight: 400 !important;}
+.p4-confirm input {width: auto;}
