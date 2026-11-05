@@ -82,6 +82,16 @@ def _paper_facts(profile):
     return result
 
 
+def _location(source):
+    page = f"PDF page {source.page_index + 1}"
+    if source.source_type in {"table", "figure", "formula"}:
+        kind = {"table": "Table", "figure": "Figure", "formula": "Equation"}[source.source_type]
+        match = re.search(rf"\b{kind}\s*\(?([0-9]+)\)?", source.relevant_excerpt, re.I)
+        if match:
+            return f"{kind} {match.group(1)}, {page}"
+    return page
+
+
 def build_report_plan(snapshot: dict, decisions: list[ReviewerDecision],
                       reviews: list[EvidenceReviewRecord], manual: list[ReviewerAddedIssue],
                       report_kind: str, language: str):
@@ -141,8 +151,7 @@ def build_report_plan(snapshot: dict, decisions: list[ReviewerDecision],
                             review.consolidated_issue_id == entry.consolidated_issue_id and
                             review.confirmation_status == "confirmed" and
                             review.source_ref_id in refs]
-        locations = [f"{source_index[ref].source_type}, PDF page "
-                     f"{source_index[ref].page_index + 1}" for ref in refs
+        locations = [_location(source_index[ref]) for ref in sorted(refs)
                      if ref in source_index and source_index[ref].page_index is not None]
         tools = [f"{check.check_type}: {check.result}" for check in result.tool_results if
                  check.verification_task_id == entry.verification_task_id and
