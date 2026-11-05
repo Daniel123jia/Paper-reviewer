@@ -5,7 +5,7 @@ import pytest
 
 from backend.p4_planner import build_report_plan
 from backend.p4_report_schema import ReportComment, ReportWritingResult
-from backend.p4_validator import validate_bilingual_pair, validate_writing
+from backend.p4_validator import numeric_claims, validate_bilingual_pair, validate_writing
 from backend.tests.test_p4_api import seeded_p4_client
 
 
@@ -81,3 +81,31 @@ def test_author_text_cannot_leak_internal_identifiers_or_decisions(tmp_path):
     wrong.comments[0].comment_body += " We recommend rejection."
     with pytest.raises(ValueError, match="publication decision"):
         validate_writing(wrong, plan, pack)
+
+
+def test_internal_report_cannot_invent_a_numeric_result(tmp_path):
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        frozen = json.loads(db.execute("SELECT source_snapshot_json FROM p4_report_projects "
+            "WHERE id = ?", (project["id"],)).fetchone()[0])
+    plan, pack = build_report_plan(frozen, [], [], [], "internal", "en")
+    group = plan.groups[0]
+    comment = ReportComment(report_comment_id=group.group_id,
+        source_issue_ids=group.source_issue_ids, source="p3",
+        title_zh="方法问题", title_en="Method question",
+        comment_body="The method requires clarification of its novelty claim. The fabricated accuracy is 91.7 percent.",
+        scientific_question=group.scientific_question, evidence_refs=[],
+        author_action_requested="Clarify the method and the evidence supporting the claim.",
+        comment_category=group.category, uncertainty_qualification="Unverified")
+    result = ReportWritingResult(prompt_version="review-comment-writing-en/v1",
+        language="en", report_kind="internal", general_assessment="Authors describe a method.",
+        comments=[comment])
+    with pytest.raises(ValueError, match="unsupported numbers"):
+        validate_writing(result, plan, pack)
+
+
+def test_numbered_comment_heading_is_not_a_scientific_numeric_claim():
+    assert numeric_claims("### 1. Relative position scope\nTable 3 reports 79.1 EM.") == {"79.1"}
+    assert numeric_claims("所提供材料定位于 PDF 第 3–4 页，速度下降 7%。") == {"7"}
+    assert numeric_claims("PDF pages 3–4 and Tables 2–3 report 7% slower steps.") == {"7"}

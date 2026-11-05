@@ -1,0 +1,662 @@
+{
+  "paper": "shaw2018",
+  "source_p3_run_id": "replay_1660e3c071434e5c91de49b5aa47057c",
+  "p3_execution_mode": "recorded_model_replay",
+  "note": "P3.1 recorded-model replay; no new P3 model invocation in P4.",
+  "reviewer_approval_status": "pending; no real human PDF confirmation recorded",
+  "issues": [
+    {
+      "issue_id": "consolidated_9825c343099d3753e676",
+      "verification_task_id": "verify_de54fcc35ed02354a988",
+      "title": "The supplied evidence does not fully establish comparability of the baseline and relative-position runs",
+      "scientific_question": "Were each absolute-position baseline and its corresponding relative-position model trained, selected, decoded, and evaluated under matched conditions so that the reported BLEU differences can be attributed to the position representations?",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "Do run configurations confirm that each absolute/relative pair followed the stated configuration-specific update count, dropout, hardware allocation, and checkpoint policy, including the last-20-checkpoint averaging procedure for big models?",
+        "How were random initialization and data ordering controlled, and were the gains reproduced across multiple seeds? Identical seeds are not themselves a prerequisite for a valid comparison, but variability matters when assessing the smaller gains.",
+        "Were there any additional checkpoint-selection, development-set tuning, or stopping decisions beyond the stated training durations and averaging rules?",
+        "What exact BLEU computation and text-processing settings were used, and were they identical within each comparison? The supplied material identifies the test set and beam-search settings but does not fully specify the scoring pipeline.",
+        "Can the original Table 1 and run provenance confirm that its absolute-position rows are precisely the newly generated in-house baselines? The supplied prose strongly links them, but the table extraction has not been visually verified.",
+        "Do the different base and big training schedules, hardware, and checkpoint policies establish a mismatch within an absolute/relative comparison?",
+        "Is the broad concern that preprocessing, batching, optimization, and decoding comparability are undocumented supported?",
+        "Does the located evidence link Table 1 to the authors' newly generated baselines, and do the numeric tools independently verify that provenance?",
+        "Can the authors confirm that the individual absolute/relative runs followed the stated configuration-specific update counts and checkpoint policies without additional selection or stopping differences?",
+        "Are the smaller reported BLEU improvements robust to random initialization and data-order variability?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_7",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_7"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_9",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_9"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_3",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_3"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_16",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_16"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_5",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_5"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_2",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_2"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_38",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_38"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_1",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_1"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_0",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_0"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_105a91210515bf8f5b82",
+      "verification_task_id": "verify_cfd16bf8c8b4d05c632f",
+      "title": "The measured efficiency evidence is narrower than the broad implementation claim",
+      "scientific_question": "What baseline and measurement scope underlie the reported 7% decrease in steps per second, and do matched runtime, memory, and scaling measurements substantiate the claimed practical efficiency of the relative-position implementation?",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "Was the 7% decrease measured against the authors' regenerated sinusoidal-position Transformer baseline, a result from Vaswani et al. (2017), or another implementation? Which dataset and model configuration produced it?",
+        "What did the steps-per-second timing include: complete forward and backward computation, optimizer updates, device communication, input processing, checkpoint saving, and evaluation? What warmup, timing window, and repetition protocol were used?",
+        "Were software versions, numerical precision, device count and utilization, sequence-length distributions, padding, batch construction, and checkpoint behavior matched for the timing comparison?",
+        "Are measured peak memory, absolute step times, total training wall-clock costs, or inference throughput reported elsewhere in the paper? The supplied selection does not establish their presence or absence.",
+        "How do measured runtime and peak memory vary with sequence length, batch size, and head sharing? The supplied base configuration uses K40 GPUs and unique representations per head, whereas the big configuration uses P100 GPUs and unique representations per layer; these descriptions do not constitute a matched scaling experiment.",
+        "Separately from empirical efficiency, what tensors and storage scope are counted by the stated asymptotic expressions? How do they relate to actual materialization, attention intermediates, gradients, and layer/head sharing in each configuration?",
+        "Does the located efficiency passage establish a limited throughput result and a concrete implementation rationale?",
+        "Do the authors identify a controlled baseline, and is it explicitly connected to the 7% timing comparison?",
+        "Does the full paper report measured peak memory, absolute runtime, inference throughput, or controlled runtime and memory scaling experiments?",
+        "Do the storage expressions independently establish measured peak memory or complete accounting of materialized training tensors?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_33",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_33"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_24",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_24"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_39",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_39"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_13",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_13"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_16",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_16"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_37",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_37"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_2",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_2"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_7",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_7"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_9",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_9"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_fe5b94a19e9e06327e40",
+      "verification_task_id": "verify_c8e885ff405633dae2e0",
+      "title": "The stated overall storage bound may describe only selected attention tensors",
+      "scientific_question": "Check the original Section 3.3 layout and surrounding text for an explicit restriction of the space analysis to representation storage.",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "Does the original Section 3.3 layout or additional surrounding text explicitly qualify 'overall self-attention space complexity' as representation storage, beyond the opening sentence's narrower restriction?",
+        "Are complete pairwise compatibility and normalized-weight tensors materialized, and which tensors are retained, overwritten, or recomputed during forward computation and training? Computing all pairwise values does not alone establish their simultaneous retention.",
+        "For the base model's unique representations per head, does the implementation materialize O(hn²da) relative-representation tensors shared across sequences, or use another storage strategy? How is its memory bound distinguished from the shared-head bound?",
+        "Does the actual implementation avoid relative-representation broadcasting while retaining an O(bhn²) attention tensor, and where is that distinction documented?",
+        "Does Section 3.3 explicitly restrict the disputed overall space bound to representation storage?",
+        "Does the implementation materialize and retain pairwise scores or normalized attention weights, requiring an O(bhn²) storage term?",
+        "Are the head-sharing assumptions undocumented or inconsistent with the base-model configuration?",
+        "Does avoiding relative-representation broadcasting establish that pairwise scalar attention storage is eliminated, or do the practical results settle the scope question?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_39",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_39"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_10",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_10"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_1_39",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_886cadb1a708_1_39"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_7",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_7"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_24",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_24"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_9",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_9"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_13",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_13"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_18",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_18"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_33",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_33"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_e3eac49834cebb136759",
+      "verification_task_id": "verify_9ecbab2d89ac51599b54",
+      "title": "The claim about generalization to unseen sequence lengths is presented without a corresponding evaluation in the supplied evidence",
+      "scientific_question": "Could the authors clarify whether 'enables the model to generalize to sequence lengths not seen during training' denotes representational applicability or maintained translation performance? The located clipping ablation does not isolate unseen-length performance; if the latter meaning is intended, what training-length boundary and evaluation beyond that boundary support it?",
+      "verdict": "concern_narrowed",
+      "report_eligibility": "eligible_with_qualification",
+      "human_review_status": "pending",
+      "p4_processing_status": "auto_draft_candidate",
+      "outstanding_checks": [
+        "Does 'enables the model to generalize' mean representational applicability at unseen lengths, or does it also claim maintained translation performance?",
+        "Does the complete paper specify maximum training sequence lengths or measured source and target length distributions, beyond the supplied batch token budgets?",
+        "Does the complete paper evaluate sequences outside the training-length range, with results separated by sequence length or length bucket?",
+        "If such an evaluation exists, does it compare relative representations with the sinusoidal baseline under matched model configurations and length restrictions, separately from the clipping-distance ablation?",
+        "Does surrounding material elsewhere explicitly qualify unseen-length generalization as an architectural capability or hypothesis?",
+        "Does the located clipping-distance experiment directly test predictive performance at sequence lengths outside the training range?",
+        "Does the complete paper omit training-length limits, evaluation length distributions, and a dedicated unseen-length comparison?",
+        "If no such experiment exists, is the claim intended as a theoretical property rather than an empirical result?",
+        "If no length-extrapolation evaluation is present, is the statement sufficiently qualified as an architectural capability or hypothesis?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_18",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_18"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_1_16",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_886cadb1a708_1_16"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_6",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_6"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_8",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_8"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_2",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_2"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_4_17",
+          "source_type": "reading_unit",
+          "page_index": 4,
+          "evidence_ids": [
+            "ev_886cadb1a708_4_17"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_23",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_23"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_16",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_16"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_3",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_3"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_c5155e1e615fb4a2358a",
+      "verification_task_id": "verify_a04fac62747054b4c898",
+      "title": "The exact BLEU evaluation pipeline requires verification",
+      "scientific_question": "Inspect the complete experimental setup, footnotes, and any supplementary material for the BLEU scorer, case handling, tokenization, reference processing, and word-piece reconstruction procedure.",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "Which BLEU implementation, version, and options produced the reported scores, including tokenization and case handling?",
+        "How were decoded word pieces reconstructed into scoring inputs, including whitespace and punctuation processing?",
+        "Which reference files and reference preprocessing were used for each language pair and evaluation set?",
+        "Does an identifiable tensor2tensor revision, problem definition, configuration, or evaluation command uniquely recover these choices?",
+        "Were baseline and relative-position outputs scored with identical processing and references for each language pair and model size? The stated baseline-generation rationale supports this intention but does not document the scoring operations.",
+        "Do the complete PDF, additional footnotes, or supplementary materials specify further evaluation details? Their contents cannot be established from this selected context.",
+        "Do the independently located setup passages uniquely specify the BLEU scoring and text-processing pipeline?",
+        "Does the use of newstest2014 in the main results and newstest2013 in model variations indicate an unexplained evaluation-set inconsistency?",
+        "Is there evidence that baseline and relative-position outputs received different scoring or reference processing?",
+        "Can an identifiable tensor2tensor revision or released configuration recover the exact evaluation pipeline?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_37",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_37"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_2",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_2"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_5",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_5"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_1",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_1"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_3",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_3"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_40",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_40"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_6",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_6"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_16",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_16"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_3a9cf1ce576dc3d2beda",
+      "verification_task_id": "verify_4feb1a992b32da75a9c0",
+      "title": "The no-benefit conclusion for combining position representations needs a clearly identified control",
+      "scientific_question": "Does the full Table 1 or another table contain a combined relative-plus-sinusoidal condition?",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "Does the complete Table 1, another table, or accompanying material identify a combined relative-plus-sinusoidal condition and its BLEU scores? The supplied extraction does not resolve this.",
+        "Which model sizes and language pairs were evaluated with combined representations, and did each comparison use the same architecture, dropout, relative-position settings, training update budget, checkpoint policy, and decoding settings as its corresponding single-representation conditions?",
+        "Was the no-benefit observation based on a single run or repeated runs, and are individual scores, variability estimates, or a criterion for what counted as a benefit available?",
+        "Is a numerical combined-condition result identifiable in the located table text or other searched material?",
+        "Does the located material establish whether the combined condition used matched training and evaluation settings?",
+        "Can the run count, variability, and numerical size of the combined-condition effect be determined?",
+        "Is the reported no-benefit result based on one run or repeated measurements, and are the underlying scores available?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_0",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_0"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_1",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_1"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_6",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_6"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "table_p3_0",
+          "source_type": "table",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_10"
+          ],
+          "verification_status": "visual_check_required"
+        },
+        {
+          "source_ref": "table_p4_0",
+          "source_type": "table",
+          "page_index": 4,
+          "evidence_ids": [
+            "ev_886cadb1a708_4_3",
+            "ev_886cadb1a708_4_4",
+            "ev_886cadb1a708_4_7"
+          ],
+          "verification_status": "visual_check_required"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_3",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_3"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_0_10",
+          "source_type": "reading_unit",
+          "page_index": 0,
+          "evidence_ids": [
+            "ev_886cadb1a708_0_10"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_2",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_2"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_5",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_5"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_7",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_7"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_9",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_9"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_3_16",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_886cadb1a708_3_16"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_886cadb1a708_2_38",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_886cadb1a708_2_38"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    }
+  ]
+}

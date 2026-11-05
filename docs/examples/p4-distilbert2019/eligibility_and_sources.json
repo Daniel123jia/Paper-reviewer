@@ -1,0 +1,1081 @@
+{
+  "paper": "distilbert2019",
+  "source_p3_run_id": "replay_40828d011fcb40948370ce78458c6226",
+  "p3_execution_mode": "recorded_model_replay",
+  "note": "P3.1 recorded-model replay; no new P3 model invocation in P4.",
+  "reviewer_approval_status": "pending; no real human PDF confirmation recorded",
+  "issues": [
+    {
+      "issue_id": "consolidated_c9750ce2c32914386e93",
+      "verification_task_id": "verify_3a45a00a08fbc07fcdd4",
+      "title": "The effective triple objective requires verification beyond the supplied high-level loss description",
+      "scientific_question": "Do the original source and experiment-specific code and configurations uniquely specify the reported triple objective, including loss coefficients, training temperature and scaling, contributing token positions, hidden-state pairing, reductions, and coefficient handling in the ablations?",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "What numerical coefficients weight distillation, masked language modeling, and cosine alignment in the reported pretraining run?",
+        "What numerical training temperature was used, and was the distillation loss multiplied by a temperature-dependent factor such as T squared?",
+        "Which token positions contribute to each loss, including treatment of padding, special tokens, masked positions, and unmasked positions?",
+        "Do teacher and student receive the same dynamically masked inputs?",
+        "Which teacher and student hidden states are compared for cosine alignment, and is there one layer pair or a mapping across multiple layers?",
+        "How is each loss reduced across vocabulary classes, hidden dimensions, tokens, examples, and accumulated batches?",
+        "When a loss is removed in an ablation, are the remaining coefficients and reductions preserved, renormalized, or otherwise retuned?",
+        "Does a versioned released implementation and its experiment-specific configuration identify the runs underlying the reported model and Table 4?",
+        "Are the reported run's numerical loss coefficients, training temperature, reductions, and temperature-dependent scaling recoverable from the paper and released configuration?",
+        "Which token positions contribute to each loss, and do teacher and student receive identical dynamically masked inputs?",
+        "Does cosine alignment use final-layer states, intermediate layer pairs, or another mapping?",
+        "Do the Table 4 ablations preserve, renormalize, or retune the surviving loss coefficients and reductions, and is their configuration linked to the reported runs?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_9",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_9"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_8",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_8"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_11",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_11"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_12",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_12"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_8",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_8"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "table_ev_6724ca5dce54_3_0",
+          "source_type": "table",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_0"
+          ],
+          "verification_status": "visual_check_required"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_2",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_2"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_13",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_13"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_6",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_6"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_7",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_7"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_9",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_9"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_2fc7365d65828d021acd",
+      "verification_task_id": "verify_8519b1fe2056683370b9",
+      "title": "SQuAD adaptation-distillation results require reconciliation before interpreting the improvement",
+      "scientific_question": "Could the authors reconcile the located adaptation-distillation prose reporting 70.4 EM and 79.8 F1 with Table 2's extracted DistilBERT (D) values of 79.1 EM and 86.9 F1, confirming the table associations and evaluation configurations and identifying the full-model baseline intended by 'within 3 points'?",
+      "verdict": "concern_narrowed",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "human_review_required",
+      "outstanding_checks": [
+        "Does the original PDF confirm the extracted prose values of 79.8 F1 and 70.4 EM, including their metric labels?",
+        "Does the original Table 2 confirm the EM/F1 ordering and the associations BERT-base 81.2/88.5, DistilBERT 77.7/85.8, and DistilBERT (D) 79.1/86.9?",
+        "Do the prose and table use the same SQuAD version and split, evaluation procedure, teacher checkpoint, student checkpoint, and adaptation configuration?",
+        "Which full-model baseline supports the prose's 'within 3 points' statement?",
+        "After verifying the numerical associations and evaluation comparability, what are the adaptation-stage gains over ordinary DistilBERT and the remaining gaps to BERT?",
+        "Are Table 2's model-by-metric associations sufficiently verified to establish a numerical contradiction with the prose?",
+        "Do the located author explanations establish that the prose and table concern identical evaluation configurations?",
+        "Would the extracted table values, if their associations and comparability are confirmed, support the adaptation-stage improvement and the within-three-points claim?",
+        "After resolving the source conflict, what are the EM and F1 improvements over DistilBERT without adaptation distillation and the corresponding gaps to BERT?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_3",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_3"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_17",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_17"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_6",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_6"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_8",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_8"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_15",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_15"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_4",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_4"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "table_ev_6724ca5dce54_2_4",
+          "source_type": "table",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_4"
+          ],
+          "verification_status": "visual_check_required"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_74d31eae282a7e352cfb",
+      "verification_task_id": "verify_636263b3fa88f2815a22",
+      "title": "Lower pretraining cost is supported by a comparison with a different training setup",
+      "scientific_question": "Does the reported training-resource evidence support the lower-pretraining-cost claim under an explicit accounting boundary for teacher pretraining and teacher computation, with a relevant comparison controlling data exposure and target performance?",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "Does the intended cost boundary cover incremental student training given an existing teacher, or the total cost of obtaining both teacher and student, and how is any shared teacher cost amortized?",
+        "Does the approximately 90-hour duration include all teacher forward passes, any preparation of cached teacher outputs, and other preparation required for the reported student training?",
+        "Is there a relevant BERT training-resource comparison with comparable token exposure, sequence lengths, optimization workload, and a stated target performance? Sharing the same corpus does not establish equal data exposure.",
+        "What are the model configuration, workload, and achieved performance associated with the cited RoBERTa resource figure, and how do they relate to the reported DistilBERT run?",
+        "Is the RoBERTa comparison intended only to illustrate the scale of training resources, or to substantiate a general pretraining-cost advantage?",
+        "Is there a compute-aware comparison against a similarly sized model trained without distillation that separates savings from architectural reduction, initialization, and distillation?",
+        "Is the cheaper-pretraining claim broader than a description of the reported DistilBERT and RoBERTa runs?",
+        "Does teacher dependence justify requesting an explicit distinction between incremental student cost and total teacher-plus-student cost?",
+        "Is there evidence that the approximately 90-hour runtime excludes teacher forward computation or preparation of cached teacher outputs?",
+        "Does the located resource comparison establish a controlled pretraining-cost advantage over the BERT counterpart at comparable workload and performance?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_6724ca5dce54_0_5",
+          "source_type": "reading_unit",
+          "page_index": 0,
+          "evidence_ids": [
+            "ev_6724ca5dce54_0_5"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_0",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_0"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_12",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_12"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_6",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_6"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_9",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_9"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_10",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_10"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_9",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_9"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_8",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_8"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_11",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_11"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_13",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_13"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_8e8e2b5dcfc41219ae35",
+      "verification_task_id": "verify_641fb5ebefc3284a239f",
+      "title": "Single-component ablations may not establish the joint contribution of additional distillation signals",
+      "scientific_question": "Does Table 4 or other available material compare the full objective with an otherwise matched, teacher-initialized student trained with masked language modeling alone, removing both distillation losses, and thereby establish their combined contribution rather than only conditional component benefits?",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "Does the original Table 4 confirm the extracted loss configurations and their numerical associations?",
+        "Does any other paper material report a teacher-initialized Lmlm-only student with both Lce and Lcos removed?",
+        "Across the relevant controls, are architecture, training corpus, masking procedure, optimization settings, token exposure, and downstream fine-tuning held constant?",
+        "What is the combined performance contribution of Lce and Lcos relative to matched Lmlm-only training, and how do interactions between the two distillation losses affect it?",
+        "Should the authors' statements about substantial gains and a large portion of performance be read as qualitative conditional component findings or as attribution of the total gain from ongoing teacher supervision?",
+        "What replication and uncertainty estimates apply specifically to Table 4? The five-run description supplied for Table 1 does not establish the same procedure for the ablations.",
+        "Do those individual-removal comparisons identify the combined contribution of both distillation losses over a teacher-initialized MLM-only student?",
+        "Does the complete paper or other available material report the requested matched MLM-only control?",
+        "Are the relevant comparisons demonstrably matched in training and evaluation, and does the authors' wording require a joint-effect interpretation?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_0",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_0"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_2",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_2"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_8",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_8"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_9",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_9"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_10",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_10"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_11",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_11"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_1",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_1"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_12",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_12"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_9",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_9"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_10",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_10"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_12",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_12"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_571a39dcba42a9759ff6",
+      "verification_task_id": "verify_e3fc5b4dd3e4021d567e",
+      "title": "The 97% headline may overextend an aggregate GLUE score ratio",
+      "scientific_question": "Does the verified table establish that 97% is calculated as the ratio of GLUE macro-scores, and how are individual task metrics combined?",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "Does inspection of the original table confirm that 77.0 and 79.5 are the DistilBERT and BERT-base macro-scores, respectively, and that their ratio is the intended calculation behind 97%?",
+        "Which metric or combination of metrics supplies each of the nine task scores, how are multiple splits handled, and is the aggregate the average of task medians or the median of run-level averages?",
+        "What task-level differences are confirmed by the original table, and how materially do their magnitudes qualify the aggregate retention claim? The extracted row alignment suggests variation, but does not establish verified task-to-score associations.",
+        "Does any additional surrounding discussion explicitly delimit the abstract and conclusion's capability wording to the GLUE aggregate? The supplied experimental passage provides that context, but the supplied abstract and conclusion do not state that restriction.",
+        "Does the original table establish that 97% is the rounded ratio of DistilBERT and BERT-base GLUE macro-scores?",
+        "Do the authors explain how individual task metrics and results across seeds are combined?",
+        "Does verified task-level degradation establish that the aggregate headline conceals materially uneven retention?",
+        "Does the broad capability-retention wording warrant a narrower clarification about its benchmark basis?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_0",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_0"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_1",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_1"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_2",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_2"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_13",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_13"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_0_5",
+          "source_type": "reading_unit",
+          "page_index": 0,
+          "evidence_ids": [
+            "ev_6724ca5dce54_0_5"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_4_1",
+          "source_type": "reading_unit",
+          "page_index": 4,
+          "evidence_ids": [
+            "ev_6724ca5dce54_4_1"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_12",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_12"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_15",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_15"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_16",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_16"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_63e4fcc89ffc9ebae2cf",
+      "verification_task_id": "verify_971c70815eca43a1112d",
+      "title": "The stated advantage over task-specific distillation may exceed the comparison established by the cited ablations",
+      "scientific_question": "Does the complete paper compare pretraining distillation with task-specific-only distillation under sufficiently matched student architecture, initialization, data, and training budget?",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "Does the complete paper contain a pretraining-distillation versus ta[REDACTED] comparison with matched student architecture, initialization, teacher configuration, data access and training budget?",
+        "Does the original layout and surrounding text clarify whether 'beneficial ... rather than' expresses a design choice or a claim of comparative superiority?",
+        "If no stage-isolating comparison exists, would revising that sentence to describe the demonstrated utility of general-purpose pretraining distillation and its additional teacher signals better align the wording with the evidence?",
+        "What is the verified magnitude of the SQuAD benefit from adding task-specific distillation? The prose establishes the two-stage setup, but the extracted numerical table associations remain unverified.",
+        "Does the complete paper establish a comparison between pretraining distillation and ta[REDACTED] distillation with sufficiently matched architecture, initialization, data access, and training budget?",
+        "Does the cited ablation investigate internal pretraining design choices rather than directly isolate the stage at which distillation occurs?",
+        "Does the related-work wording clearly assert experimentally established superiority over task-specific distillation?",
+        "Does the SQuAD experiment demonstrate that the authors also consider pretraining and task-specific distillation usable together?",
+        "If no stage-isolating comparison is provided, should the related-work statement be restricted to the demonstrated benefit of additional teacher signals during pretraining?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_8",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_8"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_17",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_17"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_3",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_3"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "table_ev_6724ca5dce54_3_0",
+          "source_type": "table",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_0"
+          ],
+          "verification_status": "visual_check_required"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_10",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_10"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "table_ev_6724ca5dce54_2_4",
+          "source_type": "table",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_4"
+          ],
+          "verification_status": "visual_check_required"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_11",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_11"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_12",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_12"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_10",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_10"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_0_5",
+          "source_type": "reading_unit",
+          "page_index": 0,
+          "evidence_ids": [
+            "ev_6724ca5dce54_0_5"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_0",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_0"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_4_1",
+          "source_type": "reading_unit",
+          "page_index": 4,
+          "evidence_ids": [
+            "ev_6724ca5dce54_4_1"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_84cf783ca167b1714267",
+      "verification_task_id": "verify_dfbe623d060dfef68f22",
+      "title": "CPU and mobile speed comparisons require further workload and runtime specification",
+      "scientific_question": "Inspect the original Table 3 and timing code for raw durations, the percentage calculation, framework version, numerical precision, CPU thread settings, and timing boundaries.",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "Does the original Table 3 confirm the apparent association of BERT-base with 668 seconds and DistilBERT with 410 seconds, and what percentage definition and rounding produced the reported 60% faster claim?",
+        "For the CPU benchmark, what framework and version, numerical precision, execution backend, CPU thread settings, sequence-length handling, and timing boundaries were used?",
+        "For the mobile benchmark, what question-answering examples, context and question lengths, truncation or windowing rules, and model checkpoint variants were used?",
+        "What mobile backend, software versions, numerical precision, and device execution settings were used, and what operations besides tokenization were included or excluded?",
+        "Were the two models evaluated on identical inputs with matched runtime settings within each benchmark?",
+        "How were warm-up, repeated measurements, synchronization where applicable, and timing aggregation handled for each benchmark?",
+        "What are the mobile raw durations, and how was the reported 71% improvement calculated?",
+        "Does the released mobile application, at an identifiable version or commit, retain the inputs and execution configuration used for the reported measurement?",
+        "Do the located passages specify the CPU and mobile workloads and timing boundaries?",
+        "Does Table 3 establish raw CPU durations and show that the reported 60% faster claim uses an erroneous percentage calculation?",
+        "Were the CPU models timed with matched inputs, runtime versions, precision, thread settings, and measurement procedures?",
+        "Does the mobile evidence establish the inputs, execution conditions, raw durations, and calculation behind the 71% improvement?",
+        "Does the released mobile application preserve the configuration used for the reported benchmark?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_5",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_5"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_6",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_6"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_5",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_5"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_7",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_7"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_3",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_3"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_2",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_2"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_13",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_13"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_11",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_11"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_12",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_12"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_1ca04a734f00044fd43b",
+      "verification_task_id": "verify_50d458e0b55de5345237",
+      "title": "Reported training resources and evaluation summaries do not yet identify a reproducible experiment configuration",
+      "scientific_question": "Check the complete training and experiments sections and released scripts for the optimizer, learning-rate schedule, update count, effective batch schedule, sequence lengths, masking settings, and teacher checkpoint.",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "What optimizer, optimizer parameters, learning-rate and warmup schedules, total updates or processed tokens, effective-batch schedule, and sequence-length schedule produced the reported pretrained model?",
+        "What masking probabilities and replacement rules were used, and what exact teacher checkpoint, tokenizer, casing configuration, and teacher-layer selection were used?",
+        "Which corpus versions, filtering, preprocessing, document segmentation, and example-packing procedures reconstruct the Wikipedia and Toronto Book Corpus training examples?",
+        "What per-task fine-tuning settings, seed values, hyperparameter search procedure, and checkpoint-selection rule produced the five-run GLUE medians, and were these procedures comparable for BERT and DistilBERT?",
+        "Did the ablation models use the same downstream protocol and comparable pretraining exposure, and are configurations and checkpoints available for each variant?",
+        "Which repository revision, scripts, launch arguments, and released weight files correspond to the paper's GLUE and ablation experiments?",
+        "Can inspection of the original PDF confirm the extracted passages and table associations, including the numerical basis of the 97% claim and component-specific ablation deltas?",
+        "Do the located training passages specify the optimization schedule, training exposure, masking configuration, and teacher checkpoint needed to reconstruct pretraining?",
+        "Are corpus preprocessing and tokenizer settings specified sufficiently to reconstruct the training examples?",
+        "What fine-tuning, hyperparameter-search, and checkpoint-selection procedure produced the five-seed GLUE results?",
+        "Do the ablation models use comparable pretraining exposure and the same downstream evaluation procedure?",
+        "Does the announced code and weight release resolve the remaining configuration questions?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_9",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_9"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_10",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_10"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_12",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_12"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_0",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_0"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_8",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_8"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_0",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_0"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_13",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_13"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_11",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_11"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_12",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_12"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_9",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_9"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_2",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_2"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_13",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_13"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_18",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_18"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_0caacb13a2bb7f01cbb8",
+      "verification_task_id": "verify_fe4e7255711d6441943d",
+      "title": "The advantage attributed to pretraining distillation may exceed what the component ablations isolate",
+      "scientific_question": "Does the complete paper report a compact-model baseline using masked language modeling alone with matched architecture, teacher-weight initialization, data, and training budget?",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "Does the complete paper include an MLM-only compact student with the same architecture, teacher-weight initialization, corpus, masking procedure and training budget as the full recipe?",
+        "Does any experiment compare pretraining distillation against ta[REDACTED] distillation with matched student architecture, initialization, training resources and downstream evaluation?",
+        "Does the original Table 4 confirm the extracted configurations and numerical associations, and does it contain any configuration removing both Lce and Lcos simultaneously?",
+        "Are architecture, initialization, data, training budget and downstream fine-tuning held fixed across the individual loss ablations?",
+        "Is the related-work statement that general-purpose pretraining distillation is beneficial 'rather than' task-specific distillation intended as a controlled comparative finding or as a rationale for choosing a transferable model?",
+        "Does the complete paper report an MLM-only compact-model baseline with matched architecture, teacher-weight initialization, data, and training budget?",
+        "Do the supplied loss ablations isolate the combined contribution of both distillation losses relative to MLM alone?",
+        "Does the reported SQuAD experiment compare pretraining distillation against ta[REDACTED] distillation under matched conditions?",
+        "Does the related-work wording establish an experimentally demonstrated superiority claim, or can it reasonably describe the motivation for a transferable model?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_2",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_2"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_12",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_12"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_9",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_9"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_10",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_10"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_1_9",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_6724ca5dce54_1_9"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_0",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_0"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_17",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_17"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_3",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_3"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_10",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_10"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_3_8",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_6724ca5dce54_3_8"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_12",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_12"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_2_13",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_6724ca5dce54_2_13"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_6724ca5dce54_4_1",
+          "source_type": "reading_unit",
+          "page_index": 4,
+          "evidence_ids": [
+            "ev_6724ca5dce54_4_1"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    }
+  ]
+}

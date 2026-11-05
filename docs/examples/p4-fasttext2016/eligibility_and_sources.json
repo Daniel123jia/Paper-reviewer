@@ -1,0 +1,1018 @@
+{
+  "paper": "fasttext2016",
+  "source_p3_run_id": "replay_bacc58d77e084acb874def52dd34ca4e",
+  "p3_execution_mode": "recorded_model_replay",
+  "note": "P3.1 recorded-model replay; no new P3 model invocation in P4.",
+  "reviewer_approval_status": "pending; no real human PDF confirmation recorded",
+  "issues": [
+    {
+      "issue_id": "consolidated_8103558cbdda88bc3c6c",
+      "verification_task_id": "verify_1763c10f94e264329e44",
+      "title": "Broad speed claims may conflate per-epoch speed with time to the reported accuracy",
+      "scientific_question": "For the sentiment-classification comparisons, which verified dataset and model configuration yield the stated at-least-15,000-fold speedup, and what complete-training ratio follows when the baseline schedules and five fastText epochs used for the reported accuracies are included? If that ratio is not established, should the classification speedup statement be explicitly limited to single-epoch timing under the disclosed execution conditions?",
+      "verdict": "concern_narrowed",
+      "report_eligibility": "eligible_with_qualification",
+      "human_review_status": "pending",
+      "p4_processing_status": "auto_draft_candidate",
+      "outstanding_checks": [
+        "Which dataset, comparator and model configuration produce the stated at-least-15,000-fold speedup, and is its denominator a single epoch or a complete training run?",
+        "What epoch counts and stopping criteria produced each reported classification baseline accuracy, and what complete-training ratios result when those schedules and the five fastText epochs are included?",
+        "Are the classification accuracy entries and timing entries paired to precisely the same baseline configurations, including model size, depth and use of pretrained embeddings?",
+        "Does the complete paper explicitly restrict its broad classification speed claims to per-epoch measurements under the disclosed execution conditions, or supply additional complete-training evidence?",
+        "What CPU specifications and timing boundaries apply, including preprocessing, feature construction, data loading and validation or hyperparameter selection?",
+        "Do any supplied-paper measurements separate the effects of thread count, hardware and implementation from the classification method itself?",
+        "Can the original Table 2 layout and the continuation of the speedup sentence be verified to establish column alignment, units and the intended comparator?",
+        "Can the comparator, dataset, configuration, and arithmetic behind the at-least-15,000-fold statement be independently verified?",
+        "Do undisclosed resource differences or implementation effects invalidate the classification speed comparison?",
+        "Does the paper lack any evidence connecting faster training with achieved predictive quality under matched thread counts?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_26739aba340e_0_3",
+          "source_type": "reading_unit",
+          "page_index": 0,
+          "evidence_ids": [
+            "ev_26739aba340e_0_3"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_2_9",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_26739aba340e_2_9"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_2_16",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_26739aba340e_2_16"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_12",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_12"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_2_17",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_26739aba340e_2_17"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_18",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_18"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "table_ev_26739aba340e_2_9",
+          "source_type": "table",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_26739aba340e_2_9"
+          ],
+          "verification_status": "visual_check_required"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_19",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_19"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_20",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_20"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_21",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_21"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_24",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_24"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_17",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_17"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_18",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_18"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_22",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_22"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_456a6e99f6fb075f3912",
+      "verification_task_id": "verify_1ef1fda80d5f767cb235",
+      "title": "YFCC100M filtering and split rules may be insufficiently specified for exact reconstruction",
+      "scientific_question": "Do the original task description or accompanying reconstruction materials specify exact record IDs, a deterministic assignment rule, or a random seed for the splits?",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "Do the reconstruction materials specify exact record IDs or a deterministic assignment procedure, including any random seed and required input ordering?",
+        "Does 'occurring less than 100 times' refer to total token occurrences or the number of records containing each word or tag, and what tokenization and normalization precede counting?",
+        "How are records with empty title-and-caption text or no remaining tags handled after filtering?",
+        "Can the reconstruction procedure reproduce 91,188,648 training examples, 930,497 validation examples, 543,424 test examples, 297,141 vocabulary entries, and 312,116 tags?",
+        "Were the promised dataset script and its relevant version actually released, and does the linked repository contain the materials needed for this specific YFCC100M experiment?",
+        "Would alternative plausible preprocessing or split choices materially change precision at one or inference cost? The supplied material does not quantify that sensitivity.",
+        "Does the task description or accompanying material identify the records in each split or specify a deterministic split-assignment procedure?",
+        "Are frequency counting and the handling of records emptied by filtering specified sufficiently to reconstruct preprocessing?",
+        "Can the documented reconstruction procedure reproduce the reported split sizes, vocabulary size, and tag count?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_26739aba340e_3_19",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_19"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_0_11",
+          "source_type": "reading_unit",
+          "page_index": 0,
+          "evidence_ids": [
+            "ev_26739aba340e_0_11"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_4_1",
+          "source_type": "reading_unit",
+          "page_index": 4,
+          "evidence_ids": [
+            "ev_26739aba340e_4_1"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_64b696e6ae9642e79b3d",
+      "verification_task_id": "verify_20f0c9e36a505294551a",
+      "title": "Huffman training complexity needs an explicit averaging or depth assumption",
+      "scientific_question": "Does the original passage or surrounding material define this as expected complexity under the frequencies used to construct the Huffman tree?",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "Does the original PDF or other surrounding material explicitly qualify the training bound as an average under the frequencies used to construct the Huffman tree?",
+        "Which counts determine the tree: document-level label occurrences, tag occurrences, sampled training targets, or another quantity?",
+        "Does training sample targets according to the same distribution used to construct the tree, particularly for documents containing multiple tags?",
+        "Does the implementation perform one O(h) classifier update per node on the target path, and does it impose any balancing or maximum-depth constraint?",
+        "What are the resulting target-specific, frequency-weighted average, and maximum path lengths, and which of these quantities is intended by the prose complexity claim?",
+        "Can the extracted complexity statement and relevant equations be confirmed against the original PDF?",
+        "Does the located training-complexity passage explicitly state an averaging or target-depth assumption?",
+        "Does the complete paper resolve the averaging assumption, identify the tree-construction counts, or establish that those counts match training-target sampling?",
+        "Does a conditional mathematical analysis distinguish a valid average Huffman bound from a per-target or worst-case bound?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_26739aba340e_1_20",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_20"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_19",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_19"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_21",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_21"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_4",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_4"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_16",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_16"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_24",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_24"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_20",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_20"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_1a30bff6ccc7941967da",
+      "verification_task_id": "verify_c7495f27de04117960b1",
+      "title": "The contrast with averaged word2vec representations may exceed the demonstrated classification evidence",
+      "scientific_question": "Could the conclusion clarify that the demonstrated usefulness of averaged fastText features concerns the evaluated supervised classifiers, and identify the evidence or intended qualification for its contrast with averaged unsupervised word2vec vectors?",
+      "verdict": "concern_narrowed",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "human_review_required",
+      "outstanding_checks": [
+        "Does the complete paper contain a comparison of averaged word2vec vectors and fastText features using the same downstream classifier, evaluation datasets, embedding dimensions and comparable training-data conditions, with frozen versus task-adapted embeddings distinguished?",
+        "How much of any comparative advantage comes from label supervision and joint classifier training, rather than the learned features or averaging operation?",
+        "Do matched word-only comparisons support the word2vec contrast independently of n-gram features? The supplied within-fastText ablations address n-gram contributions but do not isolate a difference from word2vec.",
+        "Does the original conclusion or surrounding discussion explicitly restrict 'good sentence representations' to the tasks used to train the representations?",
+        "Are there evaluations of frozen representation reuse or transfer to new tasks that substantiate the stated potential for reuse?",
+        "What does the cited Mikolov et al. (2013) work actually establish about averaging unsupervised word vectors, and does it support the conclusion's contrast?",
+        "Does the original PDF confirm the reconstructed conclusion across the page boundary and the configuration-to-result associations in the extracted tables?",
+        "Does the complete paper provide a matched comparison between averaged word2vec features and fastText features?",
+        "Is the usefulness of averaging supported only by configurations containing n-gram features?",
+        "Do the located results substantiate reuse of the sentence representations beyond the supervised tasks used to train them?",
+        "Does the cited word2vec literature justify or contradict the conclusion's characterization of averaged unsupervised vectors?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_26739aba340e_3_23",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_23"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_4_1",
+          "source_type": "reading_unit",
+          "page_index": 4,
+          "evidence_ids": [
+            "ev_26739aba340e_4_1"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_0_10",
+          "source_type": "reading_unit",
+          "page_index": 0,
+          "evidence_ids": [
+            "ev_26739aba340e_0_10"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_8",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_8"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_22",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_22"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_2_16",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_26739aba340e_2_16"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_21",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_21"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_20",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_20"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_18",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_18"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_19",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_19"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_0_3",
+          "source_type": "reading_unit",
+          "page_index": 0,
+          "evidence_ids": [
+            "ev_26739aba340e_0_3"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_0_4",
+          "source_type": "reading_unit",
+          "page_index": 0,
+          "evidence_ids": [
+            "ev_26739aba340e_0_4"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_2_2",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_26739aba340e_2_2"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_2_4",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_26739aba340e_2_4"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_15",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_15"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_7065266f221bc62de86a",
+      "verification_task_id": "verify_256df45a698ef1bbc95a",
+      "title": "Prediction scaling and top-T heap cost need separation from total search work",
+      "scientific_question": "Does the complete paper provide measurements of visited nodes or runtime across class counts, rather than only the large-tag benchmark?",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "Does the complete paper contain visited-node counts or prediction-runtime measurements across class counts? The supplied excerpts establish one large-output benchmark, but cannot establish the absence of other measurements from the complete PDF.",
+        "Within the stated depth-first traversal, how are children ordered, how is the pruning threshold initialized and updated, and what stopping and tie-handling rules are used? Does the implementation return exact top-T predictions under the hierarchical model?",
+        "Does O(log(T)) describe one heap update, overhead on each visited node or candidate leaf, or another quantity? What is total prediction cost in terms of visited internal nodes, candidate leaves, representation dimension h, and requested output count T?",
+        "How does the number of visited nodes change with diffuse leaf probabilities or an unbalanced Huffman tree, and what empirical conditions support the observed logarithmic behavior?",
+        "What timing boundaries and model configurations underlie the reported inference advantage, and how much of that advantage can be attributed specifically to pruning rather than other differences from the Tagspace baseline?",
+        "Does the complete paper report visited-node counts or prediction runtime across class counts?",
+        "Does the paper claim a worst-case logarithmic prediction bound, and does its pruning explanation establish such a bound?",
+        "Does the O(log(T)) statement specify total top-T prediction work or only binary-heap maintenance?",
+        "Are traversal details and exact top-T correctness established by the available author description?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_26739aba340e_3_19",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_19"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_24",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_24"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_2_9",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_26739aba340e_2_9"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_21",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_21"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_4",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_4"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_20",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_20"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_20",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_20"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_0_3",
+          "source_type": "reading_unit",
+          "page_index": 0,
+          "evidence_ids": [
+            "ev_26739aba340e_0_3"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_17",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_17"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_18",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_18"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_9a9de1c8e6d1e38a43f6",
+      "verification_task_id": "verify_6a4c860d0f04b08afdf6",
+      "title": "Timing boundaries and training-budget definitions need clarification for reproducing efficiency results",
+      "scientific_question": "Do the complete experimental sections or implementation documentation specify the CPU model and the operations included in each training and test timer?",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "What CPU model and processor configuration were used for sentiment and tag-prediction timing, and did both tag-prediction models run on identical hardware?",
+        "For each training and test timer, were preprocessing, vocabulary creation, feature hashing, Huffman-tree construction, data loading, initialization, and model loading included or excluded?",
+        "Does each fastText training time in Table 5 cover all five epochs, and does its test time cover the complete 543,424-example test set?",
+        "What epoch budget, stopping criterion, and model-selection procedure produced the Tagspace accuracy and training time in Table 5?",
+        "How does the sentiment statement that fastText takes less than a minute to train relate to the explicitly single-epoch Table 2 measurements and the five-epoch accuracy runs?",
+        "Can the original table layouts confirm the correspondence between timing columns and accuracy configurations? The extracted sentiment timing header identifies h = 10 with bigrams, and the tag rows identify hidden size and bigram use, but full alignment and any remaining configuration differences are unverified.",
+        "Were the convolutional timing figures measured by the authors or obtained from prior work or communications, and were their timed workloads defined consistently with fastText?",
+        "Are sentiment per-epoch timings explicitly distinguished from the training budget used for accuracy results?",
+        "Do the complete experimental sections or implementation documentation identify the CPU model and define the operations included in training and test timers?",
+        "Does Table 5 cover complete five-epoch fastText training, and what training budget or stopping criterion produced the Tagspace results?",
+        "Do the timing entries correspond to the configurations used for the reported accuracies?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_26739aba340e_2_17",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_26739aba340e_2_17"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_16",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_16"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_20",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_20"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_2_9",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_26739aba340e_2_9"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_2_16",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_26739aba340e_2_16"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_24",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_24"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_17",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_17"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_18",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_18"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_19",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_19"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_21",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_21"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_2_7",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_26739aba340e_2_7"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_14",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_14"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_15",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_15"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_bdd3cb2a8bdb123b2f43",
+      "verification_task_id": "verify_87690eeb87000bdb2c5c",
+      "title": "Broad efficiency comparisons may not isolate the algorithmic contribution from implementation and parallelism",
+      "scientific_question": "Does the complete paper distinguish end-to-end system efficiency from speed attributable to particular algorithmic components?",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "For the Vowpal Wabbit comparison, were datasets, features, hidden dimensions, loss and inference procedures, epochs, hardware, thread counts, and achieved accuracy matched, and which timing boundaries produced the reported 2–5 times difference?",
+        "Is there a same-model thread-scaling comparison that quantifies the contribution of parallelism separately from implementation and algorithm choices?",
+        "Is hierarchical softmax or tree-based inference compared with exhaustive scoring within the same fastText implementation and model configuration, especially on YFCC100M?",
+        "How much of the equal-thread Tagspace comparison is attributable to inference strategy versus differences in objectives, learned representations, features, optimization, and software?",
+        "Do the complete timing tables distinguish per-epoch time, complete training time, and time to comparable predictive performance? The supplied sentiment timing caption specifies a single epoch.",
+        "Does material outside the supplied excerpts provide a controlled attribution analysis or explicitly delimit the scope of headline speed claims?",
+        "Does the paper fail to distinguish implementation and algorithmic sources of efficiency?",
+        "Do the sentiment timing comparisons isolate speed attributable to an algorithmic component?",
+        "Does the complete paper contain controlled comparisons that quantify implementation and parallelism contributions separately?",
+        "Does the tag-prediction comparison address the parallelism concern and provide evidence for a narrower inference-efficiency explanation?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_26739aba340e_2_17",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_26739aba340e_2_17"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_2_9",
+          "source_type": "reading_unit",
+          "page_index": 2,
+          "evidence_ids": [
+            "ev_26739aba340e_2_9"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_16",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_16"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_17",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_17"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_18",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_18"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_20",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_20"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_21",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_21"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_0_4",
+          "source_type": "reading_unit",
+          "page_index": 0,
+          "evidence_ids": [
+            "ev_26739aba340e_0_4"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_18",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_18"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_26",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_26"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_20",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_20"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_4",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_4"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_23e6a7c956e176a37f5c",
+      "verification_task_id": "verify_bf25cf3161b634351794",
+      "title": "Filtering YFCC100M before splitting may make the evaluation depend on held-out frequency information",
+      "scientific_question": "Does the original description or dataset script compute the frequency threshold over the whole corpus or only the training partition?",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "Are word and tag frequencies counted over the full corpus, a preliminary eligible subset, or only the training partition?",
+        "Does filtering remove only word and tag types, or also examples, and how are examples with no retained tags handled?",
+        "Is precision at one scored against all original tags or only retained tags, and which examples enter its denominator?",
+        "Do fastText, the linear Tagspace variant, and the frequency baseline use exactly the same filtered examples, label inventory, and scoring rules?",
+        "If full-corpus filtering is used, is that benchmark convention explicitly documented in reconstruction materials?",
+        "Would training-only filtering materially change the vocabulary, label inventory, eligible examples, absolute precision at one, or computational measurements?",
+        "Does the located dataset description establish whether the frequency threshold is computed before splitting or only on training data?",
+        "Does a reconstruction script or other author material resolve the frequency-counting scope?",
+        "Does filtering change example eligibility or the tags counted as correct for precision at one?",
+        "Is there evidence that the compared models use different filtered datasets or that full-corpus filtering materially affects performance?",
+        "How are examples with no retained tags handled, and is precision at one computed against original tags or only retained tags?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_26739aba340e_3_19",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_19"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_16",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_16"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_21",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_21"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_24",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_24"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    },
+    {
+      "issue_id": "consolidated_4b0110cc826e3be3b84e",
+      "verification_task_id": "verify_e5b2804aa975d09b5f6c",
+      "title": "The mapping from tag sets to the single-label training objective requires verification",
+      "scientific_question": "Do the complete model and tag-prediction sections specify how multiple tags are converted into training targets?",
+      "verdict": "inconclusive",
+      "report_eligibility": "requires_human_review",
+      "human_review_status": "pending",
+      "p4_processing_status": "internal_only",
+      "outstanding_checks": [
+        "For YFCC100M training, is one retained tag sampled per record, is each record expanded into separate tag targets, or is a loss computed over several tags? What normalization or weighting is used?",
+        "Are records with no tags remaining after frequency filtering discarded, retained without updates, or handled otherwise in each split?",
+        "Does precision at one count a prediction as correct when it matches any retained reference tag, and which records enter its denominator?",
+        "Does one epoch traverse original records, expanded record-tag pairs, or another training unit, and how many target updates can a record generate?",
+        "Do fastText and the linear Tagspace baseline use the same retained targets, record weighting, and evaluation references?",
+        "Do the complete PDF or contemporaneous implementation and dataset reconstruction materials explicitly settle these choices? The supplied excerpts cannot establish their contents.",
+        "Do the complete model and tag-prediction sections specify how multiple retained tags become training targets?",
+        "Does the dataset protocol define what happens to records with no tags remaining after frequency filtering?",
+        "Is precision at one explicitly defined as matching any retained reference tag, and which records enter its denominator?",
+        "What constitutes an epoch for multi-tag records, and do fastText and the linear Tagspace baseline use comparable target processing?",
+        "Does the dataset-reconstruction material define treatment of records with no retained tags and whether precision at one accepts any retained reference tag?"
+      ],
+      "source_mapping": [
+        {
+          "source_ref": "ru_ev_26739aba340e_1_8",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_8"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_16",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_16"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_19",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_19"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_24",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_24"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_21",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_21"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_1_20",
+          "source_type": "reading_unit",
+          "page_index": 1,
+          "evidence_ids": [
+            "ev_26739aba340e_1_20"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_0_11",
+          "source_type": "reading_unit",
+          "page_index": 0,
+          "evidence_ids": [
+            "ev_26739aba340e_0_11"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_5",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_5"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_17",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_17"
+          ],
+          "verification_status": "pdf_text_located"
+        },
+        {
+          "source_ref": "ru_ev_26739aba340e_3_18",
+          "source_type": "reading_unit",
+          "page_index": 3,
+          "evidence_ids": [
+            "ev_26739aba340e_3_18"
+          ],
+          "verification_status": "pdf_text_located"
+        }
+      ]
+    }
+  ]
+}

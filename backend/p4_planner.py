@@ -25,6 +25,21 @@ def _similar_question(left, right):
     return bool(a and b) and len(a & b) / len(a | b) >= 0.78
 
 
+def _technical_phrases(text):
+    words = re.findall(r"[a-z0-9]+", text.casefold())
+    generic = {"the", "and", "with", "from", "other", "does", "which", "that",
+               "this", "for", "under", "rather", "than", "what", "whether",
+               "could", "would", "report", "reported", "paper", "available",
+               "complete", "authors", "result", "results"}
+    return {tuple(words[index:index + 3]) for index in range(len(words) - 2)
+            if all(word not in generic for word in words[index:index + 3])}
+
+
+def _same_scientific_request(left, right):
+    return _similar_question(left, right) or bool(
+        _technical_phrases(left) & _technical_phrases(right))
+
+
 def _category(entry, decision):
     if entry.verdict == "concern_narrowed":
         return "clarification"
@@ -42,14 +57,14 @@ def _groups(entries, consolidation, decisions, manual):
         decision = decisions.get(entry.consolidated_issue_id)
         category = _category(entry, decision)
         match = next((group for group in groups if group.category == category and
-                      _similar_question(group.scientific_question, entry.scientific_question) and
+                      _same_scientific_request(group.scientific_question, entry.scientific_question) and
                       (set(issue.related_claim_ids) & set(issue_index[group.source_issue_ids[0]].related_claim_ids)
                        or _terms(group.scientific_question) == _terms(entry.scientific_question))), None)
         if match:
             match.source_issue_ids.append(entry.consolidated_issue_id)
             match.group_id = "report_group_" + hashlib.sha256(
                 "|".join(sorted(match.source_issue_ids)).encode()).hexdigest()[:16]
-            match.grouping_rationale = "Same claim and substantially matching question; keep every P3 source issue"
+            match.grouping_rationale = "Same claim and matching scientific request; retain every P3 source issue"
         else:
             groups.append(ReportIssueGroup(group_id="report_group_" + hashlib.sha256(
                 entry.consolidated_issue_id.encode()).hexdigest()[:16],

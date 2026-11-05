@@ -1,0 +1,171 @@
+{
+  "schema_version": "1.0",
+  "source": {
+    "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+    "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+    "pdf_sha256": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+    "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+    "understanding_run_id": "18e72bb44b124089a0b0a2d74f85d80c",
+    "professional_review_run_id": "1146246578504a7b99666a4c690a02de",
+    "consolidation_run_id": "6890db04f76a43598942e2a1f0576276",
+    "evidence_verification_run_id": "replay_40828d011fcb40948370ce78458c6226",
+    "p3_result_sha256": "ee7a4e7882ede8e218bfa64f31a4da226608801b7d0b5e7097d2213a1bc3322f",
+    "p3_schema_version": "1.1",
+    "p3_execution_mode": "recorded_model_replay"
+  },
+  "report_kind": "internal",
+  "language": "zh",
+  "selected_issue_ids": [
+    "consolidated_c9750ce2c32914386e93",
+    "consolidated_2fc7365d65828d021acd",
+    "consolidated_74d31eae282a7e352cfb",
+    "consolidated_8e8e2b5dcfc41219ae35",
+    "consolidated_571a39dcba42a9759ff6",
+    "consolidated_63e4fcc89ffc9ebae2cf",
+    "consolidated_84cf783ca167b1714267",
+    "consolidated_1ca04a734f00044fd43b",
+    "consolidated_0caacb13a2bb7f01cbb8"
+  ],
+  "internal_only_issue_ids": [],
+  "excluded_issue_ids": [],
+  "groups": [
+    {
+      "group_id": "report_group_2294cf35662da91f",
+      "source_issue_ids": [
+        "consolidated_c9750ce2c32914386e93"
+      ],
+      "scientific_question": "Do the original source and experiment-specific code and configurations uniquely specify the reported triple objective, including loss coefficients, training temperature and scaling, contributing token positions, hidden-state pairing, reductions, and coefficient handling in the ablations?",
+      "category": "clarification",
+      "order": 0,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_9281ab602c40d0fe",
+      "source_issue_ids": [
+        "consolidated_2fc7365d65828d021acd"
+      ],
+      "scientific_question": "Could the authors reconcile the located adaptation-distillation prose reporting 70.4 EM and 79.8 F1 with Table 2's extracted DistilBERT (D) values of 79.1 EM and 86.9 F1, confirming the table associations and evaluation configurations and identifying the full-model baseline intended by 'within 3 points'?",
+      "category": "clarification",
+      "order": 1,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_b42aed6ad56ac911",
+      "source_issue_ids": [
+        "consolidated_74d31eae282a7e352cfb"
+      ],
+      "scientific_question": "Does the reported training-resource evidence support the lower-pretraining-cost claim under an explicit accounting boundary for teacher pretraining and teacher computation, with a relevant comparison controlling data exposure and target performance?",
+      "category": "clarification",
+      "order": 2,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_073805dd7d425c6a",
+      "source_issue_ids": [
+        "consolidated_8e8e2b5dcfc41219ae35",
+        "consolidated_0caacb13a2bb7f01cbb8"
+      ],
+      "scientific_question": "Does Table 4 or other available material compare the full objective with an otherwise matched, teacher-initialized student trained with masked language modeling alone, removing both distillation losses, and thereby establish their combined contribution rather than only conditional component benefits?",
+      "category": "clarification",
+      "order": 3,
+      "grouping_rationale": "Same claim and matching scientific request; retain every P3 source issue"
+    },
+    {
+      "group_id": "report_group_4efadfe760494a53",
+      "source_issue_ids": [
+        "consolidated_571a39dcba42a9759ff6"
+      ],
+      "scientific_question": "Does the verified table establish that 97% is calculated as the ratio of GLUE macro-scores, and how are individual task metrics combined?",
+      "category": "clarification",
+      "order": 4,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_efff3b5fe5bfee46",
+      "source_issue_ids": [
+        "consolidated_63e4fcc89ffc9ebae2cf"
+      ],
+      "scientific_question": "Does the complete paper compare pretraining distillation with task-specific-only distillation under sufficiently matched student architecture, initialization, data, and training budget?",
+      "category": "clarification",
+      "order": 5,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_38e46b469eeaad7e",
+      "source_issue_ids": [
+        "consolidated_84cf783ca167b1714267"
+      ],
+      "scientific_question": "Inspect the original Table 3 and timing code for raw durations, the percentage calculation, framework version, numerical precision, CPU thread settings, and timing boundaries.",
+      "category": "clarification",
+      "order": 6,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_6a6c3cff7484295a",
+      "source_issue_ids": [
+        "consolidated_1ca04a734f00044fd43b"
+      ],
+      "scientific_question": "Check the complete training and experiments sections and released scripts for the optimizer, learning-rate schedule, update count, effective batch schedule, sequence lengths, masking settings, and teacher checkpoint.",
+      "category": "clarification",
+      "order": 7,
+      "grouping_rationale": "Separate scientific question"
+    }
+  ],
+  "source_limitations": [
+    "coverage_gap_0ae3171561ac294734a1",
+    "coverage_gap_2afbe30db82547e56dcc",
+    "coverage_gap_cb071fa62ea67dca7b59",
+    "coverage_gap_af3ae888d58608fb17ce",
+    "coverage_gap_fd0caf981d5a73494014",
+    "coverage_gap_d3ada0777118890327ae",
+    "coverage_gap_3fab1ac9abe526845930",
+    "coverage_gap_5a110286b713e7296ee6",
+    "coverage_gap_e643bd2e9c3697f98747",
+    "coverage_gap_4b7f6c5eb500a8f3c29a",
+    "coverage_gap_0e693bad54e5bd714e56",
+    "coverage_gap_b3e981bd5c2c5f00a496",
+    "coverage_gap_676f262c8b880b3e82fa",
+    "coverage_gap_db4c573a889c1d617547",
+    "coverage_gap_52f88f7e3cd7271278ac",
+    "coverage_gap_8b370742f3c5ab13ef83",
+    "coverage_gap_0d6b68dce46575b5419f",
+    "coverage_gap_e982cc0d32b4dd877ea9",
+    "coverage_gap_d6bdde109fcbfe6229fb",
+    "coverage_gap_af4064e911bdf8a0d5e0",
+    "coverage_gap_9102a0bb09f50304b1cd",
+    "coverage_gap_f16782c5ab6394f61a75",
+    "coverage_gap_004b3968bb17c7da66f7",
+    "coverage_gap_46fc903f583b6356acaf",
+    "coverage_gap_28a383f0c4641e8b9d88",
+    "coverage_gap_fc9a58bcbba225453526",
+    "coverage_gap_a187fd8a74a179871557",
+    "coverage_gap_a49ff557415898553ac1",
+    "coverage_gap_fa3839173523a4411b11",
+    "coverage_gap_b4300674ab78d1562758",
+    "coverage_gap_2e292591ac3f6b4959b2",
+    "coverage_gap_d2aff15e0cd3091a496f",
+    "coverage_gap_55c0ab31614128e7e3ed",
+    "coverage_gap_69fec4c66b4cff2b17b9",
+    "coverage_gap_44c7d378b84a6c312778",
+    "coverage_gap_c182169fde1f3bccaf86",
+    "coverage_gap_b1b5f0460fb999ac5ea3",
+    "coverage_gap_b8ce53a6eee5e2537a94",
+    "coverage_gap_e959e307fa7c891a8a46",
+    "coverage_gap_cd5ebcac34732c82089d",
+    "coverage_gap_777bf1d17a6e3e691f39",
+    "The supplied quality state marks reading order as ambiguous and section mapping as incomplete; human reading and page references are unavailable.",
+    "Table structures remain incomplete and unverified for table_ev_6724ca5dce54_2_0, table_ev_6724ca5dce54_2_4, table_ev_6724ca5dce54_2_3, and table_ev_6724ca5dce54_3_0. Extracted numerical rows cannot establish verified model-by-metric associations.",
+    "The ablation deltas extracted in ru_ev_6724ca5dce54_3_2 have unverified table associations, so exact component-specific numerical effects remain unresolved.",
+    "Figure figure_ev_6724ca5dce54_0_9 is detected but unverified. Its caption identifies parameter counts of recently released pretrained language models, but plotted values and visual relationships remain unverified.",
+    "The distillation and temperature equations are fragmented across reading units; exact formula transcription, including signs and normalization, remains unverified.",
+    "Source quality: reading_order_ambiguous",
+    "Source quality: section_mapping_incomplete",
+    "Source quality: human_reading_reference_missing",
+    "Source quality: human_page_reference_missing",
+    "table table_ev_6724ca5dce54_2_0: structure_incomplete",
+    "table table_ev_6724ca5dce54_2_4: structure_incomplete",
+    "table table_ev_6724ca5dce54_2_3: structure_incomplete",
+    "table table_ev_6724ca5dce54_3_0: structure_incomplete",
+    "figure figure_ev_6724ca5dce54_0_9: detected_unverified"
+  ]
+}

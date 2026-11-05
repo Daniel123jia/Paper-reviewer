@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0",
+  "source": {
+    "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+    "snapshot_id": "886cadb1a7084f458f387ce3b2315574",
+    "pdf_sha256": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+    "source_bundle_id": "sb_8086e2e5e139_886cadb1a7084f458f387ce3b2315574_v1",
+    "understanding_run_id": "848033e148ae4ff18b46f78a172f94d9",
+    "professional_review_run_id": "8c3a5a5e783c4366bbe965f4cdad6a28",
+    "consolidation_run_id": "6982b7e180034271ab3fdd8e57e22c21",
+    "evidence_verification_run_id": "replay_1660e3c071434e5c91de49b5aa47057c",
+    "p3_result_sha256": "58eea764578f480070e326f3f1c0930a1e5bad61eeb2b7637ba7f12aa4d6a696",
+    "p3_schema_version": "1.1",
+    "p3_execution_mode": "recorded_model_replay"
+  },
+  "report_kind": "internal",
+  "language": "zh",
+  "selected_issue_ids": [
+    "consolidated_9825c343099d3753e676",
+    "consolidated_105a91210515bf8f5b82",
+    "consolidated_fe5b94a19e9e06327e40",
+    "consolidated_e3eac49834cebb136759",
+    "consolidated_c5155e1e615fb4a2358a",
+    "consolidated_3a9cf1ce576dc3d2beda"
+  ],
+  "internal_only_issue_ids": [],
+  "excluded_issue_ids": [],
+  "groups": [
+    {
+      "group_id": "report_group_73f63b476a7ec734",
+      "source_issue_ids": [
+        "consolidated_9825c343099d3753e676"
+      ],
+      "scientific_question": "Were each absolute-position baseline and its corresponding relative-position model trained, selected, decoded, and evaluated under matched conditions so that the reported BLEU differences can be attributed to the position representations?",
+      "category": "clarification",
+      "order": 0,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_0484a5aa8a8fe957",
+      "source_issue_ids": [
+        "consolidated_105a91210515bf8f5b82"
+      ],
+      "scientific_question": "What baseline and measurement scope underlie the reported 7% decrease in steps per second, and do matched runtime, memory, and scaling measurements substantiate the claimed practical efficiency of the relative-position implementation?",
+      "category": "clarification",
+      "order": 1,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_c786c12ebb46179d",
+      "source_issue_ids": [
+        "consolidated_fe5b94a19e9e06327e40"
+      ],
+      "scientific_question": "Check the original Section 3.3 layout and surrounding text for an explicit restriction of the space analysis to representation storage.",
+      "category": "clarification",
+      "order": 2,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_9a634aa5930abecf",
+      "source_issue_ids": [
+        "consolidated_e3eac49834cebb136759"
+      ],
+      "scientific_question": "Could the authors clarify whether 'enables the model to generalize to sequence lengths not seen during training' denotes representational applicability or maintained translation performance? The located clipping ablation does not isolate unseen-length performance; if the latter meaning is intended, what training-length boundary and evaluation beyond that boundary support it?",
+      "category": "clarification",
+      "order": 3,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_9c4c4c2fa71a4147",
+      "source_issue_ids": [
+        "consolidated_c5155e1e615fb4a2358a"
+      ],
+      "scientific_question": "Inspect the complete experimental setup, footnotes, and any supplementary material for the BLEU scorer, case handling, tokenization, reference processing, and word-piece reconstruction procedure.",
+      "category": "clarification",
+      "order": 4,
+      "grouping_rationale": "Separate scientific question"
+    },
+    {
+      "group_id": "report_group_10d5a8aca3ad3ec2",
+      "source_issue_ids": [
+        "consolidated_3a9cf1ce576dc3d2beda"
+      ],
+      "scientific_question": "Does the full Table 1 or another table contain a combined relative-plus-sinusoidal condition?",
+      "category": "clarification",
+      "order": 5,
+      "grouping_rationale": "Separate scientific question"
+    }
+  ],
+  "source_limitations": [
+    "coverage_gap_7198597e2e1fd305f757",
+    "coverage_gap_6effd50cb559e249b57c",
+    "coverage_gap_c315391b1ce3dd38ff1a",
+    "coverage_gap_0f75b8043f99c3ff022a",
+    "coverage_gap_aed3ccc865fb33d7ec2b",
+    "coverage_gap_21099f4778ef2378fd39",
+    "coverage_gap_750c193317f93ec2d240",
+    "coverage_gap_c32737630bbfdea9cb43",
+    "coverage_gap_5b3d0dd231c413e2d756",
+    "coverage_gap_3215f606abd7a6f90847",
+    "coverage_gap_bd97ef91a8616d7b7665",
+    "coverage_gap_968e72b3cc98344c6103",
+    "coverage_gap_45c908aae031db960144",
+    "coverage_gap_8a85a206845ce02abbf4",
+    "coverage_gap_48c7268bf48ef0531e9a",
+    "coverage_gap_002343100846232b2aef",
+    "coverage_gap_bc71555579186c897f07",
+    "coverage_gap_1f0adb57ec662dfef6d7",
+    "coverage_gap_02300f9ce9392ee6c0d6",
+    "coverage_gap_ac70eaf4b2f709dfd5ac",
+    "coverage_gap_e235f4b0dd734b77dfa0",
+    "coverage_gap_2abbc69ca6b27b6f543e",
+    "coverage_gap_cfd48f34c2427d7f8aa7",
+    "coverage_gap_d43fefae749ce86a847a",
+    "coverage_gap_106d4b875f6edc6d9ad1",
+    "coverage_gap_398092519e5ab30d6c75",
+    "coverage_gap_5e3c631c6f8f60dcdd96",
+    "coverage_gap_99fd981e2e72bdd99785",
+    "coverage_gap_80c3c8000d4caa8f2d58",
+    "coverage_gap_f83136f6e9e91d2aca71",
+    "coverage_gap_5816d70492a8d707338e",
+    "coverage_gap_d2c227477b74c1eb7d78",
+    "coverage_gap_2a849060c4ae7b5df5ee",
+    "coverage_gap_040aa2d68a52ecf58762",
+    "coverage_gap_815217dec47c4ec46dfe",
+    "coverage_gap_237cebf9398728e3a794",
+    "coverage_gap_0d946e445b861af6ae54",
+    "The supplied quality state flags ambiguous reading order, incomplete section mapping, partial source mapping, and missing human-readable document and page references.",
+    "All five listed formula objects on pages 2–3 remain unverified. Fragmented extractions do not establish complete mathematical transcriptions, including the attention equations, edge representation notation, relative position indexing, clipping definitions, dimensional specifications, and implementation transformations.",
+    "Table structures and numerical row and column associations remain unverified: table_p2_0 requires visual review, table_ev_886cadb1a708_3_1 has incomplete structure, and table_p3_0 and table_p4_0 are detected but unverified. Prose supports the reported BLEU gains, but complete numerical table reconstructions have not been visually confirmed.",
+    "The page 3 figure, figure_ev_886cadb1a708_2_11, requires visual review; its meaning remains unverified.",
+    "Source quality: reading_order_ambiguous",
+    "Source quality: section_mapping_incomplete",
+    "Source quality: source_mapping_partial",
+    "Source quality: human_reading_reference_missing",
+    "Source quality: human_page_reference_missing",
+    "table table_p2_0: visual_review_required",
+    "table table_ev_886cadb1a708_3_1: structure_incomplete",
+    "table table_p3_0: detected_unverified",
+    "table table_p4_0: detected_unverified",
+    "formula formula_ev_886cadb1a708_1_33: detected_unverified",
+    "formula formula_ev_886cadb1a708_1_3: detected_unverified",
+    "formula formula_ev_886cadb1a708_1_24: detected_unverified",
+    "formula formula_ev_886cadb1a708_1_35: detected_unverified",
+    "formula formula_ev_886cadb1a708_2_15: detected_unverified",
+    "figure figure_ev_886cadb1a708_2_11: visual_review_required"
+  ]
+}

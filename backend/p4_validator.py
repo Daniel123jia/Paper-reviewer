@@ -6,8 +6,12 @@ from backend.p4_report_schema import ReportEvidencePack, ReportPlan, ReportWriti
 
 
 def numeric_claims(text):
+    text = re.sub(r"(?m)^#{2,6}\s+\d+\.\s*", "", text)
+    text = re.sub(r"(?:\b(?:PDF\s+)?pages?|\b(?:Tables?|Sections?|Figures?)|第)\s*"
+                  r"\d+\s*[-–—~至]\s*\d+\s*(?:页)?",
+                  "", text, flags=re.I)
     without_locators = re.sub(
-        r"(?:\b(?:table|section|figure|fig\.?|equation|eq\.?|page)|表|图|公式|第)\s*"
+        r"(?:\b(?:table|section|figure|fig\.?|equation|eq\.?|pages?)|表|图|公式|第)\s*"
         r"\(?\d+(?:\.\d+)*\)?", "", text, flags=re.I)
     return set(re.findall(r"(?<![a-z0-9_])\d+(?:\.\d+)?(?![a-z0-9_])",
                           without_locators.casefold()))
@@ -22,6 +26,18 @@ def allowed_author_numbers(pack: ReportEvidencePack):
     return numeric_claims(source)
 
 
+def allowed_internal_numbers(pack: ReportEvidencePack):
+    source = " ".join(pack.paper_facts)
+    for issue in pack.issues:
+        source += " " + " ".join(issue.observed_statements + issue.actual_tool_results +
+            issue.author_explanations + issue.outstanding_checks +
+            [issue.scientific_question, issue.original_question,
+             issue.revised_question or ""])
+    for item in pack.reviewer_added:
+        source += " " + item.evidence_basis
+    return numeric_claims(source)
+
+
 def validate_writing(result: ReportWritingResult, plan: ReportPlan,
                      pack: ReportEvidencePack):
     if result.language != plan.language or result.report_kind != plan.report_kind:
@@ -31,6 +47,12 @@ def validate_writing(result: ReportWritingResult, plan: ReportPlan,
         raise ValueError("writer omitted or invented a planned report group")
     issue_index = {item.source_issue_id: item for item in pack.issues}
     manual_index = {item.issue_id: item for item in pack.reviewer_added}
+    if plan.report_kind != "author":
+        unknown = numeric_claims(result.general_assessment + " " + " ".join(
+            item.comment_body + " " + item.author_action_requested
+            for item in result.comments)) - allowed_internal_numbers(pack)
+        if unknown:
+            raise ValueError(f"internal report introduces unsupported numbers: {sorted(unknown)}")
     for comment in result.comments:
         group = expected[comment.report_comment_id]
         if set(comment.source_issue_ids) != set(group.source_issue_ids) or \

@@ -1,11 +1,14 @@
 import io
 import json
 import sqlite3
+import zipfile
 from types import SimpleNamespace
 
 import fitz
+import httpx
 from docx import Document
 from fastapi.testclient import TestClient
+from openai import APIConnectionError
 
 from backend.app import create_app
 from backend.tests.test_p4_api import seeded_p4_client
@@ -89,8 +92,8 @@ def test_versioned_edit_approval_and_real_exports(tmp_path, monkeypatch):
     second = client.post(url, json={"kind": "author", "language": "en"})
     assert second.status_code == 201 and second.json()["id"] != draft_id
     assert client.get(f"/api/review-report-drafts/{draft_id}").json()["body"] == draft["body"]
-    body = draft["body"].replace("Clarify the method's specific novelty scope.",
-                                 "Clarify the exact scope of the method claim.")
+    body = draft["body"].replace("which part of the method is new",
+                                 "which specific part of the method is new")
     updated = client.put(f"/api/review-report-drafts/{draft_id}", json={
         "body": body, "expected_revision": 1})
     assert updated.status_code == 200, updated.text
@@ -111,7 +114,7 @@ def test_versioned_edit_approval_and_real_exports(tmp_path, monkeypatch):
     assert approved.status_code == 200, approved.text
     assert approved.json()["approval_status"] == "approved"
     markdown = client.get(f"/api/review-report-drafts/{draft_id}/export?format=md&final=true")
-    assert markdown.status_code == 200 and b"DRAFT" not in markdown.content
+    assert markdown.status_code == 200 and "draft" not in markdown.text.casefold()
     word = client.get(f"/api/review-report-drafts/{draft_id}/export?format=docx&final=true")
     pdf = client.get(f"/api/review-report-drafts/{draft_id}/export?format=pdf&final=true")
     assert word.status_code == pdf.status_code == 200, (word.text[:200], pdf.text[:200])
@@ -171,3 +174,58 @@ def test_p4_draft_api_requires_authentication(tmp_path, monkeypatch):
     assert client.get("/api/review-report-drafts/nope").status_code == 401
     assert client.post("/api/auth/login", json={"access_token": "private"}).status_code == 200
     assert client.get("/api/review-report-drafts/nope").status_code == 404
+
+
+def test_transient_model_connection_is_retried_and_unknown_tokens_stay_unknown(tmp_path, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-secret")
+
+    class FlakyOpenAI(FakeOpenAI):
+        attempts = 0
+
+        @property
+        def chat(self):
+            normal = super().chat
+
+            def create(**kwargs):
+                FlakyOpenAI.attempts += 1
+                if FlakyOpenAI.attempts == 1:
+                    raise APIConnectionError(request=httpx.Request("POST", "https://example.test"))
+                return normal.completions.create(**kwargs)
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr("backend.app.OpenAI", FlakyOpenAI)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+    response = client.post(f'/api/review-report-projects/{project["id"]}/drafts',
+                           json={"kind": "author", "language": "en"})
+    assert response.status_code == 201, response.text
+    calls = response.json()["model_calls"]
+    assert [item["status"] for item in calls] == ["failed", "completed", "completed"]
+    assert calls[0]["input_tokens"] is None and calls[0]["output_tokens"] is None
+    assert calls[0]["error"] == "APIConnectionError"
+
+
+def test_p4_internal_export_keeps_editable_table_and_math(tmp_path, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-secret")
+    monkeypatch.setattr("backend.app.OpenAI", FakeOpenAI)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+    draft_response = client.post(f'/api/review-report-projects/{project["id"]}/drafts',
+                                 json={"kind": "internal", "language": "en"})
+    assert draft_response.status_code == 201, draft_response.text
+    draft = draft_response.json()
+    body = draft["body"] + "\n## Formula and table\n\n$$x^2+y^2=z^2$$\n\n" \
+           "| Item | Value |\n|:---|---:|\n| A | 1.3 |\n"
+    saved = client.put(f'/api/review-report-drafts/{draft["id"]}', json={
+        "body": body, "expected_revision": 1})
+    assert saved.status_code == 200, saved.text
+    word = client.get(f'/api/review-report-drafts/{draft["id"]}/export?format=docx')
+    pdf = client.get(f'/api/review-report-drafts/{draft["id"]}/export?format=pdf')
+    assert word.status_code == pdf.status_code == 200
+    document = Document(io.BytesIO(word.content))
+    assert document.tables and document.tables[0].cell(1, 1).text == "1.3"
+    with zipfile.ZipFile(io.BytesIO(word.content)) as archive:
+        assert b"oMath" in archive.read("word/document.xml")
+    with fitz.open(stream=pdf.content, filetype="pdf") as rendered:
+        content = " ".join(page.get_text() for page in rendered)
+        assert "Formula and table" in content and "1.3" in content

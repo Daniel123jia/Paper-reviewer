@@ -9,6 +9,7 @@ from typing import Literal
 
 from fastapi import HTTPException
 from fastapi.responses import Response
+from openai import APIConnectionError, APITimeoutError
 from pydantic import BaseModel, Field
 
 from backend.exporter import render_export
@@ -69,35 +70,40 @@ def register_p4_draft_routes(app, connect, model_factory, helpers):
 
         def invoke(stage, version, system, user):
             nonlocal client
-            started = time.perf_counter()
-            actual = None
-            input_tokens = output_tokens = None
-            error = None
-            try:
-                if client is None:
-                    client = model_factory()
-                response = client.chat.completions.create(model=requested,
-                    messages=[{"role": "system", "content": system},
-                              {"role": "user", "content": user}])
-                actual = response.model or None
-                usage = response.usage
-                input_tokens = getattr(usage, "prompt_tokens", None)
-                output_tokens = getattr(usage, "completion_tokens", None)
-                content = response.choices[0].message.content
-                if not content:
-                    raise ValueError("empty model response")
-                return {"content": content, "model_identifier": actual,
-                        "input_tokens": input_tokens, "output_tokens": output_tokens}
-            except Exception as exc:
-                error = type(exc).__name__
-                raise
-            finally:
-                with connect() as db:
-                    db.execute("INSERT INTO p4_model_calls VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                        (uuid.uuid4().hex, draft_id, project_id, stage, version, requested,
-                         actual, input_tokens, output_tokens,
-                         round((time.perf_counter() - started) * 1000),
-                         "failed" if error else "completed", error, now()))
+            for attempt in range(2):
+                started = time.perf_counter()
+                actual = None
+                input_tokens = output_tokens = None
+                error = None
+                try:
+                    if client is None:
+                        client = model_factory()
+                    response = client.chat.completions.create(model=requested,
+                        messages=[{"role": "system", "content": system},
+                                  {"role": "user", "content": user}])
+                    actual = response.model or None
+                    usage = response.usage
+                    input_tokens = getattr(usage, "prompt_tokens", None)
+                    output_tokens = getattr(usage, "completion_tokens", None)
+                    content = response.choices[0].message.content
+                    if not content:
+                        raise ValueError("empty model response")
+                    return {"content": content, "model_identifier": actual,
+                            "input_tokens": input_tokens, "output_tokens": output_tokens}
+                except (APIConnectionError, APITimeoutError) as exc:
+                    error = type(exc).__name__
+                    if attempt:
+                        raise
+                except Exception as exc:
+                    error = type(exc).__name__
+                    raise
+                finally:
+                    with connect() as db:
+                        db.execute("INSERT INTO p4_model_calls VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            (uuid.uuid4().hex, draft_id, project_id, stage, version, requested,
+                             actual, input_tokens, output_tokens,
+                             round((time.perf_counter() - started) * 1000),
+                             "failed" if error else "completed", error, now()))
         return invoke
 
     def frozen_plan(db, project_id, kind, language):
@@ -132,7 +138,14 @@ def register_p4_draft_routes(app, connect, model_factory, helpers):
             raise HTTPException(503, "后端尚未配置报告写作模型")
         draft_id = uuid.uuid4().hex
         try:
-            writing = write_report(plan, pack, call_model(project_id, draft_id))
+            with connect() as db:
+                other = db.execute("SELECT writing_json FROM p4_drafts WHERE project_id = ? "
+                    "AND kind = ? AND language != ? AND selected_issue_ids = ? "
+                    "ORDER BY rowid DESC LIMIT 1", (project_id, payload.kind, payload.language,
+                    json.dumps(plan.selected_issue_ids))).fetchone()
+            counterpart = (ReportWritingResult.model_validate_json(other["writing_json"])
+                           if other and other["writing_json"] else None)
+            writing = write_report(plan, pack, call_model(project_id, draft_id), counterpart)
             body = render_markdown(plan, pack, writing)
             if payload.kind == "author":
                 validate_author_body(body, pack)
@@ -140,13 +153,8 @@ def register_p4_draft_routes(app, connect, model_factory, helpers):
                     reject_rejected_issue_text(body, snapshot_of(
                         project_or_404(db, project_id)), plan.selected_issue_ids)
             with connect() as db:
-                other = db.execute("SELECT writing_json FROM p4_drafts WHERE project_id = ? "
-                    "AND kind = ? AND language != ? AND selected_issue_ids = ? "
-                    "ORDER BY rowid DESC LIMIT 1", (project_id, payload.kind, payload.language,
-                    json.dumps(plan.selected_issue_ids))).fetchone()
-                if other and other["writing_json"]:
-                    validate_bilingual_pair(writing,
-                        ReportWritingResult.model_validate_json(other["writing_json"]))
+                if counterpart:
+                    validate_bilingual_pair(writing, counterpart)
                 stamp = now()
                 db.execute("INSERT INTO p4_drafts VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?, "
                     "'pending', NULL, ?, ?)", (draft_id, project_id, payload.kind,

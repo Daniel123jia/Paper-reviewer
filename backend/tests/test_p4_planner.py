@@ -59,3 +59,31 @@ def test_same_question_groups_without_losing_ids_and_distinct_questions_stay_sep
     assert grouped[0].source_issue_ids == [one.consolidated_issue_id, "second"]
     distinct = two.model_copy(update={"scientific_question": "How were the dataset labels audited?"})
     assert len(_groups([one, distinct], consolidation, {}, [])) == 2
+
+
+def test_shared_technical_request_merges_but_different_claim_does_not(tmp_path):
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    frozen = snapshot(tmp_path, client)
+    from backend.p4_planner import _groups
+    from backend.p4_report_schema import EligibilityEntry
+    from backend.p2c_schema import ConsolidatedIssue
+    from types import SimpleNamespace
+    base = ConsolidatedIssue.model_validate(frozen["consolidation"]["consolidated_issues"][0])
+    same = base.model_copy(update={"consolidated_issue_id": "same"})
+    different = base.model_copy(update={"consolidated_issue_id": "different",
+                                "related_claim_ids": ["another_claim"]})
+    one = EligibilityEntry(consolidated_issue_id=base.consolidated_issue_id,
+        verification_task_id="one", title="One",
+        scientific_question="Does the full objective have a matched masked language modeling alone baseline?",
+        verdict="inconclusive", report_eligibility="requires_human_review",
+        human_review_status="pending", processing_status="internal_only",
+        source_refs=[], counterevidence_refs=[], outstanding_checks=[],
+        provisional_impact="undetermined")
+    two = one.model_copy(update={"consolidated_issue_id": "same", "verification_task_id": "two",
+        "scientific_question": "Is masked language modeling alone compared under the same architecture and training budget?"})
+    three = two.model_copy(update={"consolidated_issue_id": "different", "verification_task_id": "three"})
+    groups = _groups([one, two, three], SimpleNamespace(consolidated_issues=[
+        base, same, different]), {}, [])
+    assert len(groups) == 2
+    assert groups[0].source_issue_ids == [base.consolidated_issue_id, "same"]
+    assert groups[1].source_issue_ids == ["different"]
