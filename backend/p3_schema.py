@@ -85,12 +85,25 @@ class CounterEvidenceSearch(StrictModel):
     absence_confirmed: Literal[False] = False
 
 
+class FactAssessment(StrictModel):
+    original_observed_fact: str
+    source_ids: list[str]
+    alignment: Literal["direct", "paraphrase", "unsupported", "ambiguous"]
+    statement_type: Literal["author_claim", "experimental_result", "cited_prior_work",
+                            "model_inference", "unclear"]
+    explanation: str
+    evidence_level: Literal["model_interpretation"] = "model_interpretation"
+
+
 class IssueAdjudication(StrictModel):
     consolidated_issue_id: str
     verification_task_id: str
     original_candidate_ids: list[str] = Field(min_length=1)
     original_central_question: str
+    original_source_refs: list[str]
+    original_counterevidence_refs: list[str]
     revised_question: str | None
+    fact_assessments: list[FactAssessment]
     counterevidence_search: CounterEvidenceSearch
     subchecks: list[VerificationSubcheck] = Field(min_length=1)
     verified_observation_ids: list[str]
