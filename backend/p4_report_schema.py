@@ -132,6 +132,18 @@ class ReportEvidencePack(StrictModel):
     source_limitations: list[str]
 
 
+class ReportPlan(StrictModel):
+    schema_version: Literal["1.0"] = SCHEMA_VERSION
+    source: ReportSourceIdentity
+    report_kind: ReportKind
+    language: Language
+    selected_issue_ids: list[str]
+    internal_only_issue_ids: list[str]
+    excluded_issue_ids: list[str]
+    groups: list[ReportIssueGroup]
+    source_limitations: list[str]
+
+
 class ReportComment(StrictModel):
     report_comment_id: str
     source_issue_ids: list[str] = Field(min_length=1)
