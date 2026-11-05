@@ -1,4 +1,4 @@
-# P3 独立证据核验（Schema 1.0）
+# P3 独立证据核验（Schema 1.1，P3.1 判定规则）
 
 P3 读取同一冻结链上的 P1 Source Bundle、P2-A ReviewPlan/PaperProfile/ClaimEvidenceMap、P2-B ProfessionalReviewResult、P2-C CandidateConsolidationResult 和原始 PDF。P2-C 的每个 VerificationTask 产生一个 IssueAdjudication；P3 不修改上游结果，也不写入旧版 finding_verifications 或正式报告。
 
@@ -30,7 +30,13 @@ P3 读取同一冻结链上的 P1 Source Bundle、P2-A ReviewPlan/PaperProfile/C
 
 `provisional_impact` 仅为 major_candidate、minor_candidate 或 undetermined；`report_eligibility` 独立记录限定报告、人工复核或不可报告。`human_review_status` 默认 pending。每个结果保存全部原始 Candidate ID、中心问题、Source Ref、Counterevidence Ref 和对应 P2-C 运行 ID。`validate_p3_result` 要求每个 VerificationTask 均有去向，拒绝外来引用与未执行工具 ID。
 
-最终 `verdict_rationale` 由服务端根据实际 PDF 文本定位数、索引数和子检查状态生成；模型对工具是否执行的叙述不会被直接复制。子检查的 `actual_observations` 取自已定位的 PDF 文本；模型解释明确标为 `Model interpretation`，保存在 limitations 中。真实评测采用该确定性规则对原始模型调用的已记录结构化结果做了一次重放，未增加模型调用或改变判定状态。
+P3.1 的服务端相关性门槛逐子检查核对：子问题必须与原始疑点有具体主题交集，所引反证或支持材料中必须有**同一条**实际定位的 PDF 观察与其方法组件、模型/数据集/指标和关键配置相符；“ablation”或“baseline”单词命中、不同 PDF 片段拼接命中均不足以通过。另要求反证挑战阶段把该 Ref 归入相应正/反方向。该规则是必要条件，并不宣称词项匹配能确定性证明科学语义；不确定时降为 inconclusive。
+
+`concern_narrowed` 还要通过修订问题的来源门槛：与原问题和有依据的子检查保持主题一致；新数值和具名数据集/模型必须能在本任务 PDF 观察中定位；新增与原问题及原文均无关的实验主张降为 inconclusive，保留原问题与全部子检查。`report_eligibility` 单独检查最终问题的关键依赖：若依赖未视觉确认的表格/公式行列或不可用的外部对比，即使 verdict 为 concern_narrowed，也必须人工复核；与核心澄清无关的次要未完成检查不会一律阻断。DistilBERT SQuAD 的 Table 2 关联属于前者。
+
+`validate_p3_result` 进一步要求每个 Observation、ToolCheck 归属引用它的 VerificationTask，不能借用同篇论文其它任务的记录。最终 `verdict_rationale` 由服务端列出原始科学问题、保留或被反证的子问题、实际定位的 Source Ref、可能改变判断的作者原文片段及尚未完成的关键检查。模型关于工具执行的叙述不会被复制为事实；模型解释仍显式标为 `Model interpretation`。
+
+Schema 1.1 新增 `decision_rule_version=p3.1`、`execution_mode` 和 `replayed_from_run_id`；Schema 1.0 的历史结果仍可解析。四个模型 Prompt 版本与输入输出契约未变。三篇真实论文的新结果仅对首轮保存的脱敏模型响应执行确定性重放，没有新模型调用；原始 Schema 1.0 结果与评测文档保存在 `docs/examples/p3-*/history/p3-v1.0/` 和 `docs/history/p3-real-evaluation-v1.0.md`。公开摘要中的 Token、调用次数及模型耗时沿用原始实测值，并另外标明重放耗时。
 
 ## API、恢复与隐私
 

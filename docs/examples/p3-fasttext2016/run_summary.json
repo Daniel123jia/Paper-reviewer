@@ -3,13 +3,17 @@
   "source_bundle_id": "sb_6cbcf620c253_26739aba340e4ffab9bea75e03576a34_v1",
   "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
   "pdf_sha256": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+  "schema_version": "1.1",
+  "decision_rule_version": "p3.1",
+  "execution_mode": "recorded_model_replay",
+  "replayed_from_run_id": "bacc58d77e084acb874def52dd34ca4e",
   "p2c_tasks": 9,
   "p3_adjudications": 9,
   "verdict_counts": {
     "concern_supported": 0,
     "concern_refuted": 0,
-    "concern_narrowed": 3,
-    "inconclusive": 6,
+    "concern_narrowed": 2,
+    "inconclusive": 7,
     "blocked": 0
   },
   "execution_status": "limited",
@@ -20,13 +24,15 @@
   "unknown_token_calls": 0,
   "retry_count": 0,
   "duration_ms": 1006361,
+  "duration_ms_meaning": "Recorded live-model run duration carried forward; no new model calls in P3.1 replay",
+  "replay_wall_ms": 464,
   "tool_check_count": 8,
   "tool_check_types": [
     "external",
     "numeric",
     "pdf_region"
   ],
-  "server_rationale_replayed_from_recorded_subchecks": true,
+  "decision_replayed_from_recorded_model_responses": true,
   "call_metadata": [
     {
       "stage": "verify_1763c10f94e264329e44:source_observation",
@@ -416,9 +422,9 @@
     {
       "verification_task_id": "verify_87690eeb87000bdb2c5c",
       "consolidated_issue_id": "consolidated_bdd3cb2a8bdb123b2f43",
-      "verdict": "concern_narrowed",
+      "verdict": "inconclusive",
       "execution_status": "limited",
-      "report_eligibility": "eligible_with_qualification"
+      "report_eligibility": "requires_human_review"
     },
     {
       "verification_task_id": "verify_bf25cf3161b634351794",

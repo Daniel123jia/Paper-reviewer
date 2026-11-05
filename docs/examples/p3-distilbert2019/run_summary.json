@@ -3,13 +3,17 @@
   "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
   "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
   "pdf_sha256": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+  "schema_version": "1.1",
+  "decision_rule_version": "p3.1",
+  "execution_mode": "recorded_model_replay",
+  "replayed_from_run_id": "40828d011fcb40948370ce78458c6226",
   "p2c_tasks": 9,
   "p3_adjudications": 9,
   "verdict_counts": {
     "concern_supported": 0,
     "concern_refuted": 0,
-    "concern_narrowed": 3,
-    "inconclusive": 6,
+    "concern_narrowed": 1,
+    "inconclusive": 8,
     "blocked": 0
   },
   "execution_status": "limited",
@@ -20,13 +24,15 @@
   "unknown_token_calls": 0,
   "retry_count": 0,
   "duration_ms": 1151685,
+  "duration_ms_meaning": "Recorded live-model run duration carried forward; no new model calls in P3.1 replay",
+  "replay_wall_ms": 401,
   "tool_check_count": 15,
   "tool_check_types": [
     "external",
     "numeric",
     "pdf_region"
   ],
-  "server_rationale_replayed_from_recorded_subchecks": true,
+  "decision_replayed_from_recorded_model_responses": true,
   "call_metadata": [
     {
       "stage": "verify_3a45a00a08fbc07fcdd4:source_observation",
@@ -394,7 +400,7 @@
       "consolidated_issue_id": "consolidated_2fc7365d65828d021acd",
       "verdict": "concern_narrowed",
       "execution_status": "limited",
-      "report_eligibility": "eligible_with_qualification"
+      "report_eligibility": "requires_human_review"
     },
     {
       "verification_task_id": "verify_636263b3fa88f2815a22",
@@ -413,14 +419,14 @@
     {
       "verification_task_id": "verify_e3fc5b4dd3e4021d567e",
       "consolidated_issue_id": "consolidated_571a39dcba42a9759ff6",
-      "verdict": "concern_narrowed",
+      "verdict": "inconclusive",
       "execution_status": "limited",
-      "report_eligibility": "eligible_with_qualification"
+      "report_eligibility": "requires_human_review"
     },
     {
       "verification_task_id": "verify_971c70815eca43a1112d",
       "consolidated_issue_id": "consolidated_63e4fcc89ffc9ebae2cf",
-      "verdict": "concern_narrowed",
+      "verdict": "inconclusive",
       "execution_status": "limited",
       "report_eligibility": "requires_human_review"
     },

@@ -66,8 +66,10 @@ def validate_p3_result(result, consolidation, bundle):
         if source.source_verification_status == "human_confirmed" and \
                 source.source_method != "human_pdf_review":
             raise ValueError("automated PDF extraction cannot claim human confirmation")
-    observation_ids = {item.observation_id for item in result.observations}
-    tool_ids = {item.tool_result_id for item in result.tool_results}
+    observation_owner = {item.observation_id: item.verification_task_id
+                         for item in result.observations}
+    tool_owner = {item.tool_result_id: item.verification_task_id
+                  for item in result.tool_results}
     for item in result.observations:
         if item.verification_task_id not in tasks or \
                 not set(item.related_source_ref_ids).issubset(source_ids) or \
@@ -92,16 +94,25 @@ def validate_p3_result(result, consolidation, bundle):
         if {item.original_observed_fact for item in adjudication.fact_assessments} - \
                 set(issue.observed_facts):
             raise ValueError("P3 fact assessment invented an original fact")
-        if not set(adjudication.verified_observation_ids).issubset(observation_ids) or \
+        if any(observation_owner.get(identifier) != task.verification_task_id for identifier in
+               adjudication.verified_observation_ids):
+            raise ValueError("P3 Observation belongs to another VerificationTask")
+        if any(tool_owner.get(identifier) != task.verification_task_id for identifier in
+               adjudication.executed_tool_result_ids):
+            raise ValueError("P3 ToolCheck belongs to another VerificationTask")
+        if not set(adjudication.verified_observation_ids).issubset(observation_owner) or \
                 not set(adjudication.supporting_evidence + adjudication.counterevidence +
                         adjudication.original_source_refs + adjudication.original_counterevidence_refs).issubset(canonical) or \
-                not set(adjudication.executed_tool_result_ids).issubset(tool_ids):
+                not set(adjudication.executed_tool_result_ids).issubset(tool_owner):
             raise ValueError("P3 adjudication refers to an unknown observation, source or tool")
         for subcheck in adjudication.subchecks:
+            if any(tool_owner.get(identifier) != task.verification_task_id for identifier in
+                   subcheck.tool_result_ids):
+                raise ValueError("P3 subcheck ToolCheck belongs to another VerificationTask")
             if subcheck.parent_verification_task_id != task.verification_task_id or \
                     not set(subcheck.input_refs + subcheck.supporting_refs +
                             subcheck.contradicting_refs).issubset(source_ids) or \
-                    not set(subcheck.tool_result_ids).issubset(tool_ids):
+                    not set(subcheck.tool_result_ids).issubset(tool_owner):
                 raise ValueError("P3 subcheck lost parent or cited unexecuted evidence")
     EvidenceVerificationResult.model_validate(result.model_dump())
 
@@ -268,7 +279,8 @@ def run_p3(bundle, plan, profile, mapping, review, consolidation, pdf_path,
         consolidation.execution_status == "limited" or identity != "sha256_matched" or
         uncovered or any(item.execution_status != "completed" for item in adjudications) else
         "completed")
-    result = EvidenceVerificationResult(document_id=consolidation.document_id,
+    result = EvidenceVerificationResult(decision_rule_version="p3.1",
+        document_id=consolidation.document_id,
         snapshot_id=consolidation.snapshot_id, pdf_sha256=consolidation.pdf_sha256,
         source_bundle_id=consolidation.source_bundle_id,
         understanding_run_id=consolidation.understanding_run_id,

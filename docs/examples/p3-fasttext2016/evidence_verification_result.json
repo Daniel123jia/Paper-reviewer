@@ -1,5 +1,8 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
+  "decision_rule_version": "p3.1",
+  "execution_mode": "recorded_model_replay",
+  "replayed_from_run_id": "bacc58d77e084acb874def52dd34ca4e",
   "document_id": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
   "snapshot_id": "26739aba340e4ffab9bea75e03576a34",
   "pdf_sha256": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
@@ -7,7 +10,7 @@
   "understanding_run_id": "38fa583bb278414998f1bb16cca0be05",
   "professional_review_run_id": "3b948d9c2406422db00955223fac9ad5",
   "consolidation_run_id": "d204774e750b454e94464dc14bdf2b7f",
-  "evidence_verification_run_id": "bacc58d77e084acb874def52dd34ca4e",
+  "evidence_verification_run_id": "replay_bacc58d77e084acb874def52dd34ca4e",
   "prompt_versions": [
     "source-observation-check/v1",
     "counterevidence-challenge/v1",
@@ -3639,12 +3642,13 @@
             "ru_ev_26739aba340e_1_18"
           ],
           "tool_result_ids": [],
-          "status": "contradicted",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): The authors disclose Tesla K40 GPU training for char-CNN and VDCNN, 20 CPU threads for fastText, and cited single-thread CPU timing for GRNN. They also acknowledge possible tenfold char-CNN acceleration with newer CUDA implementations and report that their tailored implementation is faster than a Vowpal Wabbit implementation. These disclosures answer a concern that resource and implementation differences were hidden. Such differences limit method-only attribution but do not by themselves invalidate an implementation-specific wall-clock comparison. The located evidence does not establish a matched-resource decomposition of the advantage.",
             "Model-reported limitation: Disclosure does not quantify how much of each speedup comes from parallelism, hardware, implementation, or model design.",
             "Model-reported limitation: Detailed CPU specifications and timing boundaries are not established by the supplied located passages.",
-            "Model-reported limitation: No matched-resource rerun or experiment reproduction was executed."
+            "Model-reported limitation: No matched-resource rerun or experiment reproduction was executed.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -3681,12 +3685,13 @@
           "tool_result_ids": [
             "tool_fc472dc09f3ddfd9da4c"
           ],
-          "status": "contradicted",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): The tag-prediction experiment explicitly reports five fastText epochs, 20 training threads for both methods, a faster linear Tagspace comparator, and more than an order-of-magnitude less time to obtain a model with better quality. This is substantive author-reported counterevidence to the assertion that the paper supplies only per-epoch efficiency evidence. It narrows the surviving question to the classification comparisons and their claimed magnitude. Its different dataset, metric, comparator, and configurations cannot establish the classification 15,000-fold ratio.",
             "Model-reported limitation: The located prose verifies what the authors report, not the experimental result independently.",
             "Model-reported limitation: The tag-prediction table layout and numerical relationships have not been visually confirmed.",
-            "Model-reported limitation: Matched thread counts alone do not establish identical resource use or isolate all implementation effects."
+            "Model-reported limitation: Matched thread counts alone do not establish identical resource use or isolate all implementation effects.",
+            "Model status reduced by source/coverage gate"
           ]
         }
       ],
@@ -3743,10 +3748,12 @@
         "What CPU specifications and timing boundaries apply, including preprocessing, feature construction, data loading and validation or hyperparameter selection?",
         "Do any supplied-paper measurements separate the effects of thread count, hardware and implementation from the classification method itself?",
         "Can the original Table 2 layout and the continuation of the speedup sentence be verified to establish column alignment, units and the intended comparator?",
-        "Can the comparator, dataset, configuration, and arithmetic behind the at-least-15,000-fold statement be independently verified?"
+        "Can the comparator, dataset, configuration, and arithmetic behind the at-least-15,000-fold statement be independently verified?",
+        "Do undisclosed resource differences or implementation effects invalidate the classification speed comparison?",
+        "Does the paper lack any evidence connecting faster training with achieved predictive quality under matched thread counts?"
       ],
       "verdict": "concern_narrowed",
-      "verdict_rationale": "Server assessment: 16 PDF-text observations located; 109 available reading units indexed; subchecks supported=1, contradicted=2, inconclusive=1, blocked=0. Only a narrower question has supported subchecks; the original concern remains in the lineage. Model proposed concern_narrowed; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Do the original classification timing tables, speedup calculations, and baseline training schedules support the headline speed advantages as complete-training comparisons at the reported accuracies, or only as per-epoch comparisons under the disclosed hardware, thread counts, and implementations? Final verdict: concern_narrowed; model proposed concern_narrowed. Supported subchecks: Does the located classification evidence establish complete-training speedups at the reported accuracies? [Source Ref: ru_ev_26739aba340e_0_3, ru_ev_26739aba340e_2_9, ru_ev_26739aba340e_2_16, ru_ev_26739aba340e_3_12]. Contradicted subchecks: none. Revised question: For the sentiment-classification comparisons, which verified dataset and model configuration yield the stated at-least-15,000-fold speedup, and what complete-training ratio follows when the baseline schedules and five fastText epochs used for the reported accuracies are included? If that ratio is not established, should the classification speedup statement be explicitly limited to single-epoch timing under the disclosed execution conditions?. Potential author answers in located PDF text: ru_ev_26739aba340e_2_9: Table 2: Training time for a single epoch on sentiment analysis datasets compared to char-CNN and VDCNN.; ru_ev_26739aba340e_2_16: Results. We present the results in Figure 1. We use 10 hidden units and run fastText for 5 epochs with a learning rate selected on a valida-. Key pending checks: Which dataset, comparator and model configuration produce the stated at-least-15,000-fold speedup, and is its denominator a single epoch or a complete training run?; What epoch counts and stopping criteria produced each reported classification baseline accuracy, and what complete-training ratios result when those schedules and the five fastText epochs are included?; Are the classification accuracy entries and timing entries paired to precisely the same baseline configurations, including model size, depth and use of pretrained embeddings?. Audit: 16 PDF-text observations located; 109 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "The precise dataset, comparator, configuration, and timing denominator producing the 15,000-fold statement.",
         "Baseline epoch counts, stopping criteria, and correspondence between accuracy entries and timing configurations.",
@@ -4063,7 +4070,7 @@
         "Can the documented reconstruction procedure reproduce the reported split sizes, vocabulary size, and tag count?"
       ],
       "verdict": "inconclusive",
-      "verdict_rationale": "Server assessment: 3 PDF-text observations located; 109 available reading units indexed; subchecks supported=0, contradicted=0, inconclusive=2, blocked=1. The executed checks do not establish a supported or refuted issue. Model proposed inconclusive; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Do the original task description or accompanying reconstruction materials specify exact record IDs, a deterministic assignment rule, or a random seed for the splits? Final verdict: inconclusive; model proposed inconclusive. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_26739aba340e_3_19: Dataset and baselines. To test scalability of our approach, further evaluation is carried on the YFCC100M dataset (Thomee et al., 2016) whic; ru_ev_26739aba340e_0_11: 1https://github.com/facebookresearch/fastText. Key pending checks: Do the reconstruction materials specify exact record IDs or a deterministic assignment procedure, including any random seed and required input ordering?; Does 'occurring less than 100 times' refer to total token occurrences or the number of records containing each word or tag, and what tokenization and normalization precede counting?; How are records with empty title-and-caption text or no remaining tags handled after filtering?. Audit: 3 PDF-text observations located; 109 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether the promised YFCC100M reconstruction script was released and which version corresponds to the reported experiment.",
         "Whether that script supplies record IDs or deterministic assignment rules, including any required random seed and input ordering.",
@@ -4375,7 +4382,7 @@
         "Does a conditional mathematical analysis distinguish a valid average Huffman bound from a per-target or worst-case bound?"
       ],
       "verdict": "inconclusive",
-      "verdict_rationale": "Server assessment: 7 PDF-text observations located; 109 available reading units indexed; subchecks supported=0, contradicted=0, inconclusive=2, blocked=1. The executed checks do not establish a supported or refuted issue. Model proposed inconclusive; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Does the original passage or surrounding material define this as expected complexity under the frequencies used to construct the Huffman tree? Final verdict: inconclusive; model proposed inconclusive. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_26739aba340e_1_20: When the number of classes is large, computing the linear classiﬁer is computationally expensive. More precisely, the computational complexi; ru_ev_26739aba340e_3_19: Dataset and baselines. To test scalability of our approach, further evaluation is carried on the YFCC100M dataset (Thomee et al., 2016) whic. Key pending checks: Does the original PDF or other surrounding material explicitly qualify the training bound as an average under the frequencies used to construct the Huffman tree?; Which counts determine the tree: document-level label occurrences, tag occurrences, sampled training targets, or another quantity?; Does training sample targets according to the same distribution used to construct the tree, particularly for documents containing multiple tags?. Audit: 7 PDF-text observations located; 109 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether the complete paper explicitly defines training complexity as a frequency-weighted expectation.",
         "Which label counts determine the Huffman tree.",
@@ -4868,7 +4875,7 @@
         "Does the cited word2vec literature justify or contradict the conclusion's characterization of averaged unsupervised vectors?"
       ],
       "verdict": "concern_narrowed",
-      "verdict_rationale": "Server assessment: 17 PDF-text observations located; 109 available reading units indexed; subchecks supported=1, contradicted=0, inconclusive=3, blocked=1. Only a narrower question has supported subchecks; the original concern remains in the lineage. Model proposed concern_narrowed; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Does the complete paper and the cited word2vec literature support the conclusion's contrast between averaged fastText features and averaged unsupervised word2vec vectors, through matched comparisons accounting for supervision, classifier, and n-gram features, and is the claim limited to the evaluated supervised tasks or supported for broader sentence-representation reuse? Final verdict: concern_narrowed; model proposed concern_narrowed. Supported subchecks: Does the conclusion contain a contrast with averaged word2vec vectors whose scope warrants clarification? [Source Ref: ru_ev_26739aba340e_3_23, ru_ev_26739aba340e_4_1, ru_ev_26739aba340e_0_10, ru_ev_26739aba340e_1_8]. Contradicted subchecks: none. Revised question: Could the conclusion clarify that the demonstrated usefulness of averaged fastText features concerns the evaluated supervised classifiers, and identify the evidence or intended qualification for its contrast with averaged unsupervised word2vec vectors?. Potential author answers in located PDF text: ru_ev_26739aba340e_0_10: g Figure 1 shows a simple linear model with rank constraint. The ﬁrst weight matrix A is a look-up table over the words. The word representa; ru_ev_26739aba340e_1_8: tion is an hidden variable which can be potentially be reused. This architecture is similar to the cbow model of Mikolov et al. (2013), wher. Key pending checks: Does the complete paper contain a comparison of averaged word2vec vectors and fastText features using the same downstream classifier, evaluation datasets, embedding dimensions and comparable training-data conditions, with frozen versus task-adapted embeddings distinguished?; How much of any comparative advantage comes from label supervision and joint classifier training, rather than the learned features or averaging operation?; Do matched word-only comparisons support the word2vec contrast independently of n-gram features? The supplied within-fastText ablations address n-gram contributions but do not isolate a difference from word2vec.. Audit: 17 PDF-text observations located; 109 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether the complete PDF contains a matched averaged-word2vec comparison or additional qualifying discussion.",
         "Whether any reported evaluation tests frozen representation reuse or transfer.",
@@ -5257,7 +5264,7 @@
         "Are traversal details and exact top-T correctness established by the available author description?"
       ],
       "verdict": "inconclusive",
-      "verdict_rationale": "Server assessment: 12 PDF-text observations located; 109 available reading units indexed; subchecks supported=0, contradicted=0, inconclusive=4, blocked=0. The executed checks do not establish a supported or refuted issue. Model proposed inconclusive; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Does the complete paper provide measurements of visited nodes or runtime across class counts, rather than only the large-tag benchmark? Final verdict: inconclusive; model proposed inconclusive. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_26739aba340e_1_21: p p y p ( g2( )) The hierarchical softmax is also advantageous at test time when searching for the most likely class. Each node is associate; ru_ev_26739aba340e_1_4: This means that the probability of a node is always lower than the one of its parent. Exploring the tree with a depth ﬁrst search and tracki. Key pending checks: Does the complete paper contain visited-node counts or prediction-runtime measurements across class counts? The supplied excerpts establish one large-output benchmark, but cannot establish the absence of other measurements from the complete PDF.; Within the stated depth-first traversal, how are children ordered, how is the pruning threshold initialized and updated, and what stopping and tie-handling rules are used? Does the implementation return exact top-T predictions under the hierarchical model?; Does O(log(T)) describe one heap update, overhead on each visited node or candidate leaf, or another quantity? What is total prediction cost in terms of visited internal nodes, candidate leaves, representation dimension h, and requested output count T?. Audit: 12 PDF-text observations located; 109 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether the complete PDF contains visited-node counts, class-count scaling measurements, or further top-T complexity clarification.",
         "How the implementation orders children, initializes and updates pruning thresholds, handles ties, and terminates exact top-T search.",
@@ -5492,11 +5499,12 @@
             "ru_ev_26739aba340e_2_16"
           ],
           "tool_result_ids": [],
-          "status": "contradicted",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): The caption explicitly defines Table 2 as training time for a single epoch, while the results paragraph explicitly specifies five fastText epochs for accuracy experiments. This answers the concern that these two budgets are unspecified. The prose statement that fastText takes less than a minute to train is less explicit about its unit, but does not establish that the authors equated single-epoch timing with a complete accuracy run.",
             "Model-reported limitation: This comparison uses supplied PDF text observations; no independent PDF inspection was possible.",
-            "Model-reported limitation: The scope of the separate 'less than a minute' statement remains less precise than the table caption."
+            "Model-reported limitation: The scope of the separate 'less than a minute' statement remains less precise than the table caption.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -5664,12 +5672,13 @@
         "How does the sentiment statement that fastText takes less than a minute to train relate to the explicitly single-epoch Table 2 measurements and the five-epoch accuracy runs?",
         "Can the original table layouts confirm the correspondence between timing columns and accuracy configurations? The extracted sentiment timing header identifies h = 10 with bigrams, and the tag rows identify hidden size and bigram use, but full alignment and any remaining configuration differences are unverified.",
         "Were the convolutional timing figures measured by the authors or obtained from prior work or communications, and were their timed workloads defined consistently with fastText?",
+        "Are sentiment per-epoch timings explicitly distinguished from the training budget used for accuracy results?",
         "Do the complete experimental sections or implementation documentation identify the CPU model and define the operations included in training and test timers?",
         "Does Table 5 cover complete five-epoch fastText training, and what training budget or stopping criterion produced the Tagspace results?",
         "Do the timing entries correspond to the configurations used for the reported accuracies?"
       ],
       "verdict": "inconclusive",
-      "verdict_rationale": "Server assessment: 13 PDF-text observations located; 109 available reading units indexed; subchecks supported=0, contradicted=1, inconclusive=3, blocked=0. The executed checks do not establish a supported or refuted issue. Model proposed inconclusive; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Do the complete experimental sections or implementation documentation specify the CPU model and the operations included in each training and test timer? Final verdict: inconclusive; model proposed inconclusive. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_26739aba340e_2_9: Table 2: Training time for a single epoch on sentiment analysis datasets compared to char-CNN and VDCNN.; ru_ev_26739aba340e_2_16: Results. We present the results in Figure 1. We use 10 hidden units and run fastText for 5 epochs with a learning rate selected on a valida-. Key pending checks: What CPU model and processor configuration were used for sentiment and tag-prediction timing, and did both tag-prediction models run on identical hardware?; For each training and test timer, were preprocessing, vocabulary creation, feature hashing, Huffman-tree construction, data loading, initialization, and model loading included or excluded?; Does each fastText training time in Table 5 cover all five epochs, and does its test time cover the complete 543,424-example test set?. Audit: 13 PDF-text observations located; 109 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether the complete paper or implementation documentation specifies CPU identity and timer boundaries.",
         "Whether Table 5 training times explicitly cover all five fastText epochs.",
@@ -5735,7 +5744,7 @@
         "ru_ev_26739aba340e_3_18",
         "ru_ev_26739aba340e_3_20"
       ],
-      "revised_question": "Given the paper's explicit implementation comparison, computational explanations, and equal-thread tag-prediction experiment, which reported speedups should be interpreted as complete-system comparisons, and what controlled evidence quantifies the separate contributions of hierarchical inference, implementation, and parallelism?",
+      "revised_question": null,
       "fact_assessments": [
         {
           "original_observed_fact": "The authors present fastText as combining a rank-constrained model with fast loss computation. They also state that the same model could be implemented in Vowpal Wabbit, with their tailored implementation running 2–5 times faster. The sentiment timing discussion compares fastText on 20 CPU threads with convolutional models on a K40 GPU and Tang et al.'s GRNN method on a single CPU thread. The tag-prediction comparison separately reports equal training thread counts and single-thread testing for both models.",
@@ -5901,12 +5910,13 @@
             "ru_ev_26739aba340e_1_4"
           ],
           "tool_result_ids": [],
-          "status": "contradicted",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): The located author text explicitly separates a reported implementation advantage from computational mechanisms. The authors state that their model could be implemented in Vowpal Wabbit but that their tailored implementation is at least 2–5 times faster, and supply associated options. Separately, they explain the training-cost benefit of hierarchical softmax and describe pruning during inference, qualifying the test-time complexity reduction as observed in practice. This answers the stronger suggestion that the paper makes no distinction among efficiency sources.",
             "Model-reported limitation: These are supplied PDF-text observations, not a fresh independent inspection of the original PDF.",
             "Model-reported limitation: The implementation speedup and complexity statements are author claims; their empirical or mathematical validity was not independently established.",
-            "Model-reported limitation: Explicitly identifying efficiency sources does not quantify their separate contributions to measured speedups."
+            "Model-reported limitation: Explicitly identifying efficiency sources does not quantify their separate contributions to measured speedups.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -5931,12 +5941,13 @@
             "ru_ev_26739aba340e_2_17"
           ],
           "tool_result_ids": [],
-          "status": "supported",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): A qualified attribution concern is supported for these comparisons. The authors compare fastText using 20 CPU threads with convolutional systems using a K40 GPU and cite GRNN timing using one CPU thread. These comparisons change model, software, and execution configuration together and therefore do not estimate an individual algorithmic contribution. The Table 2 caption specifies single-epoch training time. Counterevidence limits the criticism: the authors disclose these configurations and acknowledge that newer convolution implementations could accelerate char-CNN by a factor of ten. The comparisons can reasonably establish practical system efficiency without constituting controlled causal attribution.",
             "Model-reported limitation: Timing-table rows, numerical ratios, and complete-training comparisons were not independently verified.",
             "Model-reported limitation: Different hardware and thread counts do not invalidate a practical system comparison.",
-            "Model-reported limitation: The located text does not establish that the authors intend these timings as isolated causal estimates."
+            "Model-reported limitation: The located text does not establish that the authors intend these timings as isolated causal estimates.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -5998,13 +6009,14 @@
           ],
           "contradicting_refs": [],
           "tool_result_ids": [],
-          "status": "supported",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): The located text specifies single-thread testing and 20 training threads for both models. It also states that the comparison uses a faster linear version of Tagspace and explains that Tagspace scores all classes whereas fastText uses its fast inference procedure. Thus, unequal nominal thread counts do not explain this comparison, and the authors provide a mechanism-specific account of the inference advantage. Nevertheless, comparing two systems does not isolate the numerical contribution of hierarchical inference from other model and implementation differences. The reported 600-fold test speedup remains an author-reported system result.",
             "Model-reported limitation: Equal thread counts do not establish identical hardware, software efficiency, objectives, features, or optimization.",
             "Model-reported limitation: The timing-table relationships and reported speedup were not independently verified.",
             "Model-reported limitation: No same-model comparison of hierarchical inference against exhaustive scoring was independently located.",
-            "Model-reported limitation: The mechanism explanation is textually supported but was not tested through an experiment."
+            "Model-reported limitation: The mechanism explanation is textually supported but was not tested through an experiment.",
+            "Model status reduced by source/coverage gate"
           ]
         }
       ],
@@ -6052,10 +6064,13 @@
         "How much of the equal-thread Tagspace comparison is attributable to inference strategy versus differences in objectives, learned representations, features, optimization, and software?",
         "Do the complete timing tables distinguish per-epoch time, complete training time, and time to comparable predictive performance? The supplied sentiment timing caption specifies a single epoch.",
         "Does material outside the supplied excerpts provide a controlled attribution analysis or explicitly delimit the scope of headline speed claims?",
-        "Does the complete paper contain controlled comparisons that quantify implementation and parallelism contributions separately?"
+        "Does the paper fail to distinguish implementation and algorithmic sources of efficiency?",
+        "Do the sentiment timing comparisons isolate speed attributable to an algorithmic component?",
+        "Does the complete paper contain controlled comparisons that quantify implementation and parallelism contributions separately?",
+        "Does the tag-prediction comparison address the parallelism concern and provide evidence for a narrower inference-efficiency explanation?"
       ],
-      "verdict": "concern_narrowed",
-      "verdict_rationale": "Server assessment: 15 PDF-text observations located; 109 available reading units indexed; subchecks supported=2, contradicted=1, inconclusive=1, blocked=0. Only a narrower question has supported subchecks; the original concern remains in the lineage. Model proposed concern_narrowed; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict": "inconclusive",
+      "verdict_rationale": "Original scientific question: Does the complete paper distinguish end-to-end system efficiency from speed attributable to particular algorithmic components? Final verdict: inconclusive; model proposed concern_narrowed. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_26739aba340e_1_18: We evaluate fastText on two different tasks. First, we compare it to existing text classifers on the problem of sentiment analysis. Then, we; ru_ev_26739aba340e_2_17: Training time. Both char-CNN and VDCNN are trained on a NVIDIA Tesla K40 GPU, while our models are trained on a CPU using 20 threads. Ta- bl. Key pending checks: For the Vowpal Wabbit comparison, were datasets, features, hidden dimensions, loss and inference procedures, epochs, hardware, thread counts, and achieved accuracy matched, and which timing boundaries produced the reported 2–5 times difference?; Is there a same-model thread-scaling comparison that quantifies the contribution of parallelism separately from implementation and algorithm choices?; Is hierarchical softmax or tree-based inference compared with exhaustive scoring within the same fastText implementation and model configuration, especially on YFCC100M?. Audit: 15 PDF-text observations located; 109 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether material elsewhere in the complete PDF supplies additional controlled comparisons or explicitly limits the interpretation of headline speedups.",
         "Which experimental controls and timing boundaries underlie the reported Vowpal Wabbit implementation advantage.",
@@ -6094,11 +6109,12 @@
         "human_page_reference_missing",
         "Model context is selected from a complete text search, not the full PDF",
         "Text location does not establish the scientific claim",
-        "PDF region generated; layout/transcription still needs visual review"
+        "PDF region generated; layout/transcription still needs visual review",
+        "Server source/coverage gate reduced the model-proposed verdict"
       ],
-      "provisional_impact": "minor_candidate",
+      "provisional_impact": "undetermined",
       "impact_rationale": "The surviving issue concerns interpretation and quantitative attribution. Located counterevidence substantially answers the broad concern, and no verified result shows the practical efficiency claims to be wrong. Stronger impact would require evidence that a central claimed algorithmic gain depends on an unsupported attribution.",
-      "report_eligibility": "eligible_with_qualification",
+      "report_eligibility": "requires_human_review",
       "human_review_status": "pending",
       "execution_status": "limited"
     },
@@ -6263,12 +6279,13 @@
           ],
           "contradicting_refs": [],
           "tool_result_ids": [],
-          "status": "supported",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): The located paragraph says, \"We remove the words and tags occurring less than 100 times and split the data into a train, validation and test set.\" This supports a qualified clarification question: the wording places filtering before splitting but does not explicitly identify the partition used to count frequencies. It also confirms title-and-caption inputs, 312,116 unique tags, precision at one, and the authors' intention to release a reconstruction script. It does not establish the implemented operation order or direct use of test labels for training.",
             "Model-reported limitation: This assessment uses the supplied PDF text observation; no independent PDF extraction or visual inspection was executed in this turn.",
             "Model-reported limitation: Narrative ordering does not conclusively establish implementation ordering.",
-            "Model-reported limitation: The supplied observation is text extraction, not human confirmation."
+            "Model-reported limitation: The supplied observation is text extraction, not human confirmation.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -6383,13 +6400,14 @@
         "Do fastText, the linear Tagspace variant, and the frequency baseline use exactly the same filtered examples, label inventory, and scoring rules?",
         "If full-corpus filtering is used, is that benchmark convention explicitly documented in reconstruction materials?",
         "Would training-only filtering materially change the vocabulary, label inventory, eligible examples, absolute precision at one, or computational measurements?",
+        "Does the located dataset description establish whether the frequency threshold is computed before splitting or only on training data?",
         "Does a reconstruction script or other author material resolve the frequency-counting scope?",
         "Does filtering change example eligibility or the tags counted as correct for precision at one?",
         "Is there evidence that the compared models use different filtered datasets or that full-corpus filtering materially affects performance?",
         "How are examples with no retained tags handled, and is precision at one computed against original tags or only retained tags?"
       ],
       "verdict": "inconclusive",
-      "verdict_rationale": "Server assessment: 4 PDF-text observations located; 109 available reading units indexed; subchecks supported=1, contradicted=0, inconclusive=2, blocked=1. The executed checks do not establish a supported or refuted issue. Model proposed inconclusive; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Does the original description or dataset script compute the frequency threshold over the whole corpus or only the training partition? Final verdict: inconclusive; model proposed inconclusive. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_26739aba340e_3_19: Dataset and baselines. To test scalability of our approach, further evaluation is carried on the YFCC100M dataset (Thomee et al., 2016) whic; ru_ev_26739aba340e_3_16: Table 5: Prec@1 on the test set for tag prediction on YFCC100M. We also report the training time and test time.. Key pending checks: Are word and tag frequencies counted over the full corpus, a preliminary eligible subset, or only the training partition?; Does filtering remove only word and tag types, or also examples, and how are examples with no retained tags handled?; Is precision at one scored against all original tags or only retained tags, and which examples enter its denominator?. Audit: 4 PDF-text observations located; 109 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether word and tag frequencies are computed over the complete corpus, a preliminary eligible subset, or the training partition.",
         "Whether filtering removes examples and how examples without retained tags are handled.",
@@ -6770,7 +6788,7 @@
         "Does the dataset-reconstruction material define treatment of records with no retained tags and whether precision at one accepts any retained reference tag?"
       ],
       "verdict": "inconclusive",
-      "verdict_rationale": "Server assessment: 11 PDF-text observations located; 109 available reading units indexed; subchecks supported=0, contradicted=0, inconclusive=3, blocked=1. The executed checks do not establish a supported or refuted issue. Model proposed blocked; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Do the complete model and tag-prediction sections specify how multiple tags are converted into training targets? Final verdict: inconclusive; model proposed blocked. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_26739aba340e_3_19: Dataset and baselines. To test scalability of our approach, further evaluation is carried on the YFCC100M dataset (Thomee et al., 2016) whic; ru_ev_26739aba340e_3_24: Results and training time. Table 5 presents a comparison of fastText and the baselines. We run fastText for 5 epochs and compare it to Tagsp. Key pending checks: For YFCC100M training, is one retained tag sampled per record, is each record expanded into separate tag targets, or is a loss computed over several tags? What normalization or weighting is used?; Are records with no tags remaining after frequency filtering discarded, retained without updates, or handled otherwise in each split?; Does precision at one count a prediction as correct when it matches any retained reference tag, and which records enter its denominator?. Audit: 11 PDF-text observations located; 109 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether the complete PDF explicitly defines multi-tag target selection, aggregation, or weighting.",
         "Whether preprocessing discards records with no retained tags.",

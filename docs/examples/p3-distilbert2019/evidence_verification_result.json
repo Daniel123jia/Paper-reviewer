@@ -1,5 +1,8 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
+  "decision_rule_version": "p3.1",
+  "execution_mode": "recorded_model_replay",
+  "replayed_from_run_id": "40828d011fcb40948370ce78458c6226",
   "document_id": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
   "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
   "pdf_sha256": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
@@ -7,7 +10,7 @@
   "understanding_run_id": "18e72bb44b124089a0b0a2d74f85d80c",
   "professional_review_run_id": "1146246578504a7b99666a4c690a02de",
   "consolidation_run_id": "6890db04f76a43598942e2a1f0576276",
-  "evidence_verification_run_id": "40828d011fcb40948370ce78458c6226",
+  "evidence_verification_run_id": "replay_40828d011fcb40948370ce78458c6226",
   "prompt_versions": [
     "source-observation-check/v1",
     "counterevidence-challenge/v1",
@@ -4138,7 +4141,7 @@
         "Do the Table 4 ablations preserve, renormalize, or retune the surviving loss coefficients and reductions, and is their configuration linked to the reported runs?"
       ],
       "verdict": "inconclusive",
-      "verdict_rationale": "Server assessment: 10 PDF-text observations located; 107 available reading units indexed; subchecks supported=1, contradicted=0, inconclusive=0, blocked=4. The executed checks do not establish a supported or refuted issue. Model proposed inconclusive; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Do the original source and experiment-specific code and configurations uniquely specify the reported triple objective, including loss coefficients, training temperature and scaling, contributing token positions, hidden-state pairing, reductions, and coefficient handling in the ablations? Final verdict: inconclusive; model proposed inconclusive. Supported subchecks: Does the located PDF text establish the three-loss objective and distinguish hidden-state alignment from student initialization? [Source Ref: ru_ev_6724ca5dce54_1_9, ru_ev_6724ca5dce54_1_8, ru_ev_6724ca5dce54_1_11, ru_ev_6724ca5dce54_1_12]. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_6724ca5dce54_1_9: The ﬁnal training objective is a linear combination of the distillation loss Lce with the supervised training loss, in our case the masked l; ru_ev_6724ca5dce54_1_8: distribution. Following Hinton et al. [2015] we used a softmax-temperature: pi = P j exp(zj/T ) where T controls the smoothness of the outpu. Key pending checks: What numerical coefficients weight distillation, masked language modeling, and cosine alignment in the reported pretraining run?; What numerical training temperature was used, and was the distillation loss multiplied by a temperature-dependent factor such as T squared?; Which token positions contribute to each loss, including treatment of padding, special tokens, masked positions, and unmasked positions?. Audit: 10 PDF-text observations located; 107 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "The numerical loss coefficients and training temperature used for the reported model.",
         "Loss reductions, normalization, and any temperature-dependent scaling.",
@@ -4530,7 +4533,7 @@
         "After resolving the source conflict, what are the EM and F1 improvements over DistilBERT without adaptation distillation and the corresponding gaps to BERT?"
       ],
       "verdict": "concern_narrowed",
-      "verdict_rationale": "Server assessment: 6 PDF-text observations located; 107 available reading units indexed; subchecks supported=1, contradicted=0, inconclusive=3, blocked=0. Only a narrower question has supported subchecks; the original concern remains in the lineage. Model proposed concern_narrowed; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: What EM and F1 scores do the original prose and Table 2 report for DistilBERT with adaptation-stage distillation under the same evaluation configuration, and do the reconciled scores support the reported improvement over DistilBERT and the 'within three points' gap to BERT? Final verdict: concern_narrowed; model proposed concern_narrowed. Supported subchecks: Does the independently located PDF prose report 79.8 F1 and 70.4 EM for two successive distillation stages and describe these scores as within three points of the full model? [Source Ref: ru_ev_6724ca5dce54_3_3, ru_ev_6724ca5dce54_2_17]. Contradicted subchecks: none. Revised question: Could the authors reconcile the located adaptation-distillation prose reporting 70.4 EM and 79.8 F1 with Table 2's extracted DistilBERT (D) values of 79.1 EM and 86.9 F1, confirming the table associations and evaluation configurations and identifying the full-model baseline intended by 'within 3 points'?. Potential author answers in located PDF text: ru_ev_6724ca5dce54_3_3: teacher for an additional term in the loss (knowledge distillation). In this setting, there are thus two successive steps of distillation, o; ru_ev_6724ca5dce54_2_4: Table 2: DistilBERT yields to comparable performance on downstream tasks. Com- parison on downstream tasks: IMDb (test ac- curacy) and SQuAD. Key pending checks: Does the original PDF confirm the extracted prose values of 79.8 F1 and 70.4 EM, including their metric labels?; Does the original Table 2 confirm the EM/F1 ordering and the associations BERT-base 81.2/88.5, DistilBERT 77.7/85.8, and DistilBERT (D) 79.1/86.9?; Do the prose and table use the same SQuAD version and split, evaluation procedure, teacher checkpoint, student checkpoint, and adaptation configuration?. Audit: 6 PDF-text observations located; 107 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Human-confirmed Table 2 row, column, and metric associations are unavailable.",
         "The prose and table may differ in checkpoint or evaluation configuration despite describing the same broad task and procedure.",
@@ -4573,7 +4576,7 @@
       ],
       "provisional_impact": "minor_candidate",
       "impact_rationale": "The supported issue is currently a localized reporting clarification. The extracted table would preserve the stated improvement and within-three-points conclusion if confirmed. A larger scientific impact would require evidence that the underlying results or comparisons are invalid, which is unavailable.",
-      "report_eligibility": "eligible_with_qualification",
+      "report_eligibility": "requires_human_review",
       "human_review_status": "pending",
       "execution_status": "limited"
     },
@@ -4940,7 +4943,7 @@
         "Does the located resource comparison establish a controlled pretraining-cost advantage over the BERT counterpart at comparable workload and performance?"
       ],
       "verdict": "inconclusive",
-      "verdict_rationale": "Server assessment: 11 PDF-text observations located; 107 available reading units indexed; subchecks supported=0, contradicted=0, inconclusive=4, blocked=0. The executed checks do not establish a supported or refuted issue. Model proposed concern_narrowed; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Does the reported training-resource evidence support the lower-pretraining-cost claim under an explicit accounting boundary for teacher pretraining and teacher computation, with a relevant comparison controlling data exposure and target performance? Final verdict: inconclusive; model proposed concern_narrowed. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_6724ca5dce54_2_10: Data and compute power We train DistilBERT on the same corpus as the original BERT model: a concatenation of English Wikipedia and Toronto B; ru_ev_6724ca5dce54_1_12: Student initialization In addition to the previously described optimization and architectural choices, an important element in our training . Key pending checks: Does the intended cost boundary cover incremental student training given an existing teacher, or the total cost of obtaining both teacher and student, and how is any shared teacher cost amortized?; Does the approximately 90-hour duration include all teacher forward passes, any preparation of cached teacher outputs, and other preparation required for the reported student training?; Is there a relevant BERT training-resource comparison with comparable token exposure, sequence lengths, optimization workload, and a stated target performance? Sharing the same corpus does not establish equal data exposure.. Audit: 11 PDF-text observations located; 107 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether teacher pretraining is treated as an existing resource, included in total cost, or amortized across uses.",
         "Whether the reported runtime includes all teacher forward computation and any cached-output preparation.",
@@ -5218,12 +5221,13 @@
             "ru_ev_6724ca5dce54_1_1"
           ],
           "tool_result_ids": [],
-          "status": "supported",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): A limited methodological concern is supported: each described distillation-loss removal retains the other distillation loss, and the random-initialization condition retains the triple loss. These contrasts do not by themselves identify the full objective's gain over teacher-initialized MLM-only training. Adding individual-removal effects would require an assumption about interactions. The authors nevertheless provide relevant conditional component evidence, consistent with their introductory statement that the components matter for best performance.",
             "Model-reported limitation: This is a logical assessment conditional on the extracted configuration descriptions.",
             "Model-reported limitation: It does not establish that the required joint-removal control is absent elsewhere.",
-            "Model-reported limitation: It does not establish that the authors intended an additive or quantified joint-effect claim."
+            "Model-reported limitation: It does not establish that the authors intended an additive or quantified joint-effect claim.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -5351,11 +5355,12 @@
         "What is the combined performance contribution of Lce and Lcos relative to matched Lmlm-only training, and how do interactions between the two distillation losses affect it?",
         "Should the authors' statements about substantial gains and a large portion of performance be read as qualitative conditional component findings or as attribution of the total gain from ongoing teacher supervision?",
         "What replication and uncertainty estimates apply specifically to Table 4? The five-run description supplied for Table 1 does not establish the same procedure for the ablations.",
+        "Do those individual-removal comparisons identify the combined contribution of both distillation losses over a teacher-initialized MLM-only student?",
         "Does the complete paper or other available material report the requested matched MLM-only control?",
         "Are the relevant comparisons demonstrably matched in training and evaluation, and does the authors' wording require a joint-effect interpretation?"
       ],
       "verdict": "inconclusive",
-      "verdict_rationale": "Server assessment: 11 PDF-text observations located; 107 available reading units indexed; subchecks supported=2, contradicted=0, inconclusive=2, blocked=0. The executed checks do not establish a supported or refuted issue. Model proposed inconclusive; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Does Table 4 or other available material compare the full objective with an otherwise matched, teacher-initialized student trained with masked language modeling alone, removing both distillation losses, and thereby establish their combined contribution rather than only conditional component benefits? Final verdict: inconclusive; model proposed inconclusive. Supported subchecks: Does the located Table 4 text describe individual loss removals and random initialization relative to a teacher-initialized, triple-loss reference? [Source Ref: ru_ev_6724ca5dce54_3_0, ru_ev_6724ca5dce54_3_2, ru_ev_6724ca5dce54_3_8]. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_6724ca5dce54_3_0: Table 4: Ablation study. Variations are relative to the model trained with triple loss and teacher weights initialization.; ru_ev_6724ca5dce54_3_2: ∅- Lcos - Lmlm -2.96 Lce - ∅- Lmlm -1.46 Lce - Lcos - ∅ -0.31 Triple loss + random weights initialization -3.69. Key pending checks: Does the original Table 4 confirm the extracted loss configurations and their numerical associations?; Does any other paper material report a teacher-initialized Lmlm-only student with both Lce and Lcos removed?; Across the relevant controls, are architecture, training corpus, masking procedure, optimization settings, token exposure, and downstream fine-tuning held constant?. Audit: 11 PDF-text observations located; 107 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether the complete PDF or additional paper material reports a teacher-initialized student trained with MLM alone.",
         "Whether independent examination confirms the extracted Table 4 configurations and numerical associations.",
@@ -5417,7 +5422,7 @@
         "ru_ev_6724ca5dce54_2_12",
         "ru_ev_6724ca5dce54_2_16"
       ],
-      "revised_question": "Could the abstract and conclusion identify the reported 97% retention as a GLUE development-set macro-score comparison, consistent with the experimental section, rather than leaving the percentage attached to general language-understanding capabilities?",
+      "revised_question": null,
       "fact_assessments": [
         {
           "original_observed_fact": "The abstract and conclusion describe retaining 97% of BERT's 'language understanding capabilities.' The experimental prose identifies the supporting measure as a GLUE macro-score, defined as the average of individual task scores, and the caption specifies development-set results with medians of five runs. The unverified extraction gives aggregate scores of 77.0 for DistilBERT and 79.5 for BERT-base, whose ratio is approximately 97%.",
@@ -5697,12 +5702,13 @@
             "ru_ev_6724ca5dce54_2_16"
           ],
           "tool_result_ids": [],
-          "status": "supported",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): The abstract and conclusion use the broad phrase '97% of the language understanding capabilities' without naming the aggregate in those sentences. A qualified request to identify the benchmark measure there is reasonable. Strong counterevidence limits this concern: the experimental section explicitly identifies GLUE development sets and the macro-score, and the caption places the retention claim in that setting. The paper also reports IMDb and SQuAD evaluations, so broader usefulness is not supported solely by GLUE. These additional evaluations do not independently establish a general 97% capability fraction. This supports a wording clarification, not proof of scientific error or an assertion that readers were promised uniform retention.",
             "Model-reported limitation: The supplied observations establish PDF text location, not independent validation of capability retention.",
             "Model-reported limitation: The complete PDF was not independently searched during this assessment; additional qualifications may exist.",
-            "Model-reported limitation: The interpretation that readers could overgeneralize the wording is a review judgment."
+            "Model-reported limitation: The interpretation that readers could overgeneralize the wording is a review judgment.",
+            "Model status reduced by source/coverage gate"
           ]
         }
       ],
@@ -5747,10 +5753,11 @@
         "Does any additional surrounding discussion explicitly delimit the abstract and conclusion's capability wording to the GLUE aggregate? The supplied experimental passage provides that context, but the supplied abstract and conclusion do not state that restriction.",
         "Does the original table establish that 97% is the rounded ratio of DistilBERT and BERT-base GLUE macro-scores?",
         "Do the authors explain how individual task metrics and results across seeds are combined?",
-        "Does verified task-level degradation establish that the aggregate headline conceals materially uneven retention?"
+        "Does verified task-level degradation establish that the aggregate headline conceals materially uneven retention?",
+        "Does the broad capability-retention wording warrant a narrower clarification about its benchmark basis?"
       ],
-      "verdict": "concern_narrowed",
-      "verdict_rationale": "Server assessment: 11 PDF-text observations located; 107 available reading units indexed; subchecks supported=1, contradicted=0, inconclusive=3, blocked=0. Only a narrower question has supported subchecks; the original concern remains in the lineage. Model proposed concern_narrowed; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict": "inconclusive",
+      "verdict_rationale": "Original scientific question: Does the verified table establish that 97% is calculated as the ratio of GLUE macro-scores, and how are individual task metrics combined? Final verdict: inconclusive; model proposed concern_narrowed. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_6724ca5dce54_2_13: The results on each of the 9 tasks are showed on Table 1 along with the macro-score (average of individual scores). Among the 9 tasks, Disti; ru_ev_6724ca5dce54_2_2: ELMo 68.7 44.1 68.6 76.6 71.1 86.2 53.4 91.5 70.4 56.3 BERT-base 79.5 56.3 86.7 88.6 91.8 89.6 69.3 92.7 89.0 53.5 DistilBERT 77.0 51.3 82.2. Key pending checks: Does inspection of the original table confirm that 77.0 and 79.5 are the DistilBERT and BERT-base macro-scores, respectively, and that their ratio is the intended calculation behind 97%?; Which metric or combination of metrics supplies each of the nine task scores, how are multiple splits handled, and is the aggregate the average of task medians or the median of run-level averages?; What task-level differences are confirmed by the original table, and how materially do their magnitudes qualify the aggregate retention claim? The extracted row alignment suggests variation, but does not establish verified task-to-score associations.. Audit: 11 PDF-text observations located; 107 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Original table structure and model-by-metric associations require independent verification.",
         "The intended ratio calculation is strongly suggested but not explicitly stated in the located prose.",
@@ -5787,11 +5794,12 @@
         "Model context is selected from a complete text search, not the full PDF",
         "Text location does not establish the scientific claim",
         "PDF region generated; layout/transcription still needs visual review",
-        "Literal presence does not verify metric semantics or experiment setup"
+        "Literal presence does not verify metric semantics or experiment setup",
+        "Server source/coverage gate reduced the model-proposed verdict"
       ],
-      "provisional_impact": "minor_candidate",
+      "provisional_impact": "undetermined",
       "impact_rationale": "The surviving question concerns the precision of a prominent summary claim. The experimental section already provides substantial benchmark context, and the evidence does not establish an invalid result or a failure of the central compression trade-off.",
-      "report_eligibility": "eligible_with_qualification",
+      "report_eligibility": "requires_human_review",
       "human_review_status": "pending",
       "execution_status": "limited"
     },
@@ -5812,7 +5820,7 @@
         "ru_ev_6724ca5dce54_3_10",
         "ru_ev_6724ca5dce54_3_3"
       ],
-      "revised_question": "Could the related-work sentence 'found it beneficial ... rather than a task-specific distillation' clarify whether it expresses a design choice or a controlled comparative finding, and distinguish that statement from the ablation's evidence for additional pretraining signals?",
+      "revised_question": null,
       "fact_assessments": [
         {
           "original_observed_fact": "The related-work discussion states that the authors found general-purpose pretraining distillation beneficial 'rather than a task-specific distillation,' after describing Tang et al. and Chatterjee. It then contrasts the approach with Turc et al. and invokes the ablation study as evidence for additional pretraining distillation signals. The supplied ablation description examines loss components and student initialization within DistilBERT. The SQuAD experiment separately adds task-specific distillation after pretraining distillation.",
@@ -5952,7 +5960,7 @@
         {
           "subcheck_id": "subcheck_e26c7e2f2ff25099b754",
           "parent_verification_task_id": "verify_971c70815eca43a1112d",
-          "question": "Does the complete paper establish a comparison between pretraining distillation and task-specific-only distillation with sufficiently matched architecture, initialization, data access, and training budget?",
+          "question": "Does the complete paper establish a comparison between pretraining distillation and ta[REDACTED] distillation with sufficiently matched architecture, initialization, data access, and training budget?",
           "check_type": "comparison_controls",
           "input_refs": [
             "ru_ev_6724ca5dce54_3_8",
@@ -6012,11 +6020,12 @@
           ],
           "contradicting_refs": [],
           "tool_result_ids": [],
-          "status": "supported",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): The ablation prose explicitly identifies triple-loss components and student initialization as its variables and GLUE macro-score as its outcome. Its caption identifies the reference model as using the triple loss and teacher-weight initialization. This supports a distinction between evidence for internal design choices and evidence comparing distillation stages. However, the related-work paragraph invokes the ablation immediately after discussing Turc et al. and additional pretraining signals, so that citation is relevant to its immediate claim and is not clearly presented as evidence for the preceding stage preference.",
             "Model-reported limitation: The conclusion concerns the scope described in the located prose and caption, not independently verified table contents.",
-            "Model-reported limitation: It does not establish that no other experiment elsewhere compares distillation stages."
+            "Model-reported limitation: It does not establish that no other experiment elsewhere compares distillation stages.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -6077,11 +6086,12 @@
           ],
           "contradicting_refs": [],
           "tool_result_ids": [],
-          "status": "supported",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): The authors explicitly describe fine-tuning DistilBERT on SQuAD with a fine-tuned BERT teacher and call this two successive distillation steps, during pretraining and adaptation. The caption likewise identifies a second distillation step during fine-tuning. This establishes that the reported approach accommodates both stages and counters a reading that task-specific distillation is categorically disfavored. It does not determine which stage is preferable or establish the incremental benefit's magnitude without verified numerical comparisons.",
             "Model-reported limitation: No table row relationships or exact performance gains were independently verified.",
-            "Model-reported limitation: A reported two-stage setup establishes compatibility; it does not by itself establish a controlled causal benefit from combining the stages."
+            "Model-reported limitation: A reported two-stage setup establishes compatibility; it does not by itself establish a controlled causal benefit from combining the stages.",
+            "Model status reduced by source/coverage gate"
           ]
         }
       ],
@@ -6115,20 +6125,22 @@
         "ru_ev_6724ca5dce54_3_10"
       ],
       "author_explanations": [
-        "Partial answer in the supplied material. The authors describe the student architecture, teacher-based initialization, pretraining corpus and compute, but these details do not establish matched controls for a task-specific-only comparator. The ablation prose explicitly examines triple-loss components and initialization using GLUE macro-score; it supports internal design choices rather than isolating the stage of distillation. The SQuAD experiment explicitly applies task-specific distillation after pretraining distillation, supporting compatibility between the stages. Counterevidence narrows the concern: the abstract, introduction and conclusion principally claim a useful general-purpose compressed model, and the related-work paragraph's explicit appeal to the ablation follows its separate discussion of Turc et al. and additional pretraining signals. Thus, the supplied text does not clearly present the ablation as a direct stage comparison, although 'beneficial ... rather than' remains open to that reading. Whether the complete paper contains a sufficiently matched stage comparison cannot be determined from this pack."
+        "Partial answer in the supplied material. The authors describe the student architecture, teacher-based initialization, pretraining corpus and compute, but these details do not establish matched controls for a ta[REDACTED] comparator. The ablation prose explicitly examines triple-loss components and initialization using GLUE macro-score; it supports internal design choices rather than isolating the stage of distillation. The SQuAD experiment explicitly applies task-specific distillation after pretraining distillation, supporting compatibility between the stages. Counterevidence narrows the concern: the abstract, introduction and conclusion principally claim a useful general-purpose compressed model, and the related-work paragraph's explicit appeal to the ablation follows its separate discussion of Turc et al. and additional pretraining signals. Thus, the supplied text does not clearly present the ablation as a direct stage comparison, although 'beneficial ... rather than' remains open to that reading. Whether the complete paper contains a sufficiently matched stage comparison cannot be determined from this pack."
       ],
       "executed_tool_result_ids": [],
       "outstanding_checks": [
-        "Does the complete paper contain a pretraining-distillation versus task-specific-only comparison with matched student architecture, initialization, teacher configuration, data access and training budget?",
+        "Does the complete paper contain a pretraining-distillation versus ta[REDACTED] comparison with matched student architecture, initialization, teacher configuration, data access and training budget?",
         "Does the original layout and surrounding text clarify whether 'beneficial ... rather than' expresses a design choice or a claim of comparative superiority?",
         "If no stage-isolating comparison exists, would revising that sentence to describe the demonstrated utility of general-purpose pretraining distillation and its additional teacher signals better align the wording with the evidence?",
         "What is the verified magnitude of the SQuAD benefit from adding task-specific distillation? The prose establishes the two-stage setup, but the extracted numerical table associations remain unverified.",
-        "Does the complete paper establish a comparison between pretraining distillation and task-specific-only distillation with sufficiently matched architecture, initialization, data access, and training budget?",
+        "Does the complete paper establish a comparison between pretraining distillation and ta[REDACTED] distillation with sufficiently matched architecture, initialization, data access, and training budget?",
+        "Does the cited ablation investigate internal pretraining design choices rather than directly isolate the stage at which distillation occurs?",
         "Does the related-work wording clearly assert experimentally established superiority over task-specific distillation?",
+        "Does the SQuAD experiment demonstrate that the authors also consider pretraining and task-specific distillation usable together?",
         "If no stage-isolating comparison is provided, should the related-work statement be restricted to the demonstrated benefit of additional teacher signals during pretraining?"
       ],
-      "verdict": "concern_narrowed",
-      "verdict_rationale": "Server assessment: 10 PDF-text observations located; 107 available reading units indexed; subchecks supported=2, contradicted=0, inconclusive=2, blocked=0. Only a narrower question has supported subchecks; the original concern remains in the lineage. Model proposed concern_narrowed; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict": "inconclusive",
+      "verdict_rationale": "Original scientific question: Does the complete paper compare pretraining distillation with task-specific-only distillation under sufficiently matched student architecture, initialization, data, and training budget? Final verdict: inconclusive; model proposed concern_narrowed. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_6724ca5dce54_3_10: Task-speciﬁc distillation Most of the prior works focus on building task-speciﬁc distillation se- tups. Tang et al. [2019] transfer ﬁne-tune; ru_ev_6724ca5dce54_3_8: In this section, we investigate the inﬂuence of various components of the triple loss and the student initialization on the performances of . Key pending checks: Does the complete paper contain a pretraining-distillation versus ta[REDACTED] comparison with matched student architecture, initialization, teacher configuration, data access and training budget?; Does the original layout and surrounding text clarify whether 'beneficial ... rather than' expresses a design choice or a claim of comparative superiority?; If no stage-isolating comparison exists, would revising that sentence to describe the demonstrated utility of general-purpose pretraining distillation and its additional teacher signals better align the wording with the evidence?. Audit: 10 PDF-text observations located; 107 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether the complete PDF contains another comparison that isolates distillation stage under appropriate controls.",
         "Whether the disputed sentence expresses design preference or intends a claim of comparative superiority.",
@@ -6164,9 +6176,10 @@
         "human_page_reference_missing",
         "Model context is selected from a complete text search, not the full PDF",
         "Text location does not establish the scientific claim",
-        "PDF region generated; layout/transcription still needs visual review"
+        "PDF region generated; layout/transcription still needs visual review",
+        "Server source/coverage gate reduced the model-proposed verdict"
       ],
-      "provisional_impact": "minor_candidate",
+      "provisional_impact": "undetermined",
       "impact_rationale": "The surviving question concerns localized comparative wording. The available counterevidence indicates that the central contribution is a useful general-purpose compressed model, not a demonstrated resolution of which distillation stage is universally preferable. No invalidation of the reported method or results is established.",
       "report_eligibility": "requires_human_review",
       "human_review_status": "pending",
@@ -6542,7 +6555,7 @@
         "Does the released mobile application preserve the configuration used for the reported benchmark?"
       ],
       "verdict": "inconclusive",
-      "verdict_rationale": "Server assessment: 11 PDF-text observations located; 107 available reading units indexed; subchecks supported=0, contradicted=0, inconclusive=4, blocked=1. The executed checks do not establish a supported or refuted issue. Model proposed inconclusive; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Inspect the original Table 3 and timing code for raw durations, the percentage calculation, framework version, numerical precision, CPU thread settings, and timing boundaries. Final verdict: inconclusive; model proposed inconclusive. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_6724ca5dce54_3_5: To further investigate the speed-up/size trade-off of DistilBERT, we compare (in Table 3) the number of parameters of each model along with ; ru_ev_6724ca5dce54_3_6: On device computation We studied whether DistilBERT could be used for on-the-edge applications by building a mobile application for question. Key pending checks: Does the original Table 3 confirm the apparent association of BERT-base with 668 seconds and DistilBERT with 410 seconds, and what percentage definition and rounding produced the reported 60% faster claim?; For the CPU benchmark, what framework and version, numerical precision, execution backend, CPU thread settings, sequence-length handling, and timing boundaries were used?; For the mobile benchmark, what question-answering examples, context and question lengths, truncation or windowing rules, and model checkpoint variants were used?. Audit: 11 PDF-text observations located; 107 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Verified Table 3 model-to-duration associations and the authors' percentage definition and rounding.",
         "CPU timing script, framework version, backend, precision, thread settings, input-length handling, and timing boundaries.",
@@ -6979,7 +6992,7 @@
         "Does the announced code and weight release resolve the remaining configuration questions?"
       ],
       "verdict": "inconclusive",
-      "verdict_rationale": "Server assessment: 14 PDF-text observations located; 107 available reading units indexed; subchecks supported=0, contradicted=0, inconclusive=4, blocked=1. The executed checks do not establish a supported or refuted issue. Model proposed inconclusive; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Check the complete training and experiments sections and released scripts for the optimizer, learning-rate schedule, update count, effective batch schedule, sequence lengths, masking settings, and teacher checkpoint. Final verdict: inconclusive; model proposed inconclusive. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_6724ca5dce54_2_9: Distillation We applied best practices for training BERT model recently proposed in Liu et al. [2019]. As such, DistilBERT is distilled on v; ru_ev_6724ca5dce54_2_10: Data and compute power We train DistilBERT on the same corpus as the original BERT model: a concatenation of English Wikipedia and Toronto B. Key pending checks: What optimizer, optimizer parameters, learning-rate and warmup schedules, total updates or processed tokens, effective-batch schedule, and sequence-length schedule produced the reported pretrained model?; What masking probabilities and replacement rules were used, and what exact teacher checkpoint, tokenizer, casing configuration, and teacher-layer selection were used?; Which corpus versions, filtering, preprocessing, document segmentation, and example-packing procedures reconstruct the Wikipedia and Toronto Book Corpus training examples?. Audit: 14 PDF-text observations located; 107 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether the complete paper contains additional optimization, preprocessing, or evaluation settings beyond the supplied observations.",
         "Which repository revision, launch arguments, and teacher and student checkpoints correspond to the reported experiments.",
@@ -7261,18 +7274,19 @@
             "ru_ev_6724ca5dce54_3_8"
           ],
           "tool_result_ids": [],
-          "status": "supported",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): Conditional on the extracted configuration labels being accurate, removing Lce retains teacher-hidden-state alignment through Lcos, and removing Lcos retains teacher-output supervision through Lce. Removing Lmlm retains both distillation losses; random initialization retains the triple loss. These configurations therefore do not identify the joint effect of removing both distillation losses. The authors' ablation discussion is meaningful counterevidence to any broader suggestion that the losses lack experimental support: it reports their conditional contributions within the recipe. The supported concern is the narrower logical distinction between those conditional contributions and an MLM-only comparison.",
             "Model-reported limitation: Table 4 has not been independently checked against the original PDF.",
             "Model-reported limitation: No exact numerical effect or model-by-score association is treated as verified.",
-            "Model-reported limitation: This establishes a conditional interpretation of the supplied labels, not that no additional configuration appears elsewhere."
+            "Model-reported limitation: This establishes a conditional interpretation of the supplied labels, not that no additional configuration appears elsewhere.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
           "subcheck_id": "subcheck_b1a9958f73c5bef1b985",
           "parent_verification_task_id": "verify_fe4e7255711d6441943d",
-          "question": "Does the reported SQuAD experiment compare pretraining distillation against task-specific-only distillation under matched conditions?",
+          "question": "Does the reported SQuAD experiment compare pretraining distillation against ta[REDACTED] distillation under matched conditions?",
           "check_type": "experimental_comparison_scope",
           "input_refs": [
             "ru_ev_6724ca5dce54_2_17",
@@ -7293,12 +7307,13 @@
             "ru_ev_6724ca5dce54_3_10"
           ],
           "tool_result_ids": [],
-          "status": "supported",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): The located text explicitly describes adding adaptation-stage distillation to DistilBERT and calls the resulting procedure two successive distillation steps. This answers whether a second stage can help an already pretrained distilled model; it does not by itself compare pretraining distillation with ta[REDACTED] distillation. The related-work passage states a preference for general-purpose pretraining distillation, but does not supply a matched experiment in that passage.",
             "Model-reported limitation: The conclusion concerns the described SQuAD experiment only.",
             "Model-reported limitation: Whether another experiment elsewhere supplies the alternative-stage comparison remains unresolved.",
-            "Model-reported limitation: No numerical table association or matching of training resources was independently verified."
+            "Model-reported limitation: No numerical table association or matching of training resources was independently verified.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -7375,20 +7390,22 @@
       "executed_tool_result_ids": [],
       "outstanding_checks": [
         "Does the complete paper include an MLM-only compact student with the same architecture, teacher-weight initialization, corpus, masking procedure and training budget as the full recipe?",
-        "Does any experiment compare pretraining distillation against task-specific-only distillation with matched student architecture, initialization, training resources and downstream evaluation?",
+        "Does any experiment compare pretraining distillation against ta[REDACTED] distillation with matched student architecture, initialization, training resources and downstream evaluation?",
         "Does the original Table 4 confirm the extracted configurations and numerical associations, and does it contain any configuration removing both Lce and Lcos simultaneously?",
         "Are architecture, initialization, data, training budget and downstream fine-tuning held fixed across the individual loss ablations?",
         "Is the related-work statement that general-purpose pretraining distillation is beneficial 'rather than' task-specific distillation intended as a controlled comparative finding or as a rationale for choosing a transferable model?",
         "Does the complete paper report an MLM-only compact-model baseline with matched architecture, teacher-weight initialization, data, and training budget?",
+        "Do the supplied loss ablations isolate the combined contribution of both distillation losses relative to MLM alone?",
+        "Does the reported SQuAD experiment compare pretraining distillation against ta[REDACTED] distillation under matched conditions?",
         "Does the related-work wording establish an experimentally demonstrated superiority claim, or can it reasonably describe the motivation for a transferable model?"
       ],
       "verdict": "inconclusive",
-      "verdict_rationale": "Server assessment: 14 PDF-text observations located; 107 available reading units indexed; subchecks supported=2, contradicted=0, inconclusive=2, blocked=0. The executed checks do not establish a supported or refuted issue. Model proposed inconclusive; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Does the complete paper report a compact-model baseline using masked language modeling alone with matched architecture, teacher-weight initialization, data, and training budget? Final verdict: inconclusive; model proposed inconclusive. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_6724ca5dce54_3_10: Task-speciﬁc distillation Most of the prior works focus on building task-speciﬁc distillation se- tups. Tang et al. [2019] transfer ﬁne-tune; ru_ev_6724ca5dce54_3_8: In this section, we investigate the inﬂuence of various components of the triple loss and the student initialization on the performances of . Key pending checks: Does the complete paper include an MLM-only compact student with the same architecture, teacher-weight initialization, corpus, masking procedure and training budget as the full recipe?; Does any experiment compare pretraining distillation against ta[REDACTED] distillation with matched student architecture, initialization, training resources and downstream evaluation?; Does the original Table 4 confirm the extracted configurations and numerical associations, and does it contain any configuration removing both Lce and Lcos simultaneously?. Audit: 14 PDF-text observations located; 107 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether the complete PDF contains a matched MLM-only compact-model baseline or additional relevant comparisons.",
         "Whether the original Table 4 confirms all extracted configuration labels and contains any additional rows.",
         "Whether architecture, initialization, data, masking, optimization budget, and downstream evaluation were held fixed across the ablations.",
-        "Whether a matched task-specific-only distillation comparison appears elsewhere.",
+        "Whether a matched ta[REDACTED] distillation comparison appears elsewhere.",
         "Whether the related-work preference was intended as a controlled comparative finding or a rationale for choosing a transferable model.",
         "Only the frozen selected context was assessed; the original PDF was not visually or independently checked.",
         "Selection from a complete text search does not establish complete PDF coverage, and absence of a matched baseline cannot be confirmed.",

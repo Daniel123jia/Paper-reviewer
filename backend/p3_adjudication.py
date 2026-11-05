@@ -96,34 +96,176 @@ def _fact_grounded_in_pdf_text(fact, observations):
 
 
 def _counter_matches_question(question, refs, observations):
-    terms = {term for term in re.findall(r"[a-z0-9]{4,}|\d+(?:\.\d+)?", question.casefold())
-             if term not in {"does", "there", "this", "that", "with", "from", "have",
-                             "been", "were", "would", "could", "paper", "claim", "about"}}
-    actual = " ".join(item.observed_statement.casefold() for item in observations
-                      if item.source_check_status == "pdf_text_located" and
-                      set(item.related_source_ref_ids).intersection(refs))
-    return bool(actual and terms and any(re.search(r"(?<![a-z0-9])" + re.escape(term) +
-                                                 r"(?![a-z0-9])", actual) for term in terms))
+    # A single shared word such as "ablation" is not evidence of the same test.
+    anchors = _topic_terms(question)
+    if len(anchors) < 2:
+        return False
+    for item in observations:
+        if item.source_check_status not in {"pdf_text_located", "human_confirmed"} or \
+                not set(item.related_source_ref_ids).intersection(refs):
+            continue
+        actual = item.observed_statement
+        actual_terms = _topic_terms(actual)
+        if len(anchors & actual_terms) < max(2, (len(anchors) + 2) // 3):
+            continue
+        if not _named_terms(question).issubset(set(re.findall(r"[a-z0-9]+(?:\.\d+)?",
+                                                         actual.casefold()))):
+            continue
+        if not {term for term in anchors if term in {"key", "value", "base", "big",
+                                                      "train", "test", "left", "right"}}.issubset(actual_terms):
+            continue
+        normalized = " ".join(re.findall(r"[a-z0-9]+", actual.casefold()))
+        if all(" ".join(re.findall(r"[a-z0-9]+", compound.casefold())) in normalized
+               for compound in re.findall(r"[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+", question)
+               if set(compound.casefold().split("-")) &
+               {"key", "value", "base", "big", "left", "right"}):
+            return True
+    return False
 
 
-def _server_rationale(verdict, proposed_verdict, subchecks, observations, search):
-    """Use executed records for the final rationale, not model claims about tool availability."""
+_GENERIC_TERMS = {
+    "about", "ablation", "ablations", "answer", "answers", "author", "authors",
+    "baseline", "baselines", "claim", "claims", "compare", "comparison", "concern",
+    "condition", "conditions", "could", "dataset", "datasets", "does", "effect",
+    "evidence", "experiment", "experiments", "explain", "explanation", "figure",
+    "given", "have", "isolate", "isolated", "issue", "method", "methods", "model",
+    "models", "paper", "reported", "report", "result", "results", "same", "setting",
+    "settings", "show", "shows", "source", "study", "support", "supported", "table",
+    "test", "tested", "there", "these", "this", "those", "using", "verified",
+    "verify", "what", "when", "where", "whether", "which", "with", "would",
+    "clarify", "clarified", "should", "can", "did", "the", "and", "for", "from",
+    "into", "its", "not", "are", "was", "were", "has", "had", "how", "that",
+    "than", "their", "then", "under", "only", "each", "also", "need", "needs",
+    "mechanism", "component", "components", "improve", "improved", "points",
+    "missing", "absent", "lacking", "lack", "without", "provided", "present",
+    "clarification", "empirical", "located", "independently", "pdf", "text",
+    "require", "requires", "make", "whose", "directly", "passages", "material",
+    "searched", "other", "narrower", "broad", "basis", "warrant", "warrants",
+    "describe", "described", "specify", "specified", "uniquely", "establish",
+    "established", "contain", "contains", "found", "available", "complete",
+    "reported", "reporting", "full", "actual", "original", "potential",
+    "scores", "score", "numerical", "numeric", "outside", "inside", "remaining",
+}
+
+
+def _topic_terms(text):
+    return {_root_term(term) for term in re.findall(r"[a-z0-9]+(?:\.\d+)?", text.casefold())
+            if (len(term) >= 3 or any(char.isdigit() for char in term)) and
+            term not in _GENERIC_TERMS}
+
+
+def _root_term(term):
+    if term.endswith("ization"):
+        return term[:-5]
+    if term.endswith("ize"):
+        return term[:-1]
+    if term.endswith("s") and len(term) > 4 and not term.endswith("ss"):
+        return term[:-1]
+    return term
+
+
+def _named_terms(text):
+    return {term.casefold() for term in re.findall(r"\b[A-Za-z][A-Za-z0-9]*\b", text)
+            if len(term) >= 2 and term.casefold() not in _GENERIC_TERMS and
+            (any(char.isdigit() for char in term) or
+             (any(char.isupper() for char in term[1:]) and any(char.islower() for char in term)) or
+             (term.isupper() and len(term) >= 2))}
+
+
+def _question_matches_issue(question, issue):
+    issue_text = " ".join([issue.title, issue.central_question,
+                           issue.suspected_problem, *issue.observed_facts])
+    return len(_topic_terms(question) & _topic_terms(issue_text)) >= 2
+
+
+def _revised_question_grounded(revised, issue, subchecks, observations):
+    if not revised or not _question_matches_issue(revised, issue):
+        return False
+    supported = [item for item in subchecks if item.status == "supported"]
+    if not supported or not any(len(_topic_terms(revised) & _topic_terms(item.question)) >= 2
+                                for item in supported):
+        return False
+    source_text = " ".join(item.observed_statement for item in observations
+        if item.source_check_status in {"pdf_text_located", "human_confirmed",
+                                        "visual_check_required"})
+    known = _topic_terms(" ".join([issue.title, issue.central_question,
+        issue.suspected_problem, *issue.observed_facts, source_text]))
+    revision_terms = _topic_terms(revised)
+    if len(revision_terms - known) * 2 >= len(revision_terms):
+        return False
+    observed_text = " ".join(item.observed_statement.casefold() for item in observations)
+    numbers = re.findall(r"(?<![a-z0-9])\d+(?:\.\d+)?(?![a-z0-9])", revised.casefold())
+    if any(not re.search(r"(?<![a-z0-9])" + re.escape(number) + r"(?![a-z0-9])",
+                         observed_text) for number in numbers):
+        return False
+    if not _named_terms(revised).issubset(set(re.findall(r"[a-z0-9]+(?:\.\d+)?",
+                                                    observed_text))):
+        return False
+    return True
+
+
+def _critical_visual_dependency(question, task, sources, subchecks):
+    relevant = {ref.source_id for ref in task.source_refs_to_check +
+                task.counterevidence_refs_to_check}
+    relevant.update(ref for item in subchecks for ref in
+                    item.supporting_refs + item.contradicting_refs)
+    numbers = set(re.findall(r"(?<![a-z0-9])\d+(?:\.\d+)?(?![a-z0-9])",
+                             question.casefold()))
+    for source in sources:
+        if source.source_id not in relevant or source.source_type not in {
+                "table", "formula", "figure"} or \
+                source.source_verification_status != "visual_check_required":
+            continue
+        label = re.search(r"\b(?:table|figure|fig\.?|equation|eq\.?)\s*(\d+)\b",
+                          source.relevant_excerpt, re.I)
+        if label and re.search(r"\b(?:table|figure|fig\.?|equation|eq\.?)\s*" +
+                               re.escape(label.group(1)) + r"\b", question, re.I):
+            return True
+        if numbers and re.search(r"\b(?:table|row|column|formula|equation|figure|score|value)\b",
+                                 question, re.I):
+            return True
+    return False
+
+
+def _critical_external_dependency(question, task, tools):
+    if not task.external_verification_required:
+        return False
+    external = [item for item in tools if item.check_type == "external"]
+    if external and all(item.status == "completed" for item in external):
+        return False
+    return bool(re.search(r"\b(?:prior|literature|citation|cited|novelty|contrast|"
+                          r"comparison|outperform|state.of.the.art|sota)\b", question, re.I))
+
+
+def _server_rationale(verdict, proposed_verdict, issue, revised_question, subchecks,
+                      observations, search, outstanding, author_answer_refs):
+    """Describe scoped questions and executed sources without trusting model tool claims."""
     located = sum(item.source_check_status == "pdf_text_located" for item in observations)
-    counts = {status: sum(item.status == status for item in subchecks)
-              for status in ("supported", "contradicted", "inconclusive", "blocked")}
-    explanation = {
-        "concern_supported": "A specific qualified review question has supported subchecks; this does not prove author error.",
-        "concern_refuted": "The same concern is answered by located counterevidence in all subchecks.",
-        "concern_narrowed": "Only a narrower question has supported subchecks; the original concern remains in the lineage.",
-        "inconclusive": "The executed checks do not establish a supported or refuted issue.",
-        "blocked": "Required material or capability is unavailable for a decisive check.",
-    }[verdict]
-    return (f"Server assessment: {located} PDF-text observations located; "
-            f"{search.indexed_unit_count} available reading units indexed; "
-            f"subchecks supported={counts['supported']}, contradicted={counts['contradicted']}, "
-            f"inconclusive={counts['inconclusive']}, blocked={counts['blocked']}. "
-            f"{explanation} Model proposed {proposed_verdict}; model interpretations "
-            "and unresolved questions remain in the subcheck and uncertainty records.")
+    located_refs = {ref for item in observations
+        if item.source_check_status in {"pdf_text_located", "human_confirmed"}
+        for ref in item.related_source_ref_ids}
+    def describe(status, ref_field):
+        matches = [item for item in subchecks if item.status == status]
+        return "; ".join(f"{item.question} [Source Ref: " +
+                         ", ".join(ref for ref in getattr(item, ref_field)
+                                   if ref in located_refs) + "]"
+                         for item in matches[:3]) or "none"
+    answer_refs = set(author_answer_refs)
+    answers = [item for item in observations if item.source_check_status == "pdf_text_located"
+        and answer_refs.intersection(item.related_source_ref_ids)]
+    answer_text = "; ".join(f"{item.related_source_ref_ids[0]}: " +
+        " ".join(item.observed_statement.split())[:140] for item in answers[:2]) or "none located"
+    pending = "; ".join(outstanding[:3]) or "none recorded"
+    return (f"Original scientific question: {issue.central_question} "
+            f"Final verdict: {verdict}; model proposed {proposed_verdict}. "
+            f"Supported subchecks: {describe('supported', 'supporting_refs')}. "
+            f"Contradicted subchecks: {describe('contradicted', 'contradicting_refs')}. "
+            f"Revised question: {revised_question or 'none'}. "
+            f"Potential author answers in located PDF text: {answer_text}. "
+            f"Key pending checks: {pending}. "
+            f"Audit: {located} PDF-text observations located; "
+            f"{search.indexed_unit_count} available reading units indexed. "
+            "Source location and model interpretation do not prove author error.")
 
 
 def _subcheck_source_observations(refs, observations):
@@ -179,10 +321,18 @@ def adjudicate(task, issue, proposal, facts, challenge, search, observations, so
         if not pdf_available:
             status = "blocked"
         elif status == "supported" and (not set(item.supporting_refs).intersection(located) or
-                                        not fact_aligned):
+                                        not fact_aligned or
+                                        not _question_matches_issue(item.question, issue) or
+                                        not _counter_matches_question(item.question,
+                                            item.supporting_refs, observations) or
+                                        not set(item.supporting_refs).intersection(
+                                            challenge.supporting_source_ids)):
             status = "inconclusive"
         elif status == "contradicted" and (not set(item.contradicting_refs).intersection(located) or
-            not _counter_matches_question(item.question, item.contradicting_refs, observations)):
+            not _question_matches_issue(item.question, issue) or
+            not _counter_matches_question(item.question, item.contradicting_refs, observations) or
+            not set(item.contradicting_refs).intersection(
+                challenge.contradicting_source_ids + challenge.author_answer_source_ids)):
             status = "inconclusive"
         elif status == "supported" and _absence_based(item.question) and not search.absence_confirmed:
             status = "inconclusive"
@@ -210,9 +360,9 @@ def adjudicate(task, issue, proposal, facts, challenge, search, observations, so
             "contradicted" in statuses or _absence_based(issue.suspected_problem + " " +
             issue.central_question) and not search.absence_confirmed):
         verdict = "inconclusive"
-    elif verdict == "concern_narrowed" and (not proposal.revised_question or
-            proposal.revised_question == issue.central_question or
-            "supported" not in statuses):
+    elif verdict == "concern_narrowed" and (proposal.revised_question == issue.central_question or
+            not _revised_question_grounded(proposal.revised_question, issue,
+                                           subchecks, observations)):
         verdict = "inconclusive"
     elif verdict == "blocked" and located:
         verdict = "inconclusive"
@@ -222,8 +372,15 @@ def adjudicate(task, issue, proposal, facts, challenge, search, observations, so
             all(source_index[ref].source_verification_status == "pdf_text_located"
                 for subcheck in subchecks if subcheck.status == "supported"
                 for ref in subcheck.supporting_refs) and \
-            not any(tool_index[tool_id].status == "blocked" for tool_id in
-                    (tool_id for subcheck in subchecks for tool_id in subcheck.tool_result_ids)):
+            not _critical_visual_dependency(proposal.revised_question if
+                verdict == "concern_narrowed" else issue.central_question,
+                task, sources, subchecks) and \
+            not _critical_external_dependency(proposal.revised_question if
+                verdict == "concern_narrowed" else issue.central_question,
+                task, tools) and \
+            not any(tool_index[tool_id].status != "completed" for tool_id in
+                    (tool_id for subcheck in subchecks if subcheck.status == "supported"
+                     for tool_id in subcheck.tool_result_ids)):
         eligibility = "eligible_with_qualification"
     else:
         eligibility = "requires_human_review"
@@ -263,7 +420,10 @@ def adjudicate(task, issue, proposal, facts, challenge, search, observations, so
                                                       for tool_id in item.tool_result_ids)),
         outstanding_checks=outstanding,
         verdict=verdict, verdict_rationale=_server_rationale(verdict,
-            proposal.proposed_verdict, subchecks, observations, search),
+            proposal.proposed_verdict, issue,
+            proposal.revised_question if verdict == "concern_narrowed" else None,
+            subchecks, observations, search, outstanding,
+            challenge.author_answer_source_ids),
         remaining_uncertainty=uncertainty,
         provisional_impact=impact, impact_rationale=proposal.impact_rationale,
         report_eligibility=eligibility, human_review_status="pending",

@@ -1,5 +1,8 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
+  "decision_rule_version": "p3.1",
+  "execution_mode": "recorded_model_replay",
+  "replayed_from_run_id": "1660e3c071434e5c91de49b5aa47057c",
   "document_id": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
   "snapshot_id": "886cadb1a7084f458f387ce3b2315574",
   "pdf_sha256": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
@@ -7,7 +10,7 @@
   "understanding_run_id": "848033e148ae4ff18b46f78a172f94d9",
   "professional_review_run_id": "8c3a5a5e783c4366bbe965f4cdad6a28",
   "consolidation_run_id": "6982b7e180034271ab3fdd8e57e22c21",
-  "evidence_verification_run_id": "1660e3c071434e5c91de49b5aa47057c",
+  "evidence_verification_run_id": "replay_1660e3c071434e5c91de49b5aa47057c",
   "prompt_versions": [
     "source-observation-check/v1",
     "counterevidence-challenge/v1",
@@ -5304,11 +5307,12 @@
             "ru_ev_886cadb1a708_3_16"
           ],
           "tool_result_ids": [],
-          "status": "contradicted",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): The 100,000 versus 300,000 updates, K40 versus P100 GPUs, and different averaging policies distinguish base from big configurations. They do not demonstrate differences between absolute and relative models of the same size. Both configuration paragraphs explicitly introduce relative-only options with 'When using relative position encodings,' favoring the reading that their surrounding training settings apply to both position variants. The authors also explicitly state that they generated baselines to isolate the representation change.",
             "Model-reported limitation: This establishes the most reasonable scope of the reported methods, not compliance by individual training runs.",
-            "Model-reported limitation: Different hardware alone would not establish a consequential confound."
+            "Model-reported limitation: Different hardware alone would not establish a consequential confound.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -5381,12 +5385,13 @@
             "tool_236488e8c16ec3301d8f",
             "tool_cc41010b86f6a83cd031"
           ],
-          "status": "contradicted",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): The authors say they generated baseline results and then describe improvements over 'our baseline,' explicitly directing readers to Table 1. This provides a reasonable textual link between the displayed comparisons and their in-house baselines. The executed tools confirm numeric literal presence only. The comparison tool's 'not_comparable' output follows from different recorded configuration labels and does not establish scientific incomparability between the intended treatment and baseline.",
             "Model-reported limitation: Table row and column associations have not been human-confirmed visually.",
             "Model-reported limitation: Neither literal checks nor the prose establish checkpoint-level provenance or reproduce an experiment.",
-            "Model-reported limitation: The provenance conclusion rests primarily on the authors' prose."
+            "Model-reported limitation: The provenance conclusion rests primarily on the authors' prose.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -5495,12 +5500,14 @@
         "Were there any additional checkpoint-selection, development-set tuning, or stopping decisions beyond the stated training durations and averaging rules?",
         "What exact BLEU computation and text-processing settings were used, and were they identical within each comparison? The supplied material identifies the test set and beam-search settings but does not fully specify the scoring pipeline.",
         "Can the original Table 1 and run provenance confirm that its absolute-position rows are precisely the newly generated in-house baselines? The supplied prose strongly links them, but the table extraction has not been visually verified.",
+        "Do the different base and big training schedules, hardware, and checkpoint policies establish a mismatch within an absolute/relative comparison?",
         "Is the broad concern that preprocessing, batching, optimization, and decoding comparability are undocumented supported?",
+        "Does the located evidence link Table 1 to the authors' newly generated baselines, and do the numeric tools independently verify that provenance?",
         "Can the authors confirm that the individual absolute/relative runs followed the stated configuration-specific update counts and checkpoint policies without additional selection or stopping differences?",
         "Are the smaller reported BLEU improvements robust to random initialization and data-order variability?"
       ],
       "verdict": "inconclusive",
-      "verdict_rationale": "Server assessment: 10 PDF-text observations located; 167 available reading units indexed; subchecks supported=0, contradicted=2, inconclusive=3, blocked=0. The executed checks do not establish a supported or refuted issue. Model proposed concern_narrowed; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Were each absolute-position baseline and its corresponding relative-position model trained, selected, decoded, and evaluated under matched conditions so that the reported BLEU differences can be attributed to the position representations? Final verdict: inconclusive; model proposed concern_narrowed. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_886cadb1a708_3_16: We compared our model using only relative po- sition representations to the baseline Transformer (Vaswani et al., 2017) with sinusoidal posi; ru_ev_886cadb1a708_3_7: For our base model, we used 6 encoder and de- coder layers, dx = 512, dz = 64, 8 attention heads, 1024 feed forward inner-layer dimensions, . Key pending checks: Do run configurations confirm that each absolute/relative pair followed the stated configuration-specific update count, dropout, hardware allocation, and checkpoint policy, including the last-20-checkpoint averaging procedure for big models?; How were random initialization and data ordering controlled, and were the gains reproduced across multiple seeds? Identical seeds are not themselves a prerequisite for a valid comparison, but variability matters when assessing the smaller gains.; Were there any additional checkpoint-selection, development-set tuning, or stopping decisions beyond the stated training durations and averaging rules?. Audit: 10 PDF-text observations located; 167 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether individual runs followed all stated configuration-specific settings and checkpoint policies.",
         "Whether additional development-set selection or stopping decisions affected either member of a comparison.",
@@ -5758,12 +5765,13 @@
             "ru_ev_886cadb1a708_2_39"
           ],
           "tool_result_ids": [],
-          "status": "supported",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): The located text reports a 7% decrease in steps per second for machine translation while retaining the same model and batch sizes on P100 GPUs as Vaswani et al. It also explains a concrete implementation strategy using parallel matrix multiplications and reshaping to avoid broadcasting relative-position representations. This supports a limited feasibility result and an algorithmic rationale. The author material counters an interpretation that the efficiency claim has no supporting explanation. It does not independently establish measured memory savings or superiority over another relative-position implementation.",
             "Model-reported limitation: The supplied observations establish PDF text location, not experimental reproduction.",
             "Model-reported limitation: No independent PDF inspection or tool execution was available in this assessment.",
-            "Model-reported limitation: The throughput sentence does not specify absolute throughput, uncertainty, or timing boundaries."
+            "Model-reported limitation: The throughput sentence does not specify absolute throughput, uncertainty, or timing boundaries.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -5911,12 +5919,13 @@
         "Are measured peak memory, absolute step times, total training wall-clock costs, or inference throughput reported elsewhere in the paper? The supplied selection does not establish their presence or absence.",
         "How do measured runtime and peak memory vary with sequence length, batch size, and head sharing? The supplied base configuration uses K40 GPUs and unique representations per head, whereas the big configuration uses P100 GPUs and unique representations per layer; these descriptions do not constitute a matched scaling experiment.",
         "Separately from empirical efficiency, what tensors and storage scope are counted by the stated asymptotic expressions? How do they relate to actual materialization, attention intermediates, gradients, and layer/head sharing in each configuration?",
+        "Does the located efficiency passage establish a limited throughput result and a concrete implementation rationale?",
         "Do the authors identify a controlled baseline, and is it explicitly connected to the 7% timing comparison?",
         "Does the full paper report measured peak memory, absolute runtime, inference throughput, or controlled runtime and memory scaling experiments?",
         "Do the storage expressions independently establish measured peak memory or complete accounting of materialized training tensors?"
       ],
       "verdict": "inconclusive",
-      "verdict_rationale": "Server assessment: 11 PDF-text observations located; 167 available reading units indexed; subchecks supported=1, contradicted=0, inconclusive=2, blocked=1. The executed checks do not establish a supported or refuted issue. Model proposed inconclusive; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: What baseline and measurement scope underlie the reported 7% decrease in steps per second, and do matched runtime, memory, and scaling measurements substantiate the claimed practical efficiency of the relative-position implementation? Final verdict: inconclusive; model proposed inconclusive. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_886cadb1a708_2_24: The ﬁrst term is identical to eq. (2), and can be computed as described above. For the second term involving relative position representatio; ru_ev_886cadb1a708_2_33: For our machine translation experiments, the re- sult was a modest 7% decrease in steps per sec- ond, but we were able to maintain the same . Key pending checks: Was the 7% decrease measured against the authors' regenerated sinusoidal-position Transformer baseline, a result from Vaswani et al. (2017), or another implementation? Which dataset and model configuration produced it?; What did the steps-per-second timing include: complete forward and backward computation, optimizer updates, device communication, input processing, checkpoint saving, and evaluation? What warmup, timing window, and repetition protocol were used?; Were software versions, numerical precision, device count and utilization, sequence-length distributions, padding, batch construction, and checkpoint behavior matched for the timing comparison?. Audit: 11 PDF-text observations located; 167 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether the 7% comparison uses the authors' regenerated sinusoidal-position baseline and which dataset and model configuration it covers.",
         "Whether timing includes complete training steps, communication, input processing, checkpoint saving, and evaluation, and what warmup and repetition protocol was used.",
@@ -6155,12 +6164,13 @@
             "ru_ev_886cadb1a708_2_24"
           ],
           "tool_result_ids": [],
-          "status": "supported",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): A qualified scope question is supported by the supplied located text. The paragraph first explicitly discusses the space required for 'storing relative position representations,' which provides substantial counterevidence to interpreting the subsequent expression as a complete activation-memory bound. Nevertheless, the subsequent sentence calls O(bhndz + n²da) the 'overall self-attention space complexity' without repeating that restriction. This supports asking what tensors 'overall' includes, but does not establish an erroneous bound.",
             "Model-reported limitation: This assessment uses supplied PDF-text observations rather than an independent extraction.",
             "Model-reported limitation: Original visual layout and surrounding text were not independently checked.",
-            "Model-reported limitation: The supplied selected-text search cannot establish that no further qualification appears elsewhere in the PDF."
+            "Model-reported limitation: The supplied selected-text search cannot establish that no further qualification appears elsewhere in the PDF.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -6226,12 +6236,13 @@
             "ru_ev_886cadb1a708_2_18"
           ],
           "tool_result_ids": [],
-          "status": "contradicted",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): The stronger concern that sharing is undocumented is answered by the supplied author text: the complexity paragraph explicitly assumes sharing across heads and sequences, while the experiment descriptions distinguish unique representations per layer and head for the base model from unique representations per layer for the big model. These are different documented configurations, not an automatic contradiction. If per-head pairwise relative vectors are expanded and retained, their storage would be O(hn²da) rather than O(n²da), assuming sequence sharing. The 2k+1 edge labels also permit a smaller learned table, whose size must not be conflated with expanded pairwise storage. Actual allocation remains unresolved.",
             "Model-reported limitation: The conditional expanded-tensor bound is not a verified description of the base implementation.",
             "Model-reported limitation: The supplied text does not establish tensor lifetimes or allocation strategy.",
-            "Model-reported limitation: Documentation of the configurations does not by itself provide a complete memory bound for each configuration."
+            "Model-reported limitation: Documentation of the configurations does not by itself provide a complete memory bound for each configuration.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -6305,11 +6316,13 @@
         "Are complete pairwise compatibility and normalized-weight tensors materialized, and which tensors are retained, overwritten, or recomputed during forward computation and training? Computing all pairwise values does not alone establish their simultaneous retention.",
         "For the base model's unique representations per head, does the implementation materialize O(hn²da) relative-representation tensors shared across sequences, or use another storage strategy? How is its memory bound distinguished from the shared-head bound?",
         "Does the actual implementation avoid relative-representation broadcasting while retaining an O(bhn²) attention tensor, and where is that distinction documented?",
+        "Does Section 3.3 explicitly restrict the disputed overall space bound to representation storage?",
         "Does the implementation materialize and retain pairwise scores or normalized attention weights, requiring an O(bhn²) storage term?",
+        "Are the head-sharing assumptions undocumented or inconsistent with the base-model configuration?",
         "Does avoiding relative-representation broadcasting establish that pairwise scalar attention storage is eliminated, or do the practical results settle the scope question?"
       ],
       "verdict": "inconclusive",
-      "verdict_rationale": "Server assessment: 9 PDF-text observations located; 167 available reading units indexed; subchecks supported=1, contradicted=1, inconclusive=2, blocked=0. The executed checks do not establish a supported or refuted issue. Model proposed inconclusive; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Check the original Section 3.3 layout and surrounding text for an explicit restriction of the space analysis to representation storage. Final verdict: inconclusive; model proposed inconclusive. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_886cadb1a708_2_39: For a sequence of length n and h attention heads, we reduce the space complexity of storing relative position representations from O(hn2da) ; ru_ev_886cadb1a708_3_7: For our base model, we used 6 encoder and de- coder layers, dx = 512, dz = 64, 8 attention heads, 1024 feed forward inner-layer dimensions, . Key pending checks: Does the original Section 3.3 layout or additional surrounding text explicitly qualify 'overall self-attention space complexity' as representation storage, beyond the opening sentence's narrower restriction?; Are complete pairwise compatibility and normalized-weight tensors materialized, and which tensors are retained, overwritten, or recomputed during forward computation and training? Computing all pairwise values does not alone establish their simultaneous retention.; For the base model's unique representations per head, does the implementation materialize O(hn²da) relative-representation tensors shared across sequences, or use another storage strategy? How is its memory bound distinguished from the shared-head bound?. Audit: 9 PDF-text observations located; 167 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether the original Section 3.3 layout or additional full-text passages explicitly delimit the meaning of 'overall.'",
         "Whether dense score or normalized-weight tensors are materialized and which buffers remain live during forward and backward computation.",
@@ -6663,12 +6676,13 @@
             "ru_ev_886cadb1a708_3_3"
           ],
           "tool_result_ids": [],
-          "status": "supported",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): The located experiment varies clipping distance in the base English-to-German model and evaluates development-set BLEU on newstest2013. That description does not establish a training-length boundary or identify evaluation examples beyond it. The authors report little BLEU variation for k >= 2 and suggest that multiple encoder layers may propagate precise relative position information beyond k; these address clipping sensitivity and distances beyond k, rather than sequence lengths outside the training range. The matched sinusoidal baseline and reported translation gains are relevant positive evidence for the method, but their located descriptions likewise do not isolate length extrapolation. Thus, this experiment alone cannot answer the predictive-performance interpretation of the claim.",
             "Model-reported limitation: This finding concerns the scope of the located experimental descriptions, not proof that the complete paper contains no additional evaluation.",
             "Model-reported limitation: No table row relationships or numerical results were independently verified.",
-            "Model-reported limitation: Development and training datasets could contain different lengths naturally; the observations do not establish their distributions."
+            "Model-reported limitation: Development and training datasets could contain different lengths naturally; the observations do not establish their distributions.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -6734,12 +6748,13 @@
         "Does the complete paper evaluate sequences outside the training-length range, with results separated by sequence length or length bucket?",
         "If such an evaluation exists, does it compare relative representations with the sinusoidal baseline under matched model configurations and length restrictions, separately from the clipping-distance ablation?",
         "Does surrounding material elsewhere explicitly qualify unseen-length generalization as an architectural capability or hypothesis?",
+        "Does the located clipping-distance experiment directly test predictive performance at sequence lengths outside the training range?",
         "Does the complete paper omit training-length limits, evaluation length distributions, and a dedicated unseen-length comparison?",
         "If no such experiment exists, is the claim intended as a theoretical property rather than an empirical result?",
         "If no length-extrapolation evaluation is present, is the statement sufficiently qualified as an architectural capability or hypothesis?"
       ],
       "verdict": "concern_narrowed",
-      "verdict_rationale": "Server assessment: 9 PDF-text observations located; 167 available reading units indexed; subchecks supported=2, contradicted=1, inconclusive=1, blocked=0. Only a narrower question has supported subchecks; the original concern remains in the lineage. Model proposed concern_narrowed; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict_rationale": "Original scientific question: Does the claim that clipping enables generalization to unseen sequence lengths refer to representations remaining defined or to maintained predictive performance, and does the complete paper provide training-length limits and evaluation outside those limits to support the latter interpretation? Final verdict: concern_narrowed; model proposed concern_narrowed. Supported subchecks: Does the located paper text make an unseen-length generalization claim whose empirical scope could require clarification? [Source Ref: ru_ev_886cadb1a708_2_18, ru_ev_886cadb1a708_1_16]. Contradicted subchecks: Is the statement unsupported even as an architectural claim that relative position representations remain available at unseen sequence lengths? [Source Ref: ru_ev_886cadb1a708_2_18, ru_ev_886cadb1a708_2_23, ru_ev_886cadb1a708_1_16]. Revised question: Could the authors clarify whether 'enables the model to generalize to sequence lengths not seen during training' denotes representational applicability or maintained translation performance? The located clipping ablation does not isolate unseen-length performance; if the latter meaning is intended, what training-length boundary and evaluation beyond that boundary support it?. Potential author answers in located PDF text: ru_ev_886cadb1a708_1_16: Position encodings based on sinusoids of vary- ing frequency are added to encoder and decoder input elements prior to the ﬁrst layer. In con; ru_ev_886cadb1a708_2_18: For linear sequences, edges can capture infor- mation about the relative position differences be- tween input elements. The maximum relative. Key pending checks: Does 'enables the model to generalize' mean representational applicability at unseen lengths, or does it also claim maintained translation performance?; Does the complete paper specify maximum training sequence lengths or measured source and target length distributions, beyond the supplied batch token budgets?; Does the complete paper evaluate sequences outside the training-length range, with results separated by sequence length or length bucket?. Audit: 9 PDF-text observations located; 167 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether the complete paper contains additional training-length restrictions, length distributions, or length-stratified evaluation.",
         "Whether the authors intended 'generalize' to denote architectural applicability alone.",
@@ -6806,7 +6821,7 @@
         "ru_ev_886cadb1a708_3_16",
         "ru_ev_886cadb1a708_3_6"
       ],
-      "revised_question": "Can the authors identify the historical tensor2tensor revision, problem/configuration, and evaluation command or equivalent protocol that fixes BLEU scoring, case handling, tokenization, reference processing, and decoded word-piece reconstruction for the reported results?",
+      "revised_question": null,
       "fact_assessments": [
         {
           "original_observed_fact": "The supplied experimental setup identifies the WMT 2014 datasets, a 32,768 word-piece vocabulary, tensor2tensor for training and evaluation, beam size 4, and length penalty 0.6. Table 1's caption identifies newstest2014, while the model-variation passage identifies newstest2013. The inspected passages do not specify the BLEU scorer or its tokenization and case handling, or how decoded word pieces are converted into scoring inputs. The results prose reports improvements ranging from 0.3 to 1.3 BLEU.",
@@ -6979,13 +6994,14 @@
             "ru_ev_886cadb1a708_2_40"
           ],
           "tool_result_ids": [],
-          "status": "supported",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): A bounded documentation question survives. The located passages identify tensor2tensor for training and evaluation, a 32,768 word-piece vocabulary, beam size 4, and length penalty 0.6. The repository footnote provides a concrete implementation lead and therefore partially answers the concern. These passages do not themselves identify the BLEU implementation or options, reference processing, or conversion of decoded word pieces into scoring inputs. The supplied search context does not resolve those details.",
             "Model-reported limitation: This supports a question about the located documentation, not a confirmed paper-wide omission.",
             "Model-reported limitation: The supplied full-text search audit selected context from 167 indexed units; selected search results cannot establish absence throughout the PDF.",
             "Model-reported limitation: PDF text extraction is not a human-confirmed visual inspection.",
-            "Model-reported limitation: Supplementary material was not independently available for inspection."
+            "Model-reported limitation: Supplementary material was not independently available for inspection.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -7008,11 +7024,12 @@
             "ru_ev_886cadb1a708_3_6"
           ],
           "tool_result_ids": [],
-          "status": "contradicted",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): The authors explicitly distinguish the scopes. Table 1 reports the main English-to-German and English-to-French results on newstest2014. The model-variation section specifies English-to-German base-model experiments evaluated on the development set newstest2013. These different evaluation sets do not establish an inconsistency.",
             "Model-reported limitation: The conclusion rests on located caption and prose text, not verified numerical table relationships.",
-            "Model-reported limitation: Identifying the evaluation sets does not uniquely identify the reference files or their preprocessing."
+            "Model-reported limitation: Identifying the evaluation sets does not uniquely identify the reference files or their preprocessing.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -7114,11 +7131,13 @@
         "Does an identifiable tensor2tensor revision, problem definition, configuration, or evaluation command uniquely recover these choices?",
         "Were baseline and relative-position outputs scored with identical processing and references for each language pair and model size? The stated baseline-generation rationale supports this intention but does not document the scoring operations.",
         "Do the complete PDF, additional footnotes, or supplementary materials specify further evaluation details? Their contents cannot be established from this selected context.",
+        "Do the independently located setup passages uniquely specify the BLEU scoring and text-processing pipeline?",
+        "Does the use of newstest2014 in the main results and newstest2013 in model variations indicate an unexplained evaluation-set inconsistency?",
         "Is there evidence that baseline and relative-position outputs received different scoring or reference processing?",
         "Can an identifiable tensor2tensor revision or released configuration recover the exact evaluation pipeline?"
       ],
-      "verdict": "concern_narrowed",
-      "verdict_rationale": "Server assessment: 8 PDF-text observations located; 167 available reading units indexed; subchecks supported=1, contradicted=1, inconclusive=1, blocked=1. Only a narrower question has supported subchecks; the original concern remains in the lineage. Model proposed concern_narrowed; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict": "inconclusive",
+      "verdict_rationale": "Original scientific question: Inspect the complete experimental setup, footnotes, and any supplementary material for the BLEU scorer, case handling, tokenization, reference processing, and word-piece reconstruction procedure. Final verdict: inconclusive; model proposed concern_narrowed. Supported subchecks: none. Contradicted subchecks: none. Revised question: none. Potential author answers in located PDF text: ru_ev_886cadb1a708_2_37: We use the tensor2tensor 1 library for training and evaluating our model.; ru_ev_886cadb1a708_3_2: For all experiments, we split tokens into a 32,768 word-piece vocabulary (Wu et al., 2016). We batched sentence pairs by approximate length,. Key pending checks: Which BLEU implementation, version, and options produced the reported scores, including tokenization and case handling?; How were decoded word pieces reconstructed into scoring inputs, including whitespace and punctuation processing?; Which reference files and reference preprocessing were used for each language pair and evaluation set?. Audit: 8 PDF-text observations located; 167 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether other PDF passages or supplementary material specify the missing evaluation details.",
         "Which historical tensor2tensor revision, problem definition, configuration, and evaluation command were used.",
@@ -7163,9 +7182,10 @@
         "Text location does not establish the scientific claim",
         "Literal presence does not verify metric semantics or experiment setup",
         "Configuration equality is based on the recorded labels; original PDF table structure and experimental meaning may need review",
-        "No independently accessible external literature, code or data was supplied"
+        "No independently accessible external literature, code or data was supplied",
+        "Server source/coverage gate reduced the model-proposed verdict"
       ],
-      "provisional_impact": "minor_candidate",
+      "provisional_impact": "undetermined",
       "impact_rationale": "The surviving concern concerns reproducibility of absolute scores and comparisons. The located results prose reports gains as small as 0.3 BLEU, making precise protocol identification useful, but neither the literal-value checks nor the available source text demonstrate scoring sensitivity, unequal treatment, or invalid gains. The authors' baseline-generation rationale further limits the supported impact.",
       "report_eligibility": "requires_human_review",
       "human_review_status": "pending",
@@ -7188,7 +7208,7 @@
         "ru_ev_886cadb1a708_3_3",
         "ru_ev_886cadb1a708_3_16"
       ],
-      "revised_question": "Could the authors identify the BLEU scores supporting the reported lack of benefit from adding sinusoidal encodings to relative representations, specify which model sizes and language pairs were tested, and clarify whether these comparisons followed the stated training and evaluation policies and used repeated runs?",
+      "revised_question": null,
       "fact_assessments": [
         {
           "original_observed_fact": "The abstract and machine translation discussion state that adding sinusoidal position encodings to relative position representations produced no further improvement. The supplied Table 1 extraction lists only absolute-position and relative-position rows, and the table structure is incomplete or unverified.",
@@ -7392,13 +7412,14 @@
             "tool_f37c649c7137e24acf82",
             "tool_13e4443fa81362925488"
           ],
-          "status": "supported",
+          "status": "inconclusive",
           "limitations": [
             "Model interpretation (not independent fact proof): A qualified request to identify the combined-condition scores is supported. Table 1's located text names only absolute and relative conditions for base and big models. The other located tables concern clipping distance and relative key/value ablations; the accompanying ablation prose explicitly excludes absolute representations. The discussion says that results are shown in Table 1, which is relevant counterevidence, but it does not identify a combined-condition score in the extracted table. The executed numeric checks confirm literal presence of baseline and relative-condition numbers only; they do not verify table relationships or provide combination scores.",
             "Model-reported limitation: This supports a traceability question, not a finding that the complete PDF contains no combined-condition result.",
             "Model-reported limitation: Table layout and row associations have not been human-confirmed.",
             "Model-reported limitation: The supplied search audit covers full-text searching, but the available context is selected output and explicitly does not confirm absence.",
-            "Model-reported limitation: No new PDF inspection or search was executed in this assessment."
+            "Model-reported limitation: No new PDF inspection or search was executed in this assessment.",
+            "Model status reduced by source/coverage gate"
           ]
         },
         {
@@ -7519,12 +7540,13 @@
         "Does the complete Table 1, another table, or accompanying material identify a combined relative-plus-sinusoidal condition and its BLEU scores? The supplied extraction does not resolve this.",
         "Which model sizes and language pairs were evaluated with combined representations, and did each comparison use the same architecture, dropout, relative-position settings, training update budget, checkpoint policy, and decoding settings as its corresponding single-representation conditions?",
         "Was the no-benefit observation based on a single run or repeated runs, and are individual scores, variability estimates, or a criterion for what counted as a benefit available?",
+        "Is a numerical combined-condition result identifiable in the located table text or other searched material?",
         "Does the located material establish whether the combined condition used matched training and evaluation settings?",
         "Can the run count, variability, and numerical size of the combined-condition effect be determined?",
         "Is the reported no-benefit result based on one run or repeated measurements, and are the underlying scores available?"
       ],
-      "verdict": "concern_narrowed",
-      "verdict_rationale": "Server assessment: 11 PDF-text observations located; 167 available reading units indexed; subchecks supported=1, contradicted=1, inconclusive=2, blocked=0. Only a narrower question has supported subchecks; the original concern remains in the lineage. Model proposed concern_narrowed; model interpretations and unresolved questions remain in the subcheck and uncertainty records.",
+      "verdict": "inconclusive",
+      "verdict_rationale": "Original scientific question: Does the full Table 1 or another table contain a combined relative-plus-sinusoidal condition? Final verdict: inconclusive; model proposed concern_narrowed. Supported subchecks: none. Contradicted subchecks: Does the located author text report testing relative representations together with sinusoidal position encodings? [Source Ref: ru_ev_886cadb1a708_0_10, ru_ev_886cadb1a708_3_3]. Revised question: none. Potential author answers in located PDF text: ru_ev_886cadb1a708_0_10: Relying entirely on an attention mechanism, the Transformer introduced by Vaswani et al. (2017) achieves state-of-the-art results for machin; ru_ev_886cadb1a708_3_3: For English-to-German our approach improved performance over our baseline by 0.3 and 1.3 BLEU for the base and big conﬁgurations, respec- ti. Key pending checks: Does the complete Table 1, another table, or accompanying material identify a combined relative-plus-sinusoidal condition and its BLEU scores? The supplied extraction does not resolve this.; Which model sizes and language pairs were evaluated with combined representations, and did each comparison use the same architecture, dropout, relative-position settings, training update budget, checkpoint policy, and decoding settings as its corresponding single-representation conditions?; Was the no-benefit observation based on a single run or repeated runs, and are individual scores, variability estimates, or a criterion for what counted as a benefit available?. Audit: 11 PDF-text observations located; 167 available reading units indexed. Source location and model interpretation do not prove author error.",
       "remaining_uncertainty": [
         "Whether complete table layout or material outside the selected search output identifies a combined condition.",
         "Which model sizes and language pairs were evaluated with both position representations.",
@@ -7568,9 +7590,10 @@
         "Text location does not establish the scientific claim",
         "PDF region generated; layout/transcription still needs visual review",
         "Literal presence does not verify metric semantics or experiment setup",
-        "Configuration equality is based on the recorded labels; original PDF table structure and experimental meaning may need review"
+        "Configuration equality is based on the recorded labels; original PDF table structure and experimental meaning may need review",
+        "Server source/coverage gate reduced the model-proposed verdict"
       ],
-      "provisional_impact": "minor_candidate",
+      "provisional_impact": "undetermined",
       "impact_rationale": "The surviving concern concerns traceability and qualification of a secondary experimental observation. It does not establish that the reported combination result is false or undermine the separately reported absolute-versus-relative comparisons.",
       "report_eligibility": "requires_human_review",
       "human_review_status": "pending",

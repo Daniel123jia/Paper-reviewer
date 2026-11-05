@@ -3,13 +3,17 @@
   "source_bundle_id": "sb_8086e2e5e139_886cadb1a7084f458f387ce3b2315574_v1",
   "snapshot_id": "886cadb1a7084f458f387ce3b2315574",
   "pdf_sha256": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+  "schema_version": "1.1",
+  "decision_rule_version": "p3.1",
+  "execution_mode": "recorded_model_replay",
+  "replayed_from_run_id": "1660e3c071434e5c91de49b5aa47057c",
   "p2c_tasks": 6,
   "p3_adjudications": 6,
   "verdict_counts": {
     "concern_supported": 0,
     "concern_refuted": 0,
-    "concern_narrowed": 3,
-    "inconclusive": 3,
+    "concern_narrowed": 1,
+    "inconclusive": 5,
     "blocked": 0
   },
   "execution_status": "limited",
@@ -20,12 +24,14 @@
   "unknown_token_calls": 0,
   "retry_count": 0,
   "duration_ms": 760600,
+  "duration_ms_meaning": "Recorded live-model run duration carried forward; no new model calls in P3.1 replay",
+  "replay_wall_ms": 355,
   "tool_check_count": 125,
   "tool_check_types": [
     "external",
     "numeric"
   ],
-  "server_rationale_replayed_from_recorded_subchecks": true,
+  "decision_replayed_from_recorded_model_responses": true,
   "call_metadata": [
     {
       "stage": "verify_de54fcc35ed02354a988:source_observation",
@@ -313,14 +319,14 @@
     {
       "verification_task_id": "verify_a04fac62747054b4c898",
       "consolidated_issue_id": "consolidated_c5155e1e615fb4a2358a",
-      "verdict": "concern_narrowed",
+      "verdict": "inconclusive",
       "execution_status": "limited",
       "report_eligibility": "requires_human_review"
     },
     {
       "verification_task_id": "verify_4feb1a992b32da75a9c0",
       "consolidated_issue_id": "consolidated_3a9cf1ce576dc3d2beda",
-      "verdict": "concern_narrowed",
+      "verdict": "inconclusive",
       "execution_status": "limited",
       "report_eligibility": "requires_human_review"
     }

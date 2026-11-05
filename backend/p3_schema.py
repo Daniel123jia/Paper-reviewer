@@ -7,7 +7,7 @@ from pydantic import Field, model_validator
 from backend.p2a_schema import StrictModel
 
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "1.1"
 Verdict = Literal["concern_supported", "concern_refuted", "concern_narrowed",
                   "inconclusive", "blocked"]
 SourceStatus = Literal["pdf_text_located", "pdf_text_mismatch", "visual_check_required",
@@ -135,7 +135,10 @@ class IssueAdjudication(StrictModel):
 
 
 class EvidenceVerificationResult(StrictModel):
-    schema_version: Literal["1.0"] = SCHEMA_VERSION
+    schema_version: Literal["1.0", "1.1"] = SCHEMA_VERSION
+    decision_rule_version: Literal["p3.1"] | None = None
+    execution_mode: Literal["live_model", "recorded_model_replay"] = "live_model"
+    replayed_from_run_id: str | None = None
     document_id: str
     snapshot_id: str
     pdf_sha256: str | None
@@ -164,6 +167,11 @@ class EvidenceVerificationResult(StrictModel):
 
     @model_validator(mode="after")
     def unique_records(self):
+        if (self.schema_version == "1.1" and self.decision_rule_version != "p3.1") or \
+                (self.schema_version == "1.0" and self.decision_rule_version is not None):
+            raise ValueError("P3 schema and adjudication rule versions differ")
+        if self.execution_mode == "recorded_model_replay" and not self.replayed_from_run_id:
+            raise ValueError("recorded model replay needs the original run ID")
         for values in (self.sources, self.observations, self.tool_results,
                        self.adjudications):
             field = ("source_id" if values and isinstance(values[0], VerificationSource) else
