@@ -1,0 +1,47 @@
+{
+  "summary_schema_version": "1.0",
+  "execution_mode": "deterministic_regression",
+  "fixture_scope": "synthetic public P3/P4 fixture; not a real model-quality run",
+  "browser_regression": {
+    "tests": 1,
+    "passed": 1,
+    "flow": "open saved draft, jump to PDF evidence, edit, save, reload, reopen, download Markdown and PDF"
+  },
+  "approval_controls": {
+    "preapproval_final_export_http_status": 409,
+    "approved_revision": 2,
+    "post_edit_approval_status": "pending",
+    "post_edit_final_export_http_status": 409
+  },
+  "approved_english_exports": {
+    "markdown_bytes": 423,
+    "docx_bytes": 23796,
+    "pdf_bytes": 90321,
+    "pdf_pages": 1,
+    "pdf_page_size_points": [595.92, 842.88],
+    "pdf_contains_expected_title": true,
+    "pdf_contains_internal_evidence_id": false,
+    "visual_status": "passed_for_single_page_fixture"
+  },
+  "chinese_math_table_draft": {
+    "docx_contains_chinese": true,
+    "docx_has_editable_table": true,
+    "pdf_contains_chinese": true,
+    "pdf_contains_math": true,
+    "pdf_contains_table_value": true,
+    "draft_marker_present": true,
+    "pdf_pages": 2,
+    "visual_status": "failed_orphan_table_created_mostly_blank_second_page"
+  },
+  "environment": {
+    "pandoc": "pypandoc bundled 3.9 exposed on PATH for this check",
+    "global_pandoc_command": "not_available",
+    "playwright_chromium": "installed"
+  },
+  "limitations": [
+    "This check uses a deterministic public fixture and fake model response; it proves product controls, not scientific quality.",
+    "The current website cannot create or inspect P2-A, P2-B, P2-C, or P3 professional runs.",
+    "The current website has no external-evidence verification form equivalent to the P4.1 API.",
+    "Actual rendered documents remain in ignored local evaluation storage."
+  ]
+}

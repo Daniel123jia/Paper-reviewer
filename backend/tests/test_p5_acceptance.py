@@ -22,6 +22,7 @@ from scripts.p5.environment import prompt_inventory, public_environment_snapshot
 from scripts.p5.audit_lineage import audit_lineage
 from scripts.p5.run_evaluation import BudgetState, EvaluationRunner, summarize_api_calls
 from scripts.p5.scientific_quality import compute_quality_metrics
+from scripts.p5.run_product_acceptance import run as run_product_acceptance
 
 
 NOW = datetime(2026, 11, 6, tzinfo=timezone.utc)
@@ -221,6 +222,36 @@ def test_historical_scientific_evaluations_validate_and_disclose_replay(path):
     assert all(item.source_result_execution_mode == "recorded_model_replay"
                for item in result.judgments)
     assert any("not a fresh P5 model run" in limitation for limitation in result.limitations)
+
+
+def test_p5_product_check_enforces_approval_and_emits_real_exports(tmp_path):
+    result = run_product_acceptance(tmp_path / "product-check")
+    assert result["execution_mode"] == "deterministic_regression"
+    assert result["preapproval_final_export_status"] == 409
+    assert result["post_edit_approval_status"] == "pending"
+    assert result["post_edit_final_export_status"] == 409
+    assert result["exports"]["docx_bytes"] > 10_000
+    assert result["exports"]["pdf_bytes"] > 1_000
+    assert result["exports"]["pdf_contains_report_title"] is True
+    assert result["exports"]["pdf_contains_internal_evidence_id"] is False
+    assert result["chinese_draft_check"] == {
+        "docx_contains_chinese": True,
+        "docx_has_editable_table": True,
+        "pdf_contains_chinese": True,
+        "pdf_contains_table_value": True,
+        "draft_marker_present": True,
+    }
+
+
+def test_public_product_summary_discloses_fixture_and_layout_failure():
+    path = Path("docs/examples/p5-regression/product-check-summary.json")
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert payload["execution_mode"] == "deterministic_regression"
+    assert "not a real model-quality run" in payload["fixture_scope"]
+    assert payload["approval_controls"]["preapproval_final_export_http_status"] == 409
+    assert payload["chinese_math_table_draft"]["visual_status"].startswith("failed_")
+    encoded = json.dumps(payload).lower()
+    assert "api_key" not in encoded and "authorization" not in encoded
 
 
 def test_lineage_audit_rejects_cross_document_and_unknown_evidence():
