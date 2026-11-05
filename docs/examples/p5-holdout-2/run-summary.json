@@ -1,0 +1,44 @@
+{
+  "summary_schema_version": "1.0",
+  "paper_id": "sam-arxiv-2010-01412v3",
+  "pdf_sha256": "73ace22a61c52152fc84a94239cb3ea5f9fa9e753aa8ef5995f277365e25b764",
+  "execution_mode": "fresh_model_run",
+  "overall_status": "blocked_missing_credential",
+  "stages": {
+    "p1": "completed",
+    "p2a": "blocked_missing_credential",
+    "p2b": "not_started",
+    "p2c": "not_started",
+    "p3": "not_started",
+    "p4": "not_started"
+  },
+  "p1": {
+    "page_count": 20,
+    "duration_ms": 6255,
+    "body_blocks": 632,
+    "reading_units": 638,
+    "sections": 13,
+    "tables": 16,
+    "formulas": 14,
+    "figures": 7,
+    "pages_with_unverified_reading_order": 9,
+    "input_readiness": {
+      "section_summary": "needs_review",
+      "formula_check": "blocked",
+      "table_review": "blocked",
+      "figure_review": "blocked"
+    }
+  },
+  "model_usage": {
+    "calls": 0,
+    "known_input_tokens": 0,
+    "known_output_tokens": 0,
+    "unknown_token_calls": 0,
+    "cost_status": "unknown"
+  },
+  "limitations": [
+    "No model-backed P2-A through P4 stage was executed because the evaluation environment had no model credential.",
+    "P1 inventory counts do not establish transcription, structure, reading-order, or scientific correctness.",
+    "This summary contains no raw paper text, model request, model response, endpoint, or credential."
+  ]
+}

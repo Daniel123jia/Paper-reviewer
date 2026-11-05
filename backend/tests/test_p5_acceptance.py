@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
+import httpx
 from pydantic import ValidationError
 
 from scripts.p5.contracts import (
@@ -17,6 +18,8 @@ from scripts.p5.contracts import (
     StageRun,
 )
 from scripts.p5.environment import prompt_inventory, public_environment_snapshot
+from scripts.p5.audit_lineage import audit_lineage
+from scripts.p5.run_evaluation import BudgetState, EvaluationRunner, summarize_api_calls
 
 
 NOW = datetime(2026, 11, 6, tzinfo=timezone.utc)
@@ -125,3 +128,171 @@ def test_frozen_holdout_reference_files_validate_and_are_blind(path):
     assert reference.etpaper_output_viewed is False
     assert reference.provenance == "non_expert_source_grounded_reference"
     assert len(reference.issues) >= 5
+
+
+@pytest.mark.parametrize("path", [
+    "docs/examples/p5-holdout-1/run-summary.json",
+    "docs/examples/p5-holdout-2/run-summary.json",
+])
+def test_public_holdout_run_summaries_are_explicitly_partial_and_sanitized(path):
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    encoded = json.dumps(payload).lower()
+    assert payload["execution_mode"] == "fresh_model_run"
+    assert payload["overall_status"] == "blocked_missing_credential"
+    assert payload["stages"]["p1"] == "completed"
+    assert payload["stages"]["p2a"] == "blocked_missing_credential"
+    assert payload["model_usage"]["calls"] == 0
+    assert payload["p1"]["pages_with_unverified_reading_order"] > 0
+    for forbidden in ("api_key", "authorization", "raw_request", "raw_response",
+                      "base_url", "endpoint_host"):
+        assert forbidden not in encoded
+
+
+def test_budget_counts_unknown_usage_as_a_call_and_stops_before_next_stage():
+    budget = PaperBudget(max_calls=2, max_input_tokens=100, max_output_tokens=50,
+                         max_duration_seconds=60, max_retries=0)
+    state = BudgetState(budget)
+    calls = summarize_api_calls("p2a", [
+        {"status": "completed", "requested_model": "m", "actual_model": "m",
+         "input_tokens": 80, "output_tokens": 20, "duration_ms": 100},
+        {"status": "failed", "requested_model": "m", "actual_model": None,
+         "input_tokens": None, "output_tokens": None, "duration_ms": 200,
+         "error": "TimeoutError: provider detail"},
+    ])
+    state.record(calls)
+    assert state.unknown_token_calls == 1
+    assert state.can_start_stage() is False
+    assert calls[1].error_type == "TimeoutError"
+    assert calls[1].status == "failed"
+
+
+def test_runner_wall_clock_budget_blocks_the_next_stage(tmp_path):
+    budget = PaperBudget(max_calls=10, max_input_tokens=100, max_output_tokens=100,
+                         max_duration_seconds=30, max_retries=0)
+    runner = EvaluationRunner("http://test", tmp_path, budget)
+    try:
+        runner.deadline = 0
+        assert runner._can_start_stage() is False
+    finally:
+        runner.close()
+
+
+def test_lineage_audit_rejects_cross_document_and_unknown_evidence():
+    artifacts = {
+        "p1": {"document": {"id": "doc-a", "sha256": "a" * 64,
+                            "snapshot_id": "snap-a"},
+               "source_bundle": {"bundle_id": "bundle-a",
+                    "document": {"id": "doc-a", "sha256": "a" * 64,
+                                 "snapshot_id": "snap-a"},
+                    "body": [{"evidence_id": "ev-1"}], "reading_units": []}},
+        "p2a": {"document_id": "doc-b", "source_bundle_id": "bundle-a",
+                "claim_evidence_map": {"evidence_refs": [
+                    {"source_ref_id": "missing-evidence"}]}},
+    }
+    report = audit_lineage(artifacts)
+    assert report.passed is False
+    assert any("document_id" in error for error in report.errors)
+    assert any("missing-evidence" in error for error in report.errors)
+
+
+def test_evaluation_runner_executes_frozen_api_chain_and_writes_ledger(tmp_path):
+    pdf = tmp_path / "paper.pdf"
+    pdf.write_bytes(b"%PDF-1.4\nfixture")
+    import hashlib
+    digest = hashlib.sha256(pdf.read_bytes()).hexdigest()
+    calls = [{"stage": "x", "status": "completed", "requested_model": "m",
+              "actual_model": "m", "input_tokens": 1, "output_tokens": 1,
+              "duration_ms": 1, "error": None}]
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        responses = {
+            ("POST", "/api/documents"): {"id": digest, "sha256": digest,
+                "snapshot_id": "snap", "filename": "paper.pdf", "page_count": 1},
+            ("GET", f"/api/documents/{digest}/source-bundle"): {
+                "bundle_id": "bundle", "document": {"id": digest, "sha256": digest,
+                    "snapshot_id": "snap"}, "body": [{"id": "ev-1", "evidence_id": "ev-1"}],
+                "reading_units": []},
+            ("GET", f"/api/documents/{digest}/parse-quality"): {"status": "needs_review"},
+            ("POST", f"/api/documents/{digest}/understanding-runs"): {"id": "p2a"},
+            ("GET", "/api/understanding-runs/p2a"): {"id": "p2a", "status": "completed",
+                "document_id": digest, "source_bundle_id": "bundle", "model_calls": calls,
+                "claim_evidence_map": {"evidence_refs": [{"source_ref_id": "ev-1"}]}},
+            ("POST", "/api/understanding-runs/p2a/professional-review-runs"): {"id": "p2b"},
+            ("GET", "/api/professional-review-runs/p2b"): {"id": "p2b", "status": "limited",
+                "document_id": digest, "source_bundle_id": "bundle", "model_calls": calls,
+                "candidates": [{"issue_id": "candidate-1", "source_refs": [
+                    {"source_id": "ev-1"}]}]},
+            ("POST", "/api/professional-review-runs/p2b/consolidation-runs"): {"id": "p2c"},
+            ("GET", "/api/candidate-consolidation-runs/p2c"): {"id": "p2c",
+                "status": "limited", "document_id": digest, "source_bundle_id": "bundle",
+                "model_calls": calls, "result": {"lineage": [
+                    {"original_issue_id": "candidate-1"}], "verification_tasks": [
+                    {"verification_task_id": "task-1", "original_candidate_ids": ["candidate-1"],
+                     "source_refs_to_check": [{"source_id": "ev-1"}]}]}},
+            ("POST", "/api/candidate-consolidation-runs/p2c/evidence-verification-runs"): {
+                "id": "p3"},
+            ("GET", "/api/evidence-verification-runs/p3"): {"id": "p3", "status": "limited",
+                "document_id": digest, "source_bundle_id": "bundle", "model_calls": calls,
+                "tasks": [{"verification_task_id": "task-1", "source_refs": ["ev-1"]}]},
+            ("POST", "/api/evidence-verification-runs/p3/report-projects"): {
+                "id": "p4", "document_id": digest},
+            ("POST", "/api/review-report-projects/p4/drafts"): {
+                "id": "draft", "status": "pending"},
+        }
+        value = responses.get((request.method, path))
+        return httpx.Response(200 if value is not None else 404,
+                              json=value or {"detail": "missing fixture"})
+
+    client = httpx.Client(base_url="http://test", transport=httpx.MockTransport(handler))
+    budget = PaperBudget(max_calls=20, max_input_tokens=100, max_output_tokens=100,
+                         max_duration_seconds=30, max_retries=0)
+    runner = EvaluationRunner("http://test", tmp_path / "out", budget,
+                              poll_seconds=0, client=client)
+    try:
+        ledger = runner.run("paper", pdf, digest)
+    finally:
+        runner.close()
+    assert ledger.overall_status == "completed"
+    assert [stage.stage for stage in ledger.stages] == ["p1", "p2a", "p2b", "p2c", "p3", "p4"]
+    assert {stage.execution_mode for stage in ledger.stages} == {"fresh_model_run"}
+    assert ledger.totals.model_calls == 4
+    assert (tmp_path / "out" / "lineage-audit.json").exists()
+
+
+def test_evaluation_runner_records_missing_credential_as_blocked_stage(tmp_path):
+    pdf = tmp_path / "paper.pdf"
+    pdf.write_bytes(b"%PDF-1.4\nfixture")
+    import hashlib
+    digest = hashlib.sha256(pdf.read_bytes()).hexdigest()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        path = request.url.path
+        if (request.method, path) == ("POST", "/api/documents"):
+            return httpx.Response(200, json={"id": digest, "sha256": digest,
+                                             "snapshot_id": "snap"})
+        if (request.method, path) == ("GET", f"/api/documents/{digest}/source-bundle"):
+            return httpx.Response(200, json={"bundle_id": "bundle", "document": {
+                "id": digest, "sha256": digest, "snapshot_id": "snap"},
+                "body": [{"evidence_id": "ev-1"}], "reading_units": []})
+        if (request.method, path) == ("GET", f"/api/documents/{digest}/parse-quality"):
+            return httpx.Response(200, json={"status": "needs_review"})
+        if (request.method, path) == ("POST", f"/api/documents/{digest}/understanding-runs"):
+            return httpx.Response(503, json={"detail": "model credential unavailable"})
+        return httpx.Response(404, json={"detail": "missing fixture"})
+
+    client = httpx.Client(base_url="http://test", transport=httpx.MockTransport(handler))
+    budget = PaperBudget(max_calls=20, max_input_tokens=100, max_output_tokens=100,
+                         max_duration_seconds=30, max_retries=0)
+    runner = EvaluationRunner("http://test", tmp_path / "out", budget,
+                              poll_seconds=0, client=client)
+    try:
+        ledger = runner.run("paper", pdf, digest)
+    finally:
+        runner.close()
+
+    assert ledger.overall_status == "blocked_missing_credential"
+    assert [stage.stage for stage in ledger.stages] == ["p1", "p2a"]
+    assert ledger.stages[1].status == "blocked_missing_credential"
+    assert ledger.stages[1].error_type == "HTTPStatusError"
+    assert {stage.execution_mode for stage in ledger.stages} == {"fresh_model_run"}
