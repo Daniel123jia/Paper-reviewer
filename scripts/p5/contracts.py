@@ -200,3 +200,58 @@ class RunLedger(StrictModel):
             model_duration_ms=sum(call.duration_ms for call in calls),
             retry_count=sum(stage.retry_count for stage in self.stages),
         )
+
+
+class ScientificIssueJudgment(StrictModel):
+    issue_id: str
+    question: str = Field(min_length=20)
+    judgment: Literal["A", "B", "C", "D", "E"]
+    source_result_execution_mode: ExecutionMode
+    evidence_refs: list[str] = Field(min_length=1)
+    pdf_pages: list[int] = Field(min_length=1)
+    rationale: str = Field(min_length=20)
+    factual_accuracy: Literal["supported", "misread", "unassessed"]
+    evidence_support: Literal["independently_checked", "source_grounded", "partial", "unverified"]
+    scientific_value: Literal["high", "medium", "low", "unassessed"]
+    actionable: bool | None
+
+
+class P3ConservatismRecord(StrictModel):
+    issue_id: str
+    p3_verdict: str
+    report_eligibility: str
+    primary_reason: Literal[
+        "insufficient_scientific_basis",
+        "author_counterevidence",
+        "unverified_table_or_formula",
+        "external_material_unavailable",
+        "support_extraction_incomplete",
+        "server_rule_conservative",
+        "verification_capability_missing",
+    ]
+    concern_status: Literal["not_supported", "refuted", "potentially_valuable", "unknown"]
+    rationale: str = Field(min_length=20)
+
+
+class ScientificEvaluation(StrictModel):
+    evaluation_schema_version: Literal["1.0"] = "1.0"
+    paper_id: str
+    pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    evaluation_mode: Literal["manual_review"] = "manual_review"
+    evaluator_provenance: Literal[
+        "codex_non_expert_review", "independent_expert_review", "chatgpt_web_reference"
+    ]
+    reference_scope: Literal["complete_expert_set", "enumerated_challenge_set", "none"]
+    judgments: list[ScientificIssueJudgment]
+    p3_conservatism: list[P3ConservatismRecord]
+    limitations: list[str] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def issue_identifiers_are_unique(self):
+        issue_ids = [item.issue_id for item in self.judgments]
+        if len(issue_ids) != len(set(issue_ids)):
+            raise ValueError("scientific issue judgments must have unique issue_id values")
+        p3_ids = [item.issue_id for item in self.p3_conservatism]
+        if len(p3_ids) != len(set(p3_ids)):
+            raise ValueError("P3 conservatism records must have unique issue_id values")
+        return self

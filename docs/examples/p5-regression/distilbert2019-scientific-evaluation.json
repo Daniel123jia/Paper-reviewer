@@ -1,0 +1,42 @@
+{
+  "evaluation_schema_version": "1.0",
+  "paper_id": "distilbert2019",
+  "pdf_sha256": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+  "evaluation_mode": "manual_review",
+  "evaluator_provenance": "codex_non_expert_review",
+  "reference_scope": "none",
+  "judgments": [
+    {
+      "issue_id": "consolidated_2fc7365d65828d021acd",
+      "question": "What scores do the prose and Table 2 report for adaptation-stage distillation under the same configuration, and do the reconciled scores support the stated comparison?",
+      "judgment": "D",
+      "source_result_execution_mode": "recorded_model_replay",
+      "evidence_refs": [
+        "ru_ev_6724ca5dce54_2_4",
+        "table_ev_6724ca5dce54_2_4",
+        "ru_ev_6724ca5dce54_3_3"
+      ],
+      "pdf_pages": [3, 4],
+      "rationale": "The saved result preserves a material prose/table numerical difference, but the table model-to-metric row and column mapping remains visual_check_required. The question cannot be called correct or false until that critical relation is audibly verified.",
+      "factual_accuracy": "unassessed",
+      "evidence_support": "unverified",
+      "scientific_value": "high",
+      "actionable": true
+    }
+  ],
+  "p3_conservatism": [
+    {
+      "issue_id": "consolidated_2fc7365d65828d021acd",
+      "p3_verdict": "concern_narrowed",
+      "report_eligibility": "requires_human_review",
+      "primary_reason": "unverified_table_or_formula",
+      "concern_status": "potentially_valuable",
+      "rationale": "The human-review gate is justified because the final comparison depends on an unverified Table 2 row and metric association; the limitation reflects missing verification capacity, not proof that the concern is invalid."
+    }
+  ],
+  "limitations": [
+    "This is a non-expert P5 review of a historical recorded-model replay, not a fresh P5 model run.",
+    "No auditable visual confirmation of Table 2 was completed, so the issue remains class D rather than being counted as a true or false finding.",
+    "One sentinel internal issue was assessed; the default author report correctly contains no automatic issue."
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "evaluation_schema_version": "1.0",
+  "paper_id": "shaw2018",
+  "pdf_sha256": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+  "evaluation_mode": "manual_review",
+  "evaluator_provenance": "codex_non_expert_review",
+  "reference_scope": "none",
+  "judgments": [
+    {
+      "issue_id": "consolidated_e3eac49834cebb136759",
+      "question": "Does unseen-length generalization mean representational applicability or maintained translation performance, and what evidence supports the latter?",
+      "judgment": "B",
+      "source_result_execution_mode": "recorded_model_replay",
+      "evidence_refs": [
+        "ru_ev_886cadb1a708_1_16",
+        "ru_ev_886cadb1a708_2_18"
+      ],
+      "pdf_pages": [2, 3],
+      "rationale": "The located text supports the architectural reading while the preserved question asks the authors to delimit any empirical performance claim. It is a specific, answerable clarification and does not allege a demonstrated error.",
+      "factual_accuracy": "supported",
+      "evidence_support": "source_grounded",
+      "scientific_value": "medium",
+      "actionable": true
+    }
+  ],
+  "p3_conservatism": [
+    {
+      "issue_id": "consolidated_e3eac49834cebb136759",
+      "p3_verdict": "concern_narrowed",
+      "report_eligibility": "eligible_with_qualification",
+      "primary_reason": "support_extraction_incomplete",
+      "concern_status": "potentially_valuable",
+      "rationale": "P3 appropriately removed the unsupported stronger interpretation and retained a narrower clarification because no length-bucket performance result was independently established."
+    }
+  ],
+  "limitations": [
+    "This is a non-expert P5 review of a historical recorded-model replay, not a fresh P5 model run.",
+    "The PDF text locations were checked through the committed source mapping; formula and table visuals were not independently reverified here.",
+    "One sentinel author-facing issue was assessed; this file is not a complete-paper quality estimate."
+  ]
+}

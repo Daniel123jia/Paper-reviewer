@@ -14,12 +14,14 @@ from scripts.p5.contracts import (
     ModelCallSummary,
     PaperBudget,
     PaperSpec,
+    ScientificEvaluation,
     RunLedger,
     StageRun,
 )
 from scripts.p5.environment import prompt_inventory, public_environment_snapshot
 from scripts.p5.audit_lineage import audit_lineage
 from scripts.p5.run_evaluation import BudgetState, EvaluationRunner, summarize_api_calls
+from scripts.p5.scientific_quality import compute_quality_metrics
 
 
 NOW = datetime(2026, 11, 6, tzinfo=timezone.utc)
@@ -175,6 +177,50 @@ def test_runner_wall_clock_budget_blocks_the_next_stage(tmp_path):
         assert runner._can_start_stage() is False
     finally:
         runner.close()
+
+
+def test_scientific_metrics_separate_valid_false_positive_and_unresolved():
+    metrics = compute_quality_metrics(["A", "B", "B", "C", "D", "E"])
+    assert metrics["counts"] == {"A": 1, "B": 2, "C": 1, "D": 1, "E": 1}
+    assert metrics["effective_issue_numerator"] == 3
+    assert metrics["effective_issue_denominator"] == 5
+    assert metrics["effective_issue_ratio"] == pytest.approx(0.6)
+    assert metrics["explicit_false_positive_count"] == 1
+    assert metrics["unresolved_count"] == 1
+
+
+def test_scientific_metrics_do_not_invent_a_rate_without_judged_issues():
+    metrics = compute_quality_metrics(["D", "D"])
+    assert metrics["effective_issue_denominator"] == 0
+    assert metrics["effective_issue_ratio"] is None
+
+
+def test_scientific_evaluation_requires_traceable_issue_evidence():
+    with pytest.raises(ValidationError):
+        ScientificEvaluation(
+            paper_id="paper", pdf_sha256="a" * 64,
+            evaluator_provenance="codex_non_expert_review", reference_scope="none",
+            judgments=[{
+                "issue_id": "issue-1", "question": "Is this sufficiently specific to test?",
+                "judgment": "D", "source_result_execution_mode": "recorded_model_replay",
+                "evidence_refs": [], "pdf_pages": [], "rationale": "No source was supplied.",
+                "factual_accuracy": "unassessed", "evidence_support": "unverified",
+                "scientific_value": "unassessed", "actionable": None,
+            }], p3_conservatism=[], limitations=["Non-expert review"])
+
+
+@pytest.mark.parametrize("path", [
+    "docs/examples/p5-regression/shaw2018-scientific-evaluation.json",
+    "docs/examples/p5-regression/distilbert2019-scientific-evaluation.json",
+    "docs/examples/p5-regression/fasttext2016-scientific-evaluation.json",
+])
+def test_historical_scientific_evaluations_validate_and_disclose_replay(path):
+    result = ScientificEvaluation.model_validate_json(Path(path).read_text(encoding="utf-8"))
+    assert result.evaluator_provenance == "codex_non_expert_review"
+    assert result.judgments
+    assert all(item.source_result_execution_mode == "recorded_model_replay"
+               for item in result.judgments)
+    assert any("not a fresh P5 model run" in limitation for limitation in result.limitations)
 
 
 def test_lineage_audit_rejects_cross_document_and_unknown_evidence():
