@@ -34,6 +34,7 @@ from backend.p2c_normalizer import validate_consolidation_inputs
 from backend.p2c_schema import CandidateConsolidationResult
 from backend.p3_engine import run_p3
 from backend.p3_sources import validate_p3_inputs
+from backend.p4_api import initialize_p4_tables, register_p4_routes
 
 
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
@@ -302,6 +303,7 @@ def create_app(data_dir: Path) -> FastAPI:
                 result_json TEXT NOT NULL, PRIMARY KEY (run_id, tool_result_id)
             );
         """)
+        initialize_p4_tables(db)
         columns = {row[1] for row in db.execute("PRAGMA table_info(review_findings)")}
         if "support_assessment" not in columns:
             db.execute("ALTER TABLE review_findings ADD COLUMN support_assessment TEXT NOT NULL DEFAULT ''")
@@ -333,7 +335,7 @@ def create_app(data_dir: Path) -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-        allow_methods=["GET", "POST", "PUT"],
+        allow_methods=["GET", "POST", "PUT", "PATCH"],
         allow_headers=["*"],
     )
 
@@ -1765,6 +1767,7 @@ def create_app(data_dir: Path) -> FastAPI:
                  "pdf": "application/pdf"}[format]
         return Response(data, media_type=media, headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
+    register_p4_routes(app, connect, files_dir, load_p3_inputs)
     return app
 
 
