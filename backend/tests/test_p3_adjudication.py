@@ -46,6 +46,29 @@ def check(question, status, support=(), contradict=()):
             "explanation": "Located the cited statements", "limitations": []}
 
 
+def test_issue_level_status_aliases_do_not_make_narrowed_subcheck_supported():
+    parsed = proposal("concern_narrowed", [
+        check("supported aspect", "concern_supported"),
+        check("refuted aspect", "concern_refuted"),
+        check("partially answered aspect", "concern_narrowed")],
+        revised="Which aspect remains untested?")
+    assert [item.proposed_status for item in parsed.subchecks] == [
+        "supported", "contradicted", "inconclusive"]
+
+
+def test_final_rationale_uses_executed_records_instead_of_false_model_tool_claim(tmp_path):
+    task, issue, search, facts, sources, observations, challenge = context(tmp_path)
+    model = proposal("inconclusive", [check("Is the mechanism established?", "inconclusive")])
+    model.verdict_rationale = "Original PDF and full-text search were not executed."
+    result = adjudicate(task, issue, model, facts, challenge, search,
+                        observations, sources, [], True)
+    assert "2 PDF-text observations located" in result.verdict_rationale
+    assert "2 available reading units indexed" in result.verdict_rationale
+    assert "were not executed" not in result.verdict_rationale
+    assert result.subchecks[0].actual_observations == []
+    assert result.subchecks[0].limitations[0].startswith("Model interpretation")
+
+
 def test_author_ablation_can_refute_missing_experiment_candidate(tmp_path):
     task, issue, search, facts, sources, observations, challenge = context(tmp_path)
     model = proposal("concern_refuted", [check("Is there an ablation?", "contradicted",

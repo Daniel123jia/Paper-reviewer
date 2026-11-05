@@ -120,7 +120,7 @@ def run_p3(bundle, plan, profile, mapping, review, consolidation, pdf_path,
     exhausted = False
     started = time.perf_counter()
     source_prompt = (PROMPTS / "source-observation-check.v1.txt").read_text(encoding="utf-8")
-    judgment_prompt = (PROMPTS / "issue-adjudication.v1.txt").read_text(encoding="utf-8")
+    judgment_prompt = (PROMPTS / "issue-adjudication.v2.txt").read_text(encoding="utf-8")
     challenge_prompt = CHALLENGE_PROMPT.read_text(encoding="utf-8")
     technical_prompt = TECHNICAL_PROMPT.read_text(encoding="utf-8")
 

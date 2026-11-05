@@ -4,7 +4,7 @@ import hashlib
 import re
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from backend.p2a_schema import StrictModel
 from backend.p3_schema import (CounterEvidenceSearch, FactAssessment, IssueAdjudication,
@@ -12,7 +12,7 @@ from backend.p3_schema import (CounterEvidenceSearch, FactAssessment, IssueAdjud
 
 
 SOURCE_PROMPT_VERSION = "source-observation-check/v1"
-JUDGMENT_PROMPT_VERSION = "issue-adjudication/v1"
+JUDGMENT_PROMPT_VERSION = "issue-adjudication/v2"
 PROMPTS = Path(__file__).with_name("prompts") / "p3"
 
 
@@ -30,6 +30,14 @@ class ProposedSubcheck(StrictModel):
     proposed_status: str = Field(pattern="^(supported|contradicted|inconclusive|blocked)$")
     explanation: str
     limitations: list[str]
+
+    @field_validator("proposed_status", mode="before")
+    @classmethod
+    def normalize_issue_level_alias(cls, value):
+        # The model sometimes applies the whole-issue vocabulary to a subcheck.
+        # A partial/narrowed issue does not establish a supported subcheck.
+        return {"concern_supported": "supported", "concern_refuted": "contradicted",
+                "concern_narrowed": "inconclusive"}.get(value, value) if isinstance(value, str) else value
 
 
 class AdjudicationProposal(StrictModel):
@@ -98,6 +106,34 @@ def _counter_matches_question(question, refs, observations):
                                                  r"(?![a-z0-9])", actual) for term in terms))
 
 
+def _server_rationale(verdict, proposed_verdict, subchecks, observations, search):
+    """Use executed records for the final rationale, not model claims about tool availability."""
+    located = sum(item.source_check_status == "pdf_text_located" for item in observations)
+    counts = {status: sum(item.status == status for item in subchecks)
+              for status in ("supported", "contradicted", "inconclusive", "blocked")}
+    explanation = {
+        "concern_supported": "A specific qualified review question has supported subchecks; this does not prove author error.",
+        "concern_refuted": "The same concern is answered by located counterevidence in all subchecks.",
+        "concern_narrowed": "Only a narrower question has supported subchecks; the original concern remains in the lineage.",
+        "inconclusive": "The executed checks do not establish a supported or refuted issue.",
+        "blocked": "Required material or capability is unavailable for a decisive check.",
+    }[verdict]
+    return (f"Server assessment: {located} PDF-text observations located; "
+            f"{search.indexed_unit_count} available reading units indexed; "
+            f"subchecks supported={counts['supported']}, contradicted={counts['contradicted']}, "
+            f"inconclusive={counts['inconclusive']}, blocked={counts['blocked']}. "
+            f"{explanation} Model proposed {proposed_verdict}; model interpretations "
+            "and unresolved questions remain in the subcheck and uncertainty records.")
+
+
+def _subcheck_source_observations(refs, observations):
+    selected = set(refs)
+    return [f"{item.source_check_status} {item.related_source_ref_ids[0]}: "
+            f"{item.observed_statement[:400]}" for item in observations
+            if item.source_check_status == "pdf_text_located" and
+            selected.intersection(item.related_source_ref_ids)]
+
+
 def fallback_adjudication(task, issue, search: CounterEvidenceSearch,
                          observations: list[SourceObservation], reason, pdf_available):
     question = task.central_question
@@ -154,11 +190,15 @@ def adjudicate(task, issue, proposal, facts, challenge, search, observations, so
             parent_verification_task_id=task.verification_task_id,
             question=item.question, check_type=item.check_type,
             input_refs=list(dict.fromkeys(item.supporting_refs + item.contradicting_refs)),
-            method=item.method, actual_observations=[item.explanation],
+            method="PDF text location and selected full-text context; model assessment subject to server gates",
+            actual_observations=_subcheck_source_observations(
+                item.supporting_refs + item.contradicting_refs, observations),
             supporting_refs=item.supporting_refs, contradicting_refs=item.contradicting_refs,
             tool_result_ids=item.tool_result_ids, status=status,
-            limitations=item.limitations + (["Model status reduced by source/coverage gate"]
-                                            if status != item.proposed_status else [])))
+            limitations=[f"Model interpretation (not independent fact proof): {item.explanation}"] +
+                [f"Model-reported limitation: {limit}" for limit in item.limitations] +
+                (["Model status reduced by source/coverage gate"]
+                 if status != item.proposed_status else [])))
     statuses = {item.status for item in subchecks}
     verdict = proposal.proposed_verdict
     if not pdf_available:
@@ -222,9 +262,8 @@ def adjudicate(task, issue, proposal, facts, challenge, search, observations, so
         executed_tool_result_ids=list(dict.fromkeys(tool_id for item in subchecks
                                                       for tool_id in item.tool_result_ids)),
         outstanding_checks=outstanding,
-        verdict=verdict, verdict_rationale=proposal.verdict_rationale +
-            ("; server source/coverage gate reduced the proposed verdict"
-             if verdict != proposal.proposed_verdict else ""),
+        verdict=verdict, verdict_rationale=_server_rationale(verdict,
+            proposal.proposed_verdict, subchecks, observations, search),
         remaining_uncertainty=uncertainty,
         provisional_impact=impact, impact_rationale=proposal.impact_rationale,
         report_eligibility=eligibility, human_review_status="pending",

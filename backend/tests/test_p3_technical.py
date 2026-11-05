@@ -99,3 +99,15 @@ def test_model_cannot_propose_foreign_metric_source(tmp_path):
            "evidence_level": "model_proposal"}
     with pytest.raises(ValueError, match="outside"):
         validate_technical_proposal(raw, pack)
+
+
+def test_json_numeric_metric_value_is_normalized_without_changing_decimal(tmp_path):
+    bundle, _, profile, mapping, _, consolidation, _ = frozen_case(tmp_path)
+    pack = CounterEvidenceRetriever(bundle, mapping, profile).retrieve(
+        consolidation.verification_tasks[0], consolidation.consolidated_issues[0])
+    source_id = pack.entries[0].source_id
+    raw = {"metric_records": [{**record("a", source_id, "70.4").model_dump(),
+                                "value": 70.4}],
+           "scalar_formula_checks": [], "unavailable_checks": [],
+           "evidence_level": "model_proposal"}
+    assert validate_technical_proposal(raw, pack).metric_records[0].value == "70.4"

@@ -1,0 +1,449 @@
+{
+  "paper": "distilbert2019",
+  "source_bundle_id": "sb_a70c78e2b4db_6724ca5dce544d00a2ebc12b085484ff_v1",
+  "snapshot_id": "6724ca5dce544d00a2ebc12b085484ff",
+  "pdf_sha256": "a70c78e2b4db85bfee7696e19829571a3b05f69c616db5c039f6f4eb33b1a0b6",
+  "p2c_tasks": 9,
+  "p3_adjudications": 9,
+  "verdict_counts": {
+    "concern_supported": 0,
+    "concern_refuted": 0,
+    "concern_narrowed": 3,
+    "inconclusive": 6,
+    "blocked": 0
+  },
+  "execution_status": "limited",
+  "model_identifier": "gpt-6.1-sol",
+  "call_count": 32,
+  "input_tokens": 450144,
+  "output_tokens": 36571,
+  "unknown_token_calls": 0,
+  "retry_count": 0,
+  "duration_ms": 1151685,
+  "tool_check_count": 15,
+  "tool_check_types": [
+    "external",
+    "numeric",
+    "pdf_region"
+  ],
+  "server_rationale_replayed_from_recorded_subchecks": true,
+  "call_metadata": [
+    {
+      "stage": "verify_3a45a00a08fbc07fcdd4:source_observation",
+      "prompt_version": "source-observation-check/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 7529,
+      "output_tokens": 658,
+      "duration_ms": 32014,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_3a45a00a08fbc07fcdd4:counterevidence",
+      "prompt_version": "counterevidence-challenge/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 17174,
+      "output_tokens": 1178,
+      "duration_ms": 35694,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_3a45a00a08fbc07fcdd4:adjudication",
+      "prompt_version": "issue-adjudication/v2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 14623,
+      "output_tokens": 2185,
+      "duration_ms": 64106,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_8519b1fe2056683370b9:source_observation",
+      "prompt_version": "source-observation-check/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 6315,
+      "output_tokens": 1336,
+      "duration_ms": 57119,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_8519b1fe2056683370b9:counterevidence",
+      "prompt_version": "counterevidence-challenge/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 16735,
+      "output_tokens": 1058,
+      "duration_ms": 48623,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_8519b1fe2056683370b9:technical",
+      "prompt_version": "technical-evidence-assessment/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 19008,
+      "output_tokens": 719,
+      "duration_ms": 29242,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_8519b1fe2056683370b9:adjudication",
+      "prompt_version": "issue-adjudication/v2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 13111,
+      "output_tokens": 1920,
+      "duration_ms": 48611,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_636263b3fa88f2815a22:source_observation",
+      "prompt_version": "source-observation-check/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 7176,
+      "output_tokens": 645,
+      "duration_ms": 19749,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_636263b3fa88f2815a22:counterevidence",
+      "prompt_version": "counterevidence-challenge/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 16832,
+      "output_tokens": 1107,
+      "duration_ms": 46784,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_636263b3fa88f2815a22:technical",
+      "prompt_version": "technical-evidence-assessment/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 21376,
+      "output_tokens": 780,
+      "duration_ms": 24119,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_636263b3fa88f2815a22:adjudication",
+      "prompt_version": "issue-adjudication/v2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 15897,
+      "output_tokens": 1875,
+      "duration_ms": 51820,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_641fb5ebefc3284a239f:source_observation",
+      "prompt_version": "source-observation-check/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 6964,
+      "output_tokens": 506,
+      "duration_ms": 16234,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_641fb5ebefc3284a239f:counterevidence",
+      "prompt_version": "counterevidence-challenge/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 17073,
+      "output_tokens": 1130,
+      "duration_ms": 36918,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_641fb5ebefc3284a239f:technical",
+      "prompt_version": "technical-evidence-assessment/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 21400,
+      "output_tokens": 509,
+      "duration_ms": 19496,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_641fb5ebefc3284a239f:adjudication",
+      "prompt_version": "issue-adjudication/v2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 14983,
+      "output_tokens": 1762,
+      "duration_ms": 42651,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_e3fc5b4dd3e4021d567e:source_observation",
+      "prompt_version": "source-observation-check/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 7629,
+      "output_tokens": 414,
+      "duration_ms": 12514,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_e3fc5b4dd3e4021d567e:counterevidence",
+      "prompt_version": "counterevidence-challenge/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 16415,
+      "output_tokens": 1267,
+      "duration_ms": 31905,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_e3fc5b4dd3e4021d567e:technical",
+      "prompt_version": "technical-evidence-assessment/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 20850,
+      "output_tokens": 528,
+      "duration_ms": 20816,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_e3fc5b4dd3e4021d567e:adjudication",
+      "prompt_version": "issue-adjudication/v2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 14449,
+      "output_tokens": 1861,
+      "duration_ms": 49209,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_971c70815eca43a1112d:source_observation",
+      "prompt_version": "source-observation-check/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 6569,
+      "output_tokens": 384,
+      "duration_ms": 18403,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_971c70815eca43a1112d:counterevidence",
+      "prompt_version": "counterevidence-challenge/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 16813,
+      "output_tokens": 1117,
+      "duration_ms": 31952,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_971c70815eca43a1112d:adjudication",
+      "prompt_version": "issue-adjudication/v2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 14847,
+      "output_tokens": 1874,
+      "duration_ms": 53598,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_dfbe623d060dfef68f22:source_observation",
+      "prompt_version": "source-observation-check/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 5967,
+      "output_tokens": 343,
+      "duration_ms": 14245,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_dfbe623d060dfef68f22:counterevidence",
+      "prompt_version": "counterevidence-challenge/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 16407,
+      "output_tokens": 1295,
+      "duration_ms": 44991,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_dfbe623d060dfef68f22:technical",
+      "prompt_version": "technical-evidence-assessment/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 20323,
+      "output_tokens": 590,
+      "duration_ms": 21933,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_dfbe623d060dfef68f22:adjudication",
+      "prompt_version": "issue-adjudication/v2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 13920,
+      "output_tokens": 2146,
+      "duration_ms": 55210,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_50d458e0b55de5345237:source_observation",
+      "prompt_version": "source-observation-check/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 6793,
+      "output_tokens": 393,
+      "duration_ms": 13776,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_50d458e0b55de5345237:counterevidence",
+      "prompt_version": "counterevidence-challenge/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 16770,
+      "output_tokens": 1413,
+      "duration_ms": 47379,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_50d458e0b55de5345237:adjudication",
+      "prompt_version": "issue-adjudication/v2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 15269,
+      "output_tokens": 2135,
+      "duration_ms": 52498,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_fe4e7255711d6441943d:source_observation",
+      "prompt_version": "source-observation-check/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 8045,
+      "output_tokens": 448,
+      "duration_ms": 17048,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_fe4e7255711d6441943d:counterevidence",
+      "prompt_version": "counterevidence-challenge/v1",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 17142,
+      "output_tokens": 1204,
+      "duration_ms": 41390,
+      "status": "completed",
+      "error": null
+    },
+    {
+      "stage": "verify_fe4e7255711d6441943d:adjudication",
+      "prompt_version": "issue-adjudication/v2",
+      "requested_model": "gpt-6.1-sol",
+      "actual_model": "gpt-6.1-sol",
+      "input_tokens": 15740,
+      "output_tokens": 1791,
+      "duration_ms": 49109,
+      "status": "completed",
+      "error": null
+    }
+  ],
+  "task_status": [
+    {
+      "verification_task_id": "verify_3a45a00a08fbc07fcdd4",
+      "consolidated_issue_id": "consolidated_c9750ce2c32914386e93",
+      "verdict": "inconclusive",
+      "execution_status": "limited",
+      "report_eligibility": "requires_human_review"
+    },
+    {
+      "verification_task_id": "verify_8519b1fe2056683370b9",
+      "consolidated_issue_id": "consolidated_2fc7365d65828d021acd",
+      "verdict": "concern_narrowed",
+      "execution_status": "limited",
+      "report_eligibility": "eligible_with_qualification"
+    },
+    {
+      "verification_task_id": "verify_636263b3fa88f2815a22",
+      "consolidated_issue_id": "consolidated_74d31eae282a7e352cfb",
+      "verdict": "inconclusive",
+      "execution_status": "limited",
+      "report_eligibility": "requires_human_review"
+    },
+    {
+      "verification_task_id": "verify_641fb5ebefc3284a239f",
+      "consolidated_issue_id": "consolidated_8e8e2b5dcfc41219ae35",
+      "verdict": "inconclusive",
+      "execution_status": "limited",
+      "report_eligibility": "requires_human_review"
+    },
+    {
+      "verification_task_id": "verify_e3fc5b4dd3e4021d567e",
+      "consolidated_issue_id": "consolidated_571a39dcba42a9759ff6",
+      "verdict": "concern_narrowed",
+      "execution_status": "limited",
+      "report_eligibility": "eligible_with_qualification"
+    },
+    {
+      "verification_task_id": "verify_971c70815eca43a1112d",
+      "consolidated_issue_id": "consolidated_63e4fcc89ffc9ebae2cf",
+      "verdict": "concern_narrowed",
+      "execution_status": "limited",
+      "report_eligibility": "requires_human_review"
+    },
+    {
+      "verification_task_id": "verify_dfbe623d060dfef68f22",
+      "consolidated_issue_id": "consolidated_84cf783ca167b1714267",
+      "verdict": "inconclusive",
+      "execution_status": "limited",
+      "report_eligibility": "requires_human_review"
+    },
+    {
+      "verification_task_id": "verify_50d458e0b55de5345237",
+      "consolidated_issue_id": "consolidated_1ca04a734f00044fd43b",
+      "verdict": "inconclusive",
+      "execution_status": "limited",
+      "report_eligibility": "requires_human_review"
+    },
+    {
+      "verification_task_id": "verify_fe4e7255711d6441943d",
+      "consolidated_issue_id": "consolidated_0caacb13a2bb7f01cbb8",
+      "verdict": "inconclusive",
+      "execution_status": "limited",
+      "report_eligibility": "requires_human_review"
+    }
+  ]
+}

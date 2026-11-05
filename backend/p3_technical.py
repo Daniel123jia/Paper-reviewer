@@ -5,7 +5,7 @@ import re
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from backend.mathcheck import source_number_matches, verify_equation_pair
 from backend.p2a_schema import StrictModel
@@ -26,6 +26,13 @@ class MetricRecord(StrictModel):
     configuration: str
     value: str
     unit: str
+
+    @field_validator("value", mode="before")
+    @classmethod
+    def normalize_json_number(cls, value):
+        if isinstance(value, bool) or not isinstance(value, (str, int, float)):
+            raise ValueError("metric value must be a decimal literal")
+        return str(value)
 
 
 class ScalarFormulaProposal(StrictModel):
