@@ -1,0 +1,87 @@
+{
+  "reference_schema_version": "1.0",
+  "paper_id": "sardet100k-neurips2024",
+  "pdf_sha256": "3f4e6cddbf32524853f3493a5e7975490b8ffeae274cf139acf2b576736998b9",
+  "created_at": "2026-11-06T02:45:00+08:00",
+  "provenance": "non_expert_source_grounded_reference",
+  "frozen_before_etpaper_output": true,
+  "etpaper_output_viewed": false,
+  "limitations": [
+    "This is a Codex-authored source-grounded challenge set, not an expert gold standard.",
+    "The set is not claimed to enumerate every defect in the paper.",
+    "External dataset permissions and code execution were not independently verified before freezing."
+  ],
+  "issues": [
+    {
+      "reference_issue_id": "h1-r1",
+      "scientific_question": "Does the train/validation/test construction prevent overlapping crops or geographically related source scenes from appearing across splits?",
+      "importance": "major",
+      "reference_category": "clarification",
+      "evidence": [
+        {"pdf_page": 16, "object_label": "Appendix A.2 split protocol", "source_note": "Unsplit source datasets receive an 8:1:1 split, but the grouping unit is not specified."},
+        {"pdf_page": 17, "object_label": "Appendix A.2 slicing protocol", "source_note": "Large images are cropped into overlapping 512 by 512 patches."}
+      ],
+      "verification_condition": "Provide split code or identifiers showing that all crops and near-duplicate scenes from one original acquisition remain in one partition.",
+      "current_assessment": "open_question"
+    },
+    {
+      "reference_issue_id": "h1-r2",
+      "scientific_question": "Could source-dataset or sensor identity be spuriously predictive of category, weakening the benchmark's claim to measure cross-source object generalization?",
+      "importance": "major",
+      "reference_category": "technical_concern",
+      "evidence": [
+        {"pdf_page": 4, "object_label": "Tables 1 and 2", "source_note": "Several object classes are contributed by only one or a small subset of source datasets with different sensors and resolutions."},
+        {"pdf_page": 16, "object_label": "Appendix A.2", "source_note": "Ten heterogeneous datasets are standardized and merged."}
+      ],
+      "verification_condition": "Report source-stratified and cross-source results or another analysis that separates object recognition from source/sensor shortcuts.",
+      "current_assessment": "open_question"
+    },
+    {
+      "reference_issue_id": "h1-r3",
+      "scientific_question": "Is Pearson correlation between transformed ImageNet and SAR inputs a valid and reproducible measure of reduced domain gap and improved transferability?",
+      "importance": "major",
+      "reference_category": "technical_concern",
+      "evidence": [
+        {"pdf_page": 7, "object_label": "Table 4 and Section 5.1", "source_note": "Near-one correlations in handcrafted feature spaces are used to support a domain-gap and transferability mechanism."}
+      ],
+      "verification_condition": "Specify sampling, alignment, aggregation, uncertainty, and a justification linking the reported correlation to domain discrepancy or transfer performance.",
+      "current_assessment": "supported_concern"
+    },
+    {
+      "reference_issue_id": "h1-r4",
+      "scientific_question": "Do the ablations isolate the claimed domain and model bridges from the effects of extra optical detection data, extra optimization, and changed initialization?",
+      "importance": "major",
+      "reference_category": "clarification",
+      "evidence": [
+        {"pdf_page": 8, "object_label": "Table 5", "source_note": "Comparisons add DOTA or DIOR detection pretraining and switch backbone versus full-framework initialization."},
+        {"pdf_page": 21, "object_label": "Table S11", "source_note": "A matched-epoch comparison helps with compute but still changes the data and training path."}
+      ],
+      "verification_condition": "Add or identify controls that separate additional data/steps from domain similarity and full-framework migration effects.",
+      "current_assessment": "open_question"
+    },
+    {
+      "reference_issue_id": "h1-r5",
+      "scientific_question": "Are small reported gains and broad generalizability claims stable across random seeds and data-order variation?",
+      "importance": "moderate",
+      "reference_category": "reporting_limit",
+      "evidence": [
+        {"pdf_page": 7, "object_label": "Table 3", "source_note": "Several filter-augmentation gains are below one mAP point and no uncertainty is shown."},
+        {"pdf_page": 28, "object_label": "NeurIPS checklist item 7", "source_note": "The authors explicitly report that error bars were not calculated because of compute limits."}
+      ],
+      "verification_condition": "Provide multi-seed uncertainty for the main ablations or narrow conclusions whose margins may overlap run-to-run variance.",
+      "current_assessment": "supported_concern"
+    },
+    {
+      "reference_issue_id": "h1-r6",
+      "scientific_question": "Are redistribution rights and downstream use constraints auditable for every source dataset in the merged public benchmark?",
+      "importance": "major",
+      "reference_category": "external_verification",
+      "evidence": [
+        {"pdf_page": 4, "object_label": "Table 2", "source_note": "Several source-dataset license cells are blank while others list incompatible or restrictive-looking terms."},
+        {"pdf_page": 30, "object_label": "NeurIPS checklist item 12", "source_note": "The paper states that owner permission was obtained, but the PDF does not provide auditable permission records."}
+      ],
+      "verification_condition": "Inspect the released asset, original terms, and permission records for each source; determine the licence of the derived merged dataset.",
+      "current_assessment": "source_limited"
+    }
+  ]
+}

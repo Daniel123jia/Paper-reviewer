@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
 from scripts.p5.contracts import (
+    BlindReferenceSet,
     EvaluationManifest,
     ModelCallSummary,
     PaperBudget,
@@ -93,3 +95,33 @@ def test_public_environment_snapshot_reports_presence_without_values(monkeypatch
     assert snapshot["model_endpoint"] == "configured_custom_endpoint"
     assert "super-secret" not in encoded
     assert "private.example" not in encoded
+
+
+def test_blind_reference_cannot_claim_blinding_after_viewing_system_output():
+    with pytest.raises(ValidationError):
+        BlindReferenceSet(
+            paper_id="holdout-1", pdf_sha256="a" * 64, created_at=NOW,
+            provenance="non_expert_source_grounded_reference",
+            frozen_before_etpaper_output=True, etpaper_output_viewed=True,
+            limitations=["not an expert gold standard"],
+            issues=[{
+                "reference_issue_id": "h1-r1",
+                "scientific_question": "Does the evaluation prevent source-scene leakage?",
+                "importance": "major", "reference_category": "clarification",
+                "evidence": [{"pdf_page": 1, "object_label": "split protocol",
+                              "source_note": "The grouping unit is not specified."}],
+                "verification_condition": "Show scene-grouped split identifiers.",
+                "current_assessment": "open_question",
+            }])
+
+
+@pytest.mark.parametrize("path", [
+    "docs/examples/p5-holdout-1/blind-reference.json",
+    "docs/examples/p5-holdout-2/blind-reference.json",
+])
+def test_frozen_holdout_reference_files_validate_and_are_blind(path):
+    reference = BlindReferenceSet.model_validate_json(Path(path).read_text(encoding="utf-8"))
+    assert reference.frozen_before_etpaper_output is True
+    assert reference.etpaper_output_viewed is False
+    assert reference.provenance == "non_expert_source_grounded_reference"
+    assert len(reference.issues) >= 5

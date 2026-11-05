@@ -1,0 +1,88 @@
+{
+  "reference_schema_version": "1.0",
+  "paper_id": "sam-iclr2021",
+  "pdf_sha256": "73ace22a61c52152fc84a94239cb3ea5f9fa9e753aa8ef5995f277365e25b764",
+  "created_at": "2026-11-06T02:50:00+08:00",
+  "provenance": "non_expert_source_grounded_reference",
+  "frozen_before_etpaper_output": true,
+  "etpaper_output_viewed": false,
+  "limitations": [
+    "This is a Codex-authored source-grounded challenge set, not an expert gold standard.",
+    "The set is not claimed to enumerate every theoretical or empirical defect.",
+    "The official code was identified but not executed before freezing."
+  ],
+  "issues": [
+    {
+      "reference_issue_id": "h2-r1",
+      "scientific_question": "How strongly does the PAC-Bayesian result justify the implemented SAM objective when its population-loss assumption is unverified and its complexity term is replaced by ordinary L2 regularization?",
+      "importance": "major",
+      "reference_category": "technical_concern",
+      "evidence": [
+        {"pdf_page": 3, "object_label": "Section 2, Equation 1", "source_note": "The paper describes the objective as inspired by the bound and substitutes a different regularizer."},
+        {"pdf_page": 14, "object_label": "Appendix A, Theorem 2", "source_note": "The theorem assumes Gaussian parameter perturbations do not reduce population loss and notes the assumption need not hold for every parameter vector."}
+      ],
+      "verification_condition": "State the exact scope of the theoretical guarantee or establish the assumption and the relation between the bound's term and the implemented regularizer.",
+      "current_assessment": "supported_concern"
+    },
+    {
+      "reference_issue_id": "h2-r2",
+      "scientific_question": "Does dropping both the exact inner maximization and second-order dependence still support the claim that the implemented update minimizes the stated min-max objective?",
+      "importance": "major",
+      "reference_category": "technical_concern",
+      "evidence": [
+        {"pdf_page": 4, "object_label": "Section 2, Equations 2 and 3", "source_note": "The inner problem is linearized and the derivative through the perturbation is then dropped."},
+        {"pdf_page": 18, "object_label": "Appendix C.4", "source_note": "The second-order ablation covers one architecture/task and reports an unexplained degradation when the term is retained."}
+      ],
+      "verification_condition": "Provide a convergence/objective analysis for the implemented update or narrow the optimization claim to a first-order heuristic supported empirically.",
+      "current_assessment": "supported_concern"
+    },
+    {
+      "reference_issue_id": "h2-r3",
+      "scientific_question": "Is SAM's reported behavior reproducible independently of accelerator count when unsynchronized per-device perturbations change the objective through m-sharpness?",
+      "importance": "major",
+      "reference_category": "clarification",
+      "evidence": [
+        {"pdf_page": 5, "object_label": "Section 3.1 footnote", "source_note": "The authors recommend unsynchronized perturbations because they amplify performance."},
+        {"pdf_page": 8, "object_label": "Section 4.1", "source_note": "Per-accelerator sub-batches are acknowledged to optimize a different sum of inner maximizations, with smaller m changing generalization."}
+      ],
+      "verification_condition": "Report synchronized versus unsynchronized results at fixed global batch size and document how device count maps to the effective objective.",
+      "current_assessment": "supported_concern"
+    },
+    {
+      "reference_issue_id": "h2-r4",
+      "scientific_question": "Are the flatness and Hessian-based mechanism claims robust to function-preserving parameter rescaling and representative of the batch-normalized models used for the main results?",
+      "importance": "major",
+      "reference_category": "technical_concern",
+      "evidence": [
+        {"pdf_page": 3, "object_label": "Section 2 neighborhood definition", "source_note": "Sharpness is measured in an absolute parameter-space norm."},
+        {"pdf_page": 8, "object_label": "Section 4.2", "source_note": "The Hessian experiment removes batch normalization because it obscures interpretation, unlike many principal models."}
+      ],
+      "verification_condition": "Demonstrate a scale-aware/invariant mechanism analysis or explicitly limit the flatness interpretation to the tested parameterization and non-BN setting.",
+      "current_assessment": "open_question"
+    },
+    {
+      "reference_issue_id": "h2-r5",
+      "scientific_question": "Does the label-noise comparison support an on-par or state-of-the-art claim under matched tuning, repeated runs, and identical evaluation protocols?",
+      "importance": "moderate",
+      "reference_category": "reporting_limit",
+      "evidence": [
+        {"pdf_page": 7, "object_label": "Section 3.3 and Table 4", "source_note": "SAM uses noise-level-specific tuning while several competitors are literature numbers, and the table does not report uncertainty."},
+        {"pdf_page": 16, "object_label": "Appendix C.1", "source_note": "Rho is selected on a clean validation subset for the noisy-label experiments."}
+      ],
+      "verification_condition": "Use matched implementations and tuning budgets with repeated-run uncertainty, or qualify the cross-paper ranking claim.",
+      "current_assessment": "open_question"
+    },
+    {
+      "reference_issue_id": "h2-r6",
+      "scientific_question": "Is describing SAM as efficient sufficiently qualified given two backpropagations per update and the hardware-dependent implementation used for its best performance?",
+      "importance": "moderate",
+      "reference_category": "clarification",
+      "evidence": [
+        {"pdf_page": 5, "object_label": "Section 3.1 compute-matched protocol", "source_note": "Each SAM update uses two backward passes; the baseline is allowed twice the epochs as an approximate compute control."},
+        {"pdf_page": 8, "object_label": "Section 4.1", "source_note": "Parallel per-device perturbations alter the effective objective and are presented as beneficial."}
+      ],
+      "verification_condition": "Report wall-clock, memory, and hardware scaling under matched accuracy or compute, and separate algorithmic simplicity from resource efficiency.",
+      "current_assessment": "open_question"
+    }
+  ]
+}

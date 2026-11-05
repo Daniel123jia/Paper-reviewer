@@ -49,6 +49,47 @@ class PaperSpec(StrictModel):
     has_figures: bool | None = None
 
 
+class ReferenceEvidence(StrictModel):
+    pdf_page: int = Field(gt=0)
+    object_label: str
+    source_note: str = Field(min_length=1)
+
+
+class ReferenceIssue(StrictModel):
+    reference_issue_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
+    scientific_question: str = Field(min_length=20)
+    importance: Literal["major", "moderate", "minor"]
+    reference_category: Literal[
+        "technical_concern", "clarification", "reporting_limit", "external_verification"
+    ]
+    evidence: list[ReferenceEvidence] = Field(min_length=1)
+    verification_condition: str = Field(min_length=10)
+    current_assessment: Literal["supported_concern", "open_question", "source_limited"]
+
+
+class BlindReferenceSet(StrictModel):
+    reference_schema_version: Literal["1.0"] = "1.0"
+    paper_id: str
+    pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_at: datetime
+    provenance: Literal[
+        "non_expert_source_grounded_reference", "independent_expert_review", "chatgpt_web_reference"
+    ]
+    frozen_before_etpaper_output: bool
+    etpaper_output_viewed: bool
+    limitations: list[str]
+    issues: list[ReferenceIssue] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def blind_claim_is_consistent(self):
+        if self.frozen_before_etpaper_output and self.etpaper_output_viewed:
+            raise ValueError("a blind reference cannot have viewed EtPaper output")
+        issue_ids = [issue.reference_issue_id for issue in self.issues]
+        if len(issue_ids) != len(set(issue_ids)):
+            raise ValueError("reference_issue_id values must be unique")
+        return self
+
+
 class EvaluationManifest(StrictModel):
     manifest_schema_version: Literal["1.0"] = "1.0"
     permitted_execution_modes: list[ExecutionMode] = [
