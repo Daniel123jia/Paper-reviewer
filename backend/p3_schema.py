@@ -76,12 +76,22 @@ class VerificationSubcheck(StrictModel):
     limitations: list[str]
 
 
+class CounterEvidenceSearch(StrictModel):
+    verification_task_id: str
+    indexed_unit_count: int = Field(ge=0)
+    selected_source_ids: list[str]
+    truncated_source_ids: list[str]
+    source_quality_limits: list[str]
+    absence_confirmed: Literal[False] = False
+
+
 class IssueAdjudication(StrictModel):
     consolidated_issue_id: str
     verification_task_id: str
     original_candidate_ids: list[str] = Field(min_length=1)
     original_central_question: str
     revised_question: str | None
+    counterevidence_search: CounterEvidenceSearch
     subchecks: list[VerificationSubcheck] = Field(min_length=1)
     verified_observation_ids: list[str]
     supporting_evidence: list[str]
