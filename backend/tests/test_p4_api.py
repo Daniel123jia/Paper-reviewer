@@ -150,3 +150,96 @@ def test_table_review_records_page_rows_values_metrics_and_does_not_change_p3(tm
     original = client.get("/api/evidence-verification-runs/v1").json()["result"]
     assert original["adjudications"][0]["report_eligibility"] == "requires_human_review"
     assert original["adjudications"][0]["human_review_status"] == "pending"
+
+
+def _set_external_dependency(tmp_path, project_id, question):
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        frozen = json.loads(db.execute("SELECT source_snapshot_json FROM p4_report_projects "
+                                       "WHERE id = ?", (project_id,)).fetchone()[0])
+        issue = frozen["p3"]["adjudications"][0]
+        issue.update(verdict="concern_narrowed", revised_question=question,
+                     report_eligibility="requires_human_review")
+        task_id = issue["verification_task_id"]
+        task = next(item for item in frozen["consolidation"]["verification_tasks"]
+                    if item["verification_task_id"] == task_id)
+        task["external_verification_required"] = True
+        task["additional_materials_needed"] = ["External literature record"]
+        db.execute("UPDATE p4_report_projects SET source_snapshot_json = ? WHERE id = ?",
+                   (json.dumps(frozen), project_id))
+
+
+def test_external_fact_cannot_be_approved_without_separate_verification_record(tmp_path):
+    client, _ = seeded_p4_client(tmp_path)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+    project_id = project["id"]
+    _set_external_dependency(tmp_path, project_id,
+        "Has prior work already proven that this method improves out-of-domain accuracy?")
+    issue = client.get(f"/api/review-report-projects/{project_id}").json()["issues"][0]
+    assert issue["external_verification_required"] is True
+    assert issue["external_dependency_is_critical"] is True
+    assert issue["external_verification_completed_in_p3"] is False
+    issue_id = issue["consolidated_issue_id"]
+    decision_url = f"/api/review-report-projects/{project_id}/issues/{issue_id}/decision"
+    proposal = {"decision": "approve_for_draft",
+                "reviewer_rationale": "The external comparison is material to this wording.",
+                "selected_source_refs": issue["source_refs"],
+                "external_dependency_disposition": "verified"}
+    rejected = client.patch(decision_url, json=proposal)
+    assert rejected.status_code == 409
+
+    review = client.post(
+        f"/api/review-report-projects/{project_id}/issues/{issue_id}/external-evidence-reviews",
+        json={"material_type": "literature", "material_identifier": "doi:10.0000/example",
+              "verification_question": "Does the prior work establish this result?",
+              "verified_finding": "The cited study reports the result for the stated setting.",
+              "limitations": ["Only the cited evaluation setting was checked"],
+              "reviewer_note": "Compared the claim with the cited article and its experiment section.",
+              "confirmation_status": "confirmed"})
+    assert review.status_code == 201, review.text
+    incomplete_decision = client.patch(decision_url, json={
+        **proposal, "external_dependency_disposition": "not_assessed",
+        "external_evidence_review_record_ids": [review.json()["record_id"]]})
+    assert incomplete_decision.status_code == 409
+    approved = client.patch(decision_url, json={**proposal,
+        "external_evidence_review_record_ids": [review.json()["record_id"]]})
+    assert approved.status_code == 200, approved.text
+    view = client.get(f"/api/review-report-projects/{project_id}").json()
+    assert len(view["external_evidence_reviews"]) == 1
+    from backend.p4_planner import build_report_plan
+    from backend.p4_report_schema import ExternalEvidenceReviewRecord, ReviewerDecision
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        db.row_factory = sqlite3.Row
+        frozen = json.loads(db.execute("SELECT source_snapshot_json FROM p4_report_projects "
+            "WHERE id = ?", (project_id,)).fetchone()[0])
+        decisions = [ReviewerDecision.model_validate_json(row["record_json"]) for row in
+            db.execute("SELECT record_json FROM p4_reviewer_decisions WHERE project_id = ?",
+                       (project_id,))]
+        external = [ExternalEvidenceReviewRecord.model_validate_json(row["record_json"]) for row in
+            db.execute("SELECT record_json FROM p4_external_evidence_reviews WHERE project_id = ?",
+                       (project_id,))]
+    plan, pack = build_report_plan(frozen, decisions, [], [], "author", "en", external)
+    assert plan.selected_issue_ids == [issue_id]
+    assert pack.issues[0].external_dependency_status == "reviewer_verified"
+    assert pack.issues[0].external_verified_findings == [
+        "The cited study reports the result for the stated setting."]
+
+
+def test_external_material_can_remain_missing_for_scoped_author_clarification(tmp_path):
+    client, _ = seeded_p4_client(tmp_path)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+    project_id = project["id"]
+    _set_external_dependency(tmp_path, project_id,
+        "Could the authors clarify whether the conclusion is limited to settings evaluated in this paper?")
+    issue = client.get(f"/api/review-report-projects/{project_id}").json()["issues"][0]
+    decision = client.patch(
+        f"/api/review-report-projects/{project_id}/issues/{issue['consolidated_issue_id']}/decision",
+        json={"decision": "approve_for_draft",
+              "reviewer_rationale": "This asks only for the scope of the paper's own conclusion.",
+              "selected_source_refs": issue["source_refs"],
+              "external_dependency_disposition": "clarification_only",
+              "external_uncertainty_qualification":
+                  "External literature was not checked; retain this only as a request for clarification."})
+    assert decision.status_code == 200, decision.text
+    view = client.get(f"/api/review-report-projects/{project_id}").json()
+    assert view["external_evidence_reviews"] == []
+    assert decision.json()["external_evidence_review_record_ids"] == []

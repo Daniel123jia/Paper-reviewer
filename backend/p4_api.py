@@ -16,7 +16,8 @@ from backend.p3_schema import EvidenceVerificationResult
 from backend.p4_drafts_api import register_p4_draft_routes
 from backend.p4_eligibility import eligibility_entries, source_identity
 from backend.p4_report_schema import (EvidenceReviewRecord, ReviewerAddedIssue,
-                                      ReviewerDecision)
+                                      ExternalEvidenceReviewRecord, ReviewerDecision)
+from backend.p4_planner import external_requirement
 
 
 def initialize_p4_tables(db):
@@ -31,6 +32,10 @@ def initialize_p4_tables(db):
             PRIMARY KEY(project_id, issue_id)
         );
         CREATE TABLE IF NOT EXISTS p4_evidence_reviews (
+            id TEXT PRIMARY KEY, project_id TEXT NOT NULL, issue_id TEXT NOT NULL,
+            record_json TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS p4_external_evidence_reviews (
             id TEXT PRIMARY KEY, project_id TEXT NOT NULL, issue_id TEXT NOT NULL,
             record_json TEXT NOT NULL
         );
@@ -75,6 +80,10 @@ class DecisionInput(BaseModel):
     selected_source_refs: list[str] = Field(default_factory=list)
     reviewer_rationale: str = Field(default="", max_length=4000)
     evidence_review_record_ids: list[str] = Field(default_factory=list)
+    external_evidence_review_record_ids: list[str] = Field(default_factory=list)
+    external_dependency_disposition: Literal["not_assessed", "verified",
+                                             "clarification_only"] = "not_assessed"
+    external_uncertainty_qualification: str = Field(default="", max_length=4000)
     reviewer_edited_comment: str | None = Field(default=None, max_length=20000)
     report_order: int = Field(default=0, ge=0)
 
@@ -87,6 +96,16 @@ class EvidenceReviewInput(BaseModel):
     checked_values_and_labels: str = Field(default="", max_length=4000)
     metric_names_and_order: str = Field(default="", max_length=2000)
     unresolved_configurations: list[str] = Field(default_factory=list)
+    reviewer_note: str = Field(min_length=8, max_length=4000)
+    confirmation_status: Literal["confirmed", "unresolved"]
+
+
+class ExternalEvidenceReviewInput(BaseModel):
+    material_type: Literal["literature", "code", "data", "other"]
+    material_identifier: str = Field(min_length=3, max_length=1000)
+    verification_question: str = Field(min_length=8, max_length=2000)
+    verified_finding: str = Field(min_length=8, max_length=4000)
+    limitations: list[str] = Field(default_factory=list)
     reviewer_note: str = Field(min_length=8, max_length=4000)
     confirmation_status: Literal["confirmed", "unresolved"]
 
@@ -121,6 +140,11 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs, model_factory):
         return [EvidenceReviewRecord.model_validate_json(row["record_json"]) for row in db.execute(
             "SELECT record_json FROM p4_evidence_reviews WHERE project_id = ?", (project_id,))]
 
+    def external_evidence_records(db, project_id):
+        return [ExternalEvidenceReviewRecord.model_validate_json(row["record_json"])
+                for row in db.execute("SELECT record_json FROM p4_external_evidence_reviews "
+                                      "WHERE project_id = ?", (project_id,))]
+
     def reviewer_issues(db, project_id):
         return [ReviewerAddedIssue.model_validate_json(row["record_json"]) for row in db.execute(
             "SELECT record_json FROM p4_reviewer_added_issues WHERE project_id = ?", (project_id,))]
@@ -128,13 +152,24 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs, model_factory):
     def project_view(db, row):
         frozen = snapshot_of(row)
         result = EvidenceVerificationResult.model_validate(frozen["p3"])
+        issues = issue_entries(frozen)
+        issue_views = []
+        for item in issues:
+            requirement = external_requirement(frozen, item)
+            issue_views.append({**item.model_dump(),
+                "external_verification_required": requirement["required"],
+                "external_dependency_is_critical": requirement["critical"],
+                "external_verification_completed_in_p3": requirement["completed_in_p3"],
+                "external_scope_clarification_allowed": requirement["scope_clarification"]})
         return {"id": row["id"], "document_id": row["document_id"],
                 "source_p3_run_id": row["p3_run_id"], "source": frozen["source"],
                 "execution_status": result.execution_status,
-                "issues": [item.model_dump() for item in issue_entries(frozen)],
+                "issues": issue_views,
                 "sources": [item.model_dump() for item in result.sources],
                 "decisions": [item.model_dump() for item in decision_records(db, row["id"])],
                 "evidence_reviews": [item.model_dump() for item in evidence_records(db, row["id"])],
+                "external_evidence_reviews": [item.model_dump() for item in
+                                              external_evidence_records(db, row["id"])],
                 "reviewer_added": [item.model_dump() for item in reviewer_issues(db, row["id"])],
                 "drafts": [{"id": item["id"], "kind": item["kind"],
                             "language": item["language"], "revision_number": item["revision_number"],
@@ -252,6 +287,11 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs, model_factory):
                        if item.consolidated_issue_id == issue_id}
             if not set(payload.evidence_review_record_ids).issubset(records):
                 raise HTTPException(400, "人工证据复核记录不属于本问题")
+            external_records = {item.record_id: item for item in
+                                external_evidence_records(db, project_id)
+                                if item.consolidated_issue_id == issue_id}
+            if not set(payload.external_evidence_review_record_ids).issubset(external_records):
+                raise HTTPException(400, "外部证据核验记录不属于本问题")
             if payload.decision in {"approve_for_draft", "approve_for_final"}:
                 if entry and entry.processing_status in {"excluded", "internal_only"}:
                     raise HTTPException(409, "P3 未核实或已反证的问题不能直接批准")
@@ -268,6 +308,25 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs, model_factory):
                               {"pdf_text_located", "human_confirmed"}} | confirmed_refs
                     if not usable:
                         raise HTTPException(409, "批准意见需要已定位或另行确认的来源")
+                    requirement = external_requirement(frozen, entry)
+                    confirmed_external = [external_records[record_id] for record_id in
+                        payload.external_evidence_review_record_ids
+                        if external_records[record_id].confirmation_status == "confirmed"]
+                    if payload.external_dependency_disposition == "verified" and not \
+                            (confirmed_external or requirement["completed_in_p3"]):
+                        raise HTTPException(409, "外部事实未有独立核验记录")
+                    externally_verified = (requirement["completed_in_p3"] or
+                        (payload.external_dependency_disposition == "verified" and
+                         bool(confirmed_external)))
+                    clarification_allowed = (
+                        payload.external_dependency_disposition == "clarification_only" and
+                        requirement["scope_clarification"] and
+                        bool(payload.external_uncertainty_qualification.strip()))
+                    if requirement["required"] and not requirement["completed_in_p3"] and \
+                            (requirement["critical"] or entry.processing_status ==
+                             "human_review_required") and not externally_verified and not \
+                            clarification_allowed:
+                        raise HTTPException(409, "外部证据依赖未核验，且未限定为论文自身范围的澄清问题")
                 if entry and entry.processing_status == "human_review_required":
                     visual = {item["source_id"] for item in frozen["p3"]["sources"]
                               if item["source_id"] in allowed and
@@ -291,12 +350,40 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs, model_factory):
                 selected_source_refs=payload.selected_source_refs,
                 reviewer_rationale=payload.reviewer_rationale,
                 evidence_review_record_ids=payload.evidence_review_record_ids,
+                external_evidence_review_record_ids=payload.external_evidence_review_record_ids,
+                external_dependency_disposition=payload.external_dependency_disposition,
+                external_uncertainty_qualification=payload.external_uncertainty_qualification,
                 reviewer_edited_comment=payload.reviewer_edited_comment,
                 report_order=payload.report_order,
                 created_at=old.created_at if old else now(), updated_at=now())
             db.execute("INSERT INTO p4_reviewer_decisions VALUES (?, ?, ?) ON CONFLICT(project_id, issue_id) "
                        "DO UPDATE SET record_json = excluded.record_json",
                        (project_id, issue_id, record.model_dump_json()))
+            invalidate_approvals(db, project_id)
+            return record.model_dump()
+
+    @app.post("/api/review-report-projects/{project_id}/issues/{issue_id}/external-evidence-reviews",
+              status_code=201)
+    def record_external_evidence_review(project_id: str, issue_id: str,
+                                        payload: ExternalEvidenceReviewInput):
+        with connect() as db:
+            frozen = snapshot_of(project_or_404(db, project_id))
+            entry = next((item for item in issue_entries(frozen)
+                          if item.consolidated_issue_id == issue_id), None)
+            if not entry:
+                raise HTTPException(404, "报告问题不存在")
+            if not external_requirement(frozen, entry)["required"]:
+                raise HTTPException(400, "当前问题未声明外部证据核验需求")
+            record = ExternalEvidenceReviewRecord(record_id=uuid.uuid4().hex,
+                report_project_id=project_id, consolidated_issue_id=issue_id,
+                material_type=payload.material_type,
+                material_identifier=payload.material_identifier,
+                verification_question=payload.verification_question,
+                verified_finding=payload.verified_finding,
+                limitations=payload.limitations, reviewer_note=payload.reviewer_note,
+                confirmation_status=payload.confirmation_status, reviewed_at=now())
+            db.execute("INSERT INTO p4_external_evidence_reviews VALUES (?, ?, ?, ?)",
+                       (record.record_id, project_id, issue_id, record.model_dump_json()))
             invalidate_approvals(db, project_id)
             return record.model_dump()
 
@@ -321,4 +408,5 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs, model_factory):
     register_p4_draft_routes(app, connect, model_factory, {
         "project_or_404": project_or_404, "snapshot_of": snapshot_of,
         "decision_records": decision_records, "evidence_records": evidence_records,
+        "external_evidence_records": external_evidence_records,
         "reviewer_issues": reviewer_issues, "now": now, "digest": digest})

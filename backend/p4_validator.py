@@ -20,7 +20,7 @@ def numeric_claims(text):
 def allowed_author_numbers(pack: ReportEvidencePack):
     source = " ".join(pack.paper_facts)
     for issue in pack.issues:
-        source += " " + " ".join(issue.observed_statements)
+        source += " " + " ".join(issue.observed_statements + issue.external_verified_findings)
     for item in pack.reviewer_added:
         source += " " + item.evidence_basis
     return numeric_claims(source)
@@ -31,6 +31,7 @@ def allowed_internal_numbers(pack: ReportEvidencePack):
     for issue in pack.issues:
         source += " " + " ".join(issue.observed_statements + issue.actual_tool_results +
             issue.author_explanations + issue.outstanding_checks +
+            issue.external_verified_findings +
             [issue.scientific_question, issue.original_question,
              issue.revised_question or ""])
     for item in pack.reviewer_added:
@@ -75,6 +76,19 @@ def validate_writing(result: ReportWritingResult, plan: ReportPlan,
         if re.search(r"\b(?:more experiments are needed|novelty is limited|method is unclear)\b",
                      comment.comment_body, re.I):
             raise ValueError("generic review template needs a specific scientific object")
+        clarification_only = [issue_index[issue_id] for issue_id in group.source_issue_ids
+                              if issue_id in issue_index and
+                              issue_index[issue_id].external_dependency_status ==
+                              "clarification_only"]
+        if clarification_only:
+            if not re.search(r"\b(?:not checked|unverified|not independently verified)\b|"
+                             r"未核查|未核验|未独立验证",
+                             comment.uncertainty_qualification, re.I):
+                raise ValueError("clarification-only external dependency needs an explicit limitation")
+            if re.search(r"\b(?:prior work|previous work|literature|cited study|repository|"
+                         r"external data)\b.{0,80}\b(?:has |have )?(?:proven|demonstrated|"
+                         r"established|confirmed|shown)\b", comment.comment_body, re.I):
+                raise ValueError("unchecked external fact cannot enter clarification-only wording")
         if plan.report_kind == "author":
             validate_author_body(comment.comment_body, pack)
             for issue_id in group.source_issue_ids:

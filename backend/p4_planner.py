@@ -8,8 +8,8 @@ from backend.p2c_schema import CandidateConsolidationResult
 from backend.p3_schema import EvidenceVerificationResult
 from backend.p4_eligibility import eligibility_entries
 from backend.p4_report_schema import (EvidenceReviewRecord, ReportEvidenceItem,
-    ReportEvidencePack, ReportIssueGroup, ReportPlan, ReportSourceIdentity,
-    ReviewerAddedIssue, ReviewerDecision)
+    ExternalEvidenceReviewRecord, ReportEvidencePack, ReportIssueGroup, ReportPlan,
+    ReportSourceIdentity, ReviewerAddedIssue, ReviewerDecision)
 
 
 def _terms(text):
@@ -35,9 +35,75 @@ def _technical_phrases(text):
             if all(word not in generic for word in words[index:index + 3])}
 
 
+def _request_facets(text):
+    patterns = {
+        "generalization": r"\b(?:generaliz\w*|out[- ]of[- ]domain|unseen|distribution shift|transfer)\b",
+        "efficiency": r"\b(?:memory|complexity|runtime|latency|throughput|scal\w*|efficien\w*)\b",
+        "mathematical": r"\b(?:formula|equation|deriv\w*|proof|theorem|mathemat\w*|correctness)\b",
+        "experimental_validation": r"\b(?:baseline|compar\w*|matched|fairness|same architecture|"
+                                   r"training budget|ablation|component|variant|isolate|"
+                                   r"contribution of)\b",
+    }
+    folded = text.casefold()
+    return {name for name, pattern in patterns.items() if re.search(pattern, folded)}
+
+
 def _same_scientific_request(left, right):
-    return _similar_question(left, right) or bool(
-        _technical_phrases(left) & _technical_phrases(right))
+    left_facets, right_facets = _request_facets(left), _request_facets(right)
+    if left_facets != right_facets:
+        return False
+    if _similar_question(left, right):
+        return True
+    return bool(left_facets and _technical_phrases(left) & _technical_phrases(right))
+
+
+def _scope_clarification(question):
+    return bool(re.search(r"\bclarif\w*\b", question, re.I) and
+                re.search(r"\b(?:scope|limit\w*|applicab\w*|conclusion|claim)\b", question, re.I) and
+                re.search(r"\b(?:this paper|evaluated|reported|studied|presented)\b", question, re.I))
+
+
+def external_requirement(snapshot, entry):
+    task = next((item for item in snapshot["consolidation"]["verification_tasks"]
+                 if item["verification_task_id"] == entry.verification_task_id), None)
+    required = bool(task and task["external_verification_required"])
+    completed = required and any(item["verification_task_id"] == entry.verification_task_id and
+                                 item["check_type"] == "external" and item["status"] == "completed"
+                                 for item in snapshot["p3"]["tool_results"])
+    external_fact = bool(re.search(
+        r"\b(?:prior work|previous work|literature|citation|cited|state[- ]of[- ]the[- ]art|sota|"
+        r"repository|source code|code|scripts?|released|external materials?|external data|"
+        r"public dataset|benchmark)\b",
+        entry.scientific_question, re.I))
+    scope_only = _scope_clarification(entry.scientific_question)
+    return {"required": required, "completed_in_p3": completed,
+            "critical": required and not completed and external_fact and not scope_only,
+            "scope_clarification": scope_only}
+
+
+def external_admission(snapshot, entry, decision, records):
+    requirement = external_requirement(snapshot, entry)
+    referenced = {item.record_id: item for item in records
+                  if item.consolidated_issue_id == entry.consolidated_issue_id}
+    confirmed = [referenced[record_id] for record_id in
+                 (decision.external_evidence_review_record_ids if decision else [])
+                 if record_id in referenced and referenced[record_id].confirmation_status == "confirmed"]
+    if not requirement["required"]:
+        return True, "not_required", "No external evidence is required for this final question.", []
+    if requirement["completed_in_p3"]:
+        return True, "completed_in_p3", "P3 records a completed external check.", []
+    if confirmed and decision and decision.external_dependency_disposition == "verified":
+        return True, "reviewer_verified", "Use only the separately reviewed external finding.", confirmed
+    if decision and decision.external_dependency_disposition == "clarification_only" and \
+            requirement["scope_clarification"] and \
+            decision.external_uncertainty_qualification.strip():
+        return True, "clarification_only", decision.external_uncertainty_qualification, []
+    status = "critical_unresolved" if requirement["critical"] else "noncritical_unresolved"
+    constraint = ("External support is a critical dependency and remains unverified; do not state "
+                  "the external fact or comparison." if requirement["critical"] else
+                  "External material remains unchecked; restrict wording to the paper's own claims "
+                  "and do not imply external verification.")
+    return not requirement["critical"], status, constraint, []
 
 
 def _category(entry, decision):
@@ -109,7 +175,9 @@ def _location(source):
 
 def build_report_plan(snapshot: dict, decisions: list[ReviewerDecision],
                       reviews: list[EvidenceReviewRecord], manual: list[ReviewerAddedIssue],
-                      report_kind: str, language: str):
+                      report_kind: str, language: str,
+                      external_reviews: list[ExternalEvidenceReviewRecord] | None = None):
+    external_reviews = external_reviews or []
     source = ReportSourceIdentity.model_validate(snapshot["source"])
     result = EvidenceVerificationResult.model_validate(snapshot["p3"])
     consolidation = CandidateConsolidationResult.model_validate(snapshot["consolidation"])
@@ -121,12 +189,14 @@ def build_report_plan(snapshot: dict, decisions: list[ReviewerDecision],
     selected = []
     for entry in entries:
         decision = decision_index.get(entry.consolidated_issue_id)
+        external_allowed, _, _, _ = external_admission(
+            snapshot, entry, decision, external_reviews)
         if report_kind != "author":
             selected.append(entry)
             continue
         if decision and decision.reviewer_approval_status in {"excluded", "needs_verification"}:
             continue
-        if entry.processing_status == "auto_draft_candidate":
+        if entry.processing_status == "auto_draft_candidate" and external_allowed:
             selected.append(entry)
         elif entry.processing_status == "human_review_required" and decision and \
                 decision.reviewer_approval_status in {"approved_for_draft", "approved_for_final"}:
@@ -135,18 +205,23 @@ def build_report_plan(snapshot: dict, decisions: list[ReviewerDecision],
                       item.source_type in {"table", "formula", "figure"} and
                       item.source_verification_status == "visual_check_required"}
             if all((entry.consolidated_issue_id, ref) in confirmed for ref in visual):
-                selected.append(entry)
+                requirement = external_requirement(snapshot, entry)
+                if external_allowed and (not requirement["required"] or
+                        requirement["completed_in_p3"] or
+                        decision.external_dependency_disposition in
+                        {"verified", "clarification_only"}):
+                    selected.append(entry)
     selected_manual = [item for item in manual if report_kind != "author" or
                        (decision_index.get(item.issue_id) and
                         decision_index[item.issue_id].reviewer_approval_status in
                         {"approved_for_draft", "approved_for_final"})]
     groups = _groups(selected, consolidation, decision_index, selected_manual)
-    plan = ReportPlan(source=source, report_kind=report_kind, language=language,
+    plan = ReportPlan(admission_rule_version="p4.1", source=source,
+        report_kind=report_kind, language=language,
         selected_issue_ids=[item.consolidated_issue_id for item in selected] +
                            [item.issue_id for item in selected_manual],
         internal_only_issue_ids=[item.consolidated_issue_id for item in entries
-                                 if item.processing_status in {"internal_only", "human_review_required"}
-                                 and item not in selected],
+                                 if item.processing_status != "excluded" and item not in selected],
         excluded_issue_ids=[item.consolidated_issue_id for item in entries
                             if item.processing_status == "excluded"],
         groups=groups, source_limitations=list(dict.fromkeys(
@@ -171,6 +246,8 @@ def build_report_plan(snapshot: dict, decisions: list[ReviewerDecision],
         tools = [f"{check.check_type}: {check.result}" for check in result.tool_results if
                  check.verification_task_id == entry.verification_task_id and
                  check.status == "completed"]
+        _, external_status, external_constraint, external_confirmed = external_admission(
+            snapshot, entry, decision_index.get(entry.consolidated_issue_id), external_reviews)
         evidence.append(ReportEvidenceItem(source_issue_id=entry.consolidated_issue_id,
             scientific_question=entry.scientific_question,
             original_question=item.original_central_question,
@@ -185,8 +262,14 @@ def build_report_plan(snapshot: dict, decisions: list[ReviewerDecision],
             author_explanations=item.author_explanations,
             outstanding_checks=item.outstanding_checks,
             evidence_limitations=item.remaining_uncertainty,
-            source_locations=list(dict.fromkeys(locations)), actual_tool_results=tools))
-    pack = ReportEvidencePack(source=source, report_kind=report_kind,
+            source_locations=list(dict.fromkeys(locations)), actual_tool_results=tools,
+            external_verification_required=external_requirement(snapshot, entry)["required"],
+            external_dependency_status=external_status,
+            external_reporting_constraint=external_constraint,
+            external_evidence_review_record_ids=[item.record_id for item in external_confirmed],
+            external_verified_findings=[item.verified_finding for item in external_confirmed]))
+    pack = ReportEvidencePack(admission_rule_version="p4.1", source=source,
+        report_kind=report_kind,
         language=language, paper_facts=_paper_facts(profile), issues=evidence,
         groups=groups, reviewer_added=selected_manual,
         approval_record_ids=[decision.decision_id for decision in decisions

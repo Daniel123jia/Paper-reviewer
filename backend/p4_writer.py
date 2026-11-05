@@ -192,6 +192,11 @@ def render_markdown(plan: ReportPlan, pack: ReportEvidencePack,
                         if issue.outstanding_checks:
                             lines += ["- " + ("未完成检查：" if zh else "Pending checks: ") +
                                       "; ".join(issue.outstanding_checks[:3])]
+                        if issue.external_verification_required:
+                            lines += ["- " + ("外部证据状态：" if zh else
+                                              "External evidence status: ") +
+                                      f"{issue.external_dependency_status}; " +
+                                      issue.external_reporting_constraint]
                 lines += [""]
     if internal:
         lines += ["## 核验限制与来源" if zh else "## Verification Limits and Sources", ""]

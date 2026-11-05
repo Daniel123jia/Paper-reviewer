@@ -40,6 +40,7 @@ def register_p4_draft_routes(app, connect, model_factory, helpers):
     snapshot_of = helpers["snapshot_of"]
     decision_records = helpers["decision_records"]
     evidence_records = helpers["evidence_records"]
+    external_evidence_records = helpers["external_evidence_records"]
     reviewer_issues = helpers["reviewer_issues"]
     now = helpers["now"]
     digest = helpers["digest"]
@@ -111,8 +112,10 @@ def register_p4_draft_routes(app, connect, model_factory, helpers):
         frozen = snapshot_of(row)
         decisions = decision_records(db, project_id)
         reviews = evidence_records(db, project_id)
+        external_reviews = external_evidence_records(db, project_id)
         manual = reviewer_issues(db, project_id)
-        return build_report_plan(frozen, decisions, reviews, manual, kind, language), decisions
+        return build_report_plan(frozen, decisions, reviews, manual, kind, language,
+                                 external_reviews), decisions
 
     def reject_rejected_issue_text(body, snapshot, selected):
         for issue in snapshot["p3"]["adjudications"]:

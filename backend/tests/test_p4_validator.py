@@ -109,3 +109,18 @@ def test_numbered_comment_heading_is_not_a_scientific_numeric_claim():
     assert numeric_claims("### 1. Relative position scope\nTable 3 reports 79.1 EM.") == {"79.1"}
     assert numeric_claims("所提供材料定位于 PDF 第 3–4 页，速度下降 7%。") == {"7"}
     assert numeric_claims("PDF pages 3–4 and Tables 2–3 report 7% slower steps.") == {"7"}
+
+
+def test_clarification_only_report_cannot_turn_unchecked_external_fact_into_assertion(tmp_path):
+    plan, pack, writing = case(tmp_path)
+    pack.issues[0].external_verification_required = True
+    pack.issues[0].external_dependency_status = "clarification_only"
+    pack.issues[0].external_reporting_constraint = (
+        "External literature was not checked; retain this only as a request for clarification.")
+    wrong = writing.model_copy(deep=True)
+    wrong.comments[0].comment_body = (
+        "Prior work has already proven that the method improves out-of-domain accuracy. "
+        "The authors should therefore revise the scope of the claim and explain the discrepancy.")
+    wrong.comments[0].uncertainty_qualification = "External literature was not checked."
+    with pytest.raises(ValueError, match="unchecked external fact"):
+        validate_writing(wrong, plan, pack)

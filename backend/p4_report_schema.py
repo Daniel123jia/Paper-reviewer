@@ -7,7 +7,7 @@ from pydantic import Field, model_validator
 from backend.p2a_schema import StrictModel
 
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "1.1"
 EligibilityStatus = Literal["auto_draft_candidate", "human_review_required",
                             "internal_only", "excluded"]
 ApprovalStatus = Literal["pending", "approved_for_draft", "approved_for_final",
@@ -56,6 +56,10 @@ class ReviewerDecision(StrictModel):
     selected_source_refs: list[str]
     reviewer_rationale: str
     evidence_review_record_ids: list[str]
+    external_evidence_review_record_ids: list[str] = Field(default_factory=list)
+    external_dependency_disposition: Literal["not_assessed", "verified",
+                                             "clarification_only"] = "not_assessed"
+    external_uncertainty_qualification: str = ""
     reviewer_edited_comment: str | None = None
     report_order: int = Field(default=0, ge=0)
     created_at: str
@@ -73,6 +77,20 @@ class EvidenceReviewRecord(StrictModel):
     checked_values_and_labels: str
     metric_names_and_order: str
     unresolved_configurations: list[str]
+    reviewer_note: str
+    confirmation_status: Literal["confirmed", "unresolved"]
+    reviewed_at: str
+
+
+class ExternalEvidenceReviewRecord(StrictModel):
+    record_id: str
+    report_project_id: str
+    consolidated_issue_id: str
+    material_type: Literal["literature", "code", "data", "other"]
+    material_identifier: str
+    verification_question: str
+    verified_finding: str
+    limitations: list[str]
     reviewer_note: str
     confirmation_status: Literal["confirmed", "unresolved"]
     reviewed_at: str
@@ -117,10 +135,18 @@ class ReportEvidenceItem(StrictModel):
     evidence_limitations: list[str]
     source_locations: list[str]
     actual_tool_results: list[str]
+    external_verification_required: bool = False
+    external_dependency_status: Literal["not_required", "completed_in_p3",
+                                        "reviewer_verified", "clarification_only",
+                                        "critical_unresolved", "noncritical_unresolved"] = "not_required"
+    external_reporting_constraint: str = ""
+    external_evidence_review_record_ids: list[str] = Field(default_factory=list)
+    external_verified_findings: list[str] = Field(default_factory=list)
 
 
 class ReportEvidencePack(StrictModel):
-    schema_version: Literal["1.0"] = SCHEMA_VERSION
+    schema_version: Literal["1.0", "1.1"] = SCHEMA_VERSION
+    admission_rule_version: Literal["p4.0", "p4.1"] | None = None
     source: ReportSourceIdentity
     report_kind: ReportKind
     language: Language
@@ -133,7 +159,8 @@ class ReportEvidencePack(StrictModel):
 
 
 class ReportPlan(StrictModel):
-    schema_version: Literal["1.0"] = SCHEMA_VERSION
+    schema_version: Literal["1.0", "1.1"] = SCHEMA_VERSION
+    admission_rule_version: Literal["p4.0", "p4.1"] | None = None
     source: ReportSourceIdentity
     report_kind: ReportKind
     language: Language
@@ -160,7 +187,7 @@ class ReportComment(StrictModel):
 
 
 class ReportWritingResult(StrictModel):
-    schema_version: Literal["1.0"] = SCHEMA_VERSION
+    schema_version: Literal["1.0"] = "1.0"
     prompt_version: str
     language: Language
     report_kind: ReportKind

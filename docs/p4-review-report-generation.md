@@ -6,16 +6,17 @@ P4 将已冻结的 P1–P3 结果组织为内部报告、作者意见草稿和�
 
 `POST /api/evidence-verification-runs/{run_id}/report-projects` 加载同一来源链中的 ReviewPlan、PaperProfile、ClaimEvidenceMap、ProfessionalReviewResult、CandidateConsolidationResult、EvidenceVerificationResult、Source Bundle 和原始 PDF。服务端校验各运行 ID、文档 ID、Source Bundle ID、PDF SHA-256 及 P3 引用，再创建不可变的 P4 来源快照。项目保存 P3 Schema 版本、原始结果摘要和 `execution_mode`；`recorded_model_replay` 保持为历史响应重放，不标为新模型核验。
 
-版本化 P4 Pydantic 契约位于 `backend/p4_report_schema.py`，当前 Schema `1.0`：
+版本化 P4 规划/证据包 Pydantic 契约位于 `backend/p4_report_schema.py`，当前 Schema `1.1`、准入规则 `p4.1`；写作模型输出契约仍为 `1.0`：
 
 - `ReportSourceIdentity`：document、snapshot、PDF SHA-256、Source Bundle 及 P2-A/P2-B/P2-C/P3 运行 ID。
 - `EligibilityEntry`：原始 verdict、report_eligibility、human_review_status 及 P4 processing_status。
 - `ReviewerDecision`：审稿人采纳、批准、修改、排除或要求复核的记录；`reviewer_approval_status` 与 P3 状态分离。
 - `EvidenceReviewRecord`：人工查看 PDF 时的对象、页码、行列、数值、指标顺序、未确认配置和说明。批准报告本身不会创建此记录。
+- `ExternalEvidenceReviewRecord`：外部文献、代码或数据的独立核验记录，保存材料标识、核验问题、已核查结论、限制和确认状态。`ReviewerDecision` 只能引用该记录，点击批准不会自动创建它。
 - `ReviewerAddedIssue`：明确标识人工新增来源；不会冒充 P3 自动核验。
 - `ReportPlan`、`ReportIssueGroup`、`ReportEvidencePack`、`ReportComment`、`ReportWritingResult`：结构化筛选、分组、写作和可追溯意见。
 
-P4 独立使用 SQLite `p4_report_projects`、`p4_reviewer_decisions`、`p4_evidence_reviews`、`p4_reviewer_added_issues`、`p4_drafts`、`p4_draft_revisions` 和 `p4_model_calls`。现有数据库初始化会增建这些表，不更改旧 `review_drafts` 或 P1–P3 表。生产环境仍须补齐论文原文、快照及诊断数据的权限和保留期限。
+P4 独立使用 SQLite `p4_report_projects`、`p4_reviewer_decisions`、`p4_evidence_reviews`、`p4_external_evidence_reviews`、`p4_reviewer_added_issues`、`p4_drafts`、`p4_draft_revisions` 和 `p4_model_calls`。现有数据库初始化会增建这些表，不更改旧 `review_drafts` 或 P1–P3 表。Schema 1.1 仍可读取已保存的 1.0 计划和证据包；旧记录没有的外部核验字段按“未声明/未核验”保守解释。生产环境仍须补齐论文原文、快照及诊断数据的权限和保留期限。
 
 ## 准入与人工审核
 
@@ -23,7 +24,9 @@ P4 独立使用 SQLite `p4_report_projects`、`p4_reviewer_decisions`、`p4_evid
 
 报告规划先构建准入清单，再按科学问题与相关 Claim 进行保守去重，保留所有 P3 Issue ID。`major_candidate` 不自动成为 Major Comment；收窄后的澄清问题保留为 Clarification。内部报告记录全部问题及状态，作者可见报告只包含准入且被选中的意见。没有准入意见时，作者草稿为空并明确提示审稿人处理待核验事项；系统不补齐固定问题数。
 
-跨问题合组要求共享相关 Claim，且科学问题高度相似或含相同的具体三词技术短语；不同 Claim 即使措辞接近仍分开。合组保留全部来源 ID、各项观察、正反证据和待核验检查。DistilBERT 的两项仅 MLM 基线疑点在报告层合为一个主题，但 P3 的两个原始判定保持独立。
+跨问题合组要求共享相关 Claim，并且科学质疑类型（泛化、效率/内存、数学正确性、实验比较/消融）一致；在此基础上还需问题高度相似，或共享同一具体技术对象的主要核验需求。不再因共享三词短语和 Claim 就自动合并；无法证明等价时保留为独立问题。合组保留全部来源 ID、各项观察、正反证据和待核验检查。DistilBERT 的两项 MLM-only 匹配基线问题仍是同一实验对象与核验需求，因此报告层保持合组；P3 两个原始判定仍独立保留。
+
+对外部材料的准入单独判定：P3 已完成的 external ToolCheck 可作为已核验状态；否则，依赖先前工作结论、代码、脚本或外部数据的最终问题标记为 `critical_unresolved`，不能靠 ReviewerDecision 放行。只要求作者界定本文自身结论范围的问题，可由审稿人明确选择 `clarification_only` 并保存未核验限定后纳入；与最终问题无关的次要外部待办不会阻断合理澄清。
 
 ## 写作与验证
 
@@ -41,7 +44,7 @@ P4 独立使用 SQLite `p4_report_projects`、`p4_reviewer_decisions`、`p4_evid
 
 - `GET /api/documents/{document_id}/evidence-verification-runs`、`GET /api/documents/{document_id}/review-report-projects`：同论文来源选择。
 - `POST /api/evidence-verification-runs/{run_id}/report-projects`、`GET /api/review-report-projects/{project_id}`：冻结和读取项目。
-- `PATCH /api/review-report-projects/{project_id}/issues/{issue_id}/decision`、`POST .../evidence-reviews`、`POST /api/review-report-projects/{project_id}/reviewer-issues`：人工决策、原文复核与新增意见。
+- `PATCH /api/review-report-projects/{project_id}/issues/{issue_id}/decision`、`POST .../evidence-reviews`、`POST .../external-evidence-reviews`、`POST /api/review-report-projects/{project_id}/reviewer-issues`：人工决策、PDF 视觉复核、外部材料核验与新增意见。
 - `POST /api/review-report-projects/{project_id}/drafts`、`GET/PUT /api/review-report-drafts/{draft_id}`、`POST .../approve`、`GET .../export?format=md|docx|pdf&final=true|false`：生成、编辑、批准和导出。
 
 所有接口继承现有 FastAPI 访问控制；部署时须配置实际访问密钥。P4 模型调用表仅保存模型标识、Prompt 版本、Token、耗时、状态及错误类别，不保存密钥或完整模型请求/响应。
