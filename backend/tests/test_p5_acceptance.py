@@ -141,6 +141,9 @@ def test_public_holdout_run_summaries_are_explicitly_partial_and_sanitized(path)
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     encoded = json.dumps(payload).lower()
     assert payload["execution_mode"] == "fresh_model_run"
+    assert payload["evaluation_id"]
+    assert payload["started_at"] < payload["finished_at"]
+    assert payload["source_bundle_id"].startswith("sb_")
     assert payload["overall_status"] == "blocked_missing_credential"
     assert payload["stages"]["p1"] == "completed"
     assert payload["stages"]["p2a"] == "blocked_missing_credential"
@@ -210,17 +213,23 @@ def test_scientific_evaluation_requires_traceable_issue_evidence():
             }], p3_conservatism=[], limitations=["Non-expert review"])
 
 
-@pytest.mark.parametrize("path", [
-    "docs/examples/p5-regression/shaw2018-scientific-evaluation.json",
-    "docs/examples/p5-regression/distilbert2019-scientific-evaluation.json",
-    "docs/examples/p5-regression/fasttext2016-scientific-evaluation.json",
+@pytest.mark.parametrize(("path", "evidence_map"), [
+    ("docs/examples/p5-regression/shaw2018-scientific-evaluation.json",
+     "docs/examples/p2b-shaw2018/evidence_mapping.json"),
+    ("docs/examples/p5-regression/distilbert2019-scientific-evaluation.json",
+     "docs/examples/p2b-distilbert2019/evidence_mapping.json"),
+    ("docs/examples/p5-regression/fasttext2016-scientific-evaluation.json",
+     "docs/examples/p2b-fasttext2016/evidence_mapping.json"),
 ])
-def test_historical_scientific_evaluations_validate_and_disclose_replay(path):
+def test_historical_scientific_evaluations_validate_and_disclose_replay(path, evidence_map):
     result = ScientificEvaluation.model_validate_json(Path(path).read_text(encoding="utf-8"))
+    source_ids = set(json.loads(Path(evidence_map).read_text(encoding="utf-8")))
     assert result.evaluator_provenance == "codex_non_expert_review"
     assert result.judgments
     assert all(item.source_result_execution_mode == "recorded_model_replay"
                for item in result.judgments)
+    assert all(source_id in source_ids for item in result.judgments
+               for source_id in item.evidence_refs)
     assert any("not a fresh P5 model run" in limitation for limitation in result.limitations)
 
 
@@ -252,6 +261,21 @@ def test_public_product_summary_discloses_fixture_and_layout_failure():
     assert payload["chinese_math_table_draft"]["visual_status"].startswith("failed_")
     encoded = json.dumps(payload).lower()
     assert "api_key" not in encoded and "authorization" not in encoded
+
+
+def test_public_evaluation_manifest_is_frozen_and_secret_free():
+    path = Path("docs/examples/p5-regression/evaluation-manifest.json")
+    manifest = EvaluationManifest.model_validate_json(path.read_text(encoding="utf-8"))
+    assert manifest.baseline_commit == "c4b613f486b4db6f118dc0ef99b7c0c103676843"
+    assert len(manifest.papers) == 5
+    assert len([paper for paper in manifest.papers if paper.group == "holdout"]) == 2
+    assert manifest.actual_model is None
+    assert manifest.chatgpt_benchmark_status == "pending"
+    assert manifest.run_parameters["fresh_model_execution"] is False
+    assert manifest.run_parameters["fresh_model_blocker"] == "model_credential_not_configured"
+    encoded = path.read_text(encoding="utf-8").lower()
+    for forbidden in ("api_key", "authorization", "bearer ", "private endpoint"):
+        assert forbidden not in encoded
 
 
 def test_lineage_audit_rejects_cross_document_and_unknown_evidence():

@@ -1,7 +1,11 @@
 {
   "summary_schema_version": "1.0",
   "paper_id": "sam-arxiv-2010-01412v3",
+  "evaluation_id": "d4ed4f1b613f4882b5d87e167cb12a65",
+  "started_at": "2026-11-05T18:16:10.200700Z",
+  "finished_at": "2026-11-05T18:16:16.482305Z",
   "pdf_sha256": "73ace22a61c52152fc84a94239cb3ea5f9fa9e753aa8ef5995f277365e25b764",
+  "source_bundle_id": "sb_73ace22a61c5_c5a6c01ee2c540b8a828d239a0cd5bb9_v1",
   "execution_mode": "fresh_model_run",
   "overall_status": "blocked_missing_credential",
   "stages": {

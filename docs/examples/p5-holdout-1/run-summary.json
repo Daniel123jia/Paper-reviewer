@@ -1,7 +1,11 @@
 {
   "summary_schema_version": "1.0",
   "paper_id": "sardet-100k-neurips2024",
+  "evaluation_id": "1f08ecae654f4bb8b37adcb1616a8315",
+  "started_at": "2026-11-05T18:15:53.142579Z",
+  "finished_at": "2026-11-05T18:16:01.756152Z",
   "pdf_sha256": "3f4e6cddbf32524853f3493a5e7975490b8ffeae274cf139acf2b576736998b9",
+  "source_bundle_id": "sb_3f4e6cddbf32_4477f7bd7f7b43afbf430d80a4098cee_v1",
   "execution_mode": "fresh_model_run",
   "overall_status": "blocked_missing_credential",
   "stages": {

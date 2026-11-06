@@ -34,12 +34,19 @@ def prompt_inventory(directory: Path) -> list[PromptRecord]:
 
 def public_environment_snapshot() -> dict:
     endpoint = os.environ.get("OPENAI_BASE_URL")
+    pandoc_version = _version(["pandoc", "--version"])
+    if pandoc_version is None:
+        try:
+            import pypandoc
+            pandoc_version = f"pypandoc bundled {pypandoc.get_pandoc_version()}"
+        except (ImportError, OSError, RuntimeError):
+            pandoc_version = None
     return {
         "operating_system": platform.platform(),
         "python_version": platform.python_version(),
         "node_version": _version(["node", "--version"]),
         "npm_version": _version(["npm", "--version"]),
-        "pandoc_version": _version(["pandoc", "--version"]),
+        "pandoc_version": pandoc_version,
         "playwright_chromium": "installed" if any(
             Path.home().glob("Library/Caches/ms-playwright/chromium-*")
         ) else "not_detected",

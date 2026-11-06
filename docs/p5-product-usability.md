@@ -46,6 +46,7 @@ Results:
 - PDF: 90,321 bytes; one A4 page (595.92 × 842.88 points), correct title, page number, no clipping and no internal `ru_ev_` identifier.
 - Editing after approval changed the state to `pending`; stale final export returned HTTP 409.
 - The browser test opened the saved draft, jumped to original PDF evidence, edited, saved, refreshed, reopened revision 2, and downloaded Draft-marked Markdown and PDF: 1/1 passed.
+- The isolated real-PDF/legacy-baseline browser set passed 6/6: fresh-browser selection, upload/search/highlight/zoom, two offline formula checks, review-mode materials, and chat network-failure recovery. These tests protect retained baseline functions; they do not represent a P2-A–P3 web workflow.
 
 The actual files and rendered pages are in ignored local P5 storage. The sanitized measurements are in [product-check-summary.json](examples/p5-regression/product-check-summary.json).
 
