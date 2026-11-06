@@ -1,4 +1,5 @@
 import json
+from datetime import date
 from types import SimpleNamespace
 
 import pytest
@@ -20,6 +21,9 @@ def configured_environment(**overrides):
         "OPENAI_MODEL": FROZEN_MODEL,
         "OPENAI_INPUT_USD_PER_MILLION": "1.5",
         "OPENAI_OUTPUT_USD_PER_MILLION": "6",
+        "OPENAI_PRICING_SOURCE_URL": "https://billing.provider.example/pricing",
+        "OPENAI_PRICING_VERIFIED_AT": date.today().isoformat(),
+        "OPENAI_PRICING_VERIFICATION": "provider_source_checked",
     }
     environment.update(overrides)
     return environment
@@ -31,6 +35,7 @@ def test_configuration_report_is_redacted_and_does_not_run_a_probe():
     report = build_configuration_report(environment, FROZEN_MODEL)
 
     encoded = json.dumps(report)
+    assert report["probe_schema_version"] == "1.2"
     assert report["configuration_ready"] is True
     assert report["credential_status"] == "configured"
     assert report["endpoint_status"] == "configured_valid"
@@ -40,8 +45,20 @@ def test_configuration_report_is_redacted_and_does_not_run_a_probe():
         "network_attempted": False,
         "model_calls": 0,
     }
-    assert report["pricing"]["status"] == "operator_configured"
-    assert report["pricing"]["estimated_probe_ceiling_usd"] == 0.000576
+    assert report["pricing"]["status"] == "operator_attested_provider_pricing"
+    assert report["pricing"]["estimated_probe_cost_usd"] == 0.000576
+    assert report["pricing"]["independently_verified"] is False
+    assert report["pricing"]["account_hard_limit"] is False
+    assert report["limits"]["input_tokens"] == {
+        "kind": "planning_estimate",
+        "estimated_tokens": 128,
+        "enforced": False,
+    }
+    assert report["limits"]["output_tokens"] == {
+        "requested_tokens": 64,
+        "request_parameter": "max_tokens",
+        "provider_enforcement": "pending_real_probe",
+    }
     assert "configured-test-secret" not in encoded
     assert "provider.example" not in encoded
     assert "OPENAI_API_KEY" not in encoded
@@ -62,6 +79,10 @@ def test_configuration_report_is_redacted_and_does_not_run_a_probe():
         ({"OPENAI_INPUT_USD_PER_MILLION": ""}, "pricing_not_configured"),
         ({"OPENAI_OUTPUT_USD_PER_MILLION": "unknown"}, "pricing_invalid"),
         ({"OPENAI_OUTPUT_USD_PER_MILLION": "Infinity"}, "pricing_invalid"),
+        ({"OPENAI_PRICING_SOURCE_URL": ""}, "provider_pricing_not_verified"),
+        ({"OPENAI_PRICING_VERIFIED_AT": ""}, "provider_pricing_not_verified"),
+        ({"OPENAI_PRICING_VERIFIED_AT": "not-a-date"}, "provider_pricing_not_verified"),
+        ({"OPENAI_PRICING_VERIFICATION": ""}, "provider_pricing_not_verified"),
     ],
 )
 def test_configuration_report_fails_closed(overrides, blocker):
@@ -86,7 +107,10 @@ def test_default_cli_never_constructs_a_model_client(tmp_path):
         "OPENAI_BASE_URL=https://provider.example/v1\n"
         f"OPENAI_MODEL={FROZEN_MODEL}\n"
         "OPENAI_INPUT_USD_PER_MILLION=1.5\n"
-        "OPENAI_OUTPUT_USD_PER_MILLION=6\n",
+        "OPENAI_OUTPUT_USD_PER_MILLION=6\n"
+        "OPENAI_PRICING_SOURCE_URL=https://billing.provider.example/pricing\n"
+        f"OPENAI_PRICING_VERIFIED_AT={date.today().isoformat()}\n"
+        "OPENAI_PRICING_VERIFICATION=provider_source_checked\n",
         encoding="utf-8",
     )
     manifest = tmp_path / "manifest.json"
@@ -103,6 +127,50 @@ def test_default_cli_never_constructs_a_model_client(tmp_path):
     assert called is False
     assert report["probe"]["network_attempted"] is False
     assert report["probe"]["model_calls"] == 0
+
+
+def test_rate_values_without_provider_evidence_remain_blocked():
+    report = build_configuration_report(configured_environment(
+        OPENAI_PRICING_SOURCE_URL="",
+        OPENAI_PRICING_VERIFIED_AT="",
+        OPENAI_PRICING_VERIFICATION="",
+    ), FROZEN_MODEL)
+
+    assert report["configuration_ready"] is False
+    assert report["pricing"]["status"] == "operator_configured_unverified"
+    assert report["pricing"]["basis"] == \
+        "operator-supplied rates without valid provider-source attestation"
+    assert report["pricing"]["account_hard_limit"] is False
+    assert "provider_pricing_not_verified" in report["blockers"]
+
+
+def test_pricing_verification_date_rejects_future_and_expired_evidence():
+    today = date(2026, 11, 6)
+
+    future = build_configuration_report(
+        configured_environment(OPENAI_PRICING_VERIFIED_AT="2026-11-07"),
+        FROZEN_MODEL,
+        today=today,
+    )
+    expired = build_configuration_report(
+        configured_environment(OPENAI_PRICING_VERIFIED_AT="2026-10-06"),
+        FROZEN_MODEL,
+        today=today,
+    )
+    boundary = build_configuration_report(
+        configured_environment(OPENAI_PRICING_VERIFIED_AT="2026-10-07"),
+        FROZEN_MODEL,
+        today=today,
+    )
+
+    assert future["configuration_ready"] is False
+    assert future["pricing"]["source_evidence_status"] == "future_dated"
+    assert "provider_pricing_verification_future_dated" in future["blockers"]
+    assert expired["configuration_ready"] is False
+    assert expired["pricing"]["source_evidence_status"] == "expired"
+    assert "provider_pricing_verification_expired" in expired["blockers"]
+    assert boundary["configuration_ready"] is True
+    assert boundary["pricing"]["source_evidence_status"] == "operator_attested"
 
 
 def test_execute_requires_exact_authorization_before_client_construction():
@@ -133,8 +201,11 @@ class FakeStreamClient:
         return iter(self.chunks)
 
 
-def successful_chunks(*, actual_model=FROZEN_MODEL, usage=True, content=None):
+def successful_chunks(*, actual_model=FROZEN_MODEL, usage=True, content=None,
+                      input_tokens=18, output_tokens=11, total_tokens="auto"):
     response = content or '{"ok":true,"probe":"p5r2"}'
+    if total_tokens == "auto":
+        total_tokens = input_tokens + output_tokens
     chunks = [
         SimpleNamespace(
             model=actual_model,
@@ -145,7 +216,8 @@ def successful_chunks(*, actual_model=FROZEN_MODEL, usage=True, content=None):
     chunks.append(SimpleNamespace(
         model=actual_model,
         choices=[],
-        usage=(SimpleNamespace(prompt_tokens=18, completion_tokens=11, total_tokens=29)
+        usage=(SimpleNamespace(prompt_tokens=input_tokens, completion_tokens=output_tokens,
+                               total_tokens=total_tokens)
                if usage else None),
     ))
     return chunks
@@ -165,6 +237,7 @@ def test_authorized_probe_makes_one_bounded_streaming_call():
     )
 
     assert result["status"] == "passed"
+    assert result["probe_schema_version"] == "1.2"
     assert result["network_attempted"] is True
     assert result["model_calls"] == 1
     assert result["requested_model"] == result["actual_model"] == FROZEN_MODEL
@@ -176,8 +249,25 @@ def test_authorized_probe_makes_one_bounded_streaming_call():
         "total_tokens": 29,
     }
     assert result["cost"] == {
-        "status": "operator_rate_calculation",
+        "status": "operator_attested_rate_calculation",
         "actual_cost_usd": 0.000093,
+        "account_hard_limit": False,
+    }
+    assert result["budget_observation"] == {
+        "input_tokens": {
+            "estimate": 128,
+            "actual": 18,
+            "status": "within_estimate",
+        },
+        "output_tokens": {
+            "requested_limit": 64,
+            "actual": 11,
+            "status": "within_requested_limit",
+        },
+    }
+    assert result["output_limit_compatibility"] == {
+        "parameter": "max_tokens",
+        "status": "accepted_within_observed_limit",
     }
     assert result["duration_ms"] == 125
     assert len(factory_calls) == 1
@@ -209,6 +299,62 @@ def test_probe_fails_closed_for_model_mismatch_or_missing_usage():
     assert usage_result["blockers"] == ["usage_reporting_incomplete"]
 
 
+@pytest.mark.parametrize(
+    ("chunks", "blocker", "budget_field", "budget_status"),
+    [
+        (successful_chunks(input_tokens=129), "input_token_estimate_exceeded",
+         "input_tokens", "estimate_exceeded"),
+        (successful_chunks(output_tokens=65), "output_token_limit_exceeded",
+         "output_tokens", "requested_limit_exceeded"),
+    ],
+)
+def test_probe_fails_when_reported_usage_exceeds_planning_budget(
+        chunks, blocker, budget_field, budget_status):
+    client = FakeStreamClient(chunks)
+
+    result = run_capability_probe(
+        configured_environment(), FROZEN_MODEL, AUTHORIZATION_ACK,
+        lambda **_kwargs: client,
+    )
+
+    assert result["status"] == "failed"
+    assert blocker in result["blockers"]
+    assert result["budget_observation"][budget_field]["status"] == budget_status
+    if budget_field == "output_tokens":
+        assert result["output_limit_compatibility"]["status"] == \
+            "accepted_but_reported_usage_exceeded"
+
+
+@pytest.mark.parametrize(
+    ("usage_values", "validation_error"),
+    [
+        ({"input_tokens": -1}, "input_tokens_negative"),
+        ({"output_tokens": -1}, "output_tokens_negative"),
+        ({"total_tokens": -1}, "total_tokens_negative"),
+        ({"input_tokens": 18.0, "total_tokens": 29}, "input_tokens_not_integer"),
+        ({"output_tokens": "11", "total_tokens": 29}, "output_tokens_not_integer"),
+        ({"total_tokens": 29.0}, "total_tokens_not_integer"),
+        ({"input_tokens": True, "total_tokens": 12}, "input_tokens_not_integer"),
+        ({"total_tokens": 30}, "total_tokens_inconsistent"),
+    ],
+)
+def test_probe_rejects_invalid_or_inconsistent_usage(usage_values, validation_error):
+    client = FakeStreamClient(successful_chunks(**usage_values))
+
+    result = run_capability_probe(
+        configured_environment(), FROZEN_MODEL, AUTHORIZATION_ACK,
+        lambda **_kwargs: client,
+    )
+
+    assert result["status"] == "failed"
+    assert result["usage"]["status"] == "invalid"
+    assert validation_error in result["usage"]["validation_errors"]
+    assert "usage_reporting_invalid" in result["blockers"]
+    assert result["cost"]["status"] == "unknown"
+    assert result["cost"]["actual_cost_usd"] is None
+    assert "provider_request_failed" not in result["blockers"]
+
+
 def test_probe_rejects_invalid_json_and_sanitizes_provider_error():
     invalid = FakeStreamClient(successful_chunks(content="not-json"))
     invalid_result = run_capability_probe(
@@ -232,3 +378,246 @@ def test_probe_rejects_invalid_json_and_sanitizes_provider_error():
     assert failed_result["error"] == {"type": "ProviderFailure", "status_code": 401}
     assert "configured-test-secret" not in json.dumps(failed_result)
     assert "provider.example" not in json.dumps(failed_result)
+
+
+def write_cli_inputs(tmp_path, environment=None):
+    environment = configured_environment() if environment is None else environment
+    environment_file = tmp_path / ".env.local"
+    environment_file.write_text(
+        "".join(f"{key}={value}\n" for key, value in environment.items()),
+        encoding="utf-8",
+    )
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps({"requested_model": FROZEN_MODEL}), encoding="utf-8")
+    return environment_file, manifest, tmp_path / "report.json"
+
+
+def cli_args(environment_file, manifest, output, *, execute=False, authorized=False):
+    args = [
+        "--environment-file", str(environment_file),
+        "--manifest", str(manifest),
+        "--output", str(output),
+    ]
+    if execute:
+        args.append("--execute")
+    if authorized:
+        args.extend(["--authorization-ack", AUTHORIZATION_ACK])
+    return args
+
+
+def test_check_only_returns_zero_even_when_configuration_is_blocked(tmp_path):
+    environment_file, manifest, output = write_cli_inputs(
+        tmp_path, configured_environment(OPENAI_API_KEY="")
+    )
+
+    exit_code = main(cli_args(environment_file, manifest, output))
+
+    assert exit_code == 0
+    assert json.loads(output.read_text(encoding="utf-8"))["configuration_ready"] is False
+
+
+def test_cli_returns_zero_for_successful_authorized_probe(tmp_path):
+    environment_file, manifest, output = write_cli_inputs(tmp_path)
+    client = FakeStreamClient(successful_chunks())
+
+    exit_code = main(
+        cli_args(environment_file, manifest, output, execute=True, authorized=True),
+        client_factory=lambda **_kwargs: client,
+    )
+
+    assert exit_code == 0
+    assert json.loads(output.read_text(encoding="utf-8"))["status"] == "passed"
+
+
+def test_cli_returns_nonzero_and_saves_redacted_failed_probe(tmp_path):
+    environment_file, manifest, output = write_cli_inputs(tmp_path)
+
+    class ProviderFailure(RuntimeError):
+        status_code = 503
+
+    def failed_factory(**_kwargs):
+        raise ProviderFailure("configured-test-secret provider.example")
+
+    exit_code = main(
+        cli_args(environment_file, manifest, output, execute=True, authorized=True),
+        client_factory=failed_factory,
+    )
+
+    encoded = output.read_text(encoding="utf-8")
+    report = json.loads(encoded)
+    assert exit_code == 1
+    assert report["status"] == "failed"
+    assert report["error"] == {"type": "ProviderFailure", "status_code": 503}
+    assert "configured-test-secret" not in encoded
+    assert "provider.example" not in encoded
+
+
+@pytest.mark.parametrize("authorized", [False, True])
+def test_cli_pre_request_block_returns_two_saves_report_and_never_constructs_client(
+        tmp_path, authorized):
+    called = False
+
+    def forbidden_client(**_kwargs):
+        nonlocal called
+        called = True
+        raise AssertionError("blocked probe must not construct client")
+
+    environment = (configured_environment() if not authorized else
+                   configured_environment(OPENAI_API_KEY=""))
+    environment_file, manifest, output = write_cli_inputs(tmp_path, environment)
+
+    exit_code = main(
+        cli_args(environment_file, manifest, output, execute=True, authorized=authorized),
+        client_factory=forbidden_client,
+    )
+
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert exit_code == 2
+    assert called is False
+    assert report["status"] == "failed"
+    assert report["network_attempted"] is False
+    assert report["model_calls"] == 0
+    expected = ("model_credential_not_configured" if authorized
+                else "probe_authorization_missing")
+    assert expected in report["blockers"]
+
+
+def test_cli_unknown_pricing_blocks_before_client_construction(tmp_path):
+    called = False
+
+    def forbidden_client(**_kwargs):
+        nonlocal called
+        called = True
+        raise AssertionError("unknown pricing must block before client construction")
+
+    environment_file, manifest, output = write_cli_inputs(
+        tmp_path,
+        configured_environment(
+            OPENAI_INPUT_USD_PER_MILLION="",
+            OPENAI_OUTPUT_USD_PER_MILLION="",
+        ),
+    )
+
+    exit_code = main(
+        cli_args(environment_file, manifest, output, execute=True, authorized=True),
+        client_factory=forbidden_client,
+    )
+
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert exit_code == 2
+    assert called is False
+    assert "pricing_not_configured" in report["blockers"]
+
+
+def test_request_network_error_is_sanitized_and_counted():
+    class NetworkFailure(RuntimeError):
+        status_code = 502
+
+    class FailingCompletions:
+        def create(self, **_kwargs):
+            raise NetworkFailure("configured-test-secret provider.example")
+
+    client = SimpleNamespace(
+        chat=SimpleNamespace(completions=FailingCompletions())
+    )
+
+    result = run_capability_probe(
+        configured_environment(), FROZEN_MODEL, AUTHORIZATION_ACK,
+        lambda **_kwargs: client,
+    )
+
+    encoded = json.dumps(result)
+    assert result["status"] == "failed"
+    assert result["network_attempted"] is True
+    assert result["model_calls"] == 1
+    assert result["error"] == {"type": "NetworkFailure", "status_code": 502}
+    assert "configured-test-secret" not in encoded
+    assert "provider.example" not in encoded
+
+
+@pytest.mark.parametrize(
+    ("manifest_setup", "expected_blocker"),
+    [
+        ("missing", "manifest_file_not_found"),
+        ("invalid_json", "manifest_json_invalid"),
+        ("missing_model", "manifest_requested_model_invalid"),
+        ("non_string_model", "manifest_requested_model_invalid"),
+        ("wrong_model", "manifest_requested_model_mismatch"),
+    ],
+)
+def test_manifest_errors_fail_before_client_and_save_redacted_report(
+        tmp_path, manifest_setup, expected_blocker):
+    called = False
+
+    def forbidden_client(**_kwargs):
+        nonlocal called
+        called = True
+        raise AssertionError("invalid manifest must block before client construction")
+
+    environment_file, manifest, output = write_cli_inputs(tmp_path)
+    if manifest_setup == "missing":
+        manifest.unlink()
+    elif manifest_setup == "invalid_json":
+        manifest.write_text('{"requested_model":"configured-test-secret"', encoding="utf-8")
+    elif manifest_setup == "missing_model":
+        manifest.write_text("{}", encoding="utf-8")
+    elif manifest_setup == "non_string_model":
+        manifest.write_text('{"requested_model":42}', encoding="utf-8")
+    else:
+        manifest.write_text('{"requested_model":"different-model"}', encoding="utf-8")
+
+    exit_code = main(
+        cli_args(environment_file, manifest, output, execute=True, authorized=True),
+        client_factory=forbidden_client,
+    )
+
+    encoded = output.read_text(encoding="utf-8")
+    report = json.loads(encoded)
+    assert exit_code == 2
+    assert called is False
+    assert report["status"] == "failed"
+    assert report["network_attempted"] is False
+    assert expected_blocker in report["blockers"]
+    assert "configured-test-secret" not in encoded
+    assert "different-model" not in encoded
+
+
+def test_output_path_is_verified_before_manifest_or_client(tmp_path):
+    called = False
+    environment_file, manifest, _output = write_cli_inputs(tmp_path)
+    parent_file = tmp_path / "not-a-directory"
+    parent_file.write_text("occupied", encoding="utf-8")
+    output = parent_file / "report.json"
+
+    def forbidden_client(**_kwargs):
+        nonlocal called
+        called = True
+        raise AssertionError("unusable output path must block before client construction")
+
+    exit_code = main(
+        cli_args(environment_file, manifest, output, execute=True, authorized=True),
+        client_factory=forbidden_client,
+    )
+
+    assert exit_code == 2
+    assert called is False
+
+
+def test_probe_writes_pre_request_report_before_constructing_client(tmp_path):
+    environment_file, manifest, output = write_cli_inputs(tmp_path)
+    client = FakeStreamClient(successful_chunks())
+
+    def factory(**_kwargs):
+        pre_request = json.loads(output.read_text(encoding="utf-8"))
+        assert pre_request["status"] == "failed"
+        assert pre_request["network_attempted"] is False
+        assert "probe_not_started" in pre_request["blockers"]
+        return client
+
+    exit_code = main(
+        cli_args(environment_file, manifest, output, execute=True, authorized=True),
+        client_factory=factory,
+    )
+
+    assert exit_code == 0
+    assert json.loads(output.read_text(encoding="utf-8"))["status"] == "passed"
