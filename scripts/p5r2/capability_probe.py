@@ -17,12 +17,23 @@ from pydantic import BaseModel, ConfigDict
 
 FROZEN_MODEL = "gpt-6.1-sol"
 AUTHORIZATION_ACK = "P5R2_MINIMAL_PROBE_AUTHORIZED"
-PROBE_SCHEMA_VERSION = "1.2"
+PROBE_SCHEMA_VERSION = "1.3"
 PROBE_MAX_CALLS = 1
 PROBE_INPUT_TOKEN_ESTIMATE = 128
 PROBE_OUTPUT_TOKEN_CEILING = 64
 PROBE_TIMEOUT_SECONDS = 180
 PRICING_VERIFICATION_MAX_AGE_DAYS = 30
+ESTIMATED_PRICING_SCOPE = "p5r3b_single_nonpaper_capability_probe"
+PROBE_ENVIRONMENT_KEYS = frozenset({
+    "OPENAI_API_KEY",
+    "OPENAI_BASE_URL",
+    "OPENAI_MODEL",
+    "OPENAI_INPUT_USD_PER_MILLION",
+    "OPENAI_OUTPUT_USD_PER_MILLION",
+    "OPENAI_PRICING_SOURCE_URL",
+    "OPENAI_PRICING_VERIFIED_AT",
+    "OPENAI_PRICING_VERIFICATION",
+})
 PROBE_SYSTEM = "Return exactly one compact JSON object and no Markdown."
 PROBE_USER = 'Return {"ok":true,"probe":"p5r2"}.'
 
@@ -69,7 +80,8 @@ def _valid_endpoint(value: str) -> bool:
 
 
 def _pricing(
-    environment: Mapping[str, str], *, today: date | None = None
+    environment: Mapping[str, str], *, allow_estimated_pricing: bool = False,
+    today: date | None = None,
 ) -> tuple[dict, list[str]]:
     raw_input = environment.get("OPENAI_INPUT_USD_PER_MILLION", "").strip()
     raw_output = environment.get("OPENAI_OUTPUT_USD_PER_MILLION", "").strip()
@@ -101,6 +113,19 @@ def _pricing(
         Decimal(PROBE_INPUT_TOKEN_ESTIMATE) * input_rate
         + Decimal(PROBE_OUTPUT_TOKEN_CEILING) * output_rate
     ) / Decimal(1_000_000)
+    if allow_estimated_pricing:
+        return ({
+            "status": "estimated_unverified",
+            "estimated_probe_cost_usd": float(
+                estimate.quantize(Decimal("0.00000001"))
+            ),
+            "basis": ("operator-supplied unverified planning rates; "
+                      "input usage remains an estimate"),
+            "source_evidence_status": "not_provided_or_not_used",
+            "scope": ESTIMATED_PRICING_SCOPE,
+            "independently_verified": False,
+            "account_hard_limit": False,
+        }, [])
     source_url = environment.get("OPENAI_PRICING_SOURCE_URL", "").strip()
     verification = environment.get("OPENAI_PRICING_VERIFICATION", "").strip()
     verified_at = environment.get("OPENAI_PRICING_VERIFIED_AT", "").strip()
@@ -154,7 +179,7 @@ def _pricing(
 
 def build_configuration_report(
     environment: Mapping[str, str], manifest_requested_model: str,
-    *, today: date | None = None,
+    *, allow_estimated_pricing: bool = False, today: date | None = None,
 ) -> dict:
     blockers: list[str] = []
     key = environment.get("OPENAI_API_KEY", "").strip()
@@ -187,7 +212,11 @@ def build_configuration_report(
     elif requested_model != manifest_requested_model:
         blockers.append("requested_model_mismatch")
 
-    pricing, pricing_blockers = _pricing(environment, today=today)
+    pricing, pricing_blockers = _pricing(
+        environment,
+        allow_estimated_pricing=allow_estimated_pricing,
+        today=today,
+    )
     blockers.extend(pricing_blockers)
     return {
         "probe_schema_version": PROBE_SCHEMA_VERSION,
@@ -295,13 +324,18 @@ def run_capability_probe(
     authorization_ack: str,
     client_factory: Callable[..., object] = OpenAI,
     *,
+    allow_estimated_pricing: bool = False,
     clock: Callable[[], float] = time.perf_counter,
 ) -> dict:
     if authorization_ack != AUTHORIZATION_ACK:
         raise ProbeAuthorizationError(
             "paid probe requires explicit authorization acknowledgement"
         )
-    configuration = build_configuration_report(environment, manifest_requested_model)
+    configuration = build_configuration_report(
+        environment,
+        manifest_requested_model,
+        allow_estimated_pricing=allow_estimated_pricing,
+    )
     if not configuration["configuration_ready"]:
         raise ProbeConfigurationError(
             "paid probe configuration is blocked: " + ",".join(configuration["blockers"])
@@ -315,6 +349,7 @@ def run_capability_probe(
         "model_calls": 0,
         "requested_model": manifest_requested_model,
         "actual_model": None,
+        "pricing": configuration["pricing"],
         "structured_json": None,
         "usage": {
             "status": "incomplete",
@@ -325,6 +360,8 @@ def run_capability_probe(
         "cost": {
             "status": "unknown",
             "actual_cost_usd": None,
+            "provider_billed_cost_usd": None,
+            "is_provider_billed_cost": False,
             "account_hard_limit": False,
         },
         "budget_observation": {
@@ -389,10 +426,16 @@ def run_capability_probe(
                 * Decimal(environment["OPENAI_OUTPUT_USD_PER_MILLION"])
             ) / Decimal(1_000_000)
             result["cost"] = {
-                "status": "operator_attested_rate_calculation",
+                "status": (
+                    "estimated_unverified_rate_calculation"
+                    if configuration["pricing"]["status"] == "estimated_unverified"
+                    else "operator_attested_rate_calculation"
+                ),
                 "actual_cost_usd": float(
                     actual_cost.quantize(Decimal("0.00000001"))
                 ),
+                "provider_billed_cost_usd": None,
+                "is_provider_billed_cost": False,
                 "account_hard_limit": False,
             }
             input_exceeded = input_tokens > PROBE_INPUT_TOKEN_ESTIMATE
@@ -454,11 +497,23 @@ def run_capability_probe(
     return result
 
 
-def _effective_environment(path: Path) -> dict[str, str]:
-    values = {key: value for key, value in os.environ.items()}
-    if path.is_file():
-        values.update({key: value or "" for key, value in dotenv_values(path).items()})
-    return values
+def _effective_environment(path: Path) -> tuple[dict[str, str], dict]:
+    file_values = (
+        {key: value or "" for key, value in dotenv_values(path).items()}
+        if path.is_file()
+        else {}
+    )
+    process_values = dict(os.environ)
+    conflicts = sorted(
+        key
+        for key in file_values.keys() & process_values.keys() & PROBE_ENVIRONMENT_KEYS
+        if (file_values[key] and process_values[key]
+            and file_values[key] != process_values[key])
+    )
+    return ({**file_values, **process_values}, {
+        "precedence": "process_environment_over_environment_file",
+        "conflicting_variable_names": conflicts,
+    })
 
 
 def _manifest_model(path: Path) -> str:
@@ -506,6 +561,8 @@ def _blocked_probe_result(blockers: list[str], error_type: str) -> dict:
         "cost": {
             "status": "not_incurred",
             "actual_cost_usd": 0,
+            "provider_billed_cost_usd": None,
+            "is_provider_billed_cost": False,
             "account_hard_limit": False,
         },
         "duration_ms": 0,
@@ -545,6 +602,7 @@ def main(argv: list[str] | None = None, *, client_factory: Callable[..., object]
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--authorization-ack", default="")
+    parser.add_argument("--allow-estimated-pricing", action="store_true")
     args = parser.parse_args(argv)
 
     pending = _blocked_probe_result(["probe_not_started"], "ProbeNotStarted")
@@ -565,7 +623,7 @@ def main(argv: list[str] | None = None, *, client_factory: Callable[..., object]
         _print_summary(str(args.output), args.execute, result)
         return 2
 
-    environment = _effective_environment(args.environment_file)
+    environment, environment_resolution = _effective_environment(args.environment_file)
     exit_code = 0
     if args.execute:
         try:
@@ -574,21 +632,34 @@ def main(argv: list[str] | None = None, *, client_factory: Callable[..., object]
                 manifest_model,
                 args.authorization_ack,
                 client_factory,
+                allow_estimated_pricing=args.allow_estimated_pricing,
             )
+            result["environment_resolution"] = environment_resolution
             exit_code = 0 if result["status"] == "passed" else 1
         except ProbeAuthorizationError:
             result = _blocked_probe_result(
                 ["probe_authorization_missing"], "ProbeAuthorizationError"
             )
+            result["environment_resolution"] = environment_resolution
             exit_code = 2
         except ProbeConfigurationError:
-            configuration = build_configuration_report(environment, manifest_model)
+            configuration = build_configuration_report(
+                environment,
+                manifest_model,
+                allow_estimated_pricing=args.allow_estimated_pricing,
+            )
             result = _blocked_probe_result(
                 configuration["blockers"], "ProbeConfigurationError"
             )
+            result["environment_resolution"] = environment_resolution
             exit_code = 2
     else:
-        result = build_configuration_report(environment, manifest_model)
+        result = build_configuration_report(
+            environment,
+            manifest_model,
+            allow_estimated_pricing=args.allow_estimated_pricing,
+        )
+        result["environment_resolution"] = environment_resolution
     _write_report(args.output, result)
     _print_summary(str(args.output), args.execute, result)
     return exit_code
