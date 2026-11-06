@@ -17,10 +17,12 @@ from pydantic import BaseModel, ConfigDict
 
 FROZEN_MODEL = "gpt-6.1-sol"
 AUTHORIZATION_ACK = "P5R2_MINIMAL_PROBE_AUTHORIZED"
+PROBE_SCHEMA_VERSION = "1.2"
 PROBE_MAX_CALLS = 1
 PROBE_INPUT_TOKEN_ESTIMATE = 128
 PROBE_OUTPUT_TOKEN_CEILING = 64
 PROBE_TIMEOUT_SECONDS = 180
+PRICING_VERIFICATION_MAX_AGE_DAYS = 30
 PROBE_SYSTEM = "Return exactly one compact JSON object and no Markdown."
 PROBE_USER = 'Return {"ok":true,"probe":"p5r2"}.'
 
@@ -31,6 +33,15 @@ class ProbeAuthorizationError(ValueError):
 
 class ProbeConfigurationError(ValueError):
     """Raised before client construction when the frozen environment is incomplete."""
+
+
+class ProbeManifestError(ValueError):
+    """Raised before client construction when the frozen manifest is unusable."""
+
+    def __init__(self, blocker: str, error_type: str):
+        super().__init__(blocker)
+        self.blocker = blocker
+        self.error_type = error_type
 
 
 class ProbePayload(BaseModel):
@@ -57,7 +68,9 @@ def _valid_endpoint(value: str) -> bool:
             and not parsed.password and not parsed.query and not parsed.fragment)
 
 
-def _pricing(environment: Mapping[str, str]) -> tuple[dict, list[str]]:
+def _pricing(
+    environment: Mapping[str, str], *, today: date | None = None
+) -> tuple[dict, list[str]]:
     raw_input = environment.get("OPENAI_INPUT_USD_PER_MILLION", "").strip()
     raw_output = environment.get("OPENAI_OUTPUT_USD_PER_MILLION", "").strip()
     if not raw_input or not raw_output:
@@ -91,17 +104,38 @@ def _pricing(environment: Mapping[str, str]) -> tuple[dict, list[str]]:
     source_url = environment.get("OPENAI_PRICING_SOURCE_URL", "").strip()
     verification = environment.get("OPENAI_PRICING_VERIFICATION", "").strip()
     verified_at = environment.get("OPENAI_PRICING_VERIFIED_AT", "").strip()
+    current_date = today or date.today()
     try:
-        date.fromisoformat(verified_at)
+        verified_date = date.fromisoformat(verified_at)
         date_valid = True
     except ValueError:
+        verified_date = None
         date_valid = False
+    date_status = "missing_or_invalid"
+    date_blockers: list[str] = []
+    if date_valid and verified_date is not None:
+        age_days = (current_date - verified_date).days
+        if age_days < 0:
+            date_status = "future_dated"
+            date_blockers.append("provider_pricing_verification_future_dated")
+        elif age_days > PRICING_VERIFICATION_MAX_AGE_DAYS:
+            date_status = "expired"
+            date_blockers.append("provider_pricing_verification_expired")
+        else:
+            date_status = "current"
     source_attested = (
         _valid_endpoint(source_url)
         and not _placeholder(source_url, endpoint=True)
         and verification == "provider_source_checked"
-        and date_valid
+        and date_status == "current"
     )
+    evidence_status = (
+        "operator_attested" if source_attested
+        else date_status if date_status in {"future_dated", "expired"}
+        else "missing_or_invalid"
+    )
+    if not source_attested and not date_blockers:
+        date_blockers.append("provider_pricing_not_verified")
     return ({
         "status": ("operator_attested_provider_pricing" if source_attested
                    else "operator_configured_unverified"),
@@ -111,15 +145,16 @@ def _pricing(environment: Mapping[str, str]) -> tuple[dict, list[str]]:
         "basis": ("operator-supplied rates with an attested provider source; "
                   "input usage remains an estimate" if source_attested else
                   "operator-supplied rates without valid provider-source attestation"),
-        "source_evidence_status": ("operator_attested" if source_attested
-                                   else "missing_or_invalid"),
+        "source_evidence_status": evidence_status,
+        "verification_max_age_days": PRICING_VERIFICATION_MAX_AGE_DAYS,
         "independently_verified": False,
         "account_hard_limit": False,
-    }, [] if source_attested else ["provider_pricing_not_verified"])
+    }, [] if source_attested else date_blockers)
 
 
 def build_configuration_report(
-    environment: Mapping[str, str], manifest_requested_model: str
+    environment: Mapping[str, str], manifest_requested_model: str,
+    *, today: date | None = None,
 ) -> dict:
     blockers: list[str] = []
     key = environment.get("OPENAI_API_KEY", "").strip()
@@ -152,10 +187,10 @@ def build_configuration_report(
     elif requested_model != manifest_requested_model:
         blockers.append("requested_model_mismatch")
 
-    pricing, pricing_blockers = _pricing(environment)
+    pricing, pricing_blockers = _pricing(environment, today=today)
     blockers.extend(pricing_blockers)
     return {
-        "probe_schema_version": "1.1",
+        "probe_schema_version": PROBE_SCHEMA_VERSION,
         "execution_mode": "configuration_check_only",
         "configuration_ready": not blockers,
         "credential_status": credential_status,
@@ -220,6 +255,40 @@ def _usage_value(usage, name: str, fallback: str | None = None):
     return value
 
 
+def _validated_usage(usage) -> dict:
+    values = {
+        "input_tokens": _usage_value(usage, "prompt_tokens", "input_tokens"),
+        "output_tokens": _usage_value(usage, "completion_tokens", "output_tokens"),
+        "total_tokens": _usage_value(usage, "total_tokens"),
+    }
+    normalized: dict[str, int | None] = {}
+    missing: list[str] = []
+    errors: list[str] = []
+    for name, value in values.items():
+        if value is None:
+            normalized[name] = None
+            missing.append(f"{name}_missing")
+        elif type(value) is not int:
+            normalized[name] = None
+            errors.append(f"{name}_not_integer")
+        else:
+            normalized[name] = value
+            if value < 0:
+                errors.append(f"{name}_negative")
+    if not errors and not missing:
+        if normalized["total_tokens"] != (
+            normalized["input_tokens"] + normalized["output_tokens"]
+        ):
+            errors.append("total_tokens_inconsistent")
+    status = "invalid" if errors else "incomplete" if missing else "complete"
+    report: dict = {"status": status, **normalized}
+    if errors:
+        report["validation_errors"] = errors
+    elif missing:
+        report["missing_fields"] = missing
+    return report
+
+
 def run_capability_probe(
     environment: Mapping[str, str],
     manifest_requested_model: str,
@@ -240,7 +309,7 @@ def run_capability_probe(
 
     started = clock()
     result = {
-        "probe_schema_version": "1.1",
+        "probe_schema_version": PROBE_SCHEMA_VERSION,
         "status": "failed",
         "network_attempted": False,
         "model_calls": 0,
@@ -308,17 +377,11 @@ def run_capability_probe(
                 if content:
                     pieces.append(content)
 
-        input_tokens = _usage_value(usage, "prompt_tokens", "input_tokens")
-        output_tokens = _usage_value(usage, "completion_tokens", "output_tokens")
-        total_tokens = _usage_value(usage, "total_tokens")
-        usage_complete = input_tokens is not None and output_tokens is not None
-        result["usage"] = {
-            "status": "complete" if usage_complete else "incomplete",
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens,
-            "total_tokens": total_tokens,
-        }
+        result["usage"] = _validated_usage(usage)
+        usage_complete = result["usage"]["status"] == "complete"
         if usage_complete:
+            input_tokens = result["usage"]["input_tokens"]
+            output_tokens = result["usage"]["output_tokens"]
             actual_cost = (
                 Decimal(input_tokens)
                 * Decimal(environment["OPENAI_INPUT_USD_PER_MILLION"])
@@ -359,7 +422,13 @@ def run_capability_probe(
                 result["blockers"].append("output_token_limit_exceeded")
         if result["actual_model"] != manifest_requested_model:
             result["blockers"].append("actual_model_mismatch")
-        if not usage_complete:
+        if result["usage"]["status"] == "invalid":
+            result["blockers"].append("usage_reporting_invalid")
+            result["output_limit_compatibility"] = {
+                "parameter": "max_tokens",
+                "status": "accepted_but_usage_invalid",
+            }
+        elif not usage_complete:
             result["blockers"].append("usage_reporting_incomplete")
             result["output_limit_compatibility"] = {
                 "parameter": "max_tokens",
@@ -393,16 +462,35 @@ def _effective_environment(path: Path) -> dict[str, str]:
 
 
 def _manifest_model(path: Path) -> str:
-    payload = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        raw = path.read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise ProbeManifestError(
+            "manifest_file_not_found", "ManifestFileNotFound"
+        ) from exc
+    except (OSError, UnicodeError) as exc:
+        raise ProbeManifestError("manifest_read_failed", "ManifestReadError") from exc
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ProbeManifestError("manifest_json_invalid", "ManifestJsonInvalid") from exc
+    if not isinstance(payload, dict):
+        raise ProbeManifestError("manifest_json_invalid", "ManifestJsonInvalid")
     model = payload.get("requested_model")
-    if not isinstance(model, str) or not model:
-        raise ValueError("manifest requested_model is missing")
+    if not isinstance(model, str) or not model.strip():
+        raise ProbeManifestError(
+            "manifest_requested_model_invalid", "ManifestModelInvalid"
+        )
+    if model != FROZEN_MODEL:
+        raise ProbeManifestError(
+            "manifest_requested_model_mismatch", "ManifestModelMismatch"
+        )
     return model
 
 
 def _blocked_probe_result(blockers: list[str], error_type: str) -> dict:
     return {
-        "probe_schema_version": "1.1",
+        "probe_schema_version": PROBE_SCHEMA_VERSION,
         "status": "failed",
         "network_attempted": False,
         "model_calls": 0,
@@ -426,6 +514,25 @@ def _blocked_probe_result(blockers: list[str], error_type: str) -> dict:
     }
 
 
+def _write_report(path: Path, result: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+
+
+def _print_summary(output: str | None, execute: bool, result: dict) -> None:
+    print(json.dumps({
+        "output": output,
+        "execution_mode": "paid_probe" if execute else "configuration_check_only",
+        "model_calls": result.get("model_calls", result.get("probe", {}).get("model_calls", 0)),
+        "network_attempted": result.get(
+            "network_attempted", result.get("probe", {}).get("network_attempted", False)
+        ),
+        "status": result.get("status", "configuration_checked"),
+    }, ensure_ascii=False))
+
+
 def main(argv: list[str] | None = None, *, client_factory: Callable[..., object] = OpenAI) -> int:
     parser = argparse.ArgumentParser(
         description="Check P5-R2 model configuration; never calls the API unless explicitly authorized"
@@ -440,8 +547,25 @@ def main(argv: list[str] | None = None, *, client_factory: Callable[..., object]
     parser.add_argument("--authorization-ack", default="")
     args = parser.parse_args(argv)
 
+    pending = _blocked_probe_result(["probe_not_started"], "ProbeNotStarted")
+    try:
+        _write_report(args.output, pending)
+    except OSError:
+        unavailable = _blocked_probe_result(
+            ["report_output_unavailable"], "ReportOutputUnavailable"
+        )
+        _print_summary(None, args.execute, unavailable)
+        return 2
+
+    try:
+        manifest_model = _manifest_model(args.manifest)
+    except ProbeManifestError as exc:
+        result = _blocked_probe_result([exc.blocker], exc.error_type)
+        _write_report(args.output, result)
+        _print_summary(str(args.output), args.execute, result)
+        return 2
+
     environment = _effective_environment(args.environment_file)
-    manifest_model = _manifest_model(args.manifest)
     exit_code = 0
     if args.execute:
         try:
@@ -465,19 +589,8 @@ def main(argv: list[str] | None = None, *, client_factory: Callable[..., object]
             exit_code = 2
     else:
         result = build_configuration_report(environment, manifest_model)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(
-        json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-    )
-    print(json.dumps({
-        "output": str(args.output),
-        "execution_mode": "paid_probe" if args.execute else "configuration_check_only",
-        "model_calls": result.get("model_calls", result.get("probe", {}).get("model_calls", 0)),
-        "network_attempted": result.get(
-            "network_attempted", result.get("probe", {}).get("network_attempted", False)
-        ),
-        "status": result.get("status", "configuration_checked"),
-    }, ensure_ascii=False))
+    _write_report(args.output, result)
+    _print_summary(str(args.output), args.execute, result)
     return exit_code
 
 

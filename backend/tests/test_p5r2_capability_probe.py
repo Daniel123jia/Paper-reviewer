@@ -1,4 +1,5 @@
 import json
+from datetime import date
 from types import SimpleNamespace
 
 import pytest
@@ -21,7 +22,7 @@ def configured_environment(**overrides):
         "OPENAI_INPUT_USD_PER_MILLION": "1.5",
         "OPENAI_OUTPUT_USD_PER_MILLION": "6",
         "OPENAI_PRICING_SOURCE_URL": "https://billing.provider.example/pricing",
-        "OPENAI_PRICING_VERIFIED_AT": "2026-11-06",
+        "OPENAI_PRICING_VERIFIED_AT": date.today().isoformat(),
         "OPENAI_PRICING_VERIFICATION": "provider_source_checked",
     }
     environment.update(overrides)
@@ -34,7 +35,7 @@ def test_configuration_report_is_redacted_and_does_not_run_a_probe():
     report = build_configuration_report(environment, FROZEN_MODEL)
 
     encoded = json.dumps(report)
-    assert report["probe_schema_version"] == "1.1"
+    assert report["probe_schema_version"] == "1.2"
     assert report["configuration_ready"] is True
     assert report["credential_status"] == "configured"
     assert report["endpoint_status"] == "configured_valid"
@@ -108,7 +109,7 @@ def test_default_cli_never_constructs_a_model_client(tmp_path):
         "OPENAI_INPUT_USD_PER_MILLION=1.5\n"
         "OPENAI_OUTPUT_USD_PER_MILLION=6\n"
         "OPENAI_PRICING_SOURCE_URL=https://billing.provider.example/pricing\n"
-        "OPENAI_PRICING_VERIFIED_AT=2026-11-06\n"
+        f"OPENAI_PRICING_VERIFIED_AT={date.today().isoformat()}\n"
         "OPENAI_PRICING_VERIFICATION=provider_source_checked\n",
         encoding="utf-8",
     )
@@ -143,6 +144,35 @@ def test_rate_values_without_provider_evidence_remain_blocked():
     assert "provider_pricing_not_verified" in report["blockers"]
 
 
+def test_pricing_verification_date_rejects_future_and_expired_evidence():
+    today = date(2026, 11, 6)
+
+    future = build_configuration_report(
+        configured_environment(OPENAI_PRICING_VERIFIED_AT="2026-11-07"),
+        FROZEN_MODEL,
+        today=today,
+    )
+    expired = build_configuration_report(
+        configured_environment(OPENAI_PRICING_VERIFIED_AT="2026-10-06"),
+        FROZEN_MODEL,
+        today=today,
+    )
+    boundary = build_configuration_report(
+        configured_environment(OPENAI_PRICING_VERIFIED_AT="2026-10-07"),
+        FROZEN_MODEL,
+        today=today,
+    )
+
+    assert future["configuration_ready"] is False
+    assert future["pricing"]["source_evidence_status"] == "future_dated"
+    assert "provider_pricing_verification_future_dated" in future["blockers"]
+    assert expired["configuration_ready"] is False
+    assert expired["pricing"]["source_evidence_status"] == "expired"
+    assert "provider_pricing_verification_expired" in expired["blockers"]
+    assert boundary["configuration_ready"] is True
+    assert boundary["pricing"]["source_evidence_status"] == "operator_attested"
+
+
 def test_execute_requires_exact_authorization_before_client_construction():
     called = False
 
@@ -172,8 +202,10 @@ class FakeStreamClient:
 
 
 def successful_chunks(*, actual_model=FROZEN_MODEL, usage=True, content=None,
-                      input_tokens=18, output_tokens=11):
+                      input_tokens=18, output_tokens=11, total_tokens="auto"):
     response = content or '{"ok":true,"probe":"p5r2"}'
+    if total_tokens == "auto":
+        total_tokens = input_tokens + output_tokens
     chunks = [
         SimpleNamespace(
             model=actual_model,
@@ -185,7 +217,7 @@ def successful_chunks(*, actual_model=FROZEN_MODEL, usage=True, content=None,
         model=actual_model,
         choices=[],
         usage=(SimpleNamespace(prompt_tokens=input_tokens, completion_tokens=output_tokens,
-                               total_tokens=input_tokens + output_tokens)
+                               total_tokens=total_tokens)
                if usage else None),
     ))
     return chunks
@@ -205,7 +237,7 @@ def test_authorized_probe_makes_one_bounded_streaming_call():
     )
 
     assert result["status"] == "passed"
-    assert result["probe_schema_version"] == "1.1"
+    assert result["probe_schema_version"] == "1.2"
     assert result["network_attempted"] is True
     assert result["model_calls"] == 1
     assert result["requested_model"] == result["actual_model"] == FROZEN_MODEL
@@ -291,6 +323,36 @@ def test_probe_fails_when_reported_usage_exceeds_planning_budget(
     if budget_field == "output_tokens":
         assert result["output_limit_compatibility"]["status"] == \
             "accepted_but_reported_usage_exceeded"
+
+
+@pytest.mark.parametrize(
+    ("usage_values", "validation_error"),
+    [
+        ({"input_tokens": -1}, "input_tokens_negative"),
+        ({"output_tokens": -1}, "output_tokens_negative"),
+        ({"total_tokens": -1}, "total_tokens_negative"),
+        ({"input_tokens": 18.0, "total_tokens": 29}, "input_tokens_not_integer"),
+        ({"output_tokens": "11", "total_tokens": 29}, "output_tokens_not_integer"),
+        ({"total_tokens": 29.0}, "total_tokens_not_integer"),
+        ({"input_tokens": True, "total_tokens": 12}, "input_tokens_not_integer"),
+        ({"total_tokens": 30}, "total_tokens_inconsistent"),
+    ],
+)
+def test_probe_rejects_invalid_or_inconsistent_usage(usage_values, validation_error):
+    client = FakeStreamClient(successful_chunks(**usage_values))
+
+    result = run_capability_probe(
+        configured_environment(), FROZEN_MODEL, AUTHORIZATION_ACK,
+        lambda **_kwargs: client,
+    )
+
+    assert result["status"] == "failed"
+    assert result["usage"]["status"] == "invalid"
+    assert validation_error in result["usage"]["validation_errors"]
+    assert "usage_reporting_invalid" in result["blockers"]
+    assert result["cost"]["status"] == "unknown"
+    assert result["cost"]["actual_cost_usd"] is None
+    assert "provider_request_failed" not in result["blockers"]
 
 
 def test_probe_rejects_invalid_json_and_sanitizes_provider_error():
@@ -471,3 +533,91 @@ def test_request_network_error_is_sanitized_and_counted():
     assert result["error"] == {"type": "NetworkFailure", "status_code": 502}
     assert "configured-test-secret" not in encoded
     assert "provider.example" not in encoded
+
+
+@pytest.mark.parametrize(
+    ("manifest_setup", "expected_blocker"),
+    [
+        ("missing", "manifest_file_not_found"),
+        ("invalid_json", "manifest_json_invalid"),
+        ("missing_model", "manifest_requested_model_invalid"),
+        ("non_string_model", "manifest_requested_model_invalid"),
+        ("wrong_model", "manifest_requested_model_mismatch"),
+    ],
+)
+def test_manifest_errors_fail_before_client_and_save_redacted_report(
+        tmp_path, manifest_setup, expected_blocker):
+    called = False
+
+    def forbidden_client(**_kwargs):
+        nonlocal called
+        called = True
+        raise AssertionError("invalid manifest must block before client construction")
+
+    environment_file, manifest, output = write_cli_inputs(tmp_path)
+    if manifest_setup == "missing":
+        manifest.unlink()
+    elif manifest_setup == "invalid_json":
+        manifest.write_text('{"requested_model":"configured-test-secret"', encoding="utf-8")
+    elif manifest_setup == "missing_model":
+        manifest.write_text("{}", encoding="utf-8")
+    elif manifest_setup == "non_string_model":
+        manifest.write_text('{"requested_model":42}', encoding="utf-8")
+    else:
+        manifest.write_text('{"requested_model":"different-model"}', encoding="utf-8")
+
+    exit_code = main(
+        cli_args(environment_file, manifest, output, execute=True, authorized=True),
+        client_factory=forbidden_client,
+    )
+
+    encoded = output.read_text(encoding="utf-8")
+    report = json.loads(encoded)
+    assert exit_code == 2
+    assert called is False
+    assert report["status"] == "failed"
+    assert report["network_attempted"] is False
+    assert expected_blocker in report["blockers"]
+    assert "configured-test-secret" not in encoded
+    assert "different-model" not in encoded
+
+
+def test_output_path_is_verified_before_manifest_or_client(tmp_path):
+    called = False
+    environment_file, manifest, _output = write_cli_inputs(tmp_path)
+    parent_file = tmp_path / "not-a-directory"
+    parent_file.write_text("occupied", encoding="utf-8")
+    output = parent_file / "report.json"
+
+    def forbidden_client(**_kwargs):
+        nonlocal called
+        called = True
+        raise AssertionError("unusable output path must block before client construction")
+
+    exit_code = main(
+        cli_args(environment_file, manifest, output, execute=True, authorized=True),
+        client_factory=forbidden_client,
+    )
+
+    assert exit_code == 2
+    assert called is False
+
+
+def test_probe_writes_pre_request_report_before_constructing_client(tmp_path):
+    environment_file, manifest, output = write_cli_inputs(tmp_path)
+    client = FakeStreamClient(successful_chunks())
+
+    def factory(**_kwargs):
+        pre_request = json.loads(output.read_text(encoding="utf-8"))
+        assert pre_request["status"] == "failed"
+        assert pre_request["network_attempted"] is False
+        assert "probe_not_started" in pre_request["blockers"]
+        return client
+
+    exit_code = main(
+        cli_args(environment_file, manifest, output, execute=True, authorized=True),
+        client_factory=factory,
+    )
+
+    assert exit_code == 0
+    assert json.loads(output.read_text(encoding="utf-8"))["status"] == "passed"

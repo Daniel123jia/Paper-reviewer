@@ -26,7 +26,7 @@ OPENAI_MODEL=gpt-6.1-sol
 OPENAI_INPUT_USD_PER_MILLION=服务商确认的每百万输入Token美元价格
 OPENAI_OUTPUT_USD_PER_MILLION=服务商确认的每百万输出Token美元价格
 OPENAI_PRICING_SOURCE_URL=服务商HTTPS价格页
-OPENAI_PRICING_VERIFIED_AT=人工核验日期YYYY-MM-DD
+OPENAI_PRICING_VERIFIED_AT=人工核验日期YYYY-MM-DD（不得晚于当天，最多30个自然日）
 OPENAI_PRICING_VERIFICATION=provider_source_checked
 ```
 
@@ -41,7 +41,7 @@ python -m scripts.p5r2.capability_probe \
   --output /tmp/p5r2-configuration.json
 ```
 
-该报告只包含 `configured/not_configured`、端点是否有效、模型是否匹配、价格及其来源是否由操作者核验、以及阻断项；不会写入密钥、原始端点、价格来源 URL 或端点主机名。单价字段只代表操作者输入；只有同时提供 HTTPS 来源、核验日期和精确人工确认标记时才满足探测前置条件，报告仍明确标记为“操作者证明、未经程序独立核验”。
+该报告只包含 `configured/not_configured`、端点是否有效、模型是否匹配、价格及其来源是否由操作者核验、以及阻断项；不会写入密钥、原始端点、价格来源 URL 或端点主机名。单价字段只代表操作者输入；只有同时提供 HTTPS 来源、精确人工确认标记和有效日期时才满足探测前置条件。日期晚于运行当天会以 `provider_pricing_verification_future_dated` 阻断；超过 30 个自然日会以 `provider_pricing_verification_expired` 阻断，必须由操作者重新核验供应商价格。报告仍明确标记为“操作者证明、未经程序独立核验”。
 
 ## 当前实际配置状态（2026-11-06）
 
@@ -60,6 +60,7 @@ python -m scripts.p5r2.capability_probe \
 - 请求发送 `max_tokens=64`。这是供应商参数而不是本地截断；兼容性需要真实响应验证。供应商拒绝该参数会记录请求失败，返回 usage 超过 64 时记录 `output_token_limit_exceeded` 并使探测失败。
 - 超时 180 秒。
 - 请求 `include_usage`，记录实际输入、输出和总 Token。
+- Usage 的三个字段必须都是非负原生整数，并且总 Token 必须等于输入与输出 Token 之和；缺失标为 `incomplete`，负数、非整数或矛盾统计标为 `invalid`，两者均不得计费或通过探测。
 - 记录请求模型、响应模型、JSON 解析结果、耗时和脱敏错误类型/HTTP 状态。
 - 响应模型不等于冻结模型、usage 缺失或 JSON 无法通过契约时均失败关闭。
 
@@ -82,7 +83,9 @@ python -m scripts.p5r2.capability_probe \
 
 这里的 128 不是硬限制，因此上述数值不是严格费用上限。价格必须来自实际 API 服务商可核验的账单或价格页面；仓库不推断中转服务的价格。只有单价而没有来源、核验日期和人工确认时，状态为 `operator_configured_unverified`，真实探测保持阻断。满足这些字段后状态为 `operator_attested_provider_pricing`，仍不声称程序独立验证了价格，也不代表供应商账户设置了费用硬限额。
 
-CLI 退出码用于自动化失败关闭：配置检查始终返回 0 并在报告中列出阻断项；真实探测成功返回 0；请求完成但模型、JSON、usage 或预算验证失败返回 1；授权或配置在请求前失败返回 2。所有真实探测失败路径都会先保存脱敏报告。
+CLI 退出码用于自动化失败关闭：输出路径和 Manifest 有效时，配置检查返回 0 并在报告中列出环境阻断项；输出路径或 Manifest 无效时返回 2。真实探测成功返回 0；请求完成但模型、JSON、usage 或预算验证失败返回 1；授权或配置在请求前失败返回 2。所有具备可写输出路径的真实探测失败路径都会先保存脱敏报告。
+
+探测报告 Schema 当前为 `1.2`。CLI 会在读取 Manifest 和构造模型客户端之前创建输出目录并写入 `probe_not_started` 报告，以确认正式请求的审计路径可用。Manifest 缺失、JSON 无效、`requested_model` 类型错误或不等于冻结模型时返回 2，并用稳定阻断码覆盖该报告；不会保存 Manifest 原文或异常消息。若报告路径本身不可写，CLI 返回 2 且绝不构造客户端，但无法在该路径保存报告。
 
 ## 静态检查与真实请求的验证边界
 
