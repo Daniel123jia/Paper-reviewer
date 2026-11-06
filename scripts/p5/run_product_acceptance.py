@@ -5,10 +5,10 @@ import io
 import json
 import os
 from pathlib import Path
+import shutil
 
 import fitz
 from docx import Document
-import pypandoc
 
 import backend.app as app_module
 from backend.tests.test_p4_api import seeded_p4_client
@@ -24,8 +24,15 @@ def run(output_dir: Path) -> dict:
     output_dir.mkdir(parents=True, exist_ok=True)
     app_data = output_dir / "app-data"
     app_data.mkdir(parents=True, exist_ok=True)
-    pandoc = Path(pypandoc.get_pandoc_path())
-    os.environ["PATH"] = f"{pandoc.parent}{os.pathsep}{os.environ.get('PATH', '')}"
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        try:
+            import pypandoc
+            pandoc = pypandoc.get_pandoc_path()
+        except (ImportError, OSError, RuntimeError) as exc:
+            raise RuntimeError("Pandoc is required for the P5 product export check") from exc
+        os.environ["PATH"] = (f"{Path(pandoc).parent}{os.pathsep}"
+                              f"{os.environ.get('PATH', '')}")
     os.environ["OPENAI_API_KEY"] = "p5-deterministic-mock-only"
     app_module.OpenAI = FakeOpenAI
     client, _ = seeded_p4_client(app_data, reportable=True)
