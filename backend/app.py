@@ -11,7 +11,7 @@ import fitz
 from fastapi import BackgroundTasks, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 from openai import OpenAI
 from pydantic import BaseModel, Field
 from typing import Literal
@@ -35,16 +35,25 @@ from backend.p2c_schema import CandidateConsolidationResult
 from backend.p3_engine import run_p3
 from backend.p3_sources import validate_p3_inputs
 from backend.p4_api import initialize_p4_tables, register_p4_routes
+from backend.model_runtime import (REQUIRED_MODEL_ENV_KEYS,
+                                   require_model_runtime_config)
 
 
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
+MODEL_ENVIRONMENT_FILE = Path(__file__).resolve().parents[1] / ".env.local"
 
 
 def load_local_environment(path: Path):
-    load_dotenv(path, override=True)
+    for key, value in dotenv_values(path).items():
+        if key not in REQUIRED_MODEL_ENV_KEYS and value is not None:
+            os.environ[key] = value
 
 
-load_local_environment(Path(__file__).resolve().parents[1] / ".env.local")
+load_local_environment(MODEL_ENVIRONMENT_FILE)
+
+
+def runtime_model_configuration():
+    return require_model_runtime_config(MODEL_ENVIRONMENT_FILE)
 
 
 class ChatRequest(BaseModel):
