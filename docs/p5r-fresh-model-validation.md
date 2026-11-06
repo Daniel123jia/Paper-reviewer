@@ -71,7 +71,7 @@ requested model 只是配置值，不代表服务端实际返回的模型。必�
 
 | 检查 | 结果 |
 |---|---|
-| P5-R 预检专项 | 15 passed |
+| P5-R 预检专项 | 16 passed |
 | 完整后端回归 | 276 passed, 2 skipped |
 | 前端生产构建 | passed |
 | PDF 阅读、公式、旧审稿模式与失败处理浏览器回归 | 6/6 passed |

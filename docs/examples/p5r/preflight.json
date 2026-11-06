@@ -1,14 +1,164 @@
 {
-  "preflight_schema_version": "1.0",
-  "generated_at": "2026-11-06T03:01:16.782700+00:00",
+  "preflight_schema_version": "1.1",
+  "generated_at": "2026-11-06T04:03:51.891314+00:00",
   "execution_mode": "fresh_model_run_preparation",
   "p5r_baseline_commit": "09c0ef8e0210d5973d4d9d5e82a4ff90a560831c",
-  "current_commit": "09c0ef8e0210d5973d4d9d5e82a4ff90a560831c",
+  "current_commit": "8d09d5b7f5f866191e1d173baceacd87a8549693",
   "baseline_is_ancestor": true,
+  "source_snapshot": {
+    "kind": "committed_source_validation",
+    "head_commit": "8d09d5b7f5f866191e1d173baceacd87a8549693",
+    "includes_uncommitted_changes": false,
+    "note": "validation executed from a clean committed source tree"
+  },
   "frozen_manifest": {
     "manifest_schema_version": "1.1",
     "baseline_commit": "c4b613f486b4db6f118dc0ef99b7c0c103676843",
     "code_commit": "c4b613f486b4db6f118dc0ef99b7c0c103676843",
+    "requested_model": "gpt-6.1-sol",
+    "prompt_inventory": [
+      {
+        "path": "contribution-evidence-mapper.v1.txt",
+        "version": "v1",
+        "sha256": "609e4aa243768984b330cf129d54fb79bef35b46955911c87b8ed860791e5783"
+      },
+      {
+        "path": "contribution-evidence-mapper.v2.txt",
+        "version": "v2",
+        "sha256": "3356a1aa33055e51ec9aca73ee3f0c10845711013ad35e720fc70f2d3a0299c3"
+      },
+      {
+        "path": "contribution-normalizer.v1.txt",
+        "version": "v1",
+        "sha256": "796062fa49456ff522c0546e4d166af8637d6426e576e86289cdb097dada70bc"
+      },
+      {
+        "path": "contribution-normalizer.v2.txt",
+        "version": "v2",
+        "sha256": "6a47858d1e4e89309500b3d2aa29ae34697822746a340caf5b84de7a97c43d07"
+      },
+      {
+        "path": "p2b/ai-algorithm.v1.txt",
+        "version": "v1",
+        "sha256": "d1b2b4ff733b0009c08d45a6d23718221c37c77385aa88a1a2e3279b65e06539"
+      },
+      {
+        "path": "p2b/argument-consistency.v1.txt",
+        "version": "v1",
+        "sha256": "dedc19849f90fea674db01aab3046ba5f56c054039d1b758478da934ab1e9c2f"
+      },
+      {
+        "path": "p2b/experiment-results.v1.txt",
+        "version": "v1",
+        "sha256": "7c01ae83a7a90fdfa72bd76471ba72b77798b27806d60c603778963ec9370707"
+      },
+      {
+        "path": "p2b/generic-academic.v1.txt",
+        "version": "v1",
+        "sha256": "4876db24549bceb4d8cfcbf6546531bc9b655a84fad35d3de04fc71f9de92366"
+      },
+      {
+        "path": "p2b/literature-positioning.v1.txt",
+        "version": "v1",
+        "sha256": "269c43bc48492650a691c4d6cf105d08094374cf7b54cdbb1d4eab5abe24f53c"
+      },
+      {
+        "path": "p2b/novelty-contribution.v1.txt",
+        "version": "v1",
+        "sha256": "e57c941a594437a6bf3584f920ac98614d38513289627d97ce7eb0bc084a2250"
+      },
+      {
+        "path": "p2b/shared-rules.v1.txt",
+        "version": "v1",
+        "sha256": "5a91d00be9793a538b18f44f1be705251de563e1c0a51e93c69089c8cad349f5"
+      },
+      {
+        "path": "p2b/technical-reproducibility.v1.txt",
+        "version": "v1",
+        "sha256": "df123f2896d53bf9e879e1902aee233e6761015fa5f0fd4d02e2a952ab264bca"
+      },
+      {
+        "path": "p2b/theory-method.v1.txt",
+        "version": "v1",
+        "sha256": "37ccca74d1c8bb4ad26745d7fcdb84346f87375eb042b324d95f164117bfd646"
+      },
+      {
+        "path": "p2c/candidate-group-reconciliation.v1.txt",
+        "version": "v1",
+        "sha256": "7e6a7c020cc3ebc403c0bb8bd1eb83f3c68a2981b7ddb2fa1fb4e11a5371af33"
+      },
+      {
+        "path": "p2c/candidate-group-reconciliation.v2.txt",
+        "version": "v2",
+        "sha256": "df9e994ada4a49698d0eebd3f65c4f45bd3ee2706fcd060840158cb887f7305d"
+      },
+      {
+        "path": "p2c/candidate-semantic-grouping.v1.txt",
+        "version": "v1",
+        "sha256": "8d24afb015d9aeb0595ce5a512f30645b33752e48ce157ab728e566bf4faa419"
+      },
+      {
+        "path": "p3/counterevidence-challenge.v1.txt",
+        "version": "v1",
+        "sha256": "fb969ab0d5e2d17fb766f3ed3c03e560df4e6928682e2de0600474bdacd74f27"
+      },
+      {
+        "path": "p3/issue-adjudication.v1.txt",
+        "version": "v1",
+        "sha256": "1f49fa8ac473d16257510b12c2f2604d6c09d9f3d0073e742bccbd0b06da0922"
+      },
+      {
+        "path": "p3/issue-adjudication.v2.txt",
+        "version": "v2",
+        "sha256": "711052d952fdd887e41ea02c34f208a52d77cc8c0e5207604bab00cecffc4edf"
+      },
+      {
+        "path": "p3/source-observation-check.v1.txt",
+        "version": "v1",
+        "sha256": "7ffed8e49972969328f4c67a8537cacc7963eae1e84e0eaa05de1686c4a3e415"
+      },
+      {
+        "path": "p3/technical-evidence-assessment.v1.txt",
+        "version": "v1",
+        "sha256": "ef886dbf983963177f32c1a685b0f83c0bc22971538ca3c50a29b0cda2a89647"
+      },
+      {
+        "path": "p4/review-comment-writing-en.v1.txt",
+        "version": "v1",
+        "sha256": "c1c811303bb7ee715bfd674124446c61a54efc3c8a6c5c1ea2bc7ceb80c22446"
+      },
+      {
+        "path": "p4/review-comment-writing-zh.v1.txt",
+        "version": "v1",
+        "sha256": "54bd8271db6a3840bd224216924e4c6b0f31d946c4ccf7989162ddda2d434ae1"
+      },
+      {
+        "path": "p4/review-report-consistency.v1.txt",
+        "version": "v1",
+        "sha256": "23dc245b7be5589f149bd6bef4aa8810be03eed1fed03c4c89baece72ffd0a04"
+      },
+      {
+        "path": "p4/review-report-planning.v1.txt",
+        "version": "v1",
+        "sha256": "02778a29058f0f063252421cdcb104cc46cc7a7688807421c5c76414ea58299b"
+      },
+      {
+        "path": "paper-type-planner.v1.txt",
+        "version": "v1",
+        "sha256": "cb7b5f556dc1384c5197acf108e91ec27e4a417a1f939c96d999902940b2c8e2"
+      },
+      {
+        "path": "paper-understanding.v1.txt",
+        "version": "v1",
+        "sha256": "a1c7bf70e570931bb9f66ea15c59cee17b042df34c68f7c0d53722440b055a4e"
+      },
+      {
+        "path": "source-consistency.v1.txt",
+        "version": "v1",
+        "sha256": "18eba4864cdb9c08e09ac0f3900ee216fb7cc1df57c698eec373b35ffebd252a"
+      }
+    ],
+    "prompt_inventory_verified": true,
     "paper_id_aliases": {
       "sardet-100k-neurips2024": "sardet100k-neurips2024",
       "sam-arxiv-2010-01412v3": "sam-iclr2021"
@@ -52,7 +202,16 @@
       "frozen_before_etpaper_output": true,
       "etpaper_output_viewed": false,
       "provenance": "non_expert_source_grounded_reference",
-      "issue_count": 6
+      "issue_count": 6,
+      "issue_ids": [
+        "h1-r1",
+        "h1-r2",
+        "h1-r3",
+        "h1-r4",
+        "h1-r5",
+        "h1-r6"
+      ],
+      "reference_file_sha256": "c1296fc1b8c0decc772fbd5e4eddabab489e1d2aea91ac8aad11baf23ed36471"
     },
     "sam-iclr2021": {
       "paper_id": "sam-iclr2021",
@@ -61,7 +220,16 @@
       "frozen_before_etpaper_output": true,
       "etpaper_output_viewed": false,
       "provenance": "non_expert_source_grounded_reference",
-      "issue_count": 6
+      "issue_count": 6,
+      "issue_ids": [
+        "h2-r1",
+        "h2-r2",
+        "h2-r3",
+        "h2-r4",
+        "h2-r5",
+        "h2-r6"
+      ],
+      "reference_file_sha256": "77eaa70cdd6b6e2440d9d8b09c08a2dc01e15b0d14692ae72bf5231e088dfea5"
     }
   },
   "model_environment": {

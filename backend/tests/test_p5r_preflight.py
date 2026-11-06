@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -150,6 +151,22 @@ def test_repository_manifest_references_aliases_and_budgets_are_frozen_consisten
         assert reference.frozen_before_etpaper_output is True
         assert reference.etpaper_output_viewed is False
         assert _digest(path) == FROZEN_REFERENCE_DIGESTS[paper_id]
+
+
+def test_public_preflight_names_the_clean_commit_that_was_actually_executed():
+    payload = json.loads(Path("docs/examples/p5r/preflight.json").read_text(encoding="utf-8"))
+    snapshot = payload["source_snapshot"]
+
+    assert payload["preflight_schema_version"] == "1.1"
+    assert payload["baseline_is_ancestor"] is True
+    assert payload["current_commit"] == snapshot["head_commit"]
+    assert snapshot["kind"] == "committed_source_validation"
+    assert snapshot["includes_uncommitted_changes"] is False
+    assert payload["frozen_manifest"]["prompt_inventory_verified"] is True
+    assert subprocess.run(
+        ["git", "merge-base", "--is-ancestor", payload["current_commit"], "HEAD"],
+        capture_output=True,
+    ).returncode == 0
 
 
 def test_preflight_verifies_canonical_ids_hashes_references_and_budget(tmp_path):
