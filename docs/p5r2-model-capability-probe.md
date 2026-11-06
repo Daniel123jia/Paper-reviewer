@@ -43,6 +43,30 @@ python -m scripts.p5r2.capability_probe \
 
 该报告只包含 `configured/not_configured`、端点是否有效、模型是否匹配、价格及其来源是否由操作者核验、以及阻断项；不会写入密钥、原始端点、价格来源 URL 或端点主机名。单价字段只代表操作者输入；只有同时提供 HTTPS 来源、精确人工确认标记和有效日期时才满足探测前置条件。日期晚于运行当天会以 `provider_pricing_verification_future_dated` 阻断；超过 30 个自然日会以 `provider_pricing_verification_expired` 阻断，必须由操作者重新核验供应商价格。报告仍明确标记为“操作者证明、未经程序独立核验”。
 
+### P5-R3B 暂估价格配置检查
+
+严格价格核验仍是默认行为。只有操作者在单次命令中显式加入 `--allow-estimated-pricing`，探测器才允许用未经供应商核验的单价完成配置准备。该模式只适用于 `p5r3b_single_nonpaper_capability_probe`，不适用于 P1–P4 正式论文工作流、完整 P5 评测或发布验收。
+
+可以保留旧的本地密钥文件原位不动，由 `--environment-file` 指向它，同时在当前进程显式指定端点、冻结模型和暂估单价。以下命令只做零网络配置检查，不包含 `--execute`：
+
+```zsh
+OPENAI_BASE_URL=https://www.yaoxing.best/v1 \
+OPENAI_MODEL=gpt-6.1-sol \
+OPENAI_INPUT_USD_PER_MILLION=0.80 \
+OPENAI_OUTPUT_USD_PER_MILLION=4.00 \
+python -m scripts.p5r2.capability_probe \
+  --environment-file /existing/private/project/.env.local \
+  --manifest docs/examples/p5-regression/evaluation-manifest.json \
+  --output /tmp/p5r3b-configuration.json \
+  --allow-estimated-pricing
+```
+
+对于这个独立探测脚本，当前进程环境的优先级高于 `--environment-file`。如果两个来源的非空值不同，报告仅记录冲突的变量名和 `process_environment_over_environment_file` 策略，不保存任何值、文件路径或端点主机名。这项优先级只在 `scripts/p5r2/capability_probe.py` 内实现，不改变 P1–P4 的生产环境加载顺序。
+
+按当前操作者暂定的输入 `$0.80/百万 Token` 和输出 `$4.00/百万 Token`，128 输入 Token 规划估算加 64 输出 Token 请求值为 `$0.0003584`。报告固定标记 `pricing.status=estimated_unverified`、`independently_verified=false` 和 `account_hard_limit=false`；不伪造价格来源 URL、核验日期或 `provider_source_checked`。该金额只是规划估算，不是供应商账户的实际扣费或严格费用上限。
+
+`--allow-estimated-pricing` 绝不构成真实调用授权。即使价格配置通过，发出请求仍必须同时加入 `--execute` 和精确授权串 `P5R2_MINIMAL_PROBE_AUTHORIZED`。
+
 ## 当前实际配置状态（2026-11-06）
 
 - P5-R2 工作树没有 `.env.local`。
@@ -85,7 +109,7 @@ python -m scripts.p5r2.capability_probe \
 
 CLI 退出码用于自动化失败关闭：输出路径和 Manifest 有效时，配置检查返回 0 并在报告中列出环境阻断项；输出路径或 Manifest 无效时返回 2。真实探测成功返回 0；请求完成但模型、JSON、usage 或预算验证失败返回 1；授权或配置在请求前失败返回 2。所有具备可写输出路径的真实探测失败路径都会先保存脱敏报告。
 
-探测报告 Schema 当前为 `1.2`。CLI 会在读取 Manifest 和构造模型客户端之前创建输出目录并写入 `probe_not_started` 报告，以确认正式请求的审计路径可用。Manifest 缺失、JSON 无效、`requested_model` 类型错误或不等于冻结模型时返回 2，并用稳定阻断码覆盖该报告；不会保存 Manifest 原文或异常消息。若报告路径本身不可写，CLI 返回 2 且绝不构造客户端，但无法在该路径保存报告。
+探测报告 Schema `1.3` 保留 1.2 报告读取方使用的旧字段。`actual_cost_usd` 仍为按供应商返回 usage 和操作者单价计算的本地兼容字段，新增 `provider_billed_cost_usd=null` 和 `is_provider_billed_cost=false` 以明确它不是供应商账户实际扣费。CLI 会在读取 Manifest 和构造模型客户端之前创建输出目录并写入 `probe_not_started` 报告，以确认正式请求的审计路径可用。Manifest 缺失、JSON 无效、`requested_model` 类型错误或不等于冻结模型时返回 2，并用稳定阻断码覆盖该报告；不会保存 Manifest 原文或异常消息。若报告路径本身不可写，CLI 返回 2 且绝不构造客户端，但无法在该路径保存报告。
 
 ## 静态检查与真实请求的验证边界
 

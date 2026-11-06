@@ -1,5 +1,6 @@
 import json
 from datetime import date
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -64,6 +65,20 @@ def test_configuration_report_is_redacted_and_does_not_run_a_probe():
     assert "provider.example" not in encoded
     assert "OPENAI_API_KEY" not in encoded
     assert "Authorization" not in encoded
+
+
+def test_documentation_records_estimated_pricing_scope_and_separate_authorization():
+    guide = Path("docs/p5r2-model-capability-probe.md").read_text(encoding="utf-8")
+    manifest = json.loads(Path(
+        "docs/examples/p5-regression/evaluation-manifest.json"
+    ).read_text(encoding="utf-8"))
+
+    assert "--allow-estimated-pricing" in guide
+    assert "estimated_unverified" in guide
+    assert "p5r3b_single_nonpaper_capability_probe" in guide
+    assert "P5R2_MINIMAL_PROBE_AUTHORIZED" in guide
+    assert "Schema `1.3`" in guide
+    assert manifest["requested_model"] == FROZEN_MODEL
 
 
 @pytest.mark.parametrize(
