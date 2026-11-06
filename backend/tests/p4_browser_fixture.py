@@ -13,6 +13,8 @@ def main(directory):
     root = Path(directory)
     root.mkdir(parents=True, exist_ok=True)
     os.environ["OPENAI_API_KEY"] = "browser-mock-only"
+    os.environ["OPENAI_BASE_URL"] = "https://provider.example/v1"
+    os.environ["OPENAI_MODEL"] = "browser-mock-model"
     app_module.OpenAI = FakeOpenAI
     client, _ = seeded_p4_client(root, reportable=True)
     project = client.post("/api/evidence-verification-runs/v1/report-projects")

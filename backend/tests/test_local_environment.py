@@ -16,24 +16,25 @@ def clear_model_environment(monkeypatch):
 
 def test_local_environment_does_not_copy_model_values_into_process(tmp_path, monkeypatch):
     clear_model_environment(monkeypatch)
-    monkeypatch.delenv("PAPER_REVIEW_PREDEPLOY", raising=False)
+    monkeypatch.delenv("P5R4_TEST_NON_MODEL_SETTING", raising=False)
     config = tmp_path / ".env.local"
     config.write_text(
         "OPENAI_API_KEY=file-key\n"
         "OPENAI_BASE_URL=https://file-provider.example/v1\n"
         "OPENAI_MODEL=file-model\n"
-        "PAPER_REVIEW_PREDEPLOY=1\n",
+        "P5R4_TEST_NON_MODEL_SETTING=file-value\n",
         encoding="utf-8",
     )
 
     load_local_environment(config)
 
     assert all(key not in os.environ for key in MODEL_KEYS)
-    assert os.environ["PAPER_REVIEW_PREDEPLOY"] == "1"
+    assert os.environ["P5R4_TEST_NON_MODEL_SETTING"] == "file-value"
     resolved = require_model_runtime_config(config)
     assert resolved.api_key == "file-key"
     assert resolved.base_url == "https://file-provider.example/v1"
     assert resolved.model == "file-model"
+    os.environ.pop("P5R4_TEST_NON_MODEL_SETTING", None)
 
 
 def test_local_environment_never_overwrites_process_model_values(tmp_path, monkeypatch):

@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from backend.app import create_app
 from backend.tests.test_p3_engine import model
 from backend.tests.test_p3_sources import frozen_case
+from backend.tests.model_test_config import configure_test_model
 
 
 def seeded_client(tmp_path):
@@ -62,8 +63,7 @@ class FakeOpenAI:
 
 def test_p3_api_auth_persistence_task_detail_and_explicit_retry(tmp_path, monkeypatch):
     monkeypatch.setenv("PAPER_REVIEW_ACCESS_TOKEN", "private")
-    monkeypatch.setenv("OPENAI_API_KEY", "fake-secret")
-    monkeypatch.setenv("OPENAI_MODEL", "requested-model")
+    configure_test_model(monkeypatch, key="fake-secret", model="requested-model")
     monkeypatch.setattr("backend.app.OpenAI", FakeOpenAI)
     client, consolidation = seeded_client(tmp_path)
     path = "/api/candidate-consolidation-runs/c1/evidence-verification-runs"
@@ -98,7 +98,7 @@ def test_p3_api_auth_persistence_task_detail_and_explicit_retry(tmp_path, monkey
 
 def test_p3_api_rejects_changed_actual_pdf_and_foreign_snapshot(tmp_path, monkeypatch):
     monkeypatch.delenv("PAPER_REVIEW_ACCESS_TOKEN", raising=False)
-    monkeypatch.setenv("OPENAI_API_KEY", "fake-secret")
+    configure_test_model(monkeypatch, key="fake-secret")
     client, _ = seeded_client(tmp_path)
     path = "/api/candidate-consolidation-runs/c1/evidence-verification-runs"
     (tmp_path / "files" / "doc1.pdf").write_bytes(b"different PDF")

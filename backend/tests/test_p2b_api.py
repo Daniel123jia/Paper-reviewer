@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from backend.app import create_app
 from backend.tests.test_p2b_engine import inputs, reply
+from backend.tests.model_test_config import configure_test_model
 
 
 def seeded_client(tmp_path):
@@ -29,7 +30,7 @@ def test_api_requires_authentication_and_completed_frozen_snapshot(tmp_path, mon
     assert client.post("/api/understanding-runs/u1/professional-review-runs").status_code == 401
     assert client.get("/api/professional-review-runs/nope").status_code == 401
     assert client.post("/api/auth/login", json={"access_token": "private"}).status_code == 200
-    monkeypatch.setenv("OPENAI_API_KEY", "fake")
+    configure_test_model(monkeypatch, key="fake")
     with sqlite3.connect(tmp_path / "review.db") as db:
         db.execute("UPDATE paper_understanding_runs SET source_bundle_id = 'other' WHERE id = 'u1'")
     assert client.post("/api/understanding-runs/u1/professional-review-runs").status_code == 409
@@ -37,8 +38,7 @@ def test_api_requires_authentication_and_completed_frozen_snapshot(tmp_path, mon
 
 def test_api_persists_all_dimensions_and_safe_call_diagnostics(tmp_path, monkeypatch):
     monkeypatch.delenv("PAPER_REVIEW_ACCESS_TOKEN", raising=False)
-    monkeypatch.setenv("OPENAI_API_KEY", "fake-secret")
-    monkeypatch.setenv("OPENAI_MODEL", "requested-model")
+    configure_test_model(monkeypatch, key="fake-secret", model="requested-model")
 
     class FakeOpenAI:
         def __init__(self, **kwargs):

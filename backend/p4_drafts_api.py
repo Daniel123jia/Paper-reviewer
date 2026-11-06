@@ -1,7 +1,6 @@
 """P4 draft revisions, explicit approval, and exports through the existing renderer."""
 
 import json
-import os
 import re
 import time
 import uuid
@@ -35,7 +34,8 @@ class ApproveDraftInput(BaseModel):
     confirm_content: bool
 
 
-def register_p4_draft_routes(app, connect, model_factory, helpers):
+def register_p4_draft_routes(app, connect, model_session_factory, model_preflight,
+                             helpers):
     project_or_404 = helpers["project_or_404"]
     snapshot_of = helpers["snapshot_of"]
     decision_records = helpers["decision_records"]
@@ -66,20 +66,20 @@ def register_p4_draft_routes(app, connect, model_factory, helpers):
         return result
 
     def call_model(project_id, draft_id):
-        requested = os.environ.get("OPENAI_MODEL", "gpt-6.1-sol")
-        client = None
+        session = None
 
         def invoke(stage, version, system, user):
-            nonlocal client
+            nonlocal session
             for attempt in range(2):
                 started = time.perf_counter()
                 actual = None
                 input_tokens = output_tokens = None
                 error = None
                 try:
-                    if client is None:
-                        client = model_factory()
-                    response = client.chat.completions.create(model=requested,
+                    if session is None:
+                        session = model_session_factory()
+                    requested = session.configuration.model
+                    response = session.client.chat.completions.create(model=requested,
                         messages=[{"role": "system", "content": system},
                                   {"role": "user", "content": user}])
                     actual = response.model or None
@@ -99,9 +99,11 @@ def register_p4_draft_routes(app, connect, model_factory, helpers):
                     error = type(exc).__name__
                     raise
                 finally:
+                    recorded_model = (session.configuration.model if session is not None
+                                      else "unresolved")
                     with connect() as db:
                         db.execute("INSERT INTO p4_model_calls VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                            (uuid.uuid4().hex, draft_id, project_id, stage, version, requested,
+                            (uuid.uuid4().hex, draft_id, project_id, stage, version, recorded_model,
                              actual, input_tokens, output_tokens,
                              round((time.perf_counter() - started) * 1000),
                              "failed" if error else "completed", error, now()))
@@ -137,8 +139,8 @@ def register_p4_draft_routes(app, connect, model_factory, helpers):
     def create_p4_draft(project_id: str, payload: CreateDraftInput):
         with connect() as db:
             (plan, pack), _ = frozen_plan(db, project_id, payload.kind, payload.language)
-        if plan.groups and not os.environ.get("OPENAI_API_KEY"):
-            raise HTTPException(503, "后端尚未配置报告写作模型")
+        if plan.groups:
+            model_preflight()
         draft_id = uuid.uuid4().hex
         try:
             with connect() as db:
@@ -168,6 +170,8 @@ def register_p4_draft_routes(app, connect, model_factory, helpers):
                 db.execute("INSERT INTO p4_draft_revisions VALUES (?, 1, ?, ?, 'pending', ?)",
                            (draft_id, body, digest(body), stamp))
                 return draft_view(db, draft_or_404(db, draft_id))
+        except HTTPException:
+            raise
         except (ValueError, KeyError, TypeError) as exc:
             raise HTTPException(422, f"P4 写作校验失败：{type(exc).__name__}: {exc}") from None
         except Exception as exc:

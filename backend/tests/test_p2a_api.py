@@ -8,6 +8,7 @@ import fitz
 from fastapi.testclient import TestClient
 
 from backend.app import create_app
+from backend.tests.model_test_config import configure_test_model
 
 
 def test_existing_p2a_run_table_receives_source_snapshot_column(tmp_path):
@@ -80,8 +81,7 @@ def _fake_completion(messages):
 
 
 def test_understanding_run_persists_scoped_results_without_changing_review_baseline(tmp_path, monkeypatch):
-    monkeypatch.setenv("OPENAI_API_KEY", "fake-key")
-    monkeypatch.setenv("OPENAI_MODEL", "requested-model")
+    configure_test_model(monkeypatch, key="fake-key", model="requested-model")
 
     class FakeOpenAI:
         def __init__(self, **kwargs):
@@ -126,7 +126,7 @@ def test_understanding_run_reports_model_failure_and_missing_key(tmp_path, monke
                                                       "application/pdf")}).json()
     route = f'/api/documents/{document["id"]}/understanding-runs'
     assert client.post(route, json={}).status_code == 503
-    monkeypatch.setenv("OPENAI_API_KEY", "fake-key")
+    configure_test_model(monkeypatch, key="fake-key")
 
     class BrokenOpenAI:
         def __init__(self, **kwargs):
@@ -150,8 +150,7 @@ def test_understanding_run_reports_model_failure_and_missing_key(tmp_path, monke
 
 
 def test_completed_plan_survives_downstream_model_failure(tmp_path, monkeypatch):
-    monkeypatch.setenv("OPENAI_API_KEY", "fake-key")
-    monkeypatch.setenv("OPENAI_MODEL", "requested-model")
+    configure_test_model(monkeypatch, key="fake-key", model="requested-model")
 
     class PlanOnlyOpenAI:
         def __init__(self, **kwargs):
@@ -180,7 +179,7 @@ def test_completed_plan_survives_downstream_model_failure(tmp_path, monkeypatch)
 
 
 def test_understanding_budget_exceeded_is_explicit(tmp_path, monkeypatch):
-    monkeypatch.setenv("OPENAI_API_KEY", "fake-key")
+    configure_test_model(monkeypatch, key="fake-key")
     monkeypatch.setenv("P2A_MAX_CALLS", "1")
 
     class FakeOpenAI:

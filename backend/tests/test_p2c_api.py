@@ -8,6 +8,7 @@ from backend.app import create_app
 from backend.p2b_engine import run_p2b
 from backend.tests.test_p2b_api import seeded_client
 from backend.tests.test_p2b_engine import candidate, inputs, reply
+from backend.tests.model_test_config import configure_test_model
 
 
 def seeded_p2c_client(tmp_path):
@@ -26,7 +27,7 @@ def seeded_p2c_client(tmp_path):
 
 def test_api_auth_snapshot_and_incomplete_p2b_input(tmp_path, monkeypatch):
     monkeypatch.setenv("PAPER_REVIEW_ACCESS_TOKEN", "private")
-    monkeypatch.setenv("OPENAI_API_KEY", "fake-secret")
+    configure_test_model(monkeypatch, key="fake-secret")
     client = seeded_p2c_client(tmp_path)
     assert client.post("/api/professional-review-runs/b1/consolidation-runs").status_code == 401
     assert client.get("/api/candidate-consolidation-runs/none").status_code == 401
@@ -42,8 +43,7 @@ def test_api_auth_snapshot_and_incomplete_p2b_input(tmp_path, monkeypatch):
 
 def test_api_persists_inventory_relations_tasks_and_safe_usage(tmp_path, monkeypatch):
     monkeypatch.delenv("PAPER_REVIEW_ACCESS_TOKEN", raising=False)
-    monkeypatch.setenv("OPENAI_API_KEY", "fake-secret")
-    monkeypatch.setenv("OPENAI_MODEL", "requested-model")
+    configure_test_model(monkeypatch, key="fake-secret", model="requested-model")
 
     class FakeOpenAI:
         def __init__(self, **kwargs):
