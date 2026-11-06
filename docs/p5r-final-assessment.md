@@ -17,6 +17,7 @@
 - 校验 Shaw、SARDet-100K 和 SAM 的 canonical ID、版本及 PDF SHA-256。
 - 校验两份留出盲测参考集与 Manifest 的身份一致性。
 - 建立不发起模型请求的版本化脱敏预检。
+- P5-R.1 将 Git 基线、Manifest Commit、requested model、Prompt 清单和盲测参考指纹改为失败关闭校验。
 - 明确每篇与三篇合计预算、未知费用和串行停止条件。
 
 ## 阻断项

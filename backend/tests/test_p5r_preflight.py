@@ -18,6 +18,11 @@ from scripts.p5r.preflight import PreflightError, build_preflight
 
 NOW = datetime(2026, 11, 6, tzinfo=timezone.utc)
 PAPER_IDS = ("shaw2018", "sardet100k-neurips2024", "sam-iclr2021")
+FROZEN_MANIFEST_COMMIT = "c4b613f486b4db6f118dc0ef99b7c0c103676843"
+FROZEN_REFERENCE_DIGESTS = {
+    "sardet100k-neurips2024": "c1296fc1b8c0decc772fbd5e4eddabab489e1d2aea91ac8aad11baf23ed36471",
+    "sam-iclr2021": "77eaa70cdd6b6e2440d9d8b09c08a2dc01e15b0d14692ae72bf5231e088dfea5",
+}
 
 
 def _digest(path: Path) -> str:
@@ -82,8 +87,8 @@ def _fixtures(tmp_path: Path):
 
     papers = [_paper(paper_id, _digest(pdf_paths[paper_id])) for paper_id in PAPER_IDS]
     manifest = EvaluationManifest(
-        baseline_commit="0" * 40,
-        code_commit="0" * 40,
+        baseline_commit=FROZEN_MANIFEST_COMMIT,
+        code_commit=FROZEN_MANIFEST_COMMIT,
         created_at=NOW,
         operating_system="test-os",
         python_version="3.11",
@@ -113,6 +118,17 @@ def _fixtures(tmp_path: Path):
     return manifest_path, pdf_paths, reference_paths
 
 
+def _reference_contract(reference_paths: dict[str, Path]) -> dict[str, dict]:
+    contract = {}
+    for paper_id, path in reference_paths.items():
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        contract[paper_id] = {
+            "file_sha256": _digest(path),
+            "issue_ids": [item["reference_issue_id"] for item in payload["issues"]],
+        }
+    return contract
+
+
 def test_repository_manifest_references_aliases_and_budgets_are_frozen_consistently():
     manifest = EvaluationManifest.model_validate_json(Path(
         "docs/examples/p5-regression/evaluation-manifest.json"
@@ -133,6 +149,7 @@ def test_repository_manifest_references_aliases_and_budgets_are_frozen_consisten
         assert reference.pdf_sha256 == papers[paper_id].pdf_sha256
         assert reference.frozen_before_etpaper_output is True
         assert reference.etpaper_output_viewed is False
+        assert _digest(path) == FROZEN_REFERENCE_DIGESTS[paper_id]
 
 
 def test_preflight_verifies_canonical_ids_hashes_references_and_budget(tmp_path):
@@ -150,9 +167,12 @@ def test_preflight_verifies_canonical_ids_hashes_references_and_budget(tmp_path)
         },
         current_commit="1" * 40,
         baseline_is_ancestor=True,
+        working_tree_dirty=True,
         generated_at=NOW,
+        frozen_reference_contract=_reference_contract(reference_paths),
     )
 
+    assert result["preflight_schema_version"] == "1.1"
     assert [paper["paper_id"] for paper in result["papers"]] == list(PAPER_IDS)
     assert all(paper["hash_verified"] for paper in result["papers"])
     assert result["reference_sets"]["sardet100k-neurips2024"]["identity_verified"]
@@ -166,7 +186,88 @@ def test_preflight_verifies_canonical_ids_hashes_references_and_budget(tmp_path)
     assert result["model_environment"]["context_window"] == "unknown_pending_provider_verification"
     assert result["model_environment"]["model_output_limit"] == \
         "unknown_pending_provider_verification"
+    assert result["frozen_manifest"]["prompt_inventory"] == []
+    assert result["source_snapshot"] == {
+        "kind": "pre_commit_worktree_validation",
+        "head_commit": "1" * 40,
+        "includes_uncommitted_changes": True,
+        "note": "head_commit identifies the checked-out parent; validation included uncommitted P5-R changes",
+    }
     assert result["ready_for_paid_run"] is False
+
+
+def test_preflight_rejects_execution_commit_without_p5r_baseline_ancestor(tmp_path):
+    manifest_path, pdf_paths, reference_paths = _fixtures(tmp_path)
+
+    with pytest.raises(PreflightError, match="P5-R baseline is not an ancestor"):
+        build_preflight(
+            manifest_path=manifest_path,
+            paper_paths=pdf_paths,
+            reference_paths=reference_paths,
+            environment={"requested_model": "requested-test-model"},
+            current_commit="1" * 40,
+            baseline_is_ancestor=False,
+            generated_at=NOW,
+            frozen_reference_contract=_reference_contract(reference_paths),
+        )
+
+
+@pytest.mark.parametrize("field", ["baseline_commit", "code_commit"])
+def test_preflight_rejects_changed_frozen_manifest_commit(tmp_path, field):
+    manifest_path, pdf_paths, reference_paths = _fixtures(tmp_path)
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    payload[field] = "f" * 40
+    manifest_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(PreflightError, match="frozen manifest commit mismatch"):
+        build_preflight(
+            manifest_path=manifest_path,
+            paper_paths=pdf_paths,
+            reference_paths=reference_paths,
+            environment={"requested_model": "requested-test-model"},
+            current_commit="1" * 40,
+            baseline_is_ancestor=True,
+            generated_at=NOW,
+            frozen_reference_contract=_reference_contract(reference_paths),
+        )
+
+
+def test_preflight_rejects_requested_model_that_differs_from_manifest(tmp_path):
+    manifest_path, pdf_paths, reference_paths = _fixtures(tmp_path)
+
+    with pytest.raises(PreflightError, match="requested model mismatch"):
+        build_preflight(
+            manifest_path=manifest_path,
+            paper_paths=pdf_paths,
+            reference_paths=reference_paths,
+            environment={"requested_model": "unapproved-model"},
+            current_commit="1" * 40,
+            baseline_is_ancestor=True,
+            generated_at=NOW,
+            frozen_reference_contract=_reference_contract(reference_paths),
+        )
+
+
+def test_preflight_rejects_prompt_inventory_that_differs_from_manifest(tmp_path):
+    manifest_path, pdf_paths, reference_paths = _fixtures(tmp_path)
+    prompt_directory = tmp_path / "prompts"
+    prompt_directory.mkdir()
+    (prompt_directory / "unauthorized.v1.txt").write_text(
+        "changed prompt", encoding="utf-8"
+    )
+
+    with pytest.raises(PreflightError, match="prompt inventory mismatch"):
+        build_preflight(
+            manifest_path=manifest_path,
+            paper_paths=pdf_paths,
+            reference_paths=reference_paths,
+            environment={"requested_model": "requested-test-model"},
+            current_commit="1" * 40,
+            baseline_is_ancestor=True,
+            generated_at=NOW,
+            frozen_reference_contract=_reference_contract(reference_paths),
+            prompt_directory=prompt_directory,
+        )
 
 
 def test_preflight_fails_closed_on_pdf_hash_mismatch(tmp_path):
@@ -178,10 +279,11 @@ def test_preflight_fails_closed_on_pdf_hash_mismatch(tmp_path):
             manifest_path=manifest_path,
             paper_paths=pdf_paths,
             reference_paths=reference_paths,
-            environment={},
+            environment={"requested_model": "requested-test-model"},
             current_commit="1" * 40,
             baseline_is_ancestor=True,
             generated_at=NOW,
+            frozen_reference_contract=_reference_contract(reference_paths),
         )
 
 
@@ -194,10 +296,11 @@ def test_preflight_rejects_alias_instead_of_canonical_execution_id(tmp_path):
             manifest_path=manifest_path,
             paper_paths=pdf_paths,
             reference_paths=reference_paths,
-            environment={},
+            environment={"requested_model": "requested-test-model"},
             current_commit="1" * 40,
             baseline_is_ancestor=True,
             generated_at=NOW,
+            frozen_reference_contract=_reference_contract(reference_paths),
         )
 
 
@@ -212,10 +315,11 @@ def test_preflight_fails_when_blind_reference_identity_differs(tmp_path):
             manifest_path=manifest_path,
             paper_paths=pdf_paths,
             reference_paths=reference_paths,
-            environment={},
+            environment={"requested_model": "requested-test-model"},
             current_commit="1" * 40,
             baseline_is_ancestor=True,
             generated_at=NOW,
+            frozen_reference_contract=_reference_contract(reference_paths),
         )
 
 
@@ -236,6 +340,7 @@ def test_preflight_public_record_never_serializes_secrets_or_absolute_paths(tmp_
         current_commit="1" * 40,
         baseline_is_ancestor=True,
         generated_at=NOW,
+        frozen_reference_contract=_reference_contract(reference_paths),
     )
     encoded = json.dumps(result)
 
@@ -245,3 +350,88 @@ def test_preflight_public_record_never_serializes_secrets_or_absolute_paths(tmp_
     assert result["model_environment"]["api_key_status"] == "configured"
     assert result["model_environment"]["endpoint_label"] == "configured_custom_endpoint"
     assert "capability_probe_not_run" in result["blockers"]
+
+
+def test_preflight_rejects_reference_not_frozen_before_output(tmp_path):
+    manifest_path, pdf_paths, reference_paths = _fixtures(tmp_path)
+    contract = _reference_contract(reference_paths)
+    path = reference_paths["sardet100k-neurips2024"]
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["frozen_before_etpaper_output"] = False
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(PreflightError, match="reference was not frozen before EtPaper output"):
+        build_preflight(
+            manifest_path=manifest_path,
+            paper_paths=pdf_paths,
+            reference_paths=reference_paths,
+            environment={"requested_model": "requested-test-model"},
+            current_commit="1" * 40,
+            baseline_is_ancestor=True,
+            generated_at=NOW,
+            frozen_reference_contract=contract,
+        )
+
+
+def test_preflight_rejects_reference_that_viewed_etpaper_output(tmp_path):
+    manifest_path, pdf_paths, reference_paths = _fixtures(tmp_path)
+    contract = _reference_contract(reference_paths)
+    path = reference_paths["sam-iclr2021"]
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["etpaper_output_viewed"] = True
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(PreflightError, match="blind reference contract invalid.*sam-iclr2021"):
+        build_preflight(
+            manifest_path=manifest_path,
+            paper_paths=pdf_paths,
+            reference_paths=reference_paths,
+            environment={"requested_model": "requested-test-model"},
+            current_commit="1" * 40,
+            baseline_is_ancestor=True,
+            generated_at=NOW,
+            frozen_reference_contract=contract,
+        )
+
+
+def test_preflight_rejects_changed_reference_issue_count(tmp_path):
+    manifest_path, pdf_paths, reference_paths = _fixtures(tmp_path)
+    contract = _reference_contract(reference_paths)
+    path = reference_paths["sam-iclr2021"]
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["issues"] = []
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(PreflightError, match="blind reference contract invalid.*sam-iclr2021"):
+        build_preflight(
+            manifest_path=manifest_path,
+            paper_paths=pdf_paths,
+            reference_paths=reference_paths,
+            environment={"requested_model": "requested-test-model"},
+            current_commit="1" * 40,
+            baseline_is_ancestor=True,
+            generated_at=NOW,
+            frozen_reference_contract=contract,
+        )
+
+
+def test_preflight_rejects_rewritten_reference_with_same_issue_ids(tmp_path):
+    manifest_path, pdf_paths, reference_paths = _fixtures(tmp_path)
+    contract = _reference_contract(reference_paths)
+    path = reference_paths["sardet100k-neurips2024"]
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["issues"][0]["scientific_question"] = \
+        "A replacement question with enough words to satisfy the schema but not the freeze."
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(PreflightError, match="reference content fingerprint mismatch"):
+        build_preflight(
+            manifest_path=manifest_path,
+            paper_paths=pdf_paths,
+            reference_paths=reference_paths,
+            environment={"requested_model": "requested-test-model"},
+            current_commit="1" * 40,
+            baseline_is_ancestor=True,
+            generated_at=NOW,
+            frozen_reference_contract=contract,
+        )

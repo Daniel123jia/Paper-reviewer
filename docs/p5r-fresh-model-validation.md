@@ -4,7 +4,18 @@
 
 P5-R 从 `main` Commit `09c0ef8e0210d5973d4d9d5e82a4ff90a560831c` 创建独立分支 `feature/p5r-fresh-model-validation`。本次只建立真实模型续跑的可审计准备层，不修改 P1–P4 核心算法、Prompt、P3 判定阈值、P4 准入规则、冻结论文或独立参考问题。
 
-确定性预检工具位于 `scripts/p5r/preflight.py`。它只读取 Manifest、指定 PDF、盲测参考集和本地环境标记，不连接模型 API。公开预检结果见 `docs/examples/p5r/preflight.json`。
+确定性预检工具位于 `scripts/p5r/preflight.py`。它只读取 Manifest、指定 PDF、盲测参考集和本地环境标记，不连接模型 API。公开预检结果见 `docs/examples/p5r/preflight.json`。P5-R.1 将预检 Schema 升级为 `1.1`。
+
+## P5-R.1 失败关闭规则
+
+| 项目 | P5-R 初版 | P5-R.1 |
+|---|---|---|
+| Git 基线 | 只记录 `baseline_is_ancestor` | 不是已验收 main 基线的后代时立即拒绝 |
+| 冻结 Manifest | 读取其 Commit 字段 | `baseline_commit` 和 `code_commit` 必须同时等于已验收的 P4 冻结 Commit |
+| 模型配置 | 环境值直接写入记录 | 环境 `requested_model` 必须与 Manifest 一致，否则需新的授权评测版本 |
+| Prompt | 未在公开结果中展开 | 校验实际 Prompt 文件的路径、版本与 SHA-256，并保留完整清单 |
+| 盲测参考 | 校验 paper ID 和 PDF 哈希 | 额外强制 `frozen=true`、`viewed=false`、固定 Issue ID 集合及整文件 SHA-256 |
+| 预检来源 | `current_commit` 可能被误解为包含当前未提交修改 | 显式记录 `committed_source_validation` 或 `pre_commit_worktree_validation` 及 dirty 状态 |
 
 ## 冻结材料校验
 
@@ -14,7 +25,7 @@ P5-R 从 `main` Commit `09c0ef8e0210d5973d4d9d5e82a4ff90a560831c` 创建独立�
 | SARDet-100K | `sardet100k-neurips2024` | NeurIPS 2024 final proceedings | `3f4e6cddbf32524853f3493a5e7975490b8ffeae274cf139acf2b576736998b9` | 通过 |
 | SAM | `sam-iclr2021` | arXiv 2010.01412v3 / ICLR 2021 | `73ace22a61c52152fc84a94239cb3ea5f9fa9e753aa8ef5995f277365e25b764` | 通过 |
 
-SARDet 和 SAM 的 `BlindReferenceSet` 分别与 Manifest 中的 canonical ID 及 PDF 哈希一致，各包含 6 项冻结参考问题。它们的 provenance 是 `non_expert_source_grounded_reference`，不是完整专家金标准，后续只能报告对这些枚举问题的覆盖情况。
+SARDet 和 SAM 的 `BlindReferenceSet` 分别与 Manifest 中的 canonical ID 及 PDF 哈希一致，各包含 6 项冻结参考问题。它们还必须保持 `frozen_before_etpaper_output=true` 和 `etpaper_output_viewed=false`。P5-R.1 固定了两份文件的 Issue ID 顺序和整文件 SHA-256，因此不能以数量相同的新问题覆盖原参考集。它们的 provenance 是 `non_expert_source_grounded_reference`，不是完整专家金标准，后续只能报告对这些枚举问题的覆盖情况。
 
 PDF 只存在被 Git 忽略的 `data/p5r/sources/` 中，不提交到公开仓库。预检严格要求 canonical ID；历史别名仅用于读取旧记录，不能作为新运行标识。
 
@@ -60,8 +71,8 @@ requested model 只是配置值，不代表服务端实际返回的模型。必�
 
 | 检查 | 结果 |
 |---|---|
-| P5-R 预检专项 | 6 passed |
-| 完整后端回归 | 267 passed, 2 skipped |
+| P5-R 预检专项 | 15 passed |
+| 完整后端回归 | 276 passed, 2 skipped |
 | 前端生产构建 | passed |
 | PDF 阅读、公式、旧审稿模式与失败处理浏览器回归 | 6/6 passed |
 | P4 编辑、定位和下载浏览器回归 | 1/1 passed |
