@@ -35,7 +35,7 @@ def test_configuration_report_is_redacted_and_does_not_run_a_probe():
     report = build_configuration_report(environment, FROZEN_MODEL)
 
     encoded = json.dumps(report)
-    assert report["probe_schema_version"] == "1.2"
+    assert report["probe_schema_version"] == "1.3"
     assert report["configuration_ready"] is True
     assert report["credential_status"] == "configured"
     assert report["endpoint_status"] == "configured_valid"
@@ -144,6 +144,69 @@ def test_rate_values_without_provider_evidence_remain_blocked():
     assert "provider_pricing_not_verified" in report["blockers"]
 
 
+def test_estimated_pricing_requires_explicit_mode_and_reports_unverified_scope():
+    environment = configured_environment(
+        OPENAI_INPUT_USD_PER_MILLION="0.80",
+        OPENAI_OUTPUT_USD_PER_MILLION="4.00",
+        OPENAI_PRICING_SOURCE_URL="",
+        OPENAI_PRICING_VERIFIED_AT="",
+        OPENAI_PRICING_VERIFICATION="",
+    )
+
+    strict = build_configuration_report(environment, FROZEN_MODEL)
+    estimated = build_configuration_report(
+        environment,
+        FROZEN_MODEL,
+        allow_estimated_pricing=True,
+    )
+
+    assert strict["configuration_ready"] is False
+    assert strict["pricing"]["status"] == "operator_configured_unverified"
+    assert "provider_pricing_not_verified" in strict["blockers"]
+    assert estimated["probe_schema_version"] == "1.3"
+    assert estimated["configuration_ready"] is True
+    assert estimated["pricing"] == {
+        "status": "estimated_unverified",
+        "estimated_probe_cost_usd": 0.0003584,
+        "basis": (
+            "operator-supplied unverified planning rates; "
+            "input usage remains an estimate"
+        ),
+        "source_evidence_status": "not_provided_or_not_used",
+        "scope": "p5r3b_single_nonpaper_capability_probe",
+        "independently_verified": False,
+        "account_hard_limit": False,
+    }
+    assert estimated["blockers"] == []
+
+
+@pytest.mark.parametrize(
+    ("input_rate", "output_rate", "blocker"),
+    [
+        ("", "4.00", "pricing_not_configured"),
+        ("0.80", "", "pricing_not_configured"),
+        ("invalid", "4.00", "pricing_invalid"),
+        ("0.80", "-1", "pricing_invalid"),
+    ],
+)
+def test_estimated_pricing_still_rejects_missing_or_invalid_rates(
+        input_rate, output_rate, blocker):
+    report = build_configuration_report(
+        configured_environment(
+            OPENAI_INPUT_USD_PER_MILLION=input_rate,
+            OPENAI_OUTPUT_USD_PER_MILLION=output_rate,
+            OPENAI_PRICING_SOURCE_URL="",
+            OPENAI_PRICING_VERIFIED_AT="",
+            OPENAI_PRICING_VERIFICATION="",
+        ),
+        FROZEN_MODEL,
+        allow_estimated_pricing=True,
+    )
+
+    assert report["configuration_ready"] is False
+    assert blocker in report["blockers"]
+
+
 def test_pricing_verification_date_rejects_future_and_expired_evidence():
     today = date(2026, 11, 6)
 
@@ -237,7 +300,7 @@ def test_authorized_probe_makes_one_bounded_streaming_call():
     )
 
     assert result["status"] == "passed"
-    assert result["probe_schema_version"] == "1.2"
+    assert result["probe_schema_version"] == "1.3"
     assert result["network_attempted"] is True
     assert result["model_calls"] == 1
     assert result["requested_model"] == result["actual_model"] == FROZEN_MODEL

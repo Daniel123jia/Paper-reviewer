@@ -17,12 +17,13 @@ from pydantic import BaseModel, ConfigDict
 
 FROZEN_MODEL = "gpt-6.1-sol"
 AUTHORIZATION_ACK = "P5R2_MINIMAL_PROBE_AUTHORIZED"
-PROBE_SCHEMA_VERSION = "1.2"
+PROBE_SCHEMA_VERSION = "1.3"
 PROBE_MAX_CALLS = 1
 PROBE_INPUT_TOKEN_ESTIMATE = 128
 PROBE_OUTPUT_TOKEN_CEILING = 64
 PROBE_TIMEOUT_SECONDS = 180
 PRICING_VERIFICATION_MAX_AGE_DAYS = 30
+ESTIMATED_PRICING_SCOPE = "p5r3b_single_nonpaper_capability_probe"
 PROBE_SYSTEM = "Return exactly one compact JSON object and no Markdown."
 PROBE_USER = 'Return {"ok":true,"probe":"p5r2"}.'
 
@@ -69,7 +70,8 @@ def _valid_endpoint(value: str) -> bool:
 
 
 def _pricing(
-    environment: Mapping[str, str], *, today: date | None = None
+    environment: Mapping[str, str], *, allow_estimated_pricing: bool = False,
+    today: date | None = None,
 ) -> tuple[dict, list[str]]:
     raw_input = environment.get("OPENAI_INPUT_USD_PER_MILLION", "").strip()
     raw_output = environment.get("OPENAI_OUTPUT_USD_PER_MILLION", "").strip()
@@ -101,6 +103,19 @@ def _pricing(
         Decimal(PROBE_INPUT_TOKEN_ESTIMATE) * input_rate
         + Decimal(PROBE_OUTPUT_TOKEN_CEILING) * output_rate
     ) / Decimal(1_000_000)
+    if allow_estimated_pricing:
+        return ({
+            "status": "estimated_unverified",
+            "estimated_probe_cost_usd": float(
+                estimate.quantize(Decimal("0.00000001"))
+            ),
+            "basis": ("operator-supplied unverified planning rates; "
+                      "input usage remains an estimate"),
+            "source_evidence_status": "not_provided_or_not_used",
+            "scope": ESTIMATED_PRICING_SCOPE,
+            "independently_verified": False,
+            "account_hard_limit": False,
+        }, [])
     source_url = environment.get("OPENAI_PRICING_SOURCE_URL", "").strip()
     verification = environment.get("OPENAI_PRICING_VERIFICATION", "").strip()
     verified_at = environment.get("OPENAI_PRICING_VERIFIED_AT", "").strip()
@@ -154,7 +169,7 @@ def _pricing(
 
 def build_configuration_report(
     environment: Mapping[str, str], manifest_requested_model: str,
-    *, today: date | None = None,
+    *, allow_estimated_pricing: bool = False, today: date | None = None,
 ) -> dict:
     blockers: list[str] = []
     key = environment.get("OPENAI_API_KEY", "").strip()
@@ -187,7 +202,11 @@ def build_configuration_report(
     elif requested_model != manifest_requested_model:
         blockers.append("requested_model_mismatch")
 
-    pricing, pricing_blockers = _pricing(environment, today=today)
+    pricing, pricing_blockers = _pricing(
+        environment,
+        allow_estimated_pricing=allow_estimated_pricing,
+        today=today,
+    )
     blockers.extend(pricing_blockers)
     return {
         "probe_schema_version": PROBE_SCHEMA_VERSION,
