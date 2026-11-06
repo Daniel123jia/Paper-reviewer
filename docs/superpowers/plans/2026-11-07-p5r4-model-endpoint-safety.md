@@ -59,7 +59,7 @@ def test_resolver_fails_closed_for_source_conflict(name):
 
 - [ ] **Step 2: Run the resolver tests and verify RED**
 
-Run: `.venv/bin/python -m pytest backend/tests/test_model_runtime.py -q`  
+Run: `.venv/bin/python -m pytest backend/tests/test_model_runtime.py -q`
 Expected: collection/import failure because `backend.model_runtime` does not exist.
 
 - [ ] **Step 3: Add endpoint and required-value tests**
@@ -115,7 +115,7 @@ def create_model_session(configuration, *, timeout, max_retries,
 
 - [ ] **Step 7: Run focused tests and verify GREEN**
 
-Run: `.venv/bin/python -m pytest backend/tests/test_model_runtime.py -q`  
+Run: `.venv/bin/python -m pytest backend/tests/test_model_runtime.py -q`
 Expected: all tests pass and no network fixture exists.
 
 - [ ] **Step 8: Commit**
@@ -149,7 +149,7 @@ Also test: an existing process model key is unchanged; repeat loads do not pollu
 
 - [ ] **Step 2: Run the isolation tests and verify RED**
 
-Run: `.venv/bin/python -m pytest backend/tests/test_local_environment.py -q`  
+Run: `.venv/bin/python -m pytest backend/tests/test_local_environment.py -q`
 Expected: old `load_dotenv(..., override=True)` copies or overwrites the model key.
 
 - [ ] **Step 3: Implement isolated file loading**
@@ -213,7 +213,7 @@ Use the smallest valid database fixture required to reach each route; do not exe
 
 - [ ] **Step 3: Run the entry-point tests and verify RED**
 
-Run: `.venv/bin/python -m pytest backend/tests/test_model_entrypoint_safety.py -q`  
+Run: `.venv/bin/python -m pytest backend/tests/test_model_entrypoint_safety.py -q`
 Expected: current routes accept key-only configuration or create a streaming response.
 
 - [ ] **Step 4: Introduce safe API preflight and session helpers in `create_app`**
@@ -379,7 +379,7 @@ Expected: no frozen Prompt/Manifest changes; only the centralized factory contai
 
 - [ ] **Step 2: Run complete backend regression**
 
-Run: `.venv/bin/python -m pytest backend/tests -q`  
+Run: `.venv/bin/python -m pytest backend/tests -q`
 Expected: exit 0, with only the existing intentional skips.
 
 - [ ] **Step 3: Run inherited P2/P3 and P5 deterministic checks**
@@ -396,7 +396,7 @@ Confirm `.github/workflows/p5-end-to-end-acceptance.yml` still contains `fresh-m
 
 - [ ] **Step 4: Build frontend**
 
-Run: `npm run build` in `frontend/`.  
+Run: `npm run build` in `frontend/`.
 Expected: exit 0.
 
 - [ ] **Step 5: Run existing browser regressions**

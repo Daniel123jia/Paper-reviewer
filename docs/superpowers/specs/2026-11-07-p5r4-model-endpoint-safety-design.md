@@ -1,6 +1,6 @@
 # P5-R4 Model Endpoint Safety Design
 
-Date: 2026-11-07  
+Date: 2026-11-07
 Scope: PR 1 only — unified production model configuration and fail-closed endpoint safety.
 
 ## Objective
