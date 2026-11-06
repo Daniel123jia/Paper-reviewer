@@ -1,13 +1,13 @@
 {
   "preflight_schema_version": "1.1",
-  "generated_at": "2026-11-06T04:05:40.260373+00:00",
+  "generated_at": "2026-11-06T04:06:39.359364+00:00",
   "execution_mode": "fresh_model_run_preparation",
   "p5r_baseline_commit": "09c0ef8e0210d5973d4d9d5e82a4ff90a560831c",
-  "current_commit": "6941703cab1ae1f7e81a4773e21165eb457499ab",
+  "current_commit": "c29e4d241f0f20aacb6c62ae54a05928f36f7412",
   "baseline_is_ancestor": true,
   "source_snapshot": {
     "kind": "committed_source_validation",
-    "head_commit": "6941703cab1ae1f7e81a4773e21165eb457499ab",
+    "head_commit": "c29e4d241f0f20aacb6c62ae54a05928f36f7412",
     "includes_uncommitted_changes": false,
     "note": "validation executed from a clean committed source tree"
   },
