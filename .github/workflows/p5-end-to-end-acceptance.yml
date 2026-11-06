@@ -1,0 +1,93 @@
+name: P5 end-to-end acceptance
+
+on:
+  push:
+    branches: [feature/p5-end-to-end-acceptance]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/p5/**'
+      - 'backend/**'
+      - 'frontend/**'
+      - 'docs/p5*'
+      - 'docs/examples/p5-*/**'
+      - '.github/workflows/p5-end-to-end-acceptance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deterministic-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install deterministic test dependencies
+        run: |
+          python -m pip install -r backend/requirements.txt
+          sudo apt-get update -qq && sudo apt-get install -y pandoc
+          cd frontend && npm ci && npx playwright install --with-deps chromium
+      - name: Download public regression papers
+        run: |
+          curl -fsSL https://arxiv.org/pdf/1803.02155 -o "$RUNNER_TEMP/shaw2018.pdf"
+          echo '8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b  '"$RUNNER_TEMP/shaw2018.pdf" | sha256sum --check
+          curl -fsSL https://www.jmlr.org/papers/volume25/24-0404/24-0404.pdf -o "$RUNNER_TEMP/jmlr2024.pdf"
+          echo '4ddf0066146f0644ba87d2462e9f73d3d72537d1daffb8d6ccc50840ff6c7dea  '"$RUNNER_TEMP/jmlr2024.pdf" | sha256sum --check
+      - name: Backend and P5 deterministic regression
+        env:
+          P11_SHAW_PDF: ${{ runner.temp }}/shaw2018.pdf
+          P11_JMLR_PDF: ${{ runner.temp }}/jmlr2024.pdf
+        run: python -m pytest backend/tests -q
+      - name: Frontend production build
+        working-directory: frontend
+        run: npm run build
+      - name: PDF reader and legacy-baseline browser regressions
+        env:
+          PAPER_REVIEW_DATA_DIR: ${{ runner.temp }}/p5-legacy-browser-data
+          REAL_PDF_PATH: ${{ runner.temp }}/Self-Attention with Relative Position Representations.pdf
+        run: |
+          cp "$RUNNER_TEMP/shaw2018.pdf" "$REAL_PDF_PATH"
+          python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000 > "$RUNNER_TEMP/p5-legacy-backend.log" 2>&1 &
+          backend_pid=$!
+          (cd frontend && npm run dev -- --host 127.0.0.1) > "$RUNNER_TEMP/p5-legacy-frontend.log" 2>&1 &
+          frontend_pid=$!
+          trap 'kill "$backend_pid" "$frontend_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/api/auth/status > /dev/null &&
+               curl -fsS http://127.0.0.1:5173/ > /dev/null; then break; fi
+            sleep 1
+          done
+          cd frontend
+          npx playwright test tests/real-pdf.spec.ts tests/cross-formula.spec.ts tests/review-modes.spec.ts tests/chat-failure.spec.ts --workers=1
+      - name: P4 review, edit and export browser regression
+        env:
+          PAPER_REVIEW_DATA_DIR: ${{ runner.temp }}/p5-p4-browser-data
+        run: |
+          python -m backend.tests.p4_browser_fixture "$PAPER_REVIEW_DATA_DIR"
+          python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000 > "$RUNNER_TEMP/p5-p4-backend.log" 2>&1 &
+          backend_pid=$!
+          (cd frontend && npm run dev -- --host 127.0.0.1) > "$RUNNER_TEMP/p5-p4-frontend.log" 2>&1 &
+          frontend_pid=$!
+          trap 'kill "$backend_pid" "$frontend_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/api/auth/status > /dev/null &&
+               curl -fsS http://127.0.0.1:5173/ > /dev/null; then break; fi
+            sleep 1
+          done
+          cd frontend
+          npx playwright test tests/p4-report.spec.ts --workers=1
+
+  fresh-model-run:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'Fresh model evaluation is intentionally opt-in and never executes in CI.'

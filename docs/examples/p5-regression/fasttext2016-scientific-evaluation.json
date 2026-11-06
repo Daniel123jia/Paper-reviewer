@@ -1,0 +1,42 @@
+{
+  "evaluation_schema_version": "1.0",
+  "paper_id": "fasttext2016",
+  "pdf_sha256": "6cbcf620c2537ed54dfb9ed0d843a83689b82dc41dcd305bfb2e82425d4d7906",
+  "evaluation_mode": "manual_review",
+  "evaluator_provenance": "codex_non_expert_review",
+  "reference_scope": "none",
+  "judgments": [
+    {
+      "issue_id": "consolidated_8103558cbdda88bc3c6c",
+      "question": "Do the timing tables support complete-training speedups at the reported accuracy, or per-epoch comparisons under the disclosed execution conditions?",
+      "judgment": "B",
+      "source_result_execution_mode": "recorded_model_replay",
+      "evidence_refs": [
+        "ru_ev_26739aba340e_2_9",
+        "ru_ev_26739aba340e_2_16",
+        "ru_ev_26739aba340e_3_17"
+      ],
+      "pdf_pages": [3, 4],
+      "rationale": "The paper labels Table 2 as single-epoch timing and separately states that fastText used five epochs. Asking the authors to delimit a complete-training interpretation is specific and useful while stopping short of claiming the reported measurements are wrong.",
+      "factual_accuracy": "supported",
+      "evidence_support": "source_grounded",
+      "scientific_value": "medium",
+      "actionable": true
+    }
+  ],
+  "p3_conservatism": [
+    {
+      "issue_id": "consolidated_8103558cbdda88bc3c6c",
+      "p3_verdict": "concern_narrowed",
+      "report_eligibility": "eligible_with_qualification",
+      "primary_reason": "unverified_table_or_formula",
+      "concern_status": "potentially_valuable",
+      "rationale": "P3 retained a useful scope clarification while acknowledging that the original table alignment and complete-training arithmetic were not independently verified."
+    }
+  ],
+  "limitations": [
+    "This is a non-expert P5 review of a historical recorded-model replay, not a fresh P5 model run.",
+    "The timing table's complete cell structure was not independently visually verified in this check.",
+    "One sentinel author-facing issue was assessed; this file is not a complete-paper quality estimate."
+  ]
+}

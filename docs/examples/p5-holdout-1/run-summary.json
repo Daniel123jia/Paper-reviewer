@@ -1,0 +1,50 @@
+{
+  "summary_schema_version": "1.1",
+  "paper_id": "sardet-100k-neurips2024",
+  "canonical_paper_id": "sardet100k-neurips2024",
+  "paper_id_resolution": "historical_execution_alias_preserved",
+  "evaluation_id": "1f08ecae654f4bb8b37adcb1616a8315",
+  "started_at": "2026-11-05T18:15:53.142579Z",
+  "finished_at": "2026-11-05T18:16:01.756152Z",
+  "pdf_sha256": "3f4e6cddbf32524853f3493a5e7975490b8ffeae274cf139acf2b576736998b9",
+  "source_bundle_id": "sb_3f4e6cddbf32_4477f7bd7f7b43afbf430d80a4098cee_v1",
+  "execution_mode": "fresh_model_run",
+  "overall_status": "blocked_missing_credential",
+  "stages": {
+    "p1": "completed",
+    "p2a": "blocked_missing_credential",
+    "p2b": "not_started",
+    "p2c": "not_started",
+    "p3": "not_started",
+    "p4": "not_started"
+  },
+  "p1": {
+    "page_count": 32,
+    "duration_ms": 8581,
+    "body_blocks": 669,
+    "reading_units": 669,
+    "sections": 30,
+    "tables": 14,
+    "formulas": 6,
+    "figures": 4,
+    "pages_with_unverified_reading_order": 8,
+    "input_readiness": {
+      "section_summary": "needs_review",
+      "formula_check": "blocked",
+      "table_review": "blocked",
+      "figure_review": "blocked"
+    }
+  },
+  "model_usage": {
+    "calls": 0,
+    "known_input_tokens": 0,
+    "known_output_tokens": 0,
+    "unknown_token_calls": 0,
+    "cost_status": "unknown"
+  },
+  "limitations": [
+    "No model-backed P2-A through P4 stage was executed because the evaluation environment had no model credential.",
+    "P1 inventory counts do not establish transcription, structure, reading-order, or scientific correctness.",
+    "This summary contains no raw paper text, model request, model response, endpoint, or credential."
+  ]
+}

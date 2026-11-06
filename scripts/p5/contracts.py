@@ -1,0 +1,288 @@
+from __future__ import annotations
+
+import re
+from datetime import datetime
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, computed_field, model_validator
+
+
+ExecutionMode = Literal[
+    "fresh_model_run", "recorded_model_replay", "deterministic_regression", "manual_review"
+]
+RunStatus = Literal[
+    "queued", "running", "completed", "limited", "partial_failed", "blocked",
+    "budget_exceeded", "failed", "blocked_missing_credential",
+]
+
+
+class StrictModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class PromptRecord(StrictModel):
+    path: str
+    version: str
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class PaperBudget(StrictModel):
+    max_calls: int = Field(gt=0)
+    max_input_tokens: int = Field(gt=0)
+    max_output_tokens: int = Field(gt=0)
+    max_duration_seconds: int = Field(gt=0)
+    max_retries: int = Field(ge=0)
+    max_cost_usd: float | None = Field(default=None, gt=0)
+    price_source: str | None = None
+
+
+class PaperSpec(StrictModel):
+    paper_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
+    title: str = Field(min_length=1)
+    group: Literal["historical_regression", "holdout"]
+    official_pdf_url: HttpUrl
+    pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    version: str = Field(min_length=1)
+    reference_status: Literal["frozen", "pending"]
+    has_appendix: bool | None = None
+    has_tables: bool | None = None
+    has_formulas: bool | None = None
+    has_figures: bool | None = None
+
+
+class ReferenceEvidence(StrictModel):
+    pdf_page: int = Field(gt=0)
+    object_label: str
+    source_note: str = Field(min_length=1)
+
+
+class ReferenceIssue(StrictModel):
+    reference_issue_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
+    scientific_question: str = Field(min_length=20)
+    importance: Literal["major", "moderate", "minor"]
+    reference_category: Literal[
+        "technical_concern", "clarification", "reporting_limit", "external_verification"
+    ]
+    evidence: list[ReferenceEvidence] = Field(min_length=1)
+    verification_condition: str = Field(min_length=10)
+    current_assessment: Literal["supported_concern", "open_question", "source_limited"]
+
+
+class BlindReferenceSet(StrictModel):
+    reference_schema_version: Literal["1.0"] = "1.0"
+    paper_id: str
+    pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    created_at: datetime
+    provenance: Literal[
+        "non_expert_source_grounded_reference", "independent_expert_review", "chatgpt_web_reference"
+    ]
+    frozen_before_etpaper_output: bool
+    etpaper_output_viewed: bool
+    limitations: list[str]
+    issues: list[ReferenceIssue] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def blind_claim_is_consistent(self):
+        if self.frozen_before_etpaper_output and self.etpaper_output_viewed:
+            raise ValueError("a blind reference cannot have viewed EtPaper output")
+        issue_ids = [issue.reference_issue_id for issue in self.issues]
+        if len(issue_ids) != len(set(issue_ids)):
+            raise ValueError("reference_issue_id values must be unique")
+        return self
+
+
+class EvaluationManifest(StrictModel):
+    manifest_schema_version: Literal["1.0", "1.1"] = "1.1"
+    permitted_execution_modes: list[ExecutionMode] = [
+        "fresh_model_run", "recorded_model_replay", "deterministic_regression", "manual_review"
+    ]
+    baseline_commit: str = Field(pattern=r"^[0-9a-f]{40}$")
+    code_commit: str = Field(pattern=r"^[0-9a-f]{40}$")
+    created_at: datetime
+    operating_system: str
+    python_version: str
+    node_version: str
+    schema_versions: dict[str, str]
+    prompt_inventory: list[PromptRecord]
+    requested_model: str
+    actual_model: str | None = None
+    provider_label: str
+    run_parameters: dict[str, str | int | float | bool | None] = {}
+    papers: list[PaperSpec]
+    budgets: dict[str, PaperBudget]
+    paper_id_aliases: dict[str, str] = Field(default_factory=dict)
+    chatgpt_benchmark_status: Literal["pending", "available", "completed"] = "pending"
+
+    @model_validator(mode="after")
+    def papers_and_budgets_match(self):
+        paper_ids = [item.paper_id for item in self.papers]
+        if len(paper_ids) != len(set(paper_ids)):
+            raise ValueError("paper_id values must be unique")
+        if set(paper_ids) != set(self.budgets):
+            raise ValueError("every paper requires exactly one budget")
+        canonical_ids = set(paper_ids)
+        if canonical_ids.intersection(self.paper_id_aliases):
+            raise ValueError("paper ID aliases must differ from canonical paper IDs")
+        if not set(self.paper_id_aliases.values()).issubset(canonical_ids):
+            raise ValueError("paper ID aliases must resolve to a manifest paper")
+        if any(not re.fullmatch(r"[a-z0-9][a-z0-9-]*", alias)
+               for alias in self.paper_id_aliases):
+            raise ValueError("paper ID aliases must use normalized ID syntax")
+        return self
+
+    def resolve_paper_id(self, paper_id: str) -> str:
+        canonical_ids = {item.paper_id for item in self.papers}
+        if paper_id in canonical_ids:
+            return paper_id
+        if paper_id in self.paper_id_aliases:
+            return self.paper_id_aliases[paper_id]
+        raise ValueError(f"paper ID is not present in the evaluation manifest: {paper_id}")
+
+
+class ModelCallSummary(StrictModel):
+    stage: str
+    status: Literal["completed", "failed", "unknown_usage"]
+    requested_model: str
+    actual_model: str | None
+    input_tokens: int | None = Field(default=None, ge=0)
+    output_tokens: int | None = Field(default=None, ge=0)
+    duration_ms: int = Field(ge=0)
+    error_type: str | None = None
+
+
+class StageRun(StrictModel):
+    stage: Literal["p1", "p2a", "p2b", "p2c", "p3", "p4", "manual_review", "export"]
+    status: RunStatus
+    execution_mode: ExecutionMode
+    started_at: datetime
+    finished_at: datetime | None
+    document_id: str
+    source_bundle_id: str | None
+    input_run_id: str | None
+    output_run_id: str | None
+    model_calls: list[ModelCallSummary] = []
+    usage_status: Literal["complete", "incomplete", "not_applicable"] = "not_applicable"
+    retry_count: int = Field(default=0, ge=0)
+    source_limitations: list[str] = []
+    artifact_path: str | None = None
+    error_type: str | None = None
+
+
+class LedgerTotals(StrictModel):
+    model_calls: int
+    successful_calls: int
+    failed_calls: int
+    unknown_token_calls: int
+    known_input_tokens: int
+    known_output_tokens: int
+    model_duration_ms: int
+    retry_count: int
+
+
+class RunLedger(StrictModel):
+    ledger_schema_version: Literal["1.0", "1.1"] = "1.1"
+    evaluation_id: str
+    paper_id: str
+    execution_paper_id: str | None = None
+    document_id: str
+    pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    source_bundle_id: str | None
+    started_at: datetime
+    finished_at: datetime | None
+    overall_status: RunStatus
+    stages: list[StageRun]
+    workflow_reached_final_stage: bool = False
+    completed_stages: list[str] = Field(default_factory=list)
+    limited_stages: list[str] = Field(default_factory=list)
+    outstanding_verification_items: list[str] = Field(default_factory=list)
+    lineage_audit_passed: bool | None = None
+    human_interventions: int = Field(default=0, ge=0)
+    cost_usd: float | None = Field(default=None, ge=0)
+    cost_status: Literal["known", "unknown"] = "unknown"
+
+    @model_validator(mode="after")
+    def source_identity_is_stable(self):
+        for stage in self.stages:
+            if stage.document_id != self.document_id:
+                raise ValueError("stage document_id differs from ledger document_id")
+            if stage.source_bundle_id and self.source_bundle_id and \
+                    stage.source_bundle_id != self.source_bundle_id:
+                raise ValueError("stage source_bundle_id differs from frozen source bundle")
+        return self
+
+    @computed_field
+    @property
+    def totals(self) -> LedgerTotals:
+        calls = [call for stage in self.stages for call in stage.model_calls]
+        return LedgerTotals(
+            model_calls=len(calls),
+            successful_calls=sum(call.status == "completed" for call in calls),
+            failed_calls=sum(call.status == "failed" for call in calls),
+            unknown_token_calls=sum(call.input_tokens is None or call.output_tokens is None
+                                    for call in calls),
+            known_input_tokens=sum(call.input_tokens or 0 for call in calls),
+            known_output_tokens=sum(call.output_tokens or 0 for call in calls),
+            model_duration_ms=sum(call.duration_ms for call in calls),
+            retry_count=sum(stage.retry_count for stage in self.stages),
+        )
+
+    @computed_field
+    @property
+    def usage_incomplete(self) -> bool:
+        return (any(stage.usage_status == "incomplete" for stage in self.stages) or
+                self.totals.unknown_token_calls > 0)
+
+
+class ScientificIssueJudgment(StrictModel):
+    issue_id: str
+    question: str = Field(min_length=20)
+    judgment: Literal["A", "B", "C", "D", "E"]
+    source_result_execution_mode: ExecutionMode
+    evidence_refs: list[str] = Field(min_length=1)
+    pdf_pages: list[int] = Field(min_length=1)
+    rationale: str = Field(min_length=20)
+    factual_accuracy: Literal["supported", "misread", "unassessed"]
+    evidence_support: Literal["independently_checked", "source_grounded", "partial", "unverified"]
+    scientific_value: Literal["high", "medium", "low", "unassessed"]
+    actionable: bool | None
+
+
+class P3ConservatismRecord(StrictModel):
+    issue_id: str
+    p3_verdict: str
+    report_eligibility: str
+    primary_reason: Literal[
+        "insufficient_scientific_basis",
+        "author_counterevidence",
+        "unverified_table_or_formula",
+        "external_material_unavailable",
+        "support_extraction_incomplete",
+        "server_rule_conservative",
+        "verification_capability_missing",
+    ]
+    concern_status: Literal["not_supported", "refuted", "potentially_valuable", "unknown"]
+    rationale: str = Field(min_length=20)
+
+
+class ScientificEvaluation(StrictModel):
+    evaluation_schema_version: Literal["1.0"] = "1.0"
+    paper_id: str
+    pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    evaluation_mode: Literal["manual_review"] = "manual_review"
+    evaluator_provenance: Literal[
+        "codex_non_expert_review", "independent_expert_review", "chatgpt_web_reference"
+    ]
+    reference_scope: Literal["complete_expert_set", "enumerated_challenge_set", "none"]
+    judgments: list[ScientificIssueJudgment]
+    p3_conservatism: list[P3ConservatismRecord]
+    limitations: list[str] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def issue_identifiers_are_unique(self):
+        issue_ids = [item.issue_id for item in self.judgments]
+        if len(issue_ids) != len(set(issue_ids)):
+            raise ValueError("scientific issue judgments must have unique issue_id values")
+        p3_ids = [item.issue_id for item in self.p3_conservatism]
+        if len(p3_ids) != len(set(p3_ids)):
+            raise ValueError("P3 conservatism records must have unique issue_id values")
+        return self
