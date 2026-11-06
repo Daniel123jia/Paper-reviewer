@@ -72,6 +72,19 @@ PAPER_REVIEW_ACCESS_TOKEN=在本机生成的随机访问口令
 
 页面右上角的“模型用量”汇总聊天、审稿与英文草稿的 Token、执行时间和已知费用。未配置单价的调用显示为“费用未知”，不会误显示为零成本。
 
+### P5-R2 零费用模型配置检查
+
+冻结真实评测要求显式设置 `OPENAI_BASE_URL`、`OPENAI_MODEL=gpt-6.1-sol`、由实际服务商确认的输入/输出单价，以及服务商价格来源、最近 30 个自然日内且不晚于当天的核验日期和人工确认标记。仅填写单价不能启动真实探测。可先运行以下命令；它默认不创建模型客户端、不连接网络：
+
+```zsh
+python -m scripts.p5r2.capability_probe \
+  --environment-file .env.local \
+  --manifest docs/examples/p5-regression/evaluation-manifest.json \
+  --output /tmp/p5r2-configuration.json
+```
+
+真实能力探测有独立的显式授权门，本项目不会因为检测到 API Key 就自动调用模型。架构、费用公式及尚未验证的能力见 [P5-R2 模型连接与能力探测说明](docs/p5r2-model-capability-probe.md)。
+
 ## 验证
 
 ```bash
