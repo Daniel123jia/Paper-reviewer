@@ -314,6 +314,8 @@ def test_authorized_probe_makes_one_bounded_streaming_call():
     assert result["cost"] == {
         "status": "operator_attested_rate_calculation",
         "actual_cost_usd": 0.000093,
+        "provider_billed_cost_usd": None,
+        "is_provider_billed_cost": False,
         "account_hard_limit": False,
     }
     assert result["budget_observation"] == {
@@ -341,6 +343,63 @@ def test_authorized_probe_makes_one_bounded_streaming_call():
     assert request["stream"] is True
     assert request["stream_options"] == {"include_usage": True}
     assert request["max_tokens"] == 64
+
+
+def test_authorized_estimated_probe_preserves_request_limits_and_cost_semantics():
+    client = FakeStreamClient(successful_chunks())
+    factory_calls = []
+    environment = configured_environment(
+        OPENAI_INPUT_USD_PER_MILLION="0.80",
+        OPENAI_OUTPUT_USD_PER_MILLION="4.00",
+        OPENAI_PRICING_SOURCE_URL="",
+        OPENAI_PRICING_VERIFIED_AT="",
+        OPENAI_PRICING_VERIFICATION="",
+    )
+
+    def factory(**kwargs):
+        factory_calls.append(kwargs)
+        return client
+
+    result = run_capability_probe(
+        environment,
+        FROZEN_MODEL,
+        AUTHORIZATION_ACK,
+        factory,
+        allow_estimated_pricing=True,
+        clock=iter([10.0, 10.125]).__next__,
+    )
+
+    assert result["status"] == "passed"
+    assert result["pricing"]["status"] == "estimated_unverified"
+    assert result["pricing"]["scope"] == \
+        "p5r3b_single_nonpaper_capability_probe"
+    assert result["cost"] == {
+        "status": "estimated_unverified_rate_calculation",
+        "actual_cost_usd": 0.0000584,
+        "provider_billed_cost_usd": None,
+        "is_provider_billed_cost": False,
+        "account_hard_limit": False,
+    }
+    assert result["model_calls"] == 1
+    assert len(factory_calls) == 1
+    assert factory_calls[0]["timeout"] == 180
+    assert factory_calls[0]["max_retries"] == 0
+    assert client.calls == [{
+        "model": FROZEN_MODEL,
+        "messages": [
+            {
+                "role": "system",
+                "content": "Return exactly one compact JSON object and no Markdown.",
+            },
+            {
+                "role": "user",
+                "content": 'Return {"ok":true,"probe":"p5r2"}.',
+            },
+        ],
+        "stream": True,
+        "stream_options": {"include_usage": True},
+        "max_tokens": 64,
+    }]
 
 
 def test_probe_fails_closed_for_model_mismatch_or_missing_usage():
@@ -455,7 +514,9 @@ def write_cli_inputs(tmp_path, environment=None):
     return environment_file, manifest, tmp_path / "report.json"
 
 
-def cli_args(environment_file, manifest, output, *, execute=False, authorized=False):
+def cli_args(
+        environment_file, manifest, output, *, execute=False, authorized=False,
+        estimated=False):
     args = [
         "--environment-file", str(environment_file),
         "--manifest", str(manifest),
@@ -465,6 +526,8 @@ def cli_args(environment_file, manifest, output, *, execute=False, authorized=Fa
         args.append("--execute")
     if authorized:
         args.extend(["--authorization-ack", AUTHORIZATION_ACK])
+    if estimated:
+        args.append("--allow-estimated-pricing")
     return args
 
 
@@ -490,6 +553,44 @@ def test_cli_returns_zero_for_successful_authorized_probe(tmp_path):
 
     assert exit_code == 0
     assert json.loads(output.read_text(encoding="utf-8"))["status"] == "passed"
+
+
+def test_estimated_pricing_flag_does_not_bypass_authorization(tmp_path):
+    called = False
+
+    def forbidden_client(**_kwargs):
+        nonlocal called
+        called = True
+        raise AssertionError("estimated pricing must not authorize a request")
+
+    environment_file, manifest, output = write_cli_inputs(
+        tmp_path,
+        configured_environment(
+            OPENAI_INPUT_USD_PER_MILLION="0.80",
+            OPENAI_OUTPUT_USD_PER_MILLION="4.00",
+            OPENAI_PRICING_SOURCE_URL="",
+            OPENAI_PRICING_VERIFIED_AT="",
+            OPENAI_PRICING_VERIFICATION="",
+        ),
+    )
+
+    exit_code = main(
+        cli_args(
+            environment_file,
+            manifest,
+            output,
+            execute=True,
+            estimated=True,
+        ),
+        client_factory=forbidden_client,
+    )
+
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert exit_code == 2
+    assert called is False
+    assert report["network_attempted"] is False
+    assert report["model_calls"] == 0
+    assert "probe_authorization_missing" in report["blockers"]
 
 
 def test_cli_returns_nonzero_and_saves_redacted_failed_probe(tmp_path):

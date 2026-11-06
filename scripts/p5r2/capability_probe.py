@@ -314,13 +314,18 @@ def run_capability_probe(
     authorization_ack: str,
     client_factory: Callable[..., object] = OpenAI,
     *,
+    allow_estimated_pricing: bool = False,
     clock: Callable[[], float] = time.perf_counter,
 ) -> dict:
     if authorization_ack != AUTHORIZATION_ACK:
         raise ProbeAuthorizationError(
             "paid probe requires explicit authorization acknowledgement"
         )
-    configuration = build_configuration_report(environment, manifest_requested_model)
+    configuration = build_configuration_report(
+        environment,
+        manifest_requested_model,
+        allow_estimated_pricing=allow_estimated_pricing,
+    )
     if not configuration["configuration_ready"]:
         raise ProbeConfigurationError(
             "paid probe configuration is blocked: " + ",".join(configuration["blockers"])
@@ -334,6 +339,7 @@ def run_capability_probe(
         "model_calls": 0,
         "requested_model": manifest_requested_model,
         "actual_model": None,
+        "pricing": configuration["pricing"],
         "structured_json": None,
         "usage": {
             "status": "incomplete",
@@ -344,6 +350,8 @@ def run_capability_probe(
         "cost": {
             "status": "unknown",
             "actual_cost_usd": None,
+            "provider_billed_cost_usd": None,
+            "is_provider_billed_cost": False,
             "account_hard_limit": False,
         },
         "budget_observation": {
@@ -408,10 +416,16 @@ def run_capability_probe(
                 * Decimal(environment["OPENAI_OUTPUT_USD_PER_MILLION"])
             ) / Decimal(1_000_000)
             result["cost"] = {
-                "status": "operator_attested_rate_calculation",
+                "status": (
+                    "estimated_unverified_rate_calculation"
+                    if configuration["pricing"]["status"] == "estimated_unverified"
+                    else "operator_attested_rate_calculation"
+                ),
                 "actual_cost_usd": float(
                     actual_cost.quantize(Decimal("0.00000001"))
                 ),
+                "provider_billed_cost_usd": None,
+                "is_provider_billed_cost": False,
                 "account_hard_limit": False,
             }
             input_exceeded = input_tokens > PROBE_INPUT_TOKEN_ESTIMATE
@@ -525,6 +539,8 @@ def _blocked_probe_result(blockers: list[str], error_type: str) -> dict:
         "cost": {
             "status": "not_incurred",
             "actual_cost_usd": 0,
+            "provider_billed_cost_usd": None,
+            "is_provider_billed_cost": False,
             "account_hard_limit": False,
         },
         "duration_ms": 0,
@@ -564,6 +580,7 @@ def main(argv: list[str] | None = None, *, client_factory: Callable[..., object]
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--authorization-ack", default="")
+    parser.add_argument("--allow-estimated-pricing", action="store_true")
     args = parser.parse_args(argv)
 
     pending = _blocked_probe_result(["probe_not_started"], "ProbeNotStarted")
@@ -593,6 +610,7 @@ def main(argv: list[str] | None = None, *, client_factory: Callable[..., object]
                 manifest_model,
                 args.authorization_ack,
                 client_factory,
+                allow_estimated_pricing=args.allow_estimated_pricing,
             )
             exit_code = 0 if result["status"] == "passed" else 1
         except ProbeAuthorizationError:
@@ -601,13 +619,21 @@ def main(argv: list[str] | None = None, *, client_factory: Callable[..., object]
             )
             exit_code = 2
         except ProbeConfigurationError:
-            configuration = build_configuration_report(environment, manifest_model)
+            configuration = build_configuration_report(
+                environment,
+                manifest_model,
+                allow_estimated_pricing=args.allow_estimated_pricing,
+            )
             result = _blocked_probe_result(
                 configuration["blockers"], "ProbeConfigurationError"
             )
             exit_code = 2
     else:
-        result = build_configuration_report(environment, manifest_model)
+        result = build_configuration_report(
+            environment,
+            manifest_model,
+            allow_estimated_pricing=args.allow_estimated_pricing,
+        )
     _write_report(args.output, result)
     _print_summary(str(args.output), args.execute, result)
     return exit_code
