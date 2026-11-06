@@ -678,6 +678,39 @@ def test_cli_returns_zero_for_successful_authorized_probe(tmp_path):
     assert json.loads(output.read_text(encoding="utf-8"))["status"] == "passed"
 
 
+def test_cli_threads_estimated_pricing_only_with_explicit_flag(tmp_path):
+    environment_file, manifest, output = write_cli_inputs(
+        tmp_path,
+        configured_environment(
+            OPENAI_INPUT_USD_PER_MILLION="0.80",
+            OPENAI_OUTPUT_USD_PER_MILLION="4.00",
+            OPENAI_PRICING_SOURCE_URL="",
+            OPENAI_PRICING_VERIFIED_AT="",
+            OPENAI_PRICING_VERIFICATION="",
+        ),
+    )
+    client = FakeStreamClient(successful_chunks())
+
+    exit_code = main(
+        cli_args(
+            environment_file,
+            manifest,
+            output,
+            execute=True,
+            authorized=True,
+            estimated=True,
+        ),
+        client_factory=lambda **_kwargs: client,
+    )
+
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert report["status"] == "passed"
+    assert report["pricing"]["status"] == "estimated_unverified"
+    assert report["model_calls"] == 1
+    assert len(client.calls) == 1
+
+
 def test_estimated_pricing_flag_does_not_bypass_authorization(tmp_path):
     called = False
 
