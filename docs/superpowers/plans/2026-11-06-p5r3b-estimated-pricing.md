@@ -357,4 +357,3 @@ Expected: a new open PR targeting `main`; do not merge it.
 - [ ] **Step 5: Wait for and verify GitHub CI**
 
 Run `gh pr checks <number> --watch` and record every check URL and result. Any failed, missing or still-running required check remains non-passing. Do not run `--execute` and do not access a real environment file.
-
