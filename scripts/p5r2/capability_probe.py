@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import time
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Callable, Mapping
@@ -17,7 +18,7 @@ from pydantic import BaseModel, ConfigDict
 FROZEN_MODEL = "gpt-6.1-sol"
 AUTHORIZATION_ACK = "P5R2_MINIMAL_PROBE_AUTHORIZED"
 PROBE_MAX_CALLS = 1
-PROBE_INPUT_TOKEN_CEILING = 128
+PROBE_INPUT_TOKEN_ESTIMATE = 128
 PROBE_OUTPUT_TOKEN_CEILING = 64
 PROBE_TIMEOUT_SECONDS = 180
 PROBE_SYSTEM = "Return exactly one compact JSON object and no Markdown."
@@ -62,8 +63,11 @@ def _pricing(environment: Mapping[str, str]) -> tuple[dict, list[str]]:
     if not raw_input or not raw_output:
         return ({
             "status": "unknown",
-            "estimated_probe_ceiling_usd": None,
+            "estimated_probe_cost_usd": None,
             "basis": "operator rates are not configured",
+            "source_evidence_status": "missing",
+            "independently_verified": False,
+            "account_hard_limit": False,
         }, ["pricing_not_configured"])
     try:
         input_rate = Decimal(raw_input)
@@ -74,18 +78,44 @@ def _pricing(environment: Mapping[str, str]) -> tuple[dict, list[str]]:
     except (InvalidOperation, ValueError):
         return ({
             "status": "unknown",
-            "estimated_probe_ceiling_usd": None,
+            "estimated_probe_cost_usd": None,
             "basis": "operator rates are invalid",
+            "source_evidence_status": "missing",
+            "independently_verified": False,
+            "account_hard_limit": False,
         }, ["pricing_invalid"])
-    ceiling = (
-        Decimal(PROBE_INPUT_TOKEN_CEILING) * input_rate
+    estimate = (
+        Decimal(PROBE_INPUT_TOKEN_ESTIMATE) * input_rate
         + Decimal(PROBE_OUTPUT_TOKEN_CEILING) * output_rate
     ) / Decimal(1_000_000)
+    source_url = environment.get("OPENAI_PRICING_SOURCE_URL", "").strip()
+    verification = environment.get("OPENAI_PRICING_VERIFICATION", "").strip()
+    verified_at = environment.get("OPENAI_PRICING_VERIFIED_AT", "").strip()
+    try:
+        date.fromisoformat(verified_at)
+        date_valid = True
+    except ValueError:
+        date_valid = False
+    source_attested = (
+        _valid_endpoint(source_url)
+        and not _placeholder(source_url, endpoint=True)
+        and verification == "provider_source_checked"
+        and date_valid
+    )
     return ({
-        "status": "operator_configured",
-        "estimated_probe_ceiling_usd": float(ceiling.quantize(Decimal("0.00000001"))),
-        "basis": "operator-supplied per-million-token rates and probe token ceilings",
-    }, [])
+        "status": ("operator_attested_provider_pricing" if source_attested
+                   else "operator_configured_unverified"),
+        "estimated_probe_cost_usd": float(
+            estimate.quantize(Decimal("0.00000001"))
+        ),
+        "basis": ("operator-supplied rates with an attested provider source; "
+                  "input usage remains an estimate" if source_attested else
+                  "operator-supplied rates without valid provider-source attestation"),
+        "source_evidence_status": ("operator_attested" if source_attested
+                                   else "missing_or_invalid"),
+        "independently_verified": False,
+        "account_hard_limit": False,
+    }, [] if source_attested else ["provider_pricing_not_verified"])
 
 
 def build_configuration_report(
@@ -125,7 +155,7 @@ def build_configuration_report(
     pricing, pricing_blockers = _pricing(environment)
     blockers.extend(pricing_blockers)
     return {
-        "probe_schema_version": "1.0",
+        "probe_schema_version": "1.1",
         "execution_mode": "configuration_check_only",
         "configuration_ready": not blockers,
         "credential_status": credential_status,
@@ -139,8 +169,16 @@ def build_configuration_report(
         "pricing": pricing,
         "limits": {
             "max_calls": PROBE_MAX_CALLS,
-            "input_token_ceiling": PROBE_INPUT_TOKEN_CEILING,
-            "output_token_ceiling": PROBE_OUTPUT_TOKEN_CEILING,
+            "input_tokens": {
+                "kind": "planning_estimate",
+                "estimated_tokens": PROBE_INPUT_TOKEN_ESTIMATE,
+                "enforced": False,
+            },
+            "output_tokens": {
+                "requested_tokens": PROBE_OUTPUT_TOKEN_CEILING,
+                "request_parameter": "max_tokens",
+                "provider_enforcement": "pending_real_probe",
+            },
             "timeout_seconds": PROBE_TIMEOUT_SECONDS,
             "sdk_max_retries": 0,
         },
@@ -202,7 +240,7 @@ def run_capability_probe(
 
     started = clock()
     result = {
-        "probe_schema_version": "1.0",
+        "probe_schema_version": "1.1",
         "status": "failed",
         "network_attempted": False,
         "model_calls": 0,
@@ -215,7 +253,27 @@ def run_capability_probe(
             "output_tokens": None,
             "total_tokens": None,
         },
-        "cost": {"status": "unknown", "actual_cost_usd": None},
+        "cost": {
+            "status": "unknown",
+            "actual_cost_usd": None,
+            "account_hard_limit": False,
+        },
+        "budget_observation": {
+            "input_tokens": {
+                "estimate": PROBE_INPUT_TOKEN_ESTIMATE,
+                "actual": None,
+                "status": "usage_unavailable",
+            },
+            "output_tokens": {
+                "requested_limit": PROBE_OUTPUT_TOKEN_CEILING,
+                "actual": None,
+                "status": "usage_unavailable",
+            },
+        },
+        "output_limit_compatibility": {
+            "parameter": "max_tokens",
+            "status": "not_confirmed",
+        },
         "duration_ms": None,
         "blockers": [],
         "error": None,
@@ -268,15 +326,45 @@ def run_capability_probe(
                 * Decimal(environment["OPENAI_OUTPUT_USD_PER_MILLION"])
             ) / Decimal(1_000_000)
             result["cost"] = {
-                "status": "operator_rate_calculation",
+                "status": "operator_attested_rate_calculation",
                 "actual_cost_usd": float(
                     actual_cost.quantize(Decimal("0.00000001"))
                 ),
+                "account_hard_limit": False,
             }
+            input_exceeded = input_tokens > PROBE_INPUT_TOKEN_ESTIMATE
+            output_exceeded = output_tokens > PROBE_OUTPUT_TOKEN_CEILING
+            result["budget_observation"] = {
+                "input_tokens": {
+                    "estimate": PROBE_INPUT_TOKEN_ESTIMATE,
+                    "actual": input_tokens,
+                    "status": ("estimate_exceeded" if input_exceeded
+                               else "within_estimate"),
+                },
+                "output_tokens": {
+                    "requested_limit": PROBE_OUTPUT_TOKEN_CEILING,
+                    "actual": output_tokens,
+                    "status": ("requested_limit_exceeded" if output_exceeded
+                               else "within_requested_limit"),
+                },
+            }
+            result["output_limit_compatibility"] = {
+                "parameter": "max_tokens",
+                "status": ("accepted_but_reported_usage_exceeded" if output_exceeded
+                           else "accepted_within_observed_limit"),
+            }
+            if input_exceeded:
+                result["blockers"].append("input_token_estimate_exceeded")
+            if output_exceeded:
+                result["blockers"].append("output_token_limit_exceeded")
         if result["actual_model"] != manifest_requested_model:
             result["blockers"].append("actual_model_mismatch")
         if not usage_complete:
             result["blockers"].append("usage_reporting_incomplete")
+            result["output_limit_compatibility"] = {
+                "parameter": "max_tokens",
+                "status": "accepted_but_usage_unavailable",
+            }
         try:
             payload = ProbePayload.model_validate_json("".join(pieces))
             if payload != ProbePayload(ok=True, probe="p5r2"):
@@ -312,6 +400,32 @@ def _manifest_model(path: Path) -> str:
     return model
 
 
+def _blocked_probe_result(blockers: list[str], error_type: str) -> dict:
+    return {
+        "probe_schema_version": "1.1",
+        "status": "failed",
+        "network_attempted": False,
+        "model_calls": 0,
+        "requested_model": FROZEN_MODEL,
+        "actual_model": None,
+        "structured_json": None,
+        "usage": {
+            "status": "not_applicable",
+            "input_tokens": None,
+            "output_tokens": None,
+            "total_tokens": None,
+        },
+        "cost": {
+            "status": "not_incurred",
+            "actual_cost_usd": 0,
+            "account_hard_limit": False,
+        },
+        "duration_ms": 0,
+        "blockers": blockers,
+        "error": {"type": error_type, "status_code": None},
+    }
+
+
 def main(argv: list[str] | None = None, *, client_factory: Callable[..., object] = OpenAI) -> int:
     parser = argparse.ArgumentParser(
         description="Check P5-R2 model configuration; never calls the API unless explicitly authorized"
@@ -328,13 +442,27 @@ def main(argv: list[str] | None = None, *, client_factory: Callable[..., object]
 
     environment = _effective_environment(args.environment_file)
     manifest_model = _manifest_model(args.manifest)
+    exit_code = 0
     if args.execute:
-        result = run_capability_probe(
-            environment,
-            manifest_model,
-            args.authorization_ack,
-            client_factory,
-        )
+        try:
+            result = run_capability_probe(
+                environment,
+                manifest_model,
+                args.authorization_ack,
+                client_factory,
+            )
+            exit_code = 0 if result["status"] == "passed" else 1
+        except ProbeAuthorizationError:
+            result = _blocked_probe_result(
+                ["probe_authorization_missing"], "ProbeAuthorizationError"
+            )
+            exit_code = 2
+        except ProbeConfigurationError:
+            configuration = build_configuration_report(environment, manifest_model)
+            result = _blocked_probe_result(
+                configuration["blockers"], "ProbeConfigurationError"
+            )
+            exit_code = 2
     else:
         result = build_configuration_report(environment, manifest_model)
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -350,7 +478,7 @@ def main(argv: list[str] | None = None, *, client_factory: Callable[..., object]
         ),
         "status": result.get("status", "configuration_checked"),
     }, ensure_ascii=False))
-    return 0
+    return exit_code
 
 
 if __name__ == "__main__":

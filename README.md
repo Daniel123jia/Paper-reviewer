@@ -74,7 +74,7 @@ PAPER_REVIEW_ACCESS_TOKEN=在本机生成的随机访问口令
 
 ### P5-R2 零费用模型配置检查
 
-冻结真实评测要求显式设置 `OPENAI_BASE_URL`、`OPENAI_MODEL=gpt-6.1-sol` 以及由实际服务商确认的输入/输出单价。可先运行以下命令；它默认不创建模型客户端、不连接网络：
+冻结真实评测要求显式设置 `OPENAI_BASE_URL`、`OPENAI_MODEL=gpt-6.1-sol`、由实际服务商确认的输入/输出单价，以及服务商价格来源、核验日期和人工确认标记。仅填写单价不能启动真实探测。可先运行以下命令；它默认不创建模型客户端、不连接网络：
 
 ```zsh
 python -m scripts.p5r2.capability_probe \
