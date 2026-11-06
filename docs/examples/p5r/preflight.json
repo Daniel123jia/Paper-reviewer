@@ -1,0 +1,141 @@
+{
+  "preflight_schema_version": "1.0",
+  "generated_at": "2026-11-06T03:01:16.782700+00:00",
+  "execution_mode": "fresh_model_run_preparation",
+  "p5r_baseline_commit": "09c0ef8e0210d5973d4d9d5e82a4ff90a560831c",
+  "current_commit": "09c0ef8e0210d5973d4d9d5e82a4ff90a560831c",
+  "baseline_is_ancestor": true,
+  "frozen_manifest": {
+    "manifest_schema_version": "1.1",
+    "baseline_commit": "c4b613f486b4db6f118dc0ef99b7c0c103676843",
+    "code_commit": "c4b613f486b4db6f118dc0ef99b7c0c103676843",
+    "paper_id_aliases": {
+      "sardet-100k-neurips2024": "sardet100k-neurips2024",
+      "sam-arxiv-2010-01412v3": "sam-iclr2021"
+    },
+    "chatgpt_benchmark_status": "pending"
+  },
+  "papers": [
+    {
+      "paper_id": "shaw2018",
+      "title": "Self-Attention with Relative Position Representations",
+      "version": "arXiv 1803.02155 / NAACL 2018",
+      "pdf_filename": "shaw2018.pdf",
+      "pdf_sha256": "8086e2e5e139fd576631ce0ec4560c5ee66225bec260d631a3e8fe7f1f13d50b",
+      "hash_verified": true,
+      "reference_status": "frozen"
+    },
+    {
+      "paper_id": "sardet100k-neurips2024",
+      "title": "SARDet-100K: Towards Open-Source Benchmark and ToolKit for Large-Scale SAR Object Detection",
+      "version": "NeurIPS 2024 final proceedings",
+      "pdf_filename": "sardet100k-neurips2024.pdf",
+      "pdf_sha256": "3f4e6cddbf32524853f3493a5e7975490b8ffeae274cf139acf2b576736998b9",
+      "hash_verified": true,
+      "reference_status": "frozen"
+    },
+    {
+      "paper_id": "sam-iclr2021",
+      "title": "Sharpness-Aware Minimization for Efficiently Improving Generalization",
+      "version": "arXiv 2010.01412v3 / ICLR 2021",
+      "pdf_filename": "sam-iclr2021.pdf",
+      "pdf_sha256": "73ace22a61c52152fc84a94239cb3ea5f9fa9e753aa8ef5995f277365e25b764",
+      "hash_verified": true,
+      "reference_status": "frozen"
+    }
+  ],
+  "reference_sets": {
+    "sardet100k-neurips2024": {
+      "paper_id": "sardet100k-neurips2024",
+      "pdf_sha256": "3f4e6cddbf32524853f3493a5e7975490b8ffeae274cf139acf2b576736998b9",
+      "identity_verified": true,
+      "frozen_before_etpaper_output": true,
+      "etpaper_output_viewed": false,
+      "provenance": "non_expert_source_grounded_reference",
+      "issue_count": 6
+    },
+    "sam-iclr2021": {
+      "paper_id": "sam-iclr2021",
+      "pdf_sha256": "73ace22a61c52152fc84a94239cb3ea5f9fa9e753aa8ef5995f277365e25b764",
+      "identity_verified": true,
+      "frozen_before_etpaper_output": true,
+      "etpaper_output_viewed": false,
+      "provenance": "non_expert_source_grounded_reference",
+      "issue_count": 6
+    }
+  },
+  "model_environment": {
+    "api_key_status": "not_configured",
+    "endpoint_label": "default_application_endpoint",
+    "requested_model": "gpt-6.1-sol",
+    "actual_model": null,
+    "provider_label": "default_application_endpoint",
+    "python_version": "3.11.15",
+    "request_timeout_seconds": 180,
+    "sdk_max_retries": 0,
+    "context_window": "unknown_pending_provider_verification",
+    "model_output_limit": "unknown_pending_provider_verification",
+    "capability_probe": "not_run_pending_authorization",
+    "network_connection": "not_tested_pending_authorization",
+    "structured_output": "not_tested",
+    "streaming_output": "not_tested",
+    "usage_reporting": "not_tested"
+  },
+  "budget": {
+    "per_paper": {
+      "max_calls": 90,
+      "max_input_tokens": 1200000,
+      "max_output_tokens": 220000,
+      "max_duration_seconds": 10800,
+      "max_retries": 2
+    },
+    "by_paper": {
+      "shaw2018": {
+        "max_calls": 90,
+        "max_input_tokens": 1200000,
+        "max_output_tokens": 220000,
+        "max_duration_seconds": 10800,
+        "max_retries": 2
+      },
+      "sardet100k-neurips2024": {
+        "max_calls": 90,
+        "max_input_tokens": 1200000,
+        "max_output_tokens": 220000,
+        "max_duration_seconds": 10800,
+        "max_retries": 2
+      },
+      "sam-iclr2021": {
+        "max_calls": 90,
+        "max_input_tokens": 1200000,
+        "max_output_tokens": 220000,
+        "max_duration_seconds": 10800,
+        "max_retries": 2
+      }
+    },
+    "aggregate": {
+      "max_calls": 270,
+      "max_input_tokens": 3600000,
+      "max_output_tokens": 660000,
+      "max_duration_seconds": 32400,
+      "max_retries": 6
+    },
+    "cost": {
+      "status": "unknown",
+      "max_cost_usd": null,
+      "reason": "operator pricing is not configured and provider pricing was not inferred"
+    }
+  },
+  "assets_verified": true,
+  "ready_for_paid_run": false,
+  "blockers": [
+    "p5r_runtime_credential_not_configured",
+    "capability_probe_not_run",
+    "actual_model_unknown"
+  ],
+  "next_authorized_step": "minimal_model_capability_probe",
+  "high_cost_run_order": [
+    "shaw2018",
+    "sardet100k-neurips2024",
+    "sam-iclr2021"
+  ]
+}
