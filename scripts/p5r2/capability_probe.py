@@ -24,6 +24,16 @@ PROBE_OUTPUT_TOKEN_CEILING = 64
 PROBE_TIMEOUT_SECONDS = 180
 PRICING_VERIFICATION_MAX_AGE_DAYS = 30
 ESTIMATED_PRICING_SCOPE = "p5r3b_single_nonpaper_capability_probe"
+PROBE_ENVIRONMENT_KEYS = frozenset({
+    "OPENAI_API_KEY",
+    "OPENAI_BASE_URL",
+    "OPENAI_MODEL",
+    "OPENAI_INPUT_USD_PER_MILLION",
+    "OPENAI_OUTPUT_USD_PER_MILLION",
+    "OPENAI_PRICING_SOURCE_URL",
+    "OPENAI_PRICING_VERIFIED_AT",
+    "OPENAI_PRICING_VERIFICATION",
+})
 PROBE_SYSTEM = "Return exactly one compact JSON object and no Markdown."
 PROBE_USER = 'Return {"ok":true,"probe":"p5r2"}.'
 
@@ -487,11 +497,23 @@ def run_capability_probe(
     return result
 
 
-def _effective_environment(path: Path) -> dict[str, str]:
-    values = {key: value for key, value in os.environ.items()}
-    if path.is_file():
-        values.update({key: value or "" for key, value in dotenv_values(path).items()})
-    return values
+def _effective_environment(path: Path) -> tuple[dict[str, str], dict]:
+    file_values = (
+        {key: value or "" for key, value in dotenv_values(path).items()}
+        if path.is_file()
+        else {}
+    )
+    process_values = dict(os.environ)
+    conflicts = sorted(
+        key
+        for key in file_values.keys() & process_values.keys() & PROBE_ENVIRONMENT_KEYS
+        if (file_values[key] and process_values[key]
+            and file_values[key] != process_values[key])
+    )
+    return ({**file_values, **process_values}, {
+        "precedence": "process_environment_over_environment_file",
+        "conflicting_variable_names": conflicts,
+    })
 
 
 def _manifest_model(path: Path) -> str:
@@ -601,7 +623,7 @@ def main(argv: list[str] | None = None, *, client_factory: Callable[..., object]
         _print_summary(str(args.output), args.execute, result)
         return 2
 
-    environment = _effective_environment(args.environment_file)
+    environment, environment_resolution = _effective_environment(args.environment_file)
     exit_code = 0
     if args.execute:
         try:
@@ -612,11 +634,13 @@ def main(argv: list[str] | None = None, *, client_factory: Callable[..., object]
                 client_factory,
                 allow_estimated_pricing=args.allow_estimated_pricing,
             )
+            result["environment_resolution"] = environment_resolution
             exit_code = 0 if result["status"] == "passed" else 1
         except ProbeAuthorizationError:
             result = _blocked_probe_result(
                 ["probe_authorization_missing"], "ProbeAuthorizationError"
             )
+            result["environment_resolution"] = environment_resolution
             exit_code = 2
         except ProbeConfigurationError:
             configuration = build_configuration_report(
@@ -627,6 +651,7 @@ def main(argv: list[str] | None = None, *, client_factory: Callable[..., object]
             result = _blocked_probe_result(
                 configuration["blockers"], "ProbeConfigurationError"
             )
+            result["environment_resolution"] = environment_resolution
             exit_code = 2
     else:
         result = build_configuration_report(
@@ -634,6 +659,7 @@ def main(argv: list[str] | None = None, *, client_factory: Callable[..., object]
             manifest_model,
             allow_estimated_pricing=args.allow_estimated_pricing,
         )
+        result["environment_resolution"] = environment_resolution
     _write_report(args.output, result)
     _print_summary(str(args.output), args.execute, result)
     return exit_code

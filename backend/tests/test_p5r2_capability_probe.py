@@ -8,6 +8,7 @@ from scripts.p5r2.capability_probe import (
     AUTHORIZATION_ACK,
     FROZEN_MODEL,
     ProbeAuthorizationError,
+    _effective_environment,
     build_configuration_report,
     main,
     run_capability_probe,
@@ -127,6 +128,106 @@ def test_default_cli_never_constructs_a_model_client(tmp_path):
     assert called is False
     assert report["probe"]["network_attempted"] is False
     assert report["probe"]["model_calls"] == 0
+
+
+def test_process_environment_overrides_file_with_redacted_conflict_metadata(
+        tmp_path, monkeypatch):
+    environment_file = tmp_path / ".env.local"
+    environment_file.write_text(
+        "OPENAI_API_KEY=file-secret\n"
+        "OPENAI_BASE_URL=https://file-provider.example/v1\n"
+        "OPENAI_MODEL=file-model\n"
+        "OPENAI_INPUT_USD_PER_MILLION=99\n"
+        "OPENAI_OUTPUT_USD_PER_MILLION=100\n",
+        encoding="utf-8",
+    )
+    process_values = {
+        "OPENAI_API_KEY": "process-secret",
+        "OPENAI_BASE_URL": "https://process-provider.example/v1",
+        "OPENAI_MODEL": FROZEN_MODEL,
+        "OPENAI_INPUT_USD_PER_MILLION": "0.80",
+        "OPENAI_OUTPUT_USD_PER_MILLION": "4.00",
+    }
+    for key, value in process_values.items():
+        monkeypatch.setenv(key, value)
+
+    environment, resolution = _effective_environment(environment_file)
+
+    assert {key: environment[key] for key in process_values} == process_values
+    assert resolution == {
+        "precedence": "process_environment_over_environment_file",
+        "conflicting_variable_names": [
+            "OPENAI_API_KEY",
+            "OPENAI_BASE_URL",
+            "OPENAI_INPUT_USD_PER_MILLION",
+            "OPENAI_MODEL",
+            "OPENAI_OUTPUT_USD_PER_MILLION",
+        ],
+    }
+    encoded = json.dumps(resolution)
+    assert "file-secret" not in encoded
+    assert "process-secret" not in encoded
+    assert "file-provider.example" not in encoded
+    assert "process-provider.example" not in encoded
+
+
+def test_cli_reports_process_precedence_without_leaking_conflicting_values(
+        tmp_path, monkeypatch):
+    environment_file = tmp_path / ".env.local"
+    environment_file.write_text(
+        "OPENAI_API_KEY=file-secret\n"
+        "OPENAI_BASE_URL=https://file-provider.example/v1\n"
+        "OPENAI_MODEL=file-model\n"
+        "OPENAI_INPUT_USD_PER_MILLION=99\n"
+        "OPENAI_OUTPUT_USD_PER_MILLION=100\n",
+        encoding="utf-8",
+    )
+    for key, value in {
+        "OPENAI_API_KEY": "process-secret",
+        "OPENAI_BASE_URL": "https://www.yaoxing.best/v1",
+        "OPENAI_MODEL": FROZEN_MODEL,
+        "OPENAI_INPUT_USD_PER_MILLION": "0.80",
+        "OPENAI_OUTPUT_USD_PER_MILLION": "4.00",
+    }.items():
+        monkeypatch.setenv(key, value)
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps({"requested_model": FROZEN_MODEL}),
+        encoding="utf-8",
+    )
+    output = tmp_path / "report.json"
+
+    exit_code = main([
+        "--environment-file", str(environment_file),
+        "--manifest", str(manifest),
+        "--output", str(output),
+        "--allow-estimated-pricing",
+    ])
+
+    encoded = output.read_text(encoding="utf-8")
+    report = json.loads(encoded)
+    assert exit_code == 0
+    assert report["configuration_ready"] is True
+    assert report["requested_model"] == FROZEN_MODEL
+    assert report["pricing"]["status"] == "estimated_unverified"
+    assert report["pricing"]["estimated_probe_cost_usd"] == 0.0003584
+    assert report["environment_resolution"] == {
+        "precedence": "process_environment_over_environment_file",
+        "conflicting_variable_names": [
+            "OPENAI_API_KEY",
+            "OPENAI_BASE_URL",
+            "OPENAI_INPUT_USD_PER_MILLION",
+            "OPENAI_MODEL",
+            "OPENAI_OUTPUT_USD_PER_MILLION",
+        ],
+    }
+    for secret in (
+        "file-secret",
+        "process-secret",
+        "file-provider.example",
+        "www.yaoxing.best",
+    ):
+        assert secret not in encoded
 
 
 def test_rate_values_without_provider_evidence_remain_blocked():
