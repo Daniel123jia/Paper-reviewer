@@ -26,9 +26,20 @@ Full PDFs, Source Bundles, SQLite databases, model diagnostics and rendered expo
 ## Execution tooling
 
 - `scripts/p5/build_manifest.py` creates the versioned public manifest.
-- `scripts/p5/run_evaluation.py` drives P1–P4 through existing APIs with a per-paper budget and partial-result ledger.
+- `scripts/p5/run_evaluation.py` drives P1–P4 through existing APIs with a per-paper budget,
+  canonical paper identity, limited-stage preservation, complete P4 draft set, and
+  explicit usage-completeness ledger.
 - `scripts/p5/audit_lineage.py` validates source identity, Source Refs, candidate lineage and P3 task disposition.
 - `scripts/p5/scientific_quality.py` computes A/B/C/D/E metrics without treating unresolved issues as false positives.
 - `scripts/p5/run_product_acceptance.py` executes deterministic edit/approval/export checks and renders PDF pages for manual inspection.
 
+Future controlled runs should pass the frozen manifest with `--manifest` so a historical
+execution alias resolves to the canonical paper ID. `--database` is optional because P4
+usage is normally returned by the draft API; when supplied as a fallback, the path must
+already identify a readable SQLite file. A missing usage source produces
+`usage_incomplete` in the ledger rather than a zero-cost record.
+
 No P1–P4 production Prompt or scientific admission rule was changed in P5. Real model calls remain opt-in and are never run by CI.
+
+P5.1 is an acceptance-tool correction only. It preserves the original P1 evidence and FAIL
+decision, and does not claim that the corrected future path was exercised with a model.

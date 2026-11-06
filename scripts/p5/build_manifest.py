@@ -68,6 +68,10 @@ def build_manifest() -> EvaluationManifest:
             "pandoc": environment["pandoc_version"],
             "playwright_chromium": environment["playwright_chromium"],
         }, papers=papers, budgets={paper.paper_id: BUDGET for paper in papers},
+        paper_id_aliases={
+            "sardet-100k-neurips2024": "sardet100k-neurips2024",
+            "sam-arxiv-2010-01412v3": "sam-iclr2021",
+        },
         chatgpt_benchmark_status="pending")
 
 

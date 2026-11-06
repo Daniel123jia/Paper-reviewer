@@ -4,6 +4,12 @@ Status date: 2026-11-06 (Asia/Shanghai)
 Execution mode: `fresh_model_run`  
 Result: **P1 completed for both holdouts; P2-A–P4 blocked before model execution**
 
+P5.1 identity note: the original execution IDs
+`sardet-100k-neurips2024` and `sam-arxiv-2010-01412v3` remain unchanged in their public
+summaries. They now resolve through the frozen manifest to canonical IDs
+`sardet100k-neurips2024` and `sam-iclr2021`. This metadata correction does not alter the
+underlying evaluation IDs, timestamps, Source Bundles, or failure state.
+
 ## What was actually executed
 
 Both frozen holdout PDFs were uploaded through the production API into an isolated P5 data directory. The production P1 parser created new document snapshots, Source Bundles, reading units, parse-quality reports, and input-readiness decisions. These were new executions, not fixture replays.

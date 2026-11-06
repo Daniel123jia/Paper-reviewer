@@ -1,7 +1,7 @@
 # P5 evaluation protocol
 
 Status: **frozen before real P5 model execution**  
-Protocol version: `p5-evaluation/v1`  
+Protocol version: `p5-evaluation/v1.1`
 Baseline: `c4b613f486b4db6f118dc0ef99b7c0c103676843`
 
 ## Purpose and separation of conclusions
@@ -20,6 +20,13 @@ Every artifact and ledger entry uses exactly one mode:
 - `manual_review`: source reading, visual checking, issue classification, editing, or approval by a person.
 
 Replays and regressions never count toward the minimum fresh-run requirement. Unknown token usage is counted as an unknown-cost call, never as zero-cost usage.
+
+P5.1 changes only the acceptance tooling. It does not alter the frozen papers, reference
+questions, P1–P4 prompts, or scientific gates. Manifest `1.1` records historical paper-ID
+aliases, and RunLedger `1.1` separately records the execution ID, canonical paper ID,
+final-stage reachability, completed and limited stages, outstanding verification items,
+lineage-audit outcome, and whether usage accounting is incomplete. Readers for both
+contracts continue to accept version `1.0`.
 
 ## Frozen software and environment
 
@@ -73,7 +80,13 @@ Each P5 paper therefore receives the same conservative ceiling:
 | Explicit retries | 2 |
 | USD cost | `unknown` until a reliable price source is configured |
 
-Stage limits remain at or below the frozen application limits. The runner checks the aggregate paper budget before starting the next stage and preserves partial work when a limit is reached. P4 model calls are included in the ledger. A call with missing usage consumes a call slot and is reported separately.
+Stage limits remain at or below the frozen application limits. The runner checks the aggregate paper budget before starting the next stage and preserves partial work when a limit is reached. P4 model calls are included in the ledger. The runner first reads the `model_calls` returned by each draft API response. An explicitly supplied and validated SQLite path is a fallback for an older or interrupted API response; absence of both sources is recorded as `usage_incomplete`, never as zero calls. Failed calls and calls with missing Token fields remain in the ledger, and a call with missing usage consumes a call slot.
+
+The complete P4 acceptance path creates internal and author drafts in both Chinese and
+English. Author drafts are required to remain pending, every automatically selected issue
+must map to an eligible P3 adjudication and report-plan group, and a final export request is
+expected to return HTTP 409 before human approval. The runner never creates reviewer
+decisions or approvals.
 
 ## Blind evaluation order
 
@@ -98,4 +111,6 @@ The runner never serializes environment variables or authorization headers. Publ
 - A prompt or core decision-rule change after holdout results are visible creates a new evaluation version and invalidates affected blind-run claims.
 - Cross-document evidence, nonexistent source references, false completed states, approval bypass, stale approval after editing, or sensitive-data disclosure is blocking.
 - A limited stage remains limited downstream; P4 cannot upgrade an unverified external, table, formula, or model interpretation into an established fact.
+- A passing lineage audit is recorded independently and cannot upgrade any P2-B, P2-C, P3,
+  or P4 `limited` stage to `completed`.
 - P5 stops after opening its PR. It does not merge `main` or deploy.

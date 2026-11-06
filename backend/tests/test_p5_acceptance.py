@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -66,6 +67,51 @@ def test_manifest_rejects_duplicate_papers_and_missing_budget():
             operating_system="os", python_version="3.11", node_version="20",
             schema_versions={}, prompt_inventory=[], requested_model="model",
             provider_label="official", papers=[paper, paper], budgets={})
+
+
+@pytest.mark.parametrize(("reference_path", "summary_path"), [
+    ("docs/examples/p5-holdout-1/blind-reference.json",
+     "docs/examples/p5-holdout-1/run-summary.json"),
+    ("docs/examples/p5-holdout-2/blind-reference.json",
+     "docs/examples/p5-holdout-2/run-summary.json"),
+])
+def test_holdout_identity_is_consistent_across_manifest_reference_ledger_and_summary(
+        reference_path, summary_path):
+    manifest = EvaluationManifest.model_validate_json(Path(
+        "docs/examples/p5-regression/evaluation-manifest.json").read_text(encoding="utf-8"))
+    reference = BlindReferenceSet.model_validate_json(
+        Path(reference_path).read_text(encoding="utf-8"))
+    summary = json.loads(Path(summary_path).read_text(encoding="utf-8"))
+
+    canonical = manifest.resolve_paper_id(summary["paper_id"])
+    assert canonical == summary["canonical_paper_id"] == reference.paper_id
+    ledger = RunLedger(
+        evaluation_id=summary["evaluation_id"], paper_id=canonical,
+        execution_paper_id=summary["paper_id"], document_id=summary["pdf_sha256"],
+        pdf_sha256=summary["pdf_sha256"], source_bundle_id=summary["source_bundle_id"],
+        started_at=summary["started_at"], finished_at=summary["finished_at"],
+        overall_status=summary["overall_status"], stages=[])
+    assert ledger.paper_id == reference.paper_id
+    assert manifest.resolve_paper_id(ledger.execution_paper_id) == ledger.paper_id
+
+
+def test_v1_contracts_remain_readable_after_p5_1_schema_update(tmp_path):
+    paper = PaperSpec(paper_id="paper", title="Paper", group="holdout",
+                      official_pdf_url="https://example.org/paper.pdf",
+                      pdf_sha256="a" * 64, version="v1", reference_status="pending")
+    manifest = EvaluationManifest(
+        manifest_schema_version="1.0", baseline_commit="b" * 40, code_commit="c" * 40,
+        created_at=NOW, operating_system="os", python_version="3.11", node_version="22",
+        schema_versions={}, prompt_inventory=[], requested_model="model", provider_label="test",
+        papers=[paper], budgets={"paper": PaperBudget(
+            max_calls=1, max_input_tokens=1, max_output_tokens=1,
+            max_duration_seconds=1, max_retries=0)})
+    ledger = RunLedger(
+        ledger_schema_version="1.0", evaluation_id="old", paper_id="paper",
+        document_id="doc", pdf_sha256="a" * 64, source_bundle_id=None,
+        started_at=NOW, finished_at=NOW, overall_status="failed", stages=[])
+    assert manifest.manifest_schema_version == "1.0"
+    assert ledger.ledger_schema_version == "1.0"
 
 
 def test_run_ledger_preserves_unknown_usage_and_rejects_cross_document_stage():
@@ -170,6 +216,103 @@ def test_budget_counts_unknown_usage_as_a_call_and_stops_before_next_stage():
     assert state.can_start_stage() is False
     assert calls[1].error_type == "TimeoutError"
     assert calls[1].status == "failed"
+
+
+def _p4_call(status="completed", input_tokens=12, output_tokens=4):
+    return {"stage": "report-writing", "status": status, "requested_model": "requested",
+            "actual_model": "actual" if status == "completed" else None,
+            "input_tokens": input_tokens, "output_tokens": output_tokens,
+            "duration_ms": 17, "error": None if status == "completed" else "ModelError"}
+
+
+def test_p4_usage_comes_from_draft_api_without_database(tmp_path):
+    runner = EvaluationRunner("http://test", tmp_path, PaperBudget(
+        max_calls=10, max_input_tokens=100, max_output_tokens=100,
+        max_duration_seconds=30, max_retries=0))
+    try:
+        calls, usage_incomplete, source = runner._p4_calls(
+            "project", [{"model_calls": [_p4_call()]}, {"model_calls": []}])
+    finally:
+        runner.close()
+    assert calls == [_p4_call()]
+    assert usage_incomplete is False
+    assert source == "draft_api"
+
+
+def test_p4_usage_falls_back_to_validated_database_path(tmp_path):
+    database = tmp_path / "paper-review.sqlite3"
+    with sqlite3.connect(database) as db:
+        db.execute("CREATE TABLE p4_model_calls (project_id TEXT, stage TEXT, "
+                   "requested_model TEXT, actual_model TEXT, input_tokens INTEGER, "
+                   "output_tokens INTEGER, duration_ms INTEGER, status TEXT, error TEXT)")
+        db.execute("INSERT INTO p4_model_calls VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                   ("project", "report-writing", "requested", "actual", 12, 4, 17,
+                    "completed", None))
+    runner = EvaluationRunner("http://test", tmp_path / "out", PaperBudget(
+        max_calls=10, max_input_tokens=100, max_output_tokens=100,
+        max_duration_seconds=30, max_retries=0), database=database)
+    try:
+        calls, usage_incomplete, source = runner._p4_calls("project", [{}])
+    finally:
+        runner.close()
+    assert len(calls) == 1
+    assert usage_incomplete is False
+    assert source == "sqlite_fallback"
+
+
+def test_p4_usage_marks_unknown_tokens_incomplete(tmp_path):
+    runner = EvaluationRunner("http://test", tmp_path, PaperBudget(
+        max_calls=10, max_input_tokens=100, max_output_tokens=100,
+        max_duration_seconds=30, max_retries=0))
+    try:
+        raw = [_p4_call(input_tokens=None, output_tokens=None)]
+        calls, usage_incomplete, source = runner._p4_calls(
+            "project", [{"model_calls": raw}])
+    finally:
+        runner.close()
+    summaries = summarize_api_calls("p4", calls)
+    assert usage_incomplete is True
+    assert source == "draft_api"
+    assert [item.status for item in summaries] == ["unknown_usage"]
+    assert all(item.input_tokens is None for item in summaries)
+
+
+def test_p4_usage_keeps_failed_model_call_with_unknown_cost(tmp_path):
+    runner = EvaluationRunner("http://test", tmp_path, PaperBudget(
+        max_calls=10, max_input_tokens=100, max_output_tokens=100,
+        max_duration_seconds=30, max_retries=0))
+    try:
+        raw = [_p4_call(status="failed", input_tokens=None, output_tokens=None)]
+        calls, usage_incomplete, source = runner._p4_calls(
+            "project", [{"model_calls": raw}])
+    finally:
+        runner.close()
+    summaries = summarize_api_calls("p4", calls)
+    assert usage_incomplete is True
+    assert source == "draft_api"
+    assert summaries[0].status == "failed"
+    assert summaries[0].error_type == "ModelError"
+    assert summaries[0].input_tokens is None
+
+
+def test_p4_usage_without_api_records_or_database_is_explicitly_incomplete(tmp_path):
+    runner = EvaluationRunner("http://test", tmp_path, PaperBudget(
+        max_calls=10, max_input_tokens=100, max_output_tokens=100,
+        max_duration_seconds=30, max_retries=0))
+    try:
+        calls, usage_incomplete, source = runner._p4_calls("project", [{}])
+    finally:
+        runner.close()
+    assert calls == []
+    assert usage_incomplete is True
+    assert source == "unavailable"
+
+
+def test_runner_rejects_a_missing_explicit_database_path(tmp_path):
+    with pytest.raises(ValueError, match="database path"):
+        EvaluationRunner("http://test", tmp_path, PaperBudget(
+            max_calls=10, max_input_tokens=100, max_output_tokens=100,
+            max_duration_seconds=30, max_retries=0), database=tmp_path / "missing.sqlite3")
 
 
 def test_runner_wall_clock_budget_blocks_the_next_stage(tmp_path):
@@ -322,11 +465,13 @@ def test_evaluation_runner_executes_frozen_api_chain_and_writes_ledger(tmp_path)
             ("POST", "/api/understanding-runs/p2a/professional-review-runs"): {"id": "p2b"},
             ("GET", "/api/professional-review-runs/p2b"): {"id": "p2b", "status": "limited",
                 "document_id": digest, "source_bundle_id": "bundle", "model_calls": calls,
+                "source_limitations": ["methods coverage requires review"],
                 "candidates": [{"issue_id": "candidate-1", "source_refs": [
                     {"source_id": "ev-1"}]}]},
             ("POST", "/api/professional-review-runs/p2b/consolidation-runs"): {"id": "p2c"},
             ("GET", "/api/candidate-consolidation-runs/p2c"): {"id": "p2c",
                 "status": "limited", "document_id": digest, "source_bundle_id": "bundle",
+                "source_limitations": ["candidate coverage remains limited"],
                 "model_calls": calls, "result": {"lineage": [
                     {"original_issue_id": "candidate-1"}], "verification_tasks": [
                     {"verification_task_id": "task-1", "original_candidate_ids": ["candidate-1"],
@@ -335,12 +480,25 @@ def test_evaluation_runner_executes_frozen_api_chain_and_writes_ledger(tmp_path)
                 "id": "p3"},
             ("GET", "/api/evidence-verification-runs/p3"): {"id": "p3", "status": "limited",
                 "document_id": digest, "source_bundle_id": "bundle", "model_calls": calls,
+                "source_limitations": ["table relation remains unverified"],
                 "tasks": [{"verification_task_id": "task-1", "source_refs": ["ev-1"]}]},
             ("POST", "/api/evidence-verification-runs/p3/report-projects"): {
                 "id": "p4", "document_id": digest},
-            ("POST", "/api/review-report-projects/p4/drafts"): {
-                "id": "draft", "status": "pending"},
         }
+        if request.method == "POST" and path == "/api/review-report-projects/p4/drafts":
+            payload = json.loads(request.content)
+            kind, language = payload["kind"], payload["language"]
+            return httpx.Response(201, json={
+                "id": f"draft-{kind}-{language}", "kind": kind, "language": language,
+                "approval_status": "pending", "selected_issue_ids": [],
+                "plan": {"report_kind": kind, "language": language,
+                         "selected_issue_ids": [], "groups": []},
+                "body": "There are currently no automatically admitted comments for authors."
+                        if kind == "author" else "Internal report",
+                "model_calls": [_p4_call()],
+            })
+        if request.method == "GET" and path.startswith("/api/review-report-drafts/draft-author-"):
+            return httpx.Response(409, json={"detail": "not approved"})
         value = responses.get((request.method, path))
         return httpx.Response(200 if value is not None else 404,
                               json=value or {"detail": "missing fixture"})
@@ -354,11 +512,72 @@ def test_evaluation_runner_executes_frozen_api_chain_and_writes_ledger(tmp_path)
         ledger = runner.run("paper", pdf, digest)
     finally:
         runner.close()
-    assert ledger.overall_status == "completed"
+    assert ledger.overall_status == "limited"
     assert [stage.stage for stage in ledger.stages] == ["p1", "p2a", "p2b", "p2c", "p3", "p4"]
     assert {stage.execution_mode for stage in ledger.stages} == {"fresh_model_run"}
-    assert ledger.totals.model_calls == 4
+    assert ledger.workflow_reached_final_stage is True
+    assert ledger.lineage_audit_passed is True
+    assert ledger.limited_stages == ["p2b", "p2c", "p3"]
+    assert ledger.completed_stages == ["p1", "p2a", "p4"]
+    assert len(ledger.outstanding_verification_items) == 3
+    assert ledger.totals.model_calls == 8
+    assert ledger.usage_incomplete is False
+    p4_artifact = json.loads((tmp_path / "out" / "p4.json").read_text(encoding="utf-8"))
+    assert {(draft["kind"], draft["language"]) for draft in p4_artifact["drafts"]} == {
+        ("internal", "zh"), ("internal", "en"), ("author", "zh"), ("author", "en")}
+    assert p4_artifact["author_draft_checks"] == {
+        "draft-author-zh": "final_export_blocked_409",
+        "draft-author-en": "final_export_blocked_409",
+    }
     assert (tmp_path / "out" / "lineage-audit.json").exists()
+
+
+def test_author_draft_validation_preserves_empty_draft_and_source_mapping(tmp_path):
+    runner = EvaluationRunner("http://test", tmp_path, PaperBudget(
+        max_calls=10, max_input_tokens=100, max_output_tokens=100,
+        max_duration_seconds=30, max_retries=0))
+    try:
+        empty = {"id": "empty", "kind": "author", "language": "zh",
+                 "approval_status": "pending", "selected_issue_ids": [],
+                 "plan": {"report_kind": "author", "language": "zh",
+                          "selected_issue_ids": [], "groups": []},
+                 "body": "目前没有自动准入的正式审稿问题。", "model_calls": []}
+        selected = {"id": "selected", "kind": "author", "language": "en",
+                    "approval_status": "pending", "selected_issue_ids": ["issue-1"],
+                    "plan": {"report_kind": "author", "language": "en",
+                             "selected_issue_ids": ["issue-1"], "groups": [{
+                                 "source_issue_ids": ["issue-1"]}]},
+                    "body": "Could the authors clarify the evidence for this scoped claim?",
+                    "model_calls": [_p4_call()]}
+        p3 = {"result": {"adjudications": [{"consolidated_issue_id": "issue-1",
+               "verdict": "concern_narrowed",
+               "report_eligibility": "eligible_with_qualification"}]}}
+        runner._validate_author_draft(empty, "zh", p3)
+        runner._validate_author_draft(selected, "en", p3)
+    finally:
+        runner.close()
+
+
+def test_author_draft_validation_rejects_unverified_accusation_or_fake_approval(tmp_path):
+    runner = EvaluationRunner("http://test", tmp_path, PaperBudget(
+        max_calls=10, max_input_tokens=100, max_output_tokens=100,
+        max_duration_seconds=30, max_retries=0))
+    draft = {"id": "draft", "kind": "author", "language": "en",
+             "approval_status": "approved", "selected_issue_ids": ["issue-1"],
+             "plan": {"report_kind": "author", "language": "en",
+                      "selected_issue_ids": ["issue-1"],
+                      "groups": [{"source_issue_ids": ["issue-1"]}]},
+             "body": "The authors made a confirmed error.", "model_calls": []}
+    p3 = {"result": {"adjudications": [{"consolidated_issue_id": "issue-1",
+           "verdict": "inconclusive", "report_eligibility": "requires_human_review"}]}}
+    try:
+        with pytest.raises(ValueError, match="approval"):
+            runner._validate_author_draft(draft, "en", p3)
+        draft["approval_status"] = "pending"
+        with pytest.raises(ValueError, match="eligible"):
+            runner._validate_author_draft(draft, "en", p3)
+    finally:
+        runner.close()
 
 
 def test_evaluation_runner_records_missing_credential_as_blocked_stage(tmp_path):

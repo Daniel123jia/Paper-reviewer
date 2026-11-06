@@ -5,6 +5,10 @@ Frozen P1–P4 baseline: `c4b613f486b4db6f118dc0ef99b7c0c103676843`
 P5 branch: `feature/p5-end-to-end-acceptance`  
 Overall P5 decision: **FAIL**
 
+P5.1 corrects acceptance-tool identity, usage accounting, status aggregation, and P4 author
+draft checks. No additional model call was made, and these corrections do not change this
+FAIL decision or any original run evidence.
+
 This result does not revoke the accepted P1–P4 stage implementations. It means the evidence produced in this environment does not satisfy the stricter P5 claim that a new paper can complete a stable, scientifically evaluated, user-operable professional-review chain.
 
 ## Four independent decisions

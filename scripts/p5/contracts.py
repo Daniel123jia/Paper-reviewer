@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from typing import Literal
 
@@ -91,7 +92,7 @@ class BlindReferenceSet(StrictModel):
 
 
 class EvaluationManifest(StrictModel):
-    manifest_schema_version: Literal["1.0"] = "1.0"
+    manifest_schema_version: Literal["1.0", "1.1"] = "1.1"
     permitted_execution_modes: list[ExecutionMode] = [
         "fresh_model_run", "recorded_model_replay", "deterministic_regression", "manual_review"
     ]
@@ -109,6 +110,7 @@ class EvaluationManifest(StrictModel):
     run_parameters: dict[str, str | int | float | bool | None] = {}
     papers: list[PaperSpec]
     budgets: dict[str, PaperBudget]
+    paper_id_aliases: dict[str, str] = Field(default_factory=dict)
     chatgpt_benchmark_status: Literal["pending", "available", "completed"] = "pending"
 
     @model_validator(mode="after")
@@ -118,7 +120,23 @@ class EvaluationManifest(StrictModel):
             raise ValueError("paper_id values must be unique")
         if set(paper_ids) != set(self.budgets):
             raise ValueError("every paper requires exactly one budget")
+        canonical_ids = set(paper_ids)
+        if canonical_ids.intersection(self.paper_id_aliases):
+            raise ValueError("paper ID aliases must differ from canonical paper IDs")
+        if not set(self.paper_id_aliases.values()).issubset(canonical_ids):
+            raise ValueError("paper ID aliases must resolve to a manifest paper")
+        if any(not re.fullmatch(r"[a-z0-9][a-z0-9-]*", alias)
+               for alias in self.paper_id_aliases):
+            raise ValueError("paper ID aliases must use normalized ID syntax")
         return self
+
+    def resolve_paper_id(self, paper_id: str) -> str:
+        canonical_ids = {item.paper_id for item in self.papers}
+        if paper_id in canonical_ids:
+            return paper_id
+        if paper_id in self.paper_id_aliases:
+            return self.paper_id_aliases[paper_id]
+        raise ValueError(f"paper ID is not present in the evaluation manifest: {paper_id}")
 
 
 class ModelCallSummary(StrictModel):
@@ -143,6 +161,7 @@ class StageRun(StrictModel):
     input_run_id: str | None
     output_run_id: str | None
     model_calls: list[ModelCallSummary] = []
+    usage_status: Literal["complete", "incomplete", "not_applicable"] = "not_applicable"
     retry_count: int = Field(default=0, ge=0)
     source_limitations: list[str] = []
     artifact_path: str | None = None
@@ -161,9 +180,10 @@ class LedgerTotals(StrictModel):
 
 
 class RunLedger(StrictModel):
-    ledger_schema_version: Literal["1.0"] = "1.0"
+    ledger_schema_version: Literal["1.0", "1.1"] = "1.1"
     evaluation_id: str
     paper_id: str
+    execution_paper_id: str | None = None
     document_id: str
     pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     source_bundle_id: str | None
@@ -171,6 +191,11 @@ class RunLedger(StrictModel):
     finished_at: datetime | None
     overall_status: RunStatus
     stages: list[StageRun]
+    workflow_reached_final_stage: bool = False
+    completed_stages: list[str] = Field(default_factory=list)
+    limited_stages: list[str] = Field(default_factory=list)
+    outstanding_verification_items: list[str] = Field(default_factory=list)
+    lineage_audit_passed: bool | None = None
     human_interventions: int = Field(default=0, ge=0)
     cost_usd: float | None = Field(default=None, ge=0)
     cost_status: Literal["known", "unknown"] = "unknown"
@@ -200,6 +225,12 @@ class RunLedger(StrictModel):
             model_duration_ms=sum(call.duration_ms for call in calls),
             retry_count=sum(stage.retry_count for stage in self.stages),
         )
+
+    @computed_field
+    @property
+    def usage_incomplete(self) -> bool:
+        return (any(stage.usage_status == "incomplete" for stage in self.stages) or
+                self.totals.unknown_token_calls > 0)
 
 
 class ScientificIssueJudgment(StrictModel):

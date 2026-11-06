@@ -1,6 +1,8 @@
 {
-  "summary_schema_version": "1.0",
+  "summary_schema_version": "1.1",
   "paper_id": "sardet-100k-neurips2024",
+  "canonical_paper_id": "sardet100k-neurips2024",
+  "paper_id_resolution": "historical_execution_alias_preserved",
   "evaluation_id": "1f08ecae654f4bb8b37adcb1616a8315",
   "started_at": "2026-11-05T18:15:53.142579Z",
   "finished_at": "2026-11-05T18:16:01.756152Z",

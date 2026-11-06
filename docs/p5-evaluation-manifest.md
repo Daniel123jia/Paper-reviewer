@@ -1,6 +1,6 @@
 # P5 evaluation manifest
 
-Manifest schema: `1.0`  
+Manifest schema: `1.1` (version `1.0` remains readable)
 Test-set freeze date: 2026-11-06 (Asia/Shanghai)  
 P1–P4 production baseline: `c4b613f486b4db6f118dc0ef99b7c0c103676843`  
 P5 protocol commit: `a59c178`  
@@ -26,6 +26,20 @@ H1 moves outside the development set’s NLP focus into multi-source SAR object 
 H2 is an optimization and generalization paper rather than a dataset/detection or language-model paper. Its central claims require following a PAC-Bayesian motivation, approximations to a min–max objective, hardware-dependent batching behavior, and experiments across several regimes. This gives a materially different scientific and document structure from H1 and the historical group.
 
 Neither holdout participated in P1–P4 prompt/rule changes. After this manifest is committed, a parsing or model failure does not justify replacing either paper.
+
+## Canonical IDs and preserved historical aliases
+
+Future P5 execution and scoring use the canonical IDs in the table above. Two already
+created P1 run summaries used different execution identifiers; those historical values are
+preserved rather than rewritten. Manifest `paper_id_aliases` resolves them as follows:
+
+| Historical execution ID | Canonical ID |
+|---|---|
+| `sardet-100k-neurips2024` | `sardet100k-neurips2024` |
+| `sam-arxiv-2010-01412v3` | `sam-iclr2021` |
+
+The public summaries carry both values and the ledger schema can retain
+`execution_paper_id` while using the canonical `paper_id` for future evaluation joins.
 
 ## Versions, appendices, and public materials
 

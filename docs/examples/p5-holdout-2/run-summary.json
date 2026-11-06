@@ -1,6 +1,8 @@
 {
-  "summary_schema_version": "1.0",
+  "summary_schema_version": "1.1",
   "paper_id": "sam-arxiv-2010-01412v3",
+  "canonical_paper_id": "sam-iclr2021",
+  "paper_id_resolution": "historical_execution_alias_preserved",
   "evaluation_id": "d4ed4f1b613f4882b5d87e167cb12a65",
   "started_at": "2026-11-05T18:16:10.200700Z",
   "finished_at": "2026-11-05T18:16:16.482305Z",
