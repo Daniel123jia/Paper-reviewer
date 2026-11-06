@@ -8,12 +8,19 @@ import pytest
 from scripts.p5r2.capability_probe import (
     AUTHORIZATION_ACK,
     FROZEN_MODEL,
+    PROBE_ENVIRONMENT_KEYS,
     ProbeAuthorizationError,
     _effective_environment,
     build_configuration_report,
     main,
     run_capability_probe,
 )
+
+
+@pytest.fixture(autouse=True)
+def isolate_probe_process_environment(monkeypatch):
+    for key in PROBE_ENVIRONMENT_KEYS:
+        monkeypatch.delenv(key, raising=False)
 
 
 def configured_environment(**overrides):

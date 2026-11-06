@@ -333,8 +333,7 @@ Then return to the repository root and run the deterministic P5 tests directly c
 ```bash
 cd ..
 .venv/bin/python -m pytest \
-  backend/tests/test_p5_evaluation.py \
-  backend/tests/test_p5_run_evaluation.py \
+  backend/tests/test_p5_acceptance.py \
   backend/tests/test_p5r_preflight.py \
   backend/tests/test_p5r2_capability_probe.py -q
 ```
