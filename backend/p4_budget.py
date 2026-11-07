@@ -26,6 +26,7 @@ P4_BUDGET_ENV_KEYS = (
     "P4_OUTPUT_USD_PER_MILLION",
     "P4_PRICING_STATUS",
 )
+P4_WORKER_ENV_KEYS = ("PAPER_REVIEW_WORKER_COUNT", "WEB_CONCURRENCY")
 _INTEGER_KEYS = P4_BUDGET_ENV_KEYS[:4]
 _DECIMAL_KEYS = P4_BUDGET_ENV_KEYS[4:8]
 _PRICING_STATUSES = {"estimated_unverified", "provider_verified"}
@@ -66,6 +67,20 @@ class P4BudgetStateError(RuntimeError):
 
     def safe_detail(self) -> dict:
         return {"code": self.code, "blockers": [self.blocker]}
+
+
+class P4WorkerConfigurationError(RuntimeError):
+    """Stable startup failure for unsupported multi-worker deployment."""
+
+    def __init__(self, blocker: str, variables: Iterable[str] = ()):
+        self.code = "p4_worker_configuration_invalid"
+        self.blocker = blocker
+        self.variables = tuple(dict.fromkeys(variables))
+        super().__init__(self.code)
+
+    def safe_detail(self) -> dict:
+        return {"code": self.code, "blockers": [self.blocker],
+                "variables": list(self.variables)}
 
 
 class P4BudgetExceededError(RuntimeError):
@@ -211,6 +226,51 @@ def require_p4_budget_configuration(
     )
 
 
+def require_p4_single_worker(
+    process_environment: Mapping[str, str | None] | None = None,
+    environment_file: Path | None = None,
+) -> None:
+    """Reject declared multi-worker deployments before restart recovery runs."""
+    environment = os.environ if process_environment is None else process_environment
+    try:
+        file_values = ({name: value for name, value in dotenv_values(environment_file).items()
+                        if name in P4_WORKER_ENV_KEYS}
+                       if environment_file is not None and environment_file.is_file() else {})
+    except Exception:
+        raise P4WorkerConfigurationError(
+            "p4_worker_environment_file_unreadable", P4_WORKER_ENV_KEYS
+        ) from None
+    source_conflicts = [name for name in P4_WORKER_ENV_KEYS
+                        if _present(environment.get(name))
+                        and _present(file_values.get(name))
+                        and environment.get(name) != file_values.get(name)]
+    if source_conflicts:
+        raise P4WorkerConfigurationError(
+            "p4_worker_configuration_source_conflict", source_conflicts
+        )
+    configured = {
+        name: (environment.get(name) if _present(environment.get(name))
+               else file_values.get(name))
+        for name in P4_WORKER_ENV_KEYS
+        if _present(environment.get(name)) or _present(file_values.get(name))
+    }
+    if not configured:
+        if environment.get("PAPER_REVIEW_PREDEPLOY") == "1":
+            raise P4WorkerConfigurationError(
+                "p4_worker_configuration_missing", ["PAPER_REVIEW_WORKER_COUNT"]
+            )
+        return
+    if len(set(configured.values())) > 1:
+        raise P4WorkerConfigurationError(
+            "p4_worker_configuration_conflict", configured.keys()
+        )
+    value = next(iter(configured.values()))
+    if not value.isascii() or not value.isdigit() or int(value) != 1:
+        raise P4WorkerConfigurationError(
+            "p4_single_worker_required", configured.keys()
+        )
+
+
 def _configuration_json(configuration: P4BudgetConfiguration) -> str:
     values = asdict(configuration)
     for name, value in values.items():
@@ -293,6 +353,11 @@ class P4BudgetController:
                 minimum_requests * self.configuration.max_output_tokens_per_request):
             raise P4BudgetExceededError("p4_output_budget_exhausted")
 
+    def ensure_within_duration(self) -> None:
+        """Final local-work gate; it cannot eliminate the later commit race."""
+        if self._remaining_duration_ms() <= 0:
+            raise P4BudgetExceededError("p4_duration_budget_exhausted")
+
     def plan_request(
         self,
         *,
@@ -359,9 +424,14 @@ class P4BudgetController:
             raise P4BudgetStateError("p4_reservation_not_outstanding")
         if usage is None:
             raise P4UsageError("p4_usage_missing")
-        input_tokens = _usage_integer(getattr(usage, "prompt_tokens", None))
-        output_tokens = _usage_integer(getattr(usage, "completion_tokens", None))
-        supplied_total = getattr(usage, "total_tokens", None)
+        try:
+            supplied_input = getattr(usage, "prompt_tokens", None)
+            supplied_output = getattr(usage, "completion_tokens", None)
+            supplied_total = getattr(usage, "total_tokens", None)
+        except Exception:
+            raise P4UsageError("p4_usage_unavailable") from None
+        input_tokens = _usage_integer(supplied_input)
+        output_tokens = _usage_integer(supplied_output)
         if supplied_total is None:
             raise P4UsageError("p4_usage_missing")
         total_tokens = _usage_integer(supplied_total)

@@ -40,6 +40,7 @@ def test_single_account_cookie_protects_documents_pdf_and_exports(tmp_path, monk
 
 def test_predeployment_requires_strong_secret_and_secure_cookie(tmp_path, monkeypatch):
     monkeypatch.setenv("PAPER_REVIEW_PREDEPLOY", "1")
+    monkeypatch.setenv("PAPER_REVIEW_WORKER_COUNT", "1")
     monkeypatch.delenv("PAPER_REVIEW_ACCESS_TOKEN", raising=False)
     with pytest.raises(ValueError, match="PAPER_REVIEW_ACCESS_TOKEN"):
         create_app(tmp_path)

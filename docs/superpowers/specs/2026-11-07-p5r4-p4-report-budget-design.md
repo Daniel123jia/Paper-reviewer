@@ -144,7 +144,7 @@ No `finally`-only insert is considered sufficient audit. The same stable call ID
 
 `reserved_not_dispatched` proves that no provider request was authorized to leave the process. `dispatch_pending` means transmission may have occurred. A process failure after the second transaction is therefore treated as potentially billable even when the SDK call had not yet begun. This can conservatively overstate unknown exposure, but it cannot silently erase a possible charge.
 
-If the SDK raises a timeout, connection error, or other exception after `dispatch_pending`, the call becomes `usage_unknown`, its reservation is not returned, and no retry is allowed. If the response arrives but the final Usage transaction fails, the durable state remains `dispatch_pending`; restart recovery converts it to `usage_unknown` rather than zero.
+If the SDK raises a timeout, connection error, or other exception after `dispatch_pending`, the call becomes `usage_unknown`, its reservation is not returned, and no retry is allowed. Response-field access failures after a response is returned are handled the same way. If the response arrives but the final Usage transaction fails, the durable state remains `dispatch_pending`; read-only audit views conservatively count that pending call as unknown and cost-incomplete immediately, while restart recovery converts it to durable `usage_unknown` rather than zero.
 
 ## Usage validation and failure rules
 
@@ -221,6 +221,10 @@ Generation runs use these stable states:
 Call sidecars use `reserved_not_dispatched`, `dispatch_pending`, `completed_usage_valid`, `usage_unknown`, `usage_invalid`, `configuration_blocked`, and `interrupted_not_sent`. Generation transitions and call transitions are updated in the same database transaction whenever both change.
 
 At application startup, deterministic recovery scans nonterminal generation runs. A `reserved_not_dispatched` call becomes `interrupted_not_sent`; it is not counted as a provider request. A `dispatch_pending` call becomes `usage_unknown`, remains potentially billable, and increments the run's unknown-Usage count. The run becomes `interrupted` while retaining a specific recovery reason. No run resumes automatically and no request is replayed.
+
+This recovery design supports one application worker only. Startup validates `PAPER_REVIEW_WORKER_COUNT` and `WEB_CONCURRENCY` before opening the database and rejects declared values other than one or conflicting declarations. Process and `.env.local` worker settings remain isolated and conflicting non-empty values fail closed. Predeployment mode additionally requires an explicit worker count. Multi-process supervisors that do not declare either value remain an unsupported local-development configuration. Supporting multiple workers requires a separately reviewed run-ownership or lease mechanism.
+
+After the final model response, P4 performs a monotonic duration check after local report assembly and validation and immediately before the final draft transaction. An expired run keeps call audits and validated partials but does not create a completed draft. The narrow race between this check and the database commit is explicitly outside the guarantee.
 
 Configuration failure receives a stable generation-run ID and a minimal sanitized run record before the API returns. It has no model-call row because no provider request was reserved.
 

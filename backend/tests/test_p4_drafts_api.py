@@ -14,6 +14,8 @@ from openai import APIConnectionError
 import backend.app as app_module
 from backend.app import create_app
 from backend.p4_budget import P4BudgetStateError, P4BudgetStore
+from backend import p4_drafts_api as p4_drafts_module
+from backend.p4_budget import P4BudgetController
 from backend.tests.test_p4_api import seeded_p4_client
 from backend.tests.model_test_config import configure_test_model
 
@@ -334,17 +336,33 @@ def test_settlement_failure_recovers_as_unknown_usage_without_replay(tmp_path, m
 
     assert response.status_code == 502
     assert len(sdk_calls) == 1
+    generation_run_id = response.json()["detail"]["generation_run_id"]
     with sqlite3.connect(tmp_path / "review.db") as db:
         assert db.execute("SELECT dispatch_state FROM p4_model_call_budget").fetchone()[0] == \
             "dispatch_pending"
+    immediate = client.get(
+        f"/api/review-report-generation-runs/{generation_run_id}"
+    ).json()
+    assert immediate["cost_complete"] is False
+    assert immediate["unknown_usage_requests"] == 1
+    assert immediate["unsettled_dispatch_requests"] == 1
 
-    TestClient(create_app(tmp_path))
+    restarted = TestClient(create_app(tmp_path))
     assert len(sdk_calls) == 1
+    recovered = restarted.get(
+        f"/api/review-report-generation-runs/{generation_run_id}"
+    ).json()
+    assert recovered["cost_complete"] is False
+    assert recovered["unknown_usage_requests"] == 1
+    assert recovered["unsettled_dispatch_requests"] == 0
+    assert recovered["state"] == immediate["state"] == "interrupted"
     with sqlite3.connect(tmp_path / "review.db") as db:
         run = db.execute("SELECT state, reason, unknown_usage_calls, cost_complete "
                          "FROM p4_generation_runs").fetchone()
         call = db.execute("SELECT dispatch_state, usage_status "
                           "FROM p4_model_call_budget").fetchone()
+        assert db.execute("SELECT count(*) FROM p4_model_calls").fetchone()[0] == 1
+        assert db.execute("SELECT count(*) FROM p4_model_call_budget").fetchone()[0] == 1
     assert run == ("interrupted", "interrupted_after_dispatch", 1, 0)
     assert call == ("usage_unknown", "unknown")
 
@@ -384,8 +402,88 @@ def test_missing_provider_usage_stops_after_one_request_and_marks_cost_incomplet
                          "FROM p4_generation_runs").fetchone()
         call = db.execute("SELECT dispatch_state, usage_status "
                           "FROM p4_model_call_budget").fetchone()
-    assert run == ("usage_invalid", 0, None)
-    assert call == ("usage_invalid", "invalid")
+    assert run == ("usage_unknown", 0, None)
+    assert call == ("usage_unknown", "unknown")
+
+
+@pytest.mark.parametrize(
+    "failure",
+    ["missing_model", "missing_usage", "usage_access_raises",
+     "usage_token_access_raises"],
+)
+def test_response_field_failure_is_immediately_audited_as_unknown_usage(
+        tmp_path, monkeypatch, failure):
+    configure_test_model(monkeypatch, key="test-secret")
+    sdk_calls = []
+
+    class BrokenResponseOpenAI(FakeOpenAI):
+        @property
+        def chat(self):
+            delegate = super().chat
+
+            def create(**kwargs):
+                sdk_calls.append(kwargs)
+                response = delegate.completions.create(**kwargs)
+                if failure == "missing_model":
+                    del response.model
+                    return response
+                if failure == "missing_usage":
+                    del response.usage
+                    return response
+                if failure == "usage_token_access_raises":
+                    class ExplodingUsage:
+                        @property
+                        def prompt_tokens(self):
+                            raise RuntimeError("sensitive-provider-detail")
+
+                    response.usage = ExplodingUsage()
+                    return response
+
+                class ExplodingUsageResponse:
+                    model = response.model
+                    choices = response.choices
+
+                    @property
+                    def usage(self):
+                        raise RuntimeError("sensitive-provider-detail")
+
+                return ExplodingUsageResponse()
+
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr(app_module, "OpenAI", BrokenResponseOpenAI)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 502
+    assert "sensitive-provider-detail" not in response.text
+    assert len(sdk_calls) == 1
+    detail = response.json()["detail"]
+    expected_blocker = ("p4_usage_unavailable"
+                        if failure == "usage_token_access_raises"
+                        else "p4_response_usage_unavailable")
+    assert detail["blockers"] == [expected_blocker]
+    run_id = detail["generation_run_id"]
+    immediate = client.get(f"/api/review-report-generation-runs/{run_id}").json()
+    assert immediate["state"] == "usage_unknown"
+    assert immediate["cost_complete"] is False
+    assert immediate["unknown_usage_requests"] == 1
+    assert immediate["unsettled_dispatch_requests"] == 0
+
+    restarted = TestClient(create_app(tmp_path))
+    recovered = restarted.get(f"/api/review-report-generation-runs/{run_id}").json()
+    assert recovered["state"] == immediate["state"]
+    assert recovered["unknown_usage_requests"] == 1
+    assert recovered["cost_complete"] is False
+    assert len(sdk_calls) == 1
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        assert db.execute("SELECT count(*) FROM p4_model_calls").fetchone()[0] == 1
+        assert db.execute("SELECT count(*) FROM p4_model_call_budget").fetchone()[0] == 1
 
 
 def test_valid_usage_over_budget_is_persisted_before_termination(tmp_path, monkeypatch):
@@ -449,6 +547,46 @@ def test_draft_and_completed_run_are_atomic_when_final_audit_update_fails(
     with sqlite3.connect(tmp_path / "review.db") as db:
         assert db.execute("SELECT count(*) FROM p4_drafts").fetchone()[0] == 0
         assert db.execute("SELECT count(*) FROM p4_draft_revisions").fetchone()[0] == 0
+
+
+def test_final_local_processing_timeout_keeps_partial_without_creating_draft(
+        tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="test-secret")
+    monkeypatch.setenv("P4_MAX_DURATION_SECONDS", "1")
+    monkeypatch.setattr(app_module, "OpenAI", FakeOpenAI)
+    clock = [100.0]
+    real_controller = P4BudgetController
+    monkeypatch.setattr(
+        p4_drafts_module,
+        "P4BudgetController",
+        lambda configuration: real_controller(configuration, lambda: clock[0]),
+    )
+    original_render = p4_drafts_module.render_markdown
+
+    def delayed_render(*args, **kwargs):
+        body = original_render(*args, **kwargs)
+        clock[0] = 101.1
+        return body
+
+    monkeypatch.setattr(p4_drafts_module, "render_markdown", delayed_render)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"]["blockers"] == ["p4_duration_budget_exhausted"]
+    run_id = response.json()["detail"]["generation_run_id"]
+    audit = client.get(f"/api/review-report-generation-runs/{run_id}").json()
+    assert audit["state"] == "budget_exhausted"
+    assert audit["has_validated_partial_output"] is True
+    assert audit["attempted_requests"] == 2
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        assert db.execute("SELECT count(*) FROM p4_drafts").fetchone()[0] == 0
+        assert db.execute("SELECT count(*) FROM p4_model_calls").fetchone()[0] == 2
 
 
 def test_transient_model_connection_is_not_retried_and_unknown_usage_is_terminal(

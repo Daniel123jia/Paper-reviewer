@@ -113,13 +113,25 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                                          type(exc).__name__, duration_ms)
                 raise
             duration_ms = round((time.perf_counter() - started) * 1000)
-            actual = response.model or None
             try:
-                settlement = controller.validate_usage(reservation, response.usage)
+                actual = response.model or None
+                usage = response.usage
+            except Exception:
+                store.fail_usage_unknown(
+                    generation_run_id, model_call_id,
+                    "p4_response_usage_unavailable", duration_ms,
+                )
+                raise P4UsageError("p4_response_usage_unavailable") from None
+            try:
+                settlement = controller.validate_usage(reservation, usage)
             except P4UsageError as exc:
                 if exc.settlement is None:
-                    store.fail_usage_invalid(generation_run_id, model_call_id,
-                                             exc.blocker, duration_ms)
+                    if exc.blocker in {"p4_usage_missing", "p4_usage_unavailable"}:
+                        store.fail_usage_unknown(generation_run_id, model_call_id,
+                                                 exc.blocker, duration_ms)
+                    else:
+                        store.fail_usage_invalid(generation_run_id, model_call_id,
+                                                 exc.blocker, duration_ms)
                 else:
                     store.settle_terminal_usage(
                         generation_run_id, model_call_id, actual_model=actual,
@@ -264,9 +276,15 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                 with connect() as db:
                     reject_rejected_issue_text(body, snapshot_of(
                         project_or_404(db, project_id)), plan.selected_issue_ids)
+            if counterpart:
+                validate_bilingual_pair(writing, counterpart)
+            if plan.groups:
+                try:
+                    controller.ensure_within_duration()
+                except P4BudgetExceededError as exc:
+                    store.fail_run(generation_run_id, "budget_exhausted", exc.blocker)
+                    raise
             with connect() as db:
-                if counterpart:
-                    validate_bilingual_pair(writing, counterpart)
                 stamp = now()
                 db.execute("INSERT INTO p4_drafts VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?, "
                     "'pending', NULL, ?, ?)", (draft_id, project_id, payload.kind,

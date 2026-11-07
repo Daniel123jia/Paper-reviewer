@@ -75,6 +75,12 @@ matching consistency check is saved as validated partial output. Raw or
 unchecked provider text is never presented as validated output. An interrupted
 run never creates an approvable or exportable complete draft.
 
+After report assembly and validation, P4 checks the same monotonic whole-run
+duration once more immediately before the draft transaction. An expired run
+keeps validated partials and call audits but creates no completed draft. This
+check cannot eliminate the narrow race between that check and the SQLite
+commit, and the local duration is not a provider-side wall-clock guarantee.
+
 Authenticated read-only endpoints expose project run lists and run detail.
 They return stable states, counts, known Usage totals, local cost fields, and a
 validated-partial presence flag. They exclude credentials, endpoints, prompts,
@@ -99,3 +105,18 @@ more.
 All automated tests use fake clients or deterministic data. This work makes no
 real model call and does not alter the P5-R3B historical FAIL, frozen prompts,
 Manifest, scientific rules, or blind references.
+
+## Deployment boundary
+
+P4 restart recovery is supported only in a single application worker. Deploy
+with `PAPER_REVIEW_WORKER_COUNT=1` and a matching server setting such as
+`uvicorn backend.app:app --workers 1`. Startup rejects a declared worker count
+other than one and rejects conflicts with `WEB_CONCURRENCY` before opening the
+database or recovering requests. Process and `.env.local` worker declarations
+are resolved separately; different non-empty values fail closed. Predeployment
+mode also rejects an undeclared
+worker count; ordinary local development retains the server's one-worker
+default for compatibility. Supervisors that start multiple processes
+without declaring either variable cannot be detected reliably; such a setup is
+unsupported. A future multi-worker deployment requires an explicit ownership
+or lease protocol before this restriction can be removed.

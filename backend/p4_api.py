@@ -206,8 +206,13 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs,
                             "approval_status": item["approval_status"]} for item in db.execute(
                     "SELECT * FROM p4_drafts WHERE project_id = ? ORDER BY rowid DESC", (row["id"],))]}
 
-    def generation_run_view(row):
+    def generation_run_view(db, row):
         partials = json.loads(row["validated_partial_json"] or "[]")
+        unsettled = db.execute(
+            "SELECT count(*) FROM p4_model_call_budget "
+            "WHERE generation_run_id = ? AND dispatch_state = 'dispatch_pending'",
+            (row["id"],),
+        ).fetchone()[0]
         return {
             "generation_run_id": row["id"],
             "draft_id": row["draft_id"],
@@ -221,10 +226,11 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs,
             "potentially_billable_requests": row["potentially_billable_requests"],
             "known_input_tokens": row["input_tokens"],
             "known_output_tokens": row["output_tokens"],
-            "unknown_usage_requests": row["unknown_usage_calls"],
+            "unknown_usage_requests": row["unknown_usage_calls"] + unsettled,
+            "unsettled_dispatch_requests": unsettled,
             "planned_cost_usd": row["planned_cost_usd"],
             "usage_calculated_cost_usd": row["usage_cost_usd"],
-            "cost_complete": bool(row["cost_complete"]),
+            "cost_complete": bool(row["cost_complete"]) and unsettled == 0,
             "provider_billed_cost_usd": row["provider_billed_cost_usd"],
             "provider_account_limit_usd": row["provider_account_limit_usd"],
             "has_validated_partial_output": bool(partials),
@@ -257,7 +263,7 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs,
     def list_p4_generation_runs(project_id: str):
         with connect() as db:
             project_or_404(db, project_id)
-            return [generation_run_view(row) for row in db.execute(
+            return [generation_run_view(db, row) for row in db.execute(
                 "SELECT * FROM p4_generation_runs WHERE project_id = ? ORDER BY rowid DESC",
                 (project_id,),
             )]
@@ -270,7 +276,7 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs,
             ).fetchone()
             if not row:
                 raise HTTPException(404, "P4 生成运行不存在")
-            return generation_run_view(row)
+            return generation_run_view(db, row)
 
     @app.post("/api/evidence-verification-runs/{run_id}/report-projects", status_code=201)
     def create_report_project(run_id: str):

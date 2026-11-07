@@ -6,6 +6,13 @@
 
 **Architecture:** A new `backend/p4_budget.py` owns explicit configuration parsing, immutable snapshots, request admission, Usage validation, and SQLite state transitions. `p4_drafts_api.py` remains the orchestration boundary: it constructs exact requests, persists a reservation before dispatch, invokes the PR 1 model session once, settles Usage before parsing content, and saves only consistency-validated partial chunks. Existing P4 report logic and historical tables remain compatible through sidecar audit tables.
 
+**Final-review addendum:** Response metadata access is part of post-dispatch
+accounting: any failure before durable Usage settlement becomes unknown Usage,
+and pending sidecars make read-only cost completeness false even before a
+restart. Check monotonic duration again after local validation and before the
+draft transaction. Because startup recovery has no lease, enforce and document
+single-worker deployment before opening the database.
+
 **Tech Stack:** Python 3.11, FastAPI, SQLite, Pydantic, OpenAI-compatible Chat Completions, pytest, Decimal, React/Vite, Playwright.
 
 ---

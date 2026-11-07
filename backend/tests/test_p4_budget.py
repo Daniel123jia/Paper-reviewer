@@ -17,9 +17,11 @@ from backend.p4_budget import (
     P4BudgetExceededError,
     P4RequestReservation,
     P4UsageError,
+    P4WorkerConfigurationError,
     estimate_p4_input_tokens,
     recover_p4_generation_runs,
     require_p4_budget_configuration,
+    require_p4_single_worker,
 )
 from backend.p4_api import initialize_p4_tables
 
@@ -455,6 +457,81 @@ def test_controller_rejects_response_finishing_after_duration_budget():
         )
 
     assert caught.value.blocker == "p4_duration_budget_exhausted"
+
+
+def test_controller_rejects_final_local_work_finishing_after_duration_budget():
+    clock = [100.0]
+    controller = P4BudgetController(
+        controller_configuration(P4_MAX_DURATION_SECONDS="1"), lambda: clock[0]
+    )
+    clock[0] = 101.1
+
+    with pytest.raises(P4BudgetExceededError) as caught:
+        controller.ensure_within_duration()
+
+    assert caught.value.blocker == "p4_duration_budget_exhausted"
+
+
+@pytest.mark.parametrize(
+    "environment",
+    [
+        {},
+        {"PAPER_REVIEW_WORKER_COUNT": "1"},
+        {"WEB_CONCURRENCY": "1"},
+        {"PAPER_REVIEW_WORKER_COUNT": "1", "WEB_CONCURRENCY": "1"},
+    ],
+)
+def test_single_worker_configuration_accepts_one_or_an_undeclared_default(environment):
+    require_p4_single_worker(environment)
+
+
+@pytest.mark.parametrize(
+    ("environment", "blocker"),
+    [
+        ({"PAPER_REVIEW_WORKER_COUNT": "2"}, "p4_single_worker_required"),
+        ({"WEB_CONCURRENCY": "2"}, "p4_single_worker_required"),
+        ({"PAPER_REVIEW_WORKER_COUNT": "many"}, "p4_single_worker_required"),
+        ({"PAPER_REVIEW_PREDEPLOY": "1"}, "p4_worker_configuration_missing"),
+        ({"PAPER_REVIEW_WORKER_COUNT": "1", "WEB_CONCURRENCY": "2"},
+         "p4_worker_configuration_conflict"),
+    ],
+)
+def test_single_worker_configuration_rejects_unsafe_declarations(environment, blocker):
+    with pytest.raises(P4WorkerConfigurationError) as caught:
+        require_p4_single_worker(environment)
+
+    detail = caught.value.safe_detail()
+    assert detail["blockers"] == [blocker]
+    assert "2" not in repr(detail)
+    assert "many" not in repr(detail)
+
+
+def test_single_worker_configuration_rejects_process_file_source_conflict(tmp_path):
+    environment_file = tmp_path / ".env.local"
+    write_environment(environment_file, {"PAPER_REVIEW_WORKER_COUNT": "1"})
+
+    with pytest.raises(P4WorkerConfigurationError) as caught:
+        require_p4_single_worker(
+            {"PAPER_REVIEW_WORKER_COUNT": "2"}, environment_file
+        )
+
+    assert caught.value.safe_detail() == {
+        "code": "p4_worker_configuration_invalid",
+        "blockers": ["p4_worker_configuration_source_conflict"],
+        "variables": ["PAPER_REVIEW_WORKER_COUNT"],
+    }
+
+
+def test_single_worker_configuration_redacts_unreadable_file(tmp_path):
+    environment_file = tmp_path / ".env.local"
+    environment_file.write_bytes(b"PAPER_REVIEW_WORKER_COUNT=secret-\xff\xfe")
+
+    with pytest.raises(P4WorkerConfigurationError) as caught:
+        require_p4_single_worker({}, environment_file)
+
+    detail = caught.value.safe_detail()
+    assert detail["blockers"] == ["p4_worker_environment_file_unreadable"]
+    assert "secret" not in repr(detail)
 
 
 def test_writing_request_reserves_capacity_for_mandatory_consistency_call():
