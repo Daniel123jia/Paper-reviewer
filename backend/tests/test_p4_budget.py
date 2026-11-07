@@ -399,6 +399,7 @@ def test_controller_fails_closed_when_cumulative_budget_is_exhausted(
         SimpleNamespace(prompt_tokens=-1, completion_tokens=1, total_tokens=0),
         SimpleNamespace(prompt_tokens=True, completion_tokens=1, total_tokens=2),
         SimpleNamespace(prompt_tokens=1.5, completion_tokens=1, total_tokens=2.5),
+        SimpleNamespace(prompt_tokens=1, completion_tokens=1, total_tokens=None),
         SimpleNamespace(prompt_tokens=1, completion_tokens=1, total_tokens=3),
         SimpleNamespace(prompt_tokens=1, completion_tokens=101, total_tokens=102),
     ],
@@ -432,6 +433,41 @@ def test_controller_rejects_actual_usage_above_report_budget():
         )
 
     assert caught.value.blocker == "p4_input_budget_exhausted"
+
+
+def test_controller_rejects_response_finishing_after_duration_budget():
+    clock = [100.0]
+    controller = P4BudgetController(
+        controller_configuration(P4_MAX_DURATION_SECONDS="1"), lambda: clock[0]
+    )
+    planned = controller.plan_request(
+        model_call_id="call-1", stage="writing", prompt_version="v1",
+        messages=[{"role": "user", "content": "x"}],
+    )
+    controller.apply_reserved(planned)
+    clock[0] = 101.1
+
+    with pytest.raises(P4BudgetExceededError) as caught:
+        controller.validate_usage(
+            planned, SimpleNamespace(prompt_tokens=1, completion_tokens=1, total_tokens=2)
+        )
+
+    assert caught.value.blocker == "p4_duration_budget_exhausted"
+
+
+def test_writing_request_reserves_capacity_for_mandatory_consistency_call():
+    controller = P4BudgetController(
+        controller_configuration(P4_MAX_PROVIDER_REQUESTS="1"), lambda: 100.0
+    )
+
+    with pytest.raises(P4BudgetExceededError) as caught:
+        controller.plan_request(
+            model_call_id="call-1", stage="writing", prompt_version="v1",
+            messages=[{"role": "user", "content": "x"}],
+            required_followup_requests=1,
+        )
+
+    assert caught.value.blocker == "p4_request_budget_exhausted"
 
 
 @pytest.mark.parametrize(

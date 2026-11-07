@@ -298,10 +298,12 @@ class P4BudgetController:
         stage: str,
         prompt_version: str,
         messages: Iterable[Mapping[str, object]],
+        required_followup_requests: int = 0,
     ) -> P4RequestReservation:
         if model_call_id in self._outstanding:
             raise P4BudgetStateError("p4_model_call_id_duplicate")
-        if self._request_count >= self.configuration.max_provider_requests:
+        if (self._request_count + 1 + required_followup_requests >
+                self.configuration.max_provider_requests):
             raise P4BudgetExceededError("p4_request_budget_exhausted")
         remaining_duration_ms = self._remaining_duration_ms()
         if remaining_duration_ms <= 0:
@@ -311,14 +313,20 @@ class P4BudgetController:
                 self.configuration.max_input_tokens):
             raise P4BudgetExceededError("p4_input_budget_exhausted")
         reserved_output = self.configuration.max_output_tokens_per_request
-        if (self._output_tokens + self._outstanding_output() + reserved_output >
+        required_output = reserved_output * (1 + required_followup_requests)
+        if (self._output_tokens + self._outstanding_output() + required_output >
                 self.configuration.max_output_tokens):
             raise P4BudgetExceededError("p4_output_budget_exhausted")
         planned_cost = (
             Decimal(estimated_input) * self.configuration.input_usd_per_million
             + Decimal(reserved_output) * self.configuration.output_usd_per_million
         ) / Decimal(1_000_000)
-        if (self._usage_cost_usd + self._outstanding_cost() + planned_cost >
+        followup_output_cost = (
+            Decimal(reserved_output * required_followup_requests)
+            * self.configuration.output_usd_per_million / Decimal(1_000_000)
+        )
+        if (self._usage_cost_usd + self._outstanding_cost() + planned_cost
+                + followup_output_cost >
                 self.configuration.max_planned_cost_usd):
             raise P4BudgetExceededError("p4_cost_budget_exhausted")
         return P4RequestReservation(
@@ -347,17 +355,18 @@ class P4BudgetController:
     ) -> P4UsageSettlement:
         if self._outstanding.get(reservation.model_call_id) != reservation:
             raise P4BudgetStateError("p4_reservation_not_outstanding")
+        if self._remaining_duration_ms() <= 0:
+            raise P4BudgetExceededError("p4_duration_budget_exhausted")
         if usage is None:
             raise P4UsageError("p4_usage_missing")
         input_tokens = _usage_integer(getattr(usage, "prompt_tokens", None))
         output_tokens = _usage_integer(getattr(usage, "completion_tokens", None))
         supplied_total = getattr(usage, "total_tokens", None)
         if supplied_total is None:
-            total_tokens = input_tokens + output_tokens
-        else:
-            total_tokens = _usage_integer(supplied_total)
-            if total_tokens != input_tokens + output_tokens:
-                raise P4UsageError("p4_usage_total_mismatch")
+            raise P4UsageError("p4_usage_missing")
+        total_tokens = _usage_integer(supplied_total)
+        if total_tokens != input_tokens + output_tokens:
+            raise P4UsageError("p4_usage_total_mismatch")
         if output_tokens > reservation.max_tokens:
             raise P4UsageError("p4_usage_output_limit_exceeded")
         if self._input_tokens + input_tokens > self.configuration.max_input_tokens:
@@ -776,6 +785,21 @@ class P4BudgetStore:
                 ).rowcount
                 if changed != 1:
                     raise P4BudgetStateError("p4_generation_run_transition_failed")
+        except P4BudgetStateError:
+            raise
+        except sqlite3.Error:
+            raise P4BudgetStateError("p4_generation_run_persist_failed") from None
+
+    def complete_run_in_transaction(self, db, generation_run_id: str) -> None:
+        """Mark completion inside the caller's draft-save transaction."""
+        try:
+            changed = db.execute(
+                """UPDATE p4_generation_runs SET state = 'completed', reason = NULL,
+                       updated_at = ? WHERE id = ? AND state IN ('ready', 'usage_valid')""",
+                (self._now(), generation_run_id),
+            ).rowcount
+            if changed != 1:
+                raise P4BudgetStateError("p4_generation_run_transition_failed")
         except P4BudgetStateError:
             raise
         except sqlite3.Error:

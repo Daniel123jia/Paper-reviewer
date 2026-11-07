@@ -50,7 +50,8 @@ class FakeOpenAI:
                         "uncertainty_qualification": "A clarification, not a proven error",
                         "reviewer_approval_status": "pending"} for group in plan["groups"]]}
             return SimpleNamespace(model="actual-mock",
-                usage=SimpleNamespace(prompt_tokens=120, completion_tokens=40),
+                usage=SimpleNamespace(prompt_tokens=120, completion_tokens=40,
+                                      total_tokens=160),
                 choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(content)))])
         return SimpleNamespace(completions=SimpleNamespace(create=create))
 
@@ -385,6 +386,29 @@ def test_missing_provider_usage_stops_after_one_request_and_marks_cost_incomplet
                           "FROM p4_model_call_budget").fetchone()
     assert run == ("usage_invalid", 0, None)
     assert call == ("usage_invalid", "invalid")
+
+
+def test_draft_and_completed_run_are_atomic_when_final_audit_update_fails(
+        tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="test-secret")
+    monkeypatch.setattr(app_module, "OpenAI", FakeOpenAI)
+
+    def fail_completion(*args, **kwargs):
+        raise P4BudgetStateError("injected_completion_failure")
+
+    monkeypatch.setattr(P4BudgetStore, "complete_run_in_transaction", fail_completion)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 502
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        assert db.execute("SELECT count(*) FROM p4_drafts").fetchone()[0] == 0
+        assert db.execute("SELECT count(*) FROM p4_draft_revisions").fetchone()[0] == 0
 
 
 def test_transient_model_connection_is_not_retried_and_unknown_usage_is_terminal(

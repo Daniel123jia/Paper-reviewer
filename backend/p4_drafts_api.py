@@ -85,6 +85,7 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                 reservation = controller.plan_request(
                     model_call_id=model_call_id, stage=stage, prompt_version=version,
                     messages=messages,
+                    required_followup_requests=1 if stage.startswith("writing-") else 0,
                 )
             except P4BudgetExceededError as exc:
                 store.fail_run(generation_run_id, "budget_exhausted", exc.blocker)
@@ -261,9 +262,9 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                     writing.prompt_version, stamp, stamp))
                 db.execute("INSERT INTO p4_draft_revisions VALUES (?, 1, ?, ?, 'pending', ?)",
                            (draft_id, body, digest(body), stamp))
+                if plan.groups:
+                    store.complete_run_in_transaction(db, generation_run_id)
                 result = draft_view(db, draft_or_404(db, draft_id))
-            if plan.groups:
-                store.complete_run(generation_run_id)
             return result
         except P4BudgetConfigurationError as exc:
             detail = exc.safe_detail()
