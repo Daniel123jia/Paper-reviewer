@@ -12,6 +12,7 @@ from openai import APIConnectionError
 
 from backend.app import create_app
 from backend.tests.test_p4_api import seeded_p4_client
+from backend.tests.model_test_config import configure_test_model
 
 
 class FakeOpenAI:
@@ -69,7 +70,7 @@ def test_empty_author_draft_is_saved_without_model_or_filler(tmp_path, monkeypat
 
 
 def test_versioned_edit_approval_and_real_exports(tmp_path, monkeypatch):
-    monkeypatch.setenv("OPENAI_API_KEY", "test-secret")
+    configure_test_model(monkeypatch, key="test-secret")
     monkeypatch.setattr("backend.app.OpenAI", FakeOpenAI)
     client, _ = seeded_p4_client(tmp_path, reportable=True)
     project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
@@ -152,7 +153,7 @@ def test_export_failure_preserves_saved_draft_and_model_failure_is_recorded(tmp_
                 raise TimeoutError("model unavailable")
             return SimpleNamespace(completions=SimpleNamespace(create=create))
 
-    monkeypatch.setenv("OPENAI_API_KEY", "fake-secret")
+    configure_test_model(monkeypatch, key="fake-secret")
     monkeypatch.setattr("backend.app.OpenAI", BrokenOpenAI)
     (tmp_path / "other").mkdir()
     other_client, _ = seeded_p4_client(tmp_path / "other", reportable=True)
@@ -177,7 +178,7 @@ def test_p4_draft_api_requires_authentication(tmp_path, monkeypatch):
 
 
 def test_transient_model_connection_is_retried_and_unknown_tokens_stay_unknown(tmp_path, monkeypatch):
-    monkeypatch.setenv("OPENAI_API_KEY", "test-secret")
+    configure_test_model(monkeypatch, key="test-secret")
 
     class FlakyOpenAI(FakeOpenAI):
         attempts = 0
@@ -206,7 +207,7 @@ def test_transient_model_connection_is_retried_and_unknown_tokens_stay_unknown(t
 
 
 def test_p4_internal_export_keeps_editable_table_and_math(tmp_path, monkeypatch):
-    monkeypatch.setenv("OPENAI_API_KEY", "test-secret")
+    configure_test_model(monkeypatch, key="test-secret")
     monkeypatch.setattr("backend.app.OpenAI", FakeOpenAI)
     client, _ = seeded_p4_client(tmp_path, reportable=True)
     project = client.post("/api/evidence-verification-runs/v1/report-projects").json()

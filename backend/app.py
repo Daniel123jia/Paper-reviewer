@@ -11,7 +11,7 @@ import fitz
 from fastapi import BackgroundTasks, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 from openai import OpenAI
 from pydantic import BaseModel, Field
 from typing import Literal
@@ -35,16 +35,34 @@ from backend.p2c_schema import CandidateConsolidationResult
 from backend.p3_engine import run_p3
 from backend.p3_sources import validate_p3_inputs
 from backend.p4_api import initialize_p4_tables, register_p4_routes
+from backend.model_runtime import (REQUIRED_MODEL_ENV_KEYS,
+                                   ModelConfigurationError,
+                                   create_model_session,
+                                   create_validated_chat_completion,
+                                   require_model_runtime_config)
 
 
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
+MODEL_ENVIRONMENT_FILE = Path(__file__).resolve().parents[1] / ".env.local"
 
 
 def load_local_environment(path: Path):
-    load_dotenv(path, override=True)
+    try:
+        values = dotenv_values(path)
+    except Exception:
+        # Runtime model preflight reports a stable, redacted configuration
+        # error.  Importing the application must not expose parser details.
+        return
+    for key, value in values.items():
+        if key not in REQUIRED_MODEL_ENV_KEYS and value is not None:
+            os.environ[key] = value
 
 
-load_local_environment(Path(__file__).resolve().parents[1] / ".env.local")
+load_local_environment(MODEL_ENVIRONMENT_FILE)
+
+
+def runtime_model_configuration():
+    return require_model_runtime_config(MODEL_ENVIRONMENT_FILE)
 
 
 class ChatRequest(BaseModel):
@@ -108,10 +126,6 @@ def calculate_cost(usage):
                   output_tokens * float(output_rate)) / 1_000_000, 8)
 
 
-def model_base_url():
-    return os.environ.get("OPENAI_BASE_URL", "https://www.yaoxing.best/v1")
-
-
 def select_evidence(blocks, question):
     terms = {term.casefold() for term in re.findall(r"[A-Za-z]{4,}|[\u4e00-\u9fff]{2,}", question)}
     ranked = sorted(blocks, key=lambda row: sum(row["excerpt"].casefold().count(term) for term in terms), reverse=True)
@@ -142,6 +156,32 @@ def create_app(data_dir: Path) -> FastAPI:
         connection = sqlite3.connect(database)
         connection.row_factory = sqlite3.Row
         return connection
+
+    def model_configuration_or_503():
+        try:
+            return runtime_model_configuration()
+        except ModelConfigurationError as exc:
+            raise HTTPException(status_code=503, detail=exc.safe_detail()) from None
+
+    def model_session(*, timeout, max_retries):
+        configuration = runtime_model_configuration()
+        return create_model_session(
+            configuration,
+            timeout=timeout,
+            max_retries=max_retries,
+            client_factory=OpenAI,
+        )
+
+    def model_session_or_503(*, timeout, max_retries):
+        try:
+            return model_session(timeout=timeout, max_retries=max_retries)
+        except ModelConfigurationError as exc:
+            raise HTTPException(status_code=503, detail=exc.safe_detail()) from None
+
+    def model_completion(session, **request):
+        return create_validated_chat_completion(
+            session, MODEL_ENVIRONMENT_FILE, **request
+        )
 
     with connect() as db:
         db.executescript("""
@@ -542,12 +582,12 @@ def create_app(data_dir: Path) -> FastAPI:
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET source_bundle_id = ?, source_bundle_json = ? "
                            "WHERE id = ?", (bundle["bundle_id"], json.dumps(bundle), run_id))
-            model = os.environ.get("OPENAI_MODEL", "gpt-6.1-sol")
-            client = OpenAI(base_url=model_base_url(), timeout=180, max_retries=0)
+            session = model_session(timeout=180, max_retries=0)
+            model = session.configuration.model
 
             def model_call(stage, system, user):
                 started = time.perf_counter()
-                stream = client.chat.completions.create(
+                stream = model_completion(session,
                     model=model, messages=[{"role": "system", "content": system},
                                            {"role": "user", "content": user}],
                     stream=True, stream_options={"include_usage": True})
@@ -608,8 +648,7 @@ def create_app(data_dir: Path) -> FastAPI:
     @app.post("/api/documents/{document_id}/understanding-runs", status_code=202)
     def create_understanding_run(document_id: str, payload: UnderstandingRunRequest,
                                  background_tasks: BackgroundTasks):
-        if not os.environ.get("OPENAI_API_KEY"):
-            raise HTTPException(503, "后端尚未配置 OPENAI_API_KEY")
+        model_configuration_or_503()
         with connect() as db:
             document_or_404(db, document_id)
             active = db.execute("SELECT 1 FROM paper_understanding_runs WHERE document_id = ? "
@@ -680,12 +719,12 @@ def create_app(data_dir: Path) -> FastAPI:
             row, bundle, plan, profile, mapping = load_professional_inputs(understanding_run_id)
             with connect() as db:
                 db.execute("UPDATE professional_review_runs SET status = 'running' WHERE id = ?", (run_id,))
-            model = os.environ.get("OPENAI_MODEL", "gpt-6.1-sol")
-            client = OpenAI(base_url=model_base_url(), timeout=180, max_retries=0)
+            session = model_session(timeout=180, max_retries=0)
+            model = session.configuration.model
 
             def model_call(stage, system, user):
                 started = time.perf_counter()
-                stream = client.chat.completions.create(
+                stream = model_completion(session,
                     model=model, messages=[{"role": "system", "content": system},
                                            {"role": "user", "content": user}],
                     stream=True, stream_options={"include_usage": True})
@@ -740,8 +779,7 @@ def create_app(data_dir: Path) -> FastAPI:
 
     @app.post("/api/understanding-runs/{run_id}/professional-review-runs", status_code=202)
     def create_professional_review_run(run_id: str, background_tasks: BackgroundTasks):
-        if not os.environ.get("OPENAI_API_KEY"):
-            raise HTTPException(503, "后端尚未配置 OPENAI_API_KEY")
+        model_configuration_or_503()
         row, bundle, _, _, _ = load_professional_inputs(run_id)
         new_id = uuid.uuid4().hex
         with connect() as db:
@@ -805,12 +843,12 @@ def create_app(data_dir: Path) -> FastAPI:
                 professional_review_run_id)
             with connect() as db:
                 db.execute("UPDATE candidate_consolidation_runs SET status = 'running' WHERE id = ?", (run_id,))
-            model = os.environ.get("OPENAI_MODEL", "gpt-6.1-sol")
-            client = OpenAI(base_url=model_base_url(), timeout=180, max_retries=0)
+            session = model_session(timeout=180, max_retries=0)
+            model = session.configuration.model
 
             def model_call(stage, system, user):
                 started = time.perf_counter()
-                stream = client.chat.completions.create(
+                stream = model_completion(session,
                     model=model, messages=[{"role": "system", "content": system},
                                            {"role": "user", "content": user}],
                     stream=True, stream_options={"include_usage": True})
@@ -872,8 +910,7 @@ def create_app(data_dir: Path) -> FastAPI:
     @app.post("/api/professional-review-runs/{run_id}/consolidation-runs", status_code=202)
     def create_consolidation_run(run_id: str, background_tasks: BackgroundTasks,
                                  payload: ConsolidationRunRequest | None = None):
-        if not os.environ.get("OPENAI_API_KEY"):
-            raise HTTPException(503, "后端尚未配置 OPENAI_API_KEY")
+        model_configuration_or_503()
         source, bundle, _, _, _, _ = load_consolidation_inputs(run_id)
         new_id = uuid.uuid4().hex
         try:
@@ -948,12 +985,12 @@ def create_app(data_dir: Path) -> FastAPI:
             with connect() as db:
                 db.execute("UPDATE evidence_verification_runs SET status = 'running' WHERE id = ?",
                            (run_id,))
-            model = os.environ.get("OPENAI_MODEL", "gpt-6.1-sol")
-            client = OpenAI(base_url=model_base_url(), timeout=180, max_retries=0)
+            session = model_session(timeout=180, max_retries=0)
+            model = session.configuration.model
 
             def model_call(stage, system, user):
                 started = time.perf_counter()
-                stream = client.chat.completions.create(
+                stream = model_completion(session,
                     model=model, messages=[{"role": "system", "content": system},
                                            {"role": "user", "content": user}],
                     stream=True, stream_options={"include_usage": True})
@@ -1018,8 +1055,7 @@ def create_app(data_dir: Path) -> FastAPI:
               status_code=202)
     def create_evidence_verification_run(run_id: str, background_tasks: BackgroundTasks,
                                          payload: EvidenceVerificationRunRequest | None = None):
-        if not os.environ.get("OPENAI_API_KEY"):
-            raise HTTPException(503, "后端尚未配置 OPENAI_API_KEY")
+        model_configuration_or_503()
         source, bundle, _, _, _, _, _, _ = load_p3_inputs(run_id)
         new_id = uuid.uuid4().hex
         try:
@@ -1140,13 +1176,13 @@ def create_app(data_dir: Path) -> FastAPI:
                               "page_index": item["relation"]["page_index"], "excerpt": item["relation"]["excerpt"]}}
                 for item in suggest_formula_links(blocks)]
 
-    def review_model_call(run_id, stage, model, messages):
+    def review_model_call(run_id, stage, session, messages):
         started = time.perf_counter()
         usage = None
         status = "failed"
+        model = session.configuration.model
         try:
-            client = OpenAI(base_url=model_base_url(), timeout=120, max_retries=1)
-            completion = client.chat.completions.create(model=model, messages=messages)
+            completion = model_completion(session, model=model, messages=messages)
             usage = completion.usage
             content = completion.choices[0].message.content or ""
             if not content:
@@ -1186,8 +1222,8 @@ def create_app(data_dir: Path) -> FastAPI:
             mode_note = {"first_review": "首次审稿：只评价原稿。",
                          "own_rereview": "本人复审：核对修订稿与作者回复是否回应原稿疑点。",
                          "new_reviewer": "新增审稿人二审：独立检查修订稿，可参考原稿与作者回复。"}[case["mode"]]
-            model = os.environ.get("OPENAI_MODEL", "gpt-6.1-sol")
-            proposal = review_model_call(run_id, "propose", model, [
+            session = model_session(timeout=120, max_retries=1)
+            proposal = review_model_call(run_id, "propose", session, [
                 {"role": "system", "content": "你是谨慎的科研论文审稿员。只根据给出的原文片段提出 0 到 3 个具体候选问题；"
                  "如果证据不足，返回空数组。不可把公式疑点判定为数学错误。只输出 JSON，格式："
                  '{"candidates":[{"title":"...","concern":"...","evidence_ids":["ev_..."]}]}。'
@@ -1200,7 +1236,7 @@ def create_app(data_dir: Path) -> FastAPI:
             candidates = candidates[:3]
             checks = []
             if candidates:
-                challenge = review_model_call(run_id, "challenge", model, [
+                challenge = review_model_call(run_id, "challenge", session, [
                     {"role": "system", "content": "你是独立的审稿反证员。逐条寻找候选问题可能被原文解释或反驳的地方；"
                      "检查引用片段是否真的支持担忧。只输出 JSON，格式："
                      '{"checks":[{"index":0,"verdict":"supported|not_supported|uncertain",'
@@ -1229,8 +1265,7 @@ def create_app(data_dir: Path) -> FastAPI:
 
     @app.post("/api/review-cases/{case_id}/analyze", status_code=202)
     def analyze_review_case(case_id: str, background_tasks: BackgroundTasks):
-        if not os.environ.get("OPENAI_API_KEY"):
-            raise HTTPException(503, "后端尚未配置 OPENAI_API_KEY")
+        model_configuration_or_503()
         with connect() as db:
             if not db.execute("SELECT 1 FROM review_cases WHERE id = ?", (case_id,)).fetchone():
                 raise HTTPException(404, "审稿任务不存在")
@@ -1271,8 +1306,8 @@ def create_app(data_dir: Path) -> FastAPI:
                 roles[case["response_document_id"]] = "作者回复"
             source = "\n\n".join(f'[{row["id"]}] {roles[row["document_id"]]}第 {row["page_index"] + 1} 页：'
                                   f'{row["excerpt"][:800]}' for row in selected)
-            model = os.environ.get("OPENAI_MODEL", "gpt-6.1-sol")
-            response = review_model_call(finding["run_id"], "deep_challenge", model, [
+            session = model_session(timeout=120, max_retries=1)
+            response = review_model_call(finding["run_id"], "deep_challenge", session, [
                 {"role": "system", "content": "你是独立的科研审稿复核员。对一个候选问题在更广的原文段落中寻找最强反证和合理解释，"
                  "并检查证据是否真正支持具体判断。可选择 verdict 为 supported_clarification、not_supported 或 uncertain；"
                  "不能把未程序验证的数学或算法疑点判为已证实错误。只输出 JSON："
@@ -1308,8 +1343,7 @@ def create_app(data_dir: Path) -> FastAPI:
 
     @app.post("/api/review-findings/{finding_id}/deep-verifications", status_code=202)
     def start_finding_verification(finding_id: str, background_tasks: BackgroundTasks):
-        if not os.environ.get("OPENAI_API_KEY"):
-            raise HTTPException(503, "后端尚未配置 OPENAI_API_KEY")
+        model_configuration_or_503()
         with connect() as db:
             if not db.execute("SELECT 1 FROM review_findings WHERE id = ?", (finding_id,)).fetchone():
                 raise HTTPException(404, "候选问题不存在")
@@ -1537,8 +1571,7 @@ def create_app(data_dir: Path) -> FastAPI:
         question = payload.message.strip()
         if not question or len(question) > 4000:
             raise HTTPException(400, "问题长度必须在 1 到 4000 字符之间")
-        if not os.environ.get("OPENAI_API_KEY"):
-            raise HTTPException(503, "后端尚未配置 OPENAI_API_KEY")
+        configuration = model_configuration_or_503()
         with connect() as db:
             conversation = db.execute("SELECT * FROM conversations WHERE id = ?", (conversation_id,)).fetchone()
             if not conversation:
@@ -1558,9 +1591,10 @@ def create_app(data_dir: Path) -> FastAPI:
                         "不能证明技术判断成立。可用 Markdown 和 LaTeX 排版。不要声称已经独立验证公式。\n\n"
                         f"当前论文 SHA-256：{document['sha256']}\n可用证据：\n{context or '没有检索到相关证据。'}")
         history = [{"role": row["role"], "content": row["content"]} for row in reversed(previous)]
-        model = os.environ.get("OPENAI_MODEL", "gpt-6.1-sol")
+        model = configuration.model
 
         def generate():
+            active_model = model
             started = time.perf_counter()
             answer = []
             usage = None
@@ -1568,11 +1602,13 @@ def create_app(data_dir: Path) -> FastAPI:
             try:
                 yield sse("sources", {"evidence": [{"evidence_id": row["id"], "page_index": row["page_index"],
                                                     "excerpt": row["excerpt"][:400]} for row in chosen]})
-                client = OpenAI(base_url=model_base_url(), timeout=90, max_retries=1)
+                session = model_session(timeout=90, max_retries=1)
+                active_model = session.configuration.model
                 messages = ([{"role": "system", "content": instructions}] + history +
                             [{"role": "user", "content": question}])
-                stream = client.chat.completions.create(model=model, messages=messages,
-                                                        stream=True, stream_options={"include_usage": True})
+                stream = model_completion(
+                    session, model=active_model, messages=messages,
+                    stream=True, stream_options={"include_usage": True})
                 for chunk in stream:
                     if chunk.usage:
                         usage = chunk.usage
@@ -1598,7 +1634,7 @@ def create_app(data_dir: Path) -> FastAPI:
             finally:
                 with connect() as db:
                     db.execute("INSERT INTO model_calls VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))",
-                               (uuid.uuid4().hex, conversation_id, model,
+                               (uuid.uuid4().hex, conversation_id, active_model,
                                 getattr(usage, "prompt_tokens", None), getattr(usage, "completion_tokens", None),
                                 calculate_cost(usage), round((time.perf_counter() - started) * 1000), status))
 
@@ -1684,15 +1720,15 @@ def create_app(data_dir: Path) -> FastAPI:
         body = compose_draft(payload.kind, paper, case["mode"], findings, formulas, experiments, algorithms)
         draft_id = uuid.uuid4().hex
         if payload.language == "en":
-            if not os.environ.get("OPENAI_API_KEY"):
-                raise HTTPException(503, "英文草稿需要后端配置 OPENAI_API_KEY")
-            model = os.environ.get("OPENAI_MODEL", "gpt-6.1-sol")
+            configuration = model_configuration_or_503()
+            model = configuration.model
             started = time.perf_counter()
             usage = None
             status = "failed"
             try:
-                client = OpenAI(base_url=model_base_url(), timeout=120, max_retries=1)
-                completion = client.chat.completions.create(model=model, messages=[
+                session = model_session(timeout=120, max_retries=1)
+                model = session.configuration.model
+                completion = model_completion(session, model=model, messages=[
                     {"role": "system", "content": "把中文审稿 Markdown 准确翻译为正式学术英语。保留全部 Evidence ID、数字、表格、LaTeX 公式和章节结构；"
                      "不要新增论文事实、错误判断或引文。只输出翻译后的 Markdown。"},
                     {"role": "user", "content": body},
@@ -1706,6 +1742,8 @@ def create_app(data_dir: Path) -> FastAPI:
                     raise ValueError("英文草稿未完整保留原文证据 ID")
                 body = translated
                 status = "completed"
+            except ModelConfigurationError as exc:
+                raise HTTPException(status_code=503, detail=exc.safe_detail()) from None
             except Exception as exc:
                 raise HTTPException(502, f"英文草稿生成失败：{type(exc).__name__}") from exc
             finally:
@@ -1767,8 +1805,12 @@ def create_app(data_dir: Path) -> FastAPI:
                  "pdf": "application/pdf"}[format]
         return Response(data, media_type=media, headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
-    register_p4_routes(app, connect, files_dir, load_p3_inputs,
-                       lambda: OpenAI(base_url=model_base_url(), timeout=180, max_retries=0))
+    register_p4_routes(
+        app, connect, files_dir, load_p3_inputs,
+        lambda: model_session_or_503(timeout=180, max_retries=0),
+        model_completion,
+        model_configuration_or_503,
+    )
     return app
 
 

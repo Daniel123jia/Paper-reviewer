@@ -2,6 +2,7 @@ import json
 
 import pytest
 
+from backend.model_runtime import ModelConfigurationError
 from backend.p2a_engine import BudgetExceeded, P2AError, RunBudget, chunk_reading_units, run_p2a
 from backend.p2a_schema import validate_source_references
 
@@ -507,3 +508,15 @@ def test_failed_call_reserves_unknown_tokens_in_budget():
     assert budget.unknown_usage_calls == 1
     assert budget.reserved_input_tokens > 0
     assert budget.reserved_output_tokens == 4096
+
+
+def test_configuration_change_stops_p2a_without_content_retry():
+    calls = []
+
+    def changed(*args):
+        calls.append(args[0])
+        raise ModelConfigurationError(["model_configuration_changed"], ["OPENAI_MODEL"])
+
+    with pytest.raises(ModelConfigurationError):
+        run_p2a(_bundle(), "configuration-change", changed, "model")
+    assert calls == ["paper-type-planner"]

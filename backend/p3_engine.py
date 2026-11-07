@@ -6,6 +6,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from backend.model_runtime import ModelConfigurationError
 from backend.p2a_engine import BudgetExceeded, RunBudget
 from backend.p2a_schema import source_reference_index
 from backend.p3_adjudication import (JUDGMENT_PROMPT_VERSION, PROMPTS,
@@ -151,6 +152,8 @@ def run_p3(bundle, plan, profile, mapping, review, consolidation, pdf_path,
                     raise ValueError("model reply missing content or model identifier")
                 value = validate(parse_model_json(reply["content"]))
                 status, error = "completed", None
+            except ModelConfigurationError:
+                raise
             except BudgetExceeded:
                 exhausted = True
                 return None

@@ -2,6 +2,7 @@ import json
 
 import pytest
 
+from backend.model_runtime import ModelConfigurationError
 from backend.p2c_engine import run_p2c
 from backend.p2c_schema import CandidateConsolidationResult
 from backend.tests.test_p2c_normalizer import fixture_review
@@ -119,3 +120,17 @@ def test_schema_rejects_lost_evidence_and_missing_pair_relation():
     raw["relations"] = []
     with pytest.raises(ValueError, match="relationship record is incomplete"):
         CandidateConsolidationResult.model_validate(raw)
+
+
+def test_configuration_change_stops_p2c_without_grouping_retry():
+    bundle, plan, profile, mapping, review = fixture_review()
+    calls = []
+
+    def changed(*args):
+        calls.append(args[0])
+        raise ModelConfigurationError(["model_configuration_changed"], ["OPENAI_API_KEY"])
+
+    with pytest.raises(ModelConfigurationError):
+        run_p2c(bundle, plan, profile, mapping, review, "u1", "b1", "config-change",
+                changed, "requested", p2b_status="limited")
+    assert len(calls) == 1

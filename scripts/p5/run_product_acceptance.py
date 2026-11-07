@@ -34,6 +34,8 @@ def run(output_dir: Path) -> dict:
         os.environ["PATH"] = (f"{Path(pandoc).parent}{os.pathsep}"
                               f"{os.environ.get('PATH', '')}")
     os.environ["OPENAI_API_KEY"] = "p5-deterministic-mock-only"
+    os.environ["OPENAI_BASE_URL"] = "https://provider.example/v1"
+    os.environ["OPENAI_MODEL"] = "p5-mock-model"
     app_module.OpenAI = FakeOpenAI
     client, _ = seeded_p4_client(app_data, reportable=True)
 

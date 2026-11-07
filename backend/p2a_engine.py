@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
+from backend.model_runtime import ModelConfigurationError
 from backend.parse_quality import assess_input_readiness
 from backend.p2a_schema import (ClaimEvidenceMap, PaperProfile, ReviewPlan, SourceConflict,
                                  source_reference_index, validate_source_references)
@@ -222,6 +223,8 @@ def _invoke(stage: str, user_text: str, bundle: dict, run_id: str, included_unit
             if on_trace:
                 on_trace(trace)
             return result
+        except ModelConfigurationError:
+            raise
         except BudgetExceeded:
             raise
         except Exception as exc:
@@ -260,6 +263,8 @@ def _aux_json(stage, payload, requested_model, model_call, traces, on_trace):
             if on_trace:
                 on_trace(trace)
             return result
+        except ModelConfigurationError:
+            raise
         except BudgetExceeded:
             raise
         except Exception as exc:

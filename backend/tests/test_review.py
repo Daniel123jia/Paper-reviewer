@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from backend.app import create_app
+from backend.tests.model_test_config import configure_test_model
 from backend.review import parse_model_json, pick_review_evidence, retrieve_counterevidence, screen_candidates, suggest_formula_links
 
 
@@ -135,7 +136,7 @@ def test_rereview_model_receives_named_material_roles(tmp_path, monkeypatch, mod
         def __init__(self, **kwargs):
             self.chat = SimpleNamespace(completions=FakeCompletions())
 
-    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    configure_test_model(monkeypatch, key="test-key")
     monkeypatch.setattr("backend.app.OpenAI", FakeOpenAI)
     assert client.post(f'/api/review-cases/{case["id"]}/analyze').status_code == 202
     assert client.get(f'/api/review-cases/{case["id"]}').json()["latest_run"]["status"] == "completed"
@@ -175,7 +176,7 @@ def test_review_analysis_persists_screened_findings_and_usage(tmp_path, monkeypa
         def __init__(self, **kwargs):
             self.chat = SimpleNamespace(completions=FakeCompletions())
 
-    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    configure_test_model(monkeypatch, key="test-key")
     monkeypatch.setattr("backend.app.OpenAI", FakeOpenAI)
     result = client.post(f'/api/review-cases/{case["id"]}/analyze')
     assert result.status_code == 202

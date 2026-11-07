@@ -8,6 +8,7 @@ from docx import Document
 from fastapi.testclient import TestClient
 
 from backend.app import create_app
+from backend.tests.model_test_config import configure_test_model
 
 
 def paper_and_verified_clarification(client, data_dir):
@@ -85,7 +86,7 @@ def test_english_draft_uses_model_and_keeps_evidence_ids(tmp_path, monkeypatch):
         def __init__(self, **kwargs):
             self.chat = SimpleNamespace(completions=FakeCompletions())
 
-    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    configure_test_model(monkeypatch, key="test-key")
     monkeypatch.setattr("backend.app.OpenAI", FakeOpenAI)
     created = client.post(f'/api/review-cases/{case["id"]}/drafts', json={"kind": "opinion", "language": "en"})
     assert created.status_code == 201

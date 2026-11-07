@@ -6,6 +6,7 @@ from pathlib import Path
 
 from pydantic import Field
 
+from backend.model_runtime import ModelConfigurationError
 from backend.p2a_schema import StrictModel
 from backend.p4_report_schema import ReportEvidencePack, ReportPlan, ReportWritingResult
 from backend.p4_validator import numeric_claims, validate_bilingual_pair, validate_writing
@@ -117,6 +118,8 @@ def write_report(plan: ReportPlan, pack: ReportEvidencePack, model_call,
                                                      assessment.language_or_scope_changes)):
                     raise ValueError("model report consistency review flagged unsupported wording")
                 break
+            except ModelConfigurationError:
+                raise
             except ValueError:
                 if attempt:
                     raise
