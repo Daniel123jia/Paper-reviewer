@@ -119,7 +119,7 @@ class ReviewerIssueInput(BaseModel):
 
 
 def register_p4_routes(app, connect, files_dir, load_p3_inputs,
-                       model_session_factory, model_preflight):
+                       model_session_factory, model_completion, model_preflight):
     def project_or_404(db, project_id):
         row = db.execute("SELECT * FROM p4_report_projects WHERE id = ?", (project_id,)).fetchone()
         if not row:
@@ -406,7 +406,8 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs,
                        (item.issue_id, project_id, item.model_dump_json()))
             return item.model_dump()
 
-    register_p4_draft_routes(app, connect, model_session_factory, model_preflight, {
+    register_p4_draft_routes(app, connect, model_session_factory, model_completion,
+                             model_preflight, {
         "project_or_404": project_or_404, "snapshot_of": snapshot_of,
         "decision_records": decision_records, "evidence_records": evidence_records,
         "external_evidence_records": external_evidence_records,

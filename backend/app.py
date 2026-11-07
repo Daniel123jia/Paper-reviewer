@@ -38,6 +38,7 @@ from backend.p4_api import initialize_p4_tables, register_p4_routes
 from backend.model_runtime import (REQUIRED_MODEL_ENV_KEYS,
                                    ModelConfigurationError,
                                    create_model_session,
+                                   create_validated_chat_completion,
                                    require_model_runtime_config)
 
 
@@ -46,7 +47,13 @@ MODEL_ENVIRONMENT_FILE = Path(__file__).resolve().parents[1] / ".env.local"
 
 
 def load_local_environment(path: Path):
-    for key, value in dotenv_values(path).items():
+    try:
+        values = dotenv_values(path)
+    except Exception:
+        # Runtime model preflight reports a stable, redacted configuration
+        # error.  Importing the application must not expose parser details.
+        return
+    for key, value in values.items():
         if key not in REQUIRED_MODEL_ENV_KEYS and value is not None:
             os.environ[key] = value
 
@@ -170,6 +177,11 @@ def create_app(data_dir: Path) -> FastAPI:
             return model_session(timeout=timeout, max_retries=max_retries)
         except ModelConfigurationError as exc:
             raise HTTPException(status_code=503, detail=exc.safe_detail()) from None
+
+    def model_completion(session, **request):
+        return create_validated_chat_completion(
+            session, MODEL_ENVIRONMENT_FILE, **request
+        )
 
     with connect() as db:
         db.executescript("""
@@ -572,11 +584,10 @@ def create_app(data_dir: Path) -> FastAPI:
                            "WHERE id = ?", (bundle["bundle_id"], json.dumps(bundle), run_id))
             session = model_session(timeout=180, max_retries=0)
             model = session.configuration.model
-            client = session.client
 
             def model_call(stage, system, user):
                 started = time.perf_counter()
-                stream = client.chat.completions.create(
+                stream = model_completion(session,
                     model=model, messages=[{"role": "system", "content": system},
                                            {"role": "user", "content": user}],
                     stream=True, stream_options={"include_usage": True})
@@ -710,11 +721,10 @@ def create_app(data_dir: Path) -> FastAPI:
                 db.execute("UPDATE professional_review_runs SET status = 'running' WHERE id = ?", (run_id,))
             session = model_session(timeout=180, max_retries=0)
             model = session.configuration.model
-            client = session.client
 
             def model_call(stage, system, user):
                 started = time.perf_counter()
-                stream = client.chat.completions.create(
+                stream = model_completion(session,
                     model=model, messages=[{"role": "system", "content": system},
                                            {"role": "user", "content": user}],
                     stream=True, stream_options={"include_usage": True})
@@ -835,11 +845,10 @@ def create_app(data_dir: Path) -> FastAPI:
                 db.execute("UPDATE candidate_consolidation_runs SET status = 'running' WHERE id = ?", (run_id,))
             session = model_session(timeout=180, max_retries=0)
             model = session.configuration.model
-            client = session.client
 
             def model_call(stage, system, user):
                 started = time.perf_counter()
-                stream = client.chat.completions.create(
+                stream = model_completion(session,
                     model=model, messages=[{"role": "system", "content": system},
                                            {"role": "user", "content": user}],
                     stream=True, stream_options={"include_usage": True})
@@ -978,11 +987,10 @@ def create_app(data_dir: Path) -> FastAPI:
                            (run_id,))
             session = model_session(timeout=180, max_retries=0)
             model = session.configuration.model
-            client = session.client
 
             def model_call(stage, system, user):
                 started = time.perf_counter()
-                stream = client.chat.completions.create(
+                stream = model_completion(session,
                     model=model, messages=[{"role": "system", "content": system},
                                            {"role": "user", "content": user}],
                     stream=True, stream_options={"include_usage": True})
@@ -1168,16 +1176,13 @@ def create_app(data_dir: Path) -> FastAPI:
                               "page_index": item["relation"]["page_index"], "excerpt": item["relation"]["excerpt"]}}
                 for item in suggest_formula_links(blocks)]
 
-    def review_model_call(run_id, stage, messages):
+    def review_model_call(run_id, stage, session, messages):
         started = time.perf_counter()
         usage = None
         status = "failed"
-        model = "unresolved"
+        model = session.configuration.model
         try:
-            session = model_session(timeout=120, max_retries=1)
-            client = session.client
-            model = session.configuration.model
-            completion = client.chat.completions.create(model=model, messages=messages)
+            completion = model_completion(session, model=model, messages=messages)
             usage = completion.usage
             content = completion.choices[0].message.content or ""
             if not content:
@@ -1217,7 +1222,8 @@ def create_app(data_dir: Path) -> FastAPI:
             mode_note = {"first_review": "首次审稿：只评价原稿。",
                          "own_rereview": "本人复审：核对修订稿与作者回复是否回应原稿疑点。",
                          "new_reviewer": "新增审稿人二审：独立检查修订稿，可参考原稿与作者回复。"}[case["mode"]]
-            proposal = review_model_call(run_id, "propose", [
+            session = model_session(timeout=120, max_retries=1)
+            proposal = review_model_call(run_id, "propose", session, [
                 {"role": "system", "content": "你是谨慎的科研论文审稿员。只根据给出的原文片段提出 0 到 3 个具体候选问题；"
                  "如果证据不足，返回空数组。不可把公式疑点判定为数学错误。只输出 JSON，格式："
                  '{"candidates":[{"title":"...","concern":"...","evidence_ids":["ev_..."]}]}。'
@@ -1230,7 +1236,7 @@ def create_app(data_dir: Path) -> FastAPI:
             candidates = candidates[:3]
             checks = []
             if candidates:
-                challenge = review_model_call(run_id, "challenge", [
+                challenge = review_model_call(run_id, "challenge", session, [
                     {"role": "system", "content": "你是独立的审稿反证员。逐条寻找候选问题可能被原文解释或反驳的地方；"
                      "检查引用片段是否真的支持担忧。只输出 JSON，格式："
                      '{"checks":[{"index":0,"verdict":"supported|not_supported|uncertain",'
@@ -1300,7 +1306,8 @@ def create_app(data_dir: Path) -> FastAPI:
                 roles[case["response_document_id"]] = "作者回复"
             source = "\n\n".join(f'[{row["id"]}] {roles[row["document_id"]]}第 {row["page_index"] + 1} 页：'
                                   f'{row["excerpt"][:800]}' for row in selected)
-            response = review_model_call(finding["run_id"], "deep_challenge", [
+            session = model_session(timeout=120, max_retries=1)
+            response = review_model_call(finding["run_id"], "deep_challenge", session, [
                 {"role": "system", "content": "你是独立的科研审稿复核员。对一个候选问题在更广的原文段落中寻找最强反证和合理解释，"
                  "并检查证据是否真正支持具体判断。可选择 verdict 为 supported_clarification、not_supported 或 uncertain；"
                  "不能把未程序验证的数学或算法疑点判为已证实错误。只输出 JSON："
@@ -1596,12 +1603,12 @@ def create_app(data_dir: Path) -> FastAPI:
                 yield sse("sources", {"evidence": [{"evidence_id": row["id"], "page_index": row["page_index"],
                                                     "excerpt": row["excerpt"][:400]} for row in chosen]})
                 session = model_session(timeout=90, max_retries=1)
-                client = session.client
                 active_model = session.configuration.model
                 messages = ([{"role": "system", "content": instructions}] + history +
                             [{"role": "user", "content": question}])
-                stream = client.chat.completions.create(model=active_model, messages=messages,
-                                                        stream=True, stream_options={"include_usage": True})
+                stream = model_completion(
+                    session, model=active_model, messages=messages,
+                    stream=True, stream_options={"include_usage": True})
                 for chunk in stream:
                     if chunk.usage:
                         usage = chunk.usage
@@ -1720,9 +1727,8 @@ def create_app(data_dir: Path) -> FastAPI:
             status = "failed"
             try:
                 session = model_session(timeout=120, max_retries=1)
-                client = session.client
                 model = session.configuration.model
-                completion = client.chat.completions.create(model=model, messages=[
+                completion = model_completion(session, model=model, messages=[
                     {"role": "system", "content": "把中文审稿 Markdown 准确翻译为正式学术英语。保留全部 Evidence ID、数字、表格、LaTeX 公式和章节结构；"
                      "不要新增论文事实、错误判断或引文。只输出翻译后的 Markdown。"},
                     {"role": "user", "content": body},
@@ -1736,6 +1742,8 @@ def create_app(data_dir: Path) -> FastAPI:
                     raise ValueError("英文草稿未完整保留原文证据 ID")
                 body = translated
                 status = "completed"
+            except ModelConfigurationError as exc:
+                raise HTTPException(status_code=503, detail=exc.safe_detail()) from None
             except Exception as exc:
                 raise HTTPException(502, f"英文草稿生成失败：{type(exc).__name__}") from exc
             finally:
@@ -1800,6 +1808,7 @@ def create_app(data_dir: Path) -> FastAPI:
     register_p4_routes(
         app, connect, files_dir, load_p3_inputs,
         lambda: model_session_or_503(timeout=180, max_retries=0),
+        model_completion,
         model_configuration_or_503,
     )
     return app

@@ -2,6 +2,7 @@ import json
 
 import pytest
 
+from backend.model_runtime import ModelConfigurationError
 from backend.p2a_engine import RunBudget
 from backend.p2c_engine import run_p2c
 from backend.p3_engine import run_p3, validate_p3_result
@@ -155,3 +156,17 @@ def test_result_rejects_observation_and_tool_borrowed_from_another_task(tmp_path
     borrowed_subcheck_tool.adjudications[1].subchecks[0].tool_result_ids.append(check.tool_result_id)
     with pytest.raises(ValueError, match="Tool|tool"):
         validate_p3_result(borrowed_subcheck_tool, consolidation, bundle)
+
+
+def test_configuration_change_stops_p3_without_verification_retry(tmp_path):
+    bundle, plan, profile, mapping, review, consolidation, pdf_path = frozen_case(tmp_path)
+    calls = []
+
+    def changed(*args):
+        calls.append(args[0])
+        raise ModelConfigurationError(["model_configuration_changed"], ["OPENAI_MODEL"])
+
+    with pytest.raises(ModelConfigurationError):
+        run_p3(bundle, plan, profile, mapping, review, consolidation, pdf_path,
+               "config-change", changed, "requested")
+    assert len(calls) == 1

@@ -73,20 +73,28 @@ def _endpoint_errors(endpoint: str) -> list[str]:
     if any(character.isspace() for character in endpoint):
         errors.append("model_endpoint_contains_whitespace")
         return errors
-    parsed = urlsplit(endpoint)
-    if parsed.scheme != "https":
+    try:
+        parsed = urlsplit(endpoint)
+        scheme = parsed.scheme
+        username = parsed.username
+        password = parsed.password
+        query = parsed.query
+        fragment = parsed.fragment
+        hostname = parsed.hostname or ""
+    except (UnicodeError, ValueError):
+        return ["model_endpoint_invalid_url"]
+    if scheme != "https":
         errors.append("model_endpoint_must_use_https")
-    if parsed.username is not None or parsed.password is not None:
+    if username is not None or password is not None:
         errors.append("model_endpoint_contains_credentials")
-    if parsed.query:
+    if query:
         errors.append("model_endpoint_contains_query")
-    if parsed.fragment:
+    if fragment:
         errors.append("model_endpoint_contains_fragment")
     try:
         parsed.port
     except ValueError:
         errors.append("model_endpoint_invalid_port")
-    hostname = parsed.hostname or ""
     if not hostname or not _valid_hostname(hostname):
         errors.append("model_endpoint_invalid_host")
     elif hostname.casefold() in _PLACEHOLDER_HOSTS:
@@ -159,11 +167,16 @@ def require_model_runtime_config(
     environment_file: Path,
     process_environment: Mapping[str, str | None] | None = None,
 ) -> ModelRuntimeConfiguration:
-    file_values = (
-        {name: value for name, value in dotenv_values(environment_file).items()
-         if name in REQUIRED_MODEL_ENV_KEYS}
-        if environment_file.is_file() else {}
-    )
+    try:
+        file_values = (
+            {name: value for name, value in dotenv_values(environment_file).items()
+             if name in REQUIRED_MODEL_ENV_KEYS}
+            if environment_file.is_file() else {}
+        )
+    except Exception:
+        raise ModelConfigurationError(
+            ["model_environment_file_unreadable"], REQUIRED_MODEL_ENV_KEYS
+        ) from None
     return resolve_model_runtime_config(
         os.environ if process_environment is None else process_environment,
         file_values,
@@ -184,3 +197,31 @@ def create_model_session(
         max_retries=max_retries,
     )
     return ModelRuntimeSession(configuration=configuration, client=client)
+
+
+def create_validated_chat_completion(
+    session: ModelRuntimeSession,
+    environment_file: Path,
+    *,
+    process_environment: Mapping[str, str | None] | None = None,
+    **request,
+):
+    current = require_model_runtime_config(
+        environment_file, process_environment=process_environment
+    )
+    attributes = {
+        "OPENAI_API_KEY": "api_key",
+        "OPENAI_BASE_URL": "base_url",
+        "OPENAI_MODEL": "model",
+    }
+    changed = [
+        variable for variable, attribute in attributes.items()
+        if getattr(current, attribute) != getattr(session.configuration, attribute)
+    ]
+    if changed:
+        raise ModelConfigurationError(["model_configuration_changed"], changed)
+    if request.get("model") != session.configuration.model:
+        raise ModelConfigurationError(
+            ["model_request_model_mismatch"], ["OPENAI_MODEL"]
+        )
+    return session.client.chat.completions.create(**request)

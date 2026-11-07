@@ -94,3 +94,22 @@ def test_repeated_loads_and_file_updates_do_not_pollute_process_source(tmp_path,
     assert first_result.model == "first-model"
     assert second_result.model == "second-model"
     assert updated_result.model == "updated-model"
+
+
+def test_local_environment_load_ignores_unreadable_file_until_safe_model_preflight(
+        tmp_path, monkeypatch):
+    clear_model_environment(monkeypatch)
+    config = tmp_path / ".env.local"
+    config.write_bytes(b"OPENAI_API_KEY=secret-\xff\xfe\n")
+
+    load_local_environment(config)
+
+    assert all(key not in os.environ for key in MODEL_KEYS)
+    with pytest.raises(ModelConfigurationError) as caught:
+        require_model_runtime_config(config)
+    assert caught.value.safe_detail() == {
+        "code": "model_configuration_invalid",
+        "blockers": ["model_environment_file_unreadable"],
+        "variables": list(MODEL_KEYS),
+    }
+    assert "secret" not in str(caught.value)

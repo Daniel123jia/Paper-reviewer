@@ -44,6 +44,18 @@ file contents, or a raw provider response. Background paths re-resolve the
 configuration before constructing the SDK client, so a configuration change
 after task acceptance also fails closed.
 
+Each individual SDK request also freshly re-resolves the three required
+variables. A task keeps its original immutable session and stops before the
+next SDK call if the current key, endpoint, or model is missing, invalid,
+conflicting, or different. It never silently replaces the session or switches
+models. Invalid or unreadable `.env.local` content is converted to a stable,
+redacted configuration error rather than exposing parser details.
+
+The check guarantees consistency at the instant immediately before the SDK
+call. It cannot eliminate the narrow process-level race in which configuration
+changes after that check but before transmission begins; deployments should
+therefore update model configuration atomically and restart workers.
+
 ## Production coverage
 
 | Production path | API preflight | Execution recheck | Request model source |
@@ -62,6 +74,13 @@ All production OpenAI-compatible clients are constructed by
 `backend/model_runtime.py`. The API key and endpoint passed to the client and
 the model passed to `chat.completions.create` come from the same immutable
 `ModelRuntimeSession`.
+
+For P4, a configuration failure is not treated as a report-content repair
+failure and is never retried. Any earlier completed model-call audit rows and
+the blocked call's redacted failed audit row remain stored.
+
+P2-A, P2-B, P2-C, and P3 likewise propagate configuration failures instead of
+classifying them as invalid model output or continuing their content retries.
 
 P4 read, edit, approval, and export operations remain available without model
 configuration. An empty author draft that requires no generated report issue

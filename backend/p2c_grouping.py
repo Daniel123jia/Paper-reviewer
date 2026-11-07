@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
+from backend.model_runtime import ModelConfigurationError
 from backend.p2a_engine import BudgetExceeded, RunBudget
 from backend.p2a_schema import ClaimEvidenceMap
 from backend.p2b_schema import CandidateSourceRef
@@ -232,6 +233,8 @@ def run_semantic_grouping(inventory: OriginalCandidateInventory, mapping: ClaimE
                     raise ValueError("model response missing content or identifier")
                 result = validate(parse_model_json(reply["content"]))
                 status, error = "completed", None
+            except ModelConfigurationError:
+                raise
             except BudgetExceeded:
                 exhausted = True
                 return None

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import inspect
+import sqlite3
 from types import SimpleNamespace
 
 import fitz
@@ -117,6 +118,34 @@ def test_configuration_conflict_response_names_variable_without_values(
     assert "test-only-key" not in response.text
     assert "different-file-key" not in response.text
     assert "provider.example" not in response.text
+
+
+def test_malformed_endpoint_returns_redacted_503_without_creating_client(
+        tmp_path, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-only-key")
+    malformed = "https://[invalid-ipv6/v1"
+    monkeypatch.setenv("OPENAI_BASE_URL", malformed)
+    monkeypatch.setenv("OPENAI_MODEL", "validated-test-model")
+    client_constructions = []
+
+    class RecordingOpenAI:
+        def __init__(self, **kwargs):
+            client_constructions.append(kwargs)
+
+    monkeypatch.setattr(app_module, "OpenAI", RecordingOpenAI)
+    client = TestClient(create_app(tmp_path))
+    document = upload_document(client)
+
+    response = client.post(f'/api/documents/{document["id"]}/understanding-runs', json={})
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == {
+        "code": "model_configuration_invalid",
+        "blockers": ["model_endpoint_invalid_url"],
+        "variables": ["OPENAI_BASE_URL"],
+    }
+    assert malformed not in response.text
+    assert client_constructions == []
 
 
 def test_background_task_revalidates_configuration_before_client_construction(
@@ -279,6 +308,54 @@ def test_p4_revalidates_configuration_after_preflight_before_first_request(
     assert client_constructions == []
 
 
+def test_p4_stops_before_second_request_if_session_configuration_changes_and_keeps_audit(
+        tmp_path, monkeypatch):
+    set_explicit_model_environment(monkeypatch)
+    sdk_calls = []
+
+    class MutatingOpenAI(FakeOpenAI):
+        @property
+        def chat(self):
+            delegate = super().chat
+
+            def create(**kwargs):
+                sdk_calls.append(kwargs)
+                response = delegate.completions.create(**kwargs)
+                monkeypatch.setenv("OPENAI_MODEL", "changed-model-must-not-leak")
+                return response
+
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr(app_module, "OpenAI", MutatingOpenAI)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == {
+        "code": "model_configuration_invalid",
+        "blockers": ["model_configuration_changed"],
+        "variables": ["OPENAI_MODEL"],
+    }
+    assert "changed-model-must-not-leak" not in response.text
+    assert len(sdk_calls) == 1
+    assert sdk_calls[0]["model"] == "validated-test-model"
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        calls = db.execute(
+            "SELECT stage, requested_model, status, error "
+            "FROM p4_model_calls ORDER BY rowid"
+        ).fetchall()
+    assert calls == [
+        ("writing-1-attempt-1", "validated-test-model", "completed", None),
+        ("consistency-1-attempt-1", "validated-test-model", "failed",
+         "ModelConfigurationError"),
+    ]
+
+
 def test_all_production_model_entrypoints_use_central_preflight_and_session():
     source = inspect.getsource(app_module.create_app)
     route_preflights = (
@@ -305,10 +382,12 @@ def test_all_production_model_entrypoints_use_central_preflight_and_session():
 
 def test_production_model_modules_contain_no_implicit_gateway_or_model_default():
     app_source = inspect.getsource(app_module)
-    from backend import p4_drafts_api
+    from backend import model_runtime, p4_drafts_api
 
     p4_source = inspect.getsource(p4_drafts_api)
     combined = app_source + p4_source
     assert "yaoxing.best" not in combined
     assert 'os.environ.get("OPENAI_MODEL"' not in combined
     assert "gpt-6.1-sol" not in combined
+    assert "chat.completions.create" not in combined
+    assert inspect.getsource(model_runtime).count("chat.completions.create") == 1

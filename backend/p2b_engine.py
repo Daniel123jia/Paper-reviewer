@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
+from backend.model_runtime import ModelConfigurationError
 from backend.p2a_engine import BudgetExceeded, RunBudget
 from backend.p2a_schema import (ClaimEvidenceMap, PaperProfile, ReviewPlan,
                                  source_reference_index, validate_source_references)
@@ -210,6 +211,8 @@ def run_p2b(bundle: dict, plan: ReviewPlan, profile: PaperProfile, mapping: Clai
                     reply["model_identifier"], status, reason, pack.coverage_status,
                     limits, state, payload)
                 trace_status, last_error = "completed", None
+            except ModelConfigurationError:
+                raise
             except BudgetExceeded:
                 budget_exhausted = True
                 last_error = "budget_exceeded"

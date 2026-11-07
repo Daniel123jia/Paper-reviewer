@@ -53,12 +53,15 @@ The module owns only production configuration and client construction:
 - `resolve_model_runtime_config(process_environment, environment_file_values)`: validates sources and returns a configuration.
 - `require_model_runtime_config(environment_file_path)`: production adapter that reads `os.environ` plus `.env.local` values without logging either.
 - `create_model_session(configuration, *, timeout, max_retries, client_factory=OpenAI)`: passes the key and endpoint explicitly to the SDK and returns the same validated model beside the client.
+- `create_validated_chat_completion(session, environment_file_path, **request)`: immediately before each SDK request, freshly resolves the three sources, requires them to equal the immutable session configuration, and requires the request model to equal the session model.
 
 The resolver is pure and receives mappings in tests. It does not read the P5 Manifest and does not import the probe implementation.
 
 ### Source precedence and conflicts
 
 Application startup no longer delegates model-variable loading to `load_dotenv`. `load_local_environment()` reads the file through `dotenv_values`; it preserves the existing application behavior for non-model variables, but deliberately excludes `OPENAI_API_KEY`, `OPENAI_BASE_URL`, and `OPENAI_MODEL` from every write to `os.environ`. The production resolver separately receives the live process mapping and freshly parsed file mapping.
+
+If `.env.local` cannot be parsed or read, application import does not expose the parser exception or file contents. Local-only non-model values are skipped, and the next model preflight returns the stable `model_environment_file_unreadable` blocker. This keeps pure local functions available while failing every model action closed.
 
 This source isolation has four consequences:
 
@@ -112,6 +115,10 @@ Covered paths:
 
 P4 prompts, planning, admission, and scientific writing validation remain unchanged. The narrow P4 integration change replaces the client-only injection with a `ModelRuntimeSession` factory. `call_model()` uses the session's validated model for every writing and consistency request. Draft creation performs a safe configuration preflight only when `plan.groups` requires model generation. Pure editing, approval, reading, and export routes do not invoke the model preflight and remain available without model configuration.
 
+Every production `chat.completions.create` call is routed through the same request-time validator. A multi-request task retains one immutable session; before its next request, the current API key, endpoint, and model must still be valid and byte-for-byte equal to that session. A mismatch raises `model_configuration_changed`, does not construct a replacement client, and does not retry. P2-A, P2-B, P2-C, and P3 let this exception escape their content-repair loops immediately. P4 does the same while retaining completed and failed call audit rows.
+
+This guarantee covers configuration state when the request-time check runs. A configuration change in the very small interval after validation and before the SDK begins transmission cannot be eliminated by repeated environment reads alone. Eliminating that process-level race would require immutable deployment configuration or stronger synchronization outside this PR; this design does not claim otherwise.
+
 ### Failure behavior
 
 Synchronous/API preflight failures return HTTP 503 with a stable JSON detail containing an error code, blocker codes, and only the names of affected variables. Background failures retain their existing failed-task status and store only an exception class or blocker code, never secret or configuration values. SSE chat resolves configuration before constructing `StreamingResponse`, so it returns an ordinary safe 503 instead of opening a stream and then failing.
@@ -135,6 +142,7 @@ Tests are zero-network and use injected mappings/fake clients.
 11. Existing API tests that intentionally exercise model paths set an explicit fake HTTPS endpoint and model.
 12. A static regression test ensures production code contains no Yaoxing fallback URL, all production `OpenAI(...)` construction is centralized, and no production SDK request reads or defaults `OPENAI_MODEL`; the accepted probe is excluded from these production assertions.
 13. P2-A/P2-B/P2-C/P3/P4, full backend, P5 deterministic, frontend build, and browser regression remain required before PR recommendation.
+14. Consecutive-request tests delete the key, change the endpoint/model, and introduce a process/file conflict after the first successful SDK call; the second SDK call must not occur. P4 must preserve the first completed audit row and add a redacted failed row.
 
 ## Compatibility and migration
 

@@ -2,6 +2,7 @@ import json
 
 import pytest
 
+from backend.model_runtime import ModelConfigurationError
 from backend.p2a_schema import (ClaimEvidenceMap, PaperProfile, ReviewPlan, SourceConflict,
                                  source_reference_index)
 from backend.p2a_engine import RunBudget
@@ -284,3 +285,17 @@ def test_dimension_input_projects_facts_and_claims_to_supplied_sources():
     assert not detailed.intersection(item["id"] for item in d3["claim_inventory"])
     assert all("explanation" not in relation for relation in d3["claim_map"]["support_relations"])
     assert "required_materials" not in d3["plan"]
+
+
+def test_configuration_change_stops_p2b_without_dimension_retry():
+    bundle, plan, profile, mapping = inputs()
+    calls = []
+
+    def changed(*args):
+        calls.append(args[0])
+        raise ModelConfigurationError(["model_configuration_changed"], ["OPENAI_BASE_URL"])
+
+    with pytest.raises(ModelConfigurationError):
+        run_p2b(bundle, plan, profile, mapping, "u1", "config-change", changed,
+                "requested")
+    assert len(calls) == 1

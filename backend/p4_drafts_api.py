@@ -12,6 +12,7 @@ from openai import APIConnectionError, APITimeoutError
 from pydantic import BaseModel, Field
 
 from backend.exporter import render_export
+from backend.model_runtime import ModelConfigurationError
 from backend.p4_planner import build_report_plan
 from backend.p4_report_schema import ReportEvidencePack, ReportPlan, ReportWritingResult
 from backend.p4_validator import (numeric_claims, validate_author_body,
@@ -34,8 +35,8 @@ class ApproveDraftInput(BaseModel):
     confirm_content: bool
 
 
-def register_p4_draft_routes(app, connect, model_session_factory, model_preflight,
-                             helpers):
+def register_p4_draft_routes(app, connect, model_session_factory, model_completion,
+                             model_preflight, helpers):
     project_or_404 = helpers["project_or_404"]
     snapshot_of = helpers["snapshot_of"]
     decision_records = helpers["decision_records"]
@@ -79,7 +80,7 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_prefligh
                     if session is None:
                         session = model_session_factory()
                     requested = session.configuration.model
-                    response = session.client.chat.completions.create(model=requested,
+                    response = model_completion(session, model=requested,
                         messages=[{"role": "system", "content": system},
                                   {"role": "user", "content": user}])
                     actual = response.model or None
@@ -170,6 +171,8 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_prefligh
                 db.execute("INSERT INTO p4_draft_revisions VALUES (?, 1, ?, ?, 'pending', ?)",
                            (draft_id, body, digest(body), stamp))
                 return draft_view(db, draft_or_404(db, draft_id))
+        except ModelConfigurationError as exc:
+            raise HTTPException(status_code=503, detail=exc.safe_detail()) from None
         except HTTPException:
             raise
         except (ValueError, KeyError, TypeError) as exc:
