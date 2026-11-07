@@ -113,18 +113,32 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                                          type(exc).__name__, duration_ms)
                 raise
             duration_ms = round((time.perf_counter() - started) * 1000)
+            actual = response.model or None
             try:
                 settlement = controller.validate_usage(reservation, response.usage)
             except P4UsageError as exc:
-                store.fail_usage_invalid(generation_run_id, model_call_id,
-                                         exc.blocker, duration_ms)
+                if exc.settlement is None:
+                    store.fail_usage_invalid(generation_run_id, model_call_id,
+                                             exc.blocker, duration_ms)
+                else:
+                    store.settle_terminal_usage(
+                        generation_run_id, model_call_id, actual_model=actual,
+                        settlement=exc.settlement, duration_ms=duration_ms,
+                        reason=exc.blocker, run_state="usage_invalid",
+                    )
                 raise
             except P4BudgetExceededError as exc:
-                store.fail_usage_invalid(generation_run_id, model_call_id,
-                                         exc.blocker, duration_ms,
-                                         run_state="budget_exhausted")
+                if exc.settlement is None:
+                    store.fail_usage_invalid(generation_run_id, model_call_id,
+                                             exc.blocker, duration_ms,
+                                             run_state="budget_exhausted")
+                else:
+                    store.settle_terminal_usage(
+                        generation_run_id, model_call_id, actual_model=actual,
+                        settlement=exc.settlement, duration_ms=duration_ms,
+                        reason=exc.blocker, run_state="budget_exhausted",
+                    )
                 raise
-            actual = response.model or None
             store.settle_valid_usage(
                 generation_run_id, model_call_id, actual_model=actual,
                 input_tokens=settlement.input_tokens,

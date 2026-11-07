@@ -69,9 +69,10 @@ class P4BudgetStateError(RuntimeError):
 
 
 class P4BudgetExceededError(RuntimeError):
-    def __init__(self, blocker: str):
+    def __init__(self, blocker: str, settlement=None):
         self.code = "p4_budget_exhausted"
         self.blocker = blocker
+        self.settlement = settlement
         super().__init__(self.code)
 
     def safe_detail(self) -> dict:
@@ -79,9 +80,10 @@ class P4BudgetExceededError(RuntimeError):
 
 
 class P4UsageError(RuntimeError):
-    def __init__(self, blocker: str = "p4_usage_invalid"):
+    def __init__(self, blocker: str = "p4_usage_invalid", settlement=None):
         self.code = "p4_usage_invalid"
         self.blocker = blocker
+        self.settlement = settlement
         super().__init__(self.code)
 
     def safe_detail(self) -> dict:
@@ -355,8 +357,6 @@ class P4BudgetController:
     ) -> P4UsageSettlement:
         if self._outstanding.get(reservation.model_call_id) != reservation:
             raise P4BudgetStateError("p4_reservation_not_outstanding")
-        if self._remaining_duration_ms() <= 0:
-            raise P4BudgetExceededError("p4_duration_budget_exhausted")
         if usage is None:
             raise P4UsageError("p4_usage_missing")
         input_tokens = _usage_integer(getattr(usage, "prompt_tokens", None))
@@ -367,27 +367,30 @@ class P4BudgetController:
         total_tokens = _usage_integer(supplied_total)
         if total_tokens != input_tokens + output_tokens:
             raise P4UsageError("p4_usage_total_mismatch")
-        if output_tokens > reservation.max_tokens:
-            raise P4UsageError("p4_usage_output_limit_exceeded")
-        if self._input_tokens + input_tokens > self.configuration.max_input_tokens:
-            raise P4BudgetExceededError("p4_input_budget_exhausted")
-        if self._output_tokens + output_tokens > self.configuration.max_output_tokens:
-            raise P4BudgetExceededError("p4_output_budget_exhausted")
         usage_cost = (
             Decimal(input_tokens) * self.configuration.input_usd_per_million
             + Decimal(output_tokens) * self.configuration.output_usd_per_million
         ) / Decimal(1_000_000)
-        other_outstanding_cost = self._outstanding_cost() - reservation.planned_cost_usd
-        if (self._usage_cost_usd + other_outstanding_cost + usage_cost >
-                self.configuration.max_planned_cost_usd):
-            raise P4BudgetExceededError("p4_cost_budget_exhausted")
-        return P4UsageSettlement(
+        settlement = P4UsageSettlement(
             model_call_id=reservation.model_call_id,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             total_tokens=total_tokens,
             usage_cost_usd=usage_cost,
         )
+        if output_tokens > reservation.max_tokens:
+            raise P4UsageError("p4_usage_output_limit_exceeded", settlement)
+        if self._remaining_duration_ms() <= 0:
+            raise P4BudgetExceededError("p4_duration_budget_exhausted", settlement)
+        if self._input_tokens + input_tokens > self.configuration.max_input_tokens:
+            raise P4BudgetExceededError("p4_input_budget_exhausted", settlement)
+        if self._output_tokens + output_tokens > self.configuration.max_output_tokens:
+            raise P4BudgetExceededError("p4_output_budget_exhausted", settlement)
+        other_outstanding_cost = self._outstanding_cost() - reservation.planned_cost_usd
+        if (self._usage_cost_usd + other_outstanding_cost + usage_cost >
+                self.configuration.max_planned_cost_usd):
+            raise P4BudgetExceededError("p4_cost_budget_exhausted", settlement)
+        return settlement
 
     def apply_settlement(self, settlement: P4UsageSettlement) -> None:
         if settlement.model_call_id not in self._outstanding:
@@ -769,6 +772,61 @@ class P4BudgetStore:
                            updated_at = ? WHERE id = ?""",
                     (run_state, reason, timestamp, generation_run_id),
                 )
+        except P4BudgetStateError:
+            raise
+        except sqlite3.Error:
+            raise P4BudgetStateError("p4_usage_persist_failed") from None
+
+    def settle_terminal_usage(
+        self,
+        generation_run_id: str,
+        model_call_id: str,
+        *,
+        actual_model: str,
+        settlement: P4UsageSettlement,
+        duration_ms: int,
+        reason: str,
+        run_state: str,
+    ) -> None:
+        """Persist valid provider Usage even when it exhausts a local ceiling."""
+        timestamp = self._now()
+        try:
+            with self._connect() as db:
+                changed = db.execute(
+                    """UPDATE p4_model_call_budget
+                       SET dispatch_state = 'usage_invalid', usage_status = 'valid_over_budget',
+                           actual_total_tokens = ?, usage_cost_usd = ?, updated_at = ?
+                       WHERE model_call_id = ? AND generation_run_id = ?
+                         AND dispatch_state = 'dispatch_pending'""",
+                    (settlement.total_tokens, str(settlement.usage_cost_usd), timestamp,
+                     model_call_id, generation_run_id),
+                ).rowcount
+                if changed != 1:
+                    raise P4BudgetStateError("p4_usage_transition_failed")
+                changed = db.execute(
+                    """UPDATE p4_model_calls SET actual_model = ?, input_tokens = ?,
+                           output_tokens = ?, duration_ms = ?, status = 'failed', error = ?
+                       WHERE id = ? AND status = 'reserved'""",
+                    (actual_model, settlement.input_tokens, settlement.output_tokens,
+                     duration_ms, reason, model_call_id),
+                ).rowcount
+                if changed != 1:
+                    raise P4BudgetStateError("p4_legacy_call_transition_failed")
+                current = db.execute(
+                    "SELECT usage_cost_usd FROM p4_generation_runs WHERE id = ?",
+                    (generation_run_id,),
+                ).fetchone()
+                prior_cost = Decimal(current["usage_cost_usd"] or "0")
+                changed = db.execute(
+                    """UPDATE p4_generation_runs SET state = ?, reason = ?,
+                           input_tokens = input_tokens + ?, output_tokens = output_tokens + ?,
+                           usage_cost_usd = ?, updated_at = ? WHERE id = ?""",
+                    (run_state, reason, settlement.input_tokens, settlement.output_tokens,
+                     str(prior_cost + settlement.usage_cost_usd), timestamp,
+                     generation_run_id),
+                ).rowcount
+                if changed != 1:
+                    raise P4BudgetStateError("p4_generation_run_transition_failed")
         except P4BudgetStateError:
             raise
         except sqlite3.Error:

@@ -388,6 +388,46 @@ def test_missing_provider_usage_stops_after_one_request_and_marks_cost_incomplet
     assert call == ("usage_invalid", "invalid")
 
 
+def test_valid_usage_over_budget_is_persisted_before_termination(tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="test-secret")
+
+    class OverBudgetOpenAI(FakeOpenAI):
+        @property
+        def chat(self):
+            delegate = super().chat
+
+            def create(**kwargs):
+                response = delegate.completions.create(**kwargs)
+                response.usage = SimpleNamespace(
+                    prompt_tokens=200001, completion_tokens=40, total_tokens=200041
+                )
+                return response
+
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr(app_module, "OpenAI", OverBudgetOpenAI)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"]["blockers"] == ["p4_input_budget_exhausted"]
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        run = db.execute("SELECT state, input_tokens, output_tokens, usage_cost_usd, "
+                         "cost_complete FROM p4_generation_runs").fetchone()
+        call = db.execute("SELECT input_tokens, output_tokens, status, error "
+                          "FROM p4_model_calls").fetchone()
+        sidecar = db.execute("SELECT usage_status, actual_total_tokens "
+                             "FROM p4_model_call_budget").fetchone()
+    assert run == ("budget_exhausted", 200001, 40, "0.1601608", 1)
+    assert call == (200001, 40, "failed", "p4_input_budget_exhausted")
+    assert sidecar == ("valid_over_budget", 200041)
+
+
 def test_draft_and_completed_run_are_atomic_when_final_audit_update_fails(
         tmp_path, monkeypatch):
     configure_test_model(monkeypatch, key="test-secret")

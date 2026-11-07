@@ -433,6 +433,8 @@ def test_controller_rejects_actual_usage_above_report_budget():
         )
 
     assert caught.value.blocker == "p4_input_budget_exhausted"
+    assert caught.value.settlement.input_tokens == 101
+    assert caught.value.settlement.total_tokens == 102
 
 
 def test_controller_rejects_response_finishing_after_duration_budget():
