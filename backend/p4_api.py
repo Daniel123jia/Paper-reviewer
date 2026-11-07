@@ -63,6 +63,34 @@ def initialize_p4_tables(db):
             created_at TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS p4_calls_project ON p4_model_calls(project_id);
+        CREATE TABLE IF NOT EXISTS p4_generation_runs (
+            id TEXT PRIMARY KEY, draft_id TEXT, project_id TEXT NOT NULL,
+            kind TEXT NOT NULL, language TEXT NOT NULL, budget_json TEXT NOT NULL,
+            state TEXT NOT NULL, reason TEXT, request_count INTEGER NOT NULL DEFAULT 0,
+            potentially_billable_requests INTEGER NOT NULL DEFAULT 0,
+            input_tokens INTEGER NOT NULL DEFAULT 0,
+            output_tokens INTEGER NOT NULL DEFAULT 0,
+            unknown_usage_calls INTEGER NOT NULL DEFAULT 0,
+            planned_cost_usd TEXT NOT NULL DEFAULT '0', usage_cost_usd TEXT,
+            cost_complete INTEGER NOT NULL DEFAULT 1,
+            validated_partial_json TEXT NOT NULL DEFAULT '[]',
+            provider_billed_cost_usd TEXT, provider_account_limit_usd TEXT,
+            created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS p4_generation_runs_project
+            ON p4_generation_runs(project_id);
+        CREATE TABLE IF NOT EXISTS p4_model_call_budget (
+            model_call_id TEXT PRIMARY KEY, generation_run_id TEXT NOT NULL,
+            request_index INTEGER NOT NULL, estimated_input_tokens INTEGER NOT NULL,
+            reserved_output_tokens INTEGER NOT NULL, max_tokens INTEGER NOT NULL,
+            remaining_duration_ms INTEGER NOT NULL, planned_cost_usd TEXT NOT NULL,
+            pricing_status TEXT NOT NULL, dispatch_state TEXT NOT NULL,
+            usage_status TEXT NOT NULL, actual_total_tokens INTEGER,
+            usage_cost_usd TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+            UNIQUE(generation_run_id, request_index)
+        );
+        CREATE INDEX IF NOT EXISTS p4_model_call_budget_run
+            ON p4_model_call_budget(generation_run_id);
     """)
 
 
