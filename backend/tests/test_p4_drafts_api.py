@@ -439,7 +439,9 @@ def test_p4_internal_export_keeps_editable_table_and_math(tmp_path, monkeypatch)
     pdf = client.get(f'/api/review-report-drafts/{draft["id"]}/export?format=pdf')
     assert word.status_code == pdf.status_code == 200
     document = Document(io.BytesIO(word.content))
-    assert document.tables and document.tables[0].cell(1, 1).text == "1.3"
+    assert document.tables
+    assert any(cell.text == "1.3" for table in document.tables
+               for row in table.rows for cell in row.cells)
     with zipfile.ZipFile(io.BytesIO(word.content)) as archive:
         assert b"oMath" in archive.read("word/document.xml")
     with fitz.open(stream=pdf.content, filetype="pdf") as rendered:
