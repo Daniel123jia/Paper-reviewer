@@ -4,6 +4,7 @@ from decimal import Decimal
 import json
 from pathlib import Path
 import sqlite3
+from types import SimpleNamespace
 
 import pytest
 
@@ -12,7 +13,11 @@ from backend.p4_budget import (
     P4BudgetConfigurationError,
     P4BudgetStateError,
     P4BudgetStore,
+    P4BudgetController,
+    P4BudgetExceededError,
     P4RequestReservation,
+    P4UsageError,
+    estimate_p4_input_tokens,
     require_p4_budget_configuration,
 )
 from backend.p4_api import initialize_p4_tables
@@ -300,3 +305,129 @@ def test_only_validated_partial_payloads_are_appended(tmp_path):
         {"batch": 1, "content": "checked"},
         {"batch": 2, "content": "checked twice"},
     ]
+
+
+def controller_configuration(**overrides):
+    values = valid_budget_environment(
+        P4_MAX_PROVIDER_REQUESTS="2",
+        P4_MAX_INPUT_TOKENS="1000",
+        P4_MAX_OUTPUT_TOKENS="200",
+        P4_MAX_OUTPUT_TOKENS_PER_REQUEST="100",
+        P4_MAX_DURATION_SECONDS="10",
+        P4_MAX_PLANNED_COST_USD="1",
+    )
+    values.update(overrides)
+    return require_p4_budget_configuration(Path("missing.env"), values)
+
+
+def test_controller_estimates_exact_messages_and_reconciles_valid_usage():
+    clock = [100.0]
+    controller = P4BudgetController(controller_configuration(), lambda: clock[0])
+    messages = [
+        {"role": "system", "content": "Return JSON."},
+        {"role": "user", "content": "完整上下文 " * 10},
+    ]
+
+    planned = controller.plan_request(
+        model_call_id="call-1", stage="writing", prompt_version="v1",
+        messages=messages,
+    )
+
+    assert planned.estimated_input_tokens == estimate_p4_input_tokens(messages)
+    assert planned.reserved_output_tokens == 100
+    assert planned.max_tokens == 100
+    assert planned.remaining_duration_ms == 10000
+    assert controller.request_count == 0
+
+    controller.apply_reserved(planned)
+    settlement = controller.validate_usage(
+        planned, SimpleNamespace(prompt_tokens=90, completion_tokens=40, total_tokens=130)
+    )
+    controller.apply_settlement(settlement)
+
+    assert controller.request_count == 1
+    assert controller.input_tokens == 90
+    assert controller.output_tokens == 40
+    assert controller.usage_cost_usd == Decimal("0.000232")
+
+
+@pytest.mark.parametrize(
+    ("overrides", "messages", "elapsed", "reserve_first", "blocker"),
+    [
+        ({"P4_MAX_PROVIDER_REQUESTS": "1"}, [{"role": "user", "content": "x"}], 0, True,
+         "p4_request_budget_exhausted"),
+        ({"P4_MAX_INPUT_TOKENS": "1"}, [{"role": "user", "content": "long input"}], 0, False,
+         "p4_input_budget_exhausted"),
+        ({"P4_MAX_OUTPUT_TOKENS": "100", "P4_MAX_OUTPUT_TOKENS_PER_REQUEST": "100"},
+         [{"role": "user", "content": "x"}], 0, True, "p4_output_budget_exhausted"),
+        ({"P4_MAX_DURATION_SECONDS": "1"}, [{"role": "user", "content": "x"}], 2, False,
+         "p4_duration_budget_exhausted"),
+        ({"P4_MAX_PLANNED_COST_USD": "0.00001"},
+         [{"role": "user", "content": "x"}], 0, False, "p4_cost_budget_exhausted"),
+    ],
+)
+def test_controller_fails_closed_when_cumulative_budget_is_exhausted(
+    overrides, messages, elapsed, reserve_first, blocker
+):
+    clock = [100.0]
+    controller = P4BudgetController(controller_configuration(**overrides), lambda: clock[0])
+    if reserve_first:
+        first = controller.plan_request(
+            model_call_id="call-1", stage="writing", prompt_version="v1",
+            messages=[{"role": "user", "content": "x"}],
+        )
+        controller.apply_reserved(first)
+    if elapsed:
+        clock[0] += elapsed
+
+    with pytest.raises(P4BudgetExceededError) as caught:
+        controller.plan_request(
+            model_call_id="call-2" if reserve_first else "call-1",
+            stage="consistency", prompt_version="v1",
+            messages=messages,
+        )
+
+    assert caught.value.blocker == blocker
+
+
+@pytest.mark.parametrize(
+    "usage",
+    [
+        None,
+        SimpleNamespace(prompt_tokens=None, completion_tokens=1, total_tokens=1),
+        SimpleNamespace(prompt_tokens=-1, completion_tokens=1, total_tokens=0),
+        SimpleNamespace(prompt_tokens=True, completion_tokens=1, total_tokens=2),
+        SimpleNamespace(prompt_tokens=1.5, completion_tokens=1, total_tokens=2.5),
+        SimpleNamespace(prompt_tokens=1, completion_tokens=1, total_tokens=3),
+        SimpleNamespace(prompt_tokens=1, completion_tokens=101, total_tokens=102),
+    ],
+)
+def test_controller_rejects_missing_invalid_or_contradictory_usage(usage):
+    controller = P4BudgetController(controller_configuration(), lambda: 100.0)
+    planned = controller.plan_request(
+        model_call_id="call-1", stage="writing", prompt_version="v1",
+        messages=[{"role": "user", "content": "x"}],
+    )
+    controller.apply_reserved(planned)
+
+    with pytest.raises(P4UsageError):
+        controller.validate_usage(planned, usage)
+
+
+def test_controller_rejects_actual_usage_above_report_budget():
+    controller = P4BudgetController(
+        controller_configuration(P4_MAX_INPUT_TOKENS="100"), lambda: 100.0
+    )
+    planned = controller.plan_request(
+        model_call_id="call-1", stage="writing", prompt_version="v1",
+        messages=[{"role": "user", "content": "x"}],
+    )
+    controller.apply_reserved(planned)
+
+    with pytest.raises(P4BudgetExceededError) as caught:
+        controller.validate_usage(
+            planned,
+            SimpleNamespace(prompt_tokens=101, completion_tokens=1, total_tokens=102),
+        )
+
+    assert caught.value.blocker == "p4_input_budget_exhausted"
