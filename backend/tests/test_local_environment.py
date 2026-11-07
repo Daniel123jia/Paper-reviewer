@@ -4,6 +4,7 @@ import pytest
 
 from backend.app import load_local_environment
 from backend.model_runtime import ModelConfigurationError, require_model_runtime_config
+from backend.p4_budget import P4_BUDGET_ENV_KEYS
 
 
 MODEL_KEYS = ("OPENAI_API_KEY", "OPENAI_BASE_URL", "OPENAI_MODEL")
@@ -113,3 +114,15 @@ def test_local_environment_load_ignores_unreadable_file_until_safe_model_preflig
         "variables": list(MODEL_KEYS),
     }
     assert "secret" not in str(caught.value)
+
+
+def test_local_environment_does_not_copy_p4_budget_values(tmp_path, monkeypatch):
+    for key in P4_BUDGET_ENV_KEYS:
+        monkeypatch.delenv(key, raising=False)
+    config = tmp_path / ".env.local"
+    config.write_text("\n".join(f"{key}=private-file-value"
+                                 for key in P4_BUDGET_ENV_KEYS), encoding="utf-8")
+
+    load_local_environment(config)
+
+    assert all(key not in os.environ for key in P4_BUDGET_ENV_KEYS)

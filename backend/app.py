@@ -35,6 +35,7 @@ from backend.p2c_schema import CandidateConsolidationResult
 from backend.p3_engine import run_p3
 from backend.p3_sources import validate_p3_inputs
 from backend.p4_api import initialize_p4_tables, register_p4_routes
+from backend.p4_budget import P4_BUDGET_ENV_KEYS
 from backend.model_runtime import (REQUIRED_MODEL_ENV_KEYS,
                                    ModelConfigurationError,
                                    create_model_session,
@@ -54,7 +55,7 @@ def load_local_environment(path: Path):
         # error.  Importing the application must not expose parser details.
         return
     for key, value in values.items():
-        if key not in REQUIRED_MODEL_ENV_KEYS and value is not None:
+        if key not in REQUIRED_MODEL_ENV_KEYS + P4_BUDGET_ENV_KEYS and value is not None:
             os.environ[key] = value
 
 
