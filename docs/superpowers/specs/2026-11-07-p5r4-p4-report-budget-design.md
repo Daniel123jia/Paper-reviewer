@@ -58,8 +58,8 @@ The following variables are all required when a P4 plan contains model-generated
 | `P4_MAX_OUTPUT_TOKENS_PER_REQUEST` | positive integer, no greater than cumulative output limit | Request-level `max_tokens` value |
 | `P4_MAX_DURATION_SECONDS` | positive decimal | Maximum monotonic wall time for the complete generation attempt |
 | `P4_MAX_PLANNED_COST_USD` | positive decimal | Maximum local planned cost; not an account-side hard limit |
-| `P4_INPUT_USD_PER_MILLION` | non-negative decimal | Operator-supplied input price used only for local calculations |
-| `P4_OUTPUT_USD_PER_MILLION` | non-negative decimal | Operator-supplied output price used only for local calculations |
+| `P4_INPUT_USD_PER_MILLION` | positive decimal | Operator-supplied input price used only for local calculations |
+| `P4_OUTPUT_USD_PER_MILLION` | positive decimal | Operator-supplied output price used only for local calculations |
 | `P4_PRICING_STATUS` | `estimated_unverified` or `provider_verified` | Provenance label for the operator-supplied prices |
 
 There are no production defaults and no fallback to the P5-R3B probe's `OPENAI_*_USD_PER_MILLION` variables. This prevents a probe estimate from silently becoming a production report budget.
@@ -67,6 +67,8 @@ There are no production defaults and no fallback to the P5-R3B probe's `OPENAI_*
 The P4 variables use the same source isolation rule as the model runtime configuration: process environment and `.env.local` remain distinguishable; different non-empty values fail closed; identical values are accepted; values are never included in errors. Application startup must not copy these variables from the file into `os.environ`.
 
 `P4_PRICING_STATUS=provider_verified` remains an operator assertion recorded for audit. It is not independent proof of the provider bill. `estimated_unverified` is allowed for controlled engineering runs but cannot by itself satisfy a formal P5 price-verification or release gate.
+
+Zero prices are rejected in this version for both pricing statuses. This prevents an unverified zero from bypassing planned-cost admission. A genuinely free provider tier requires a separately reviewed status and auditable provider evidence; it is not inferred from a zero environment value.
 
 Invalid, incomplete, unreadable, conflicting, non-finite, negative, or internally inconsistent configuration returns a stable `p4_budget_configuration_invalid` error before model-session construction and before the first provider request. P4 local read, edit, approval, and export operations remain available without these variables.
 
@@ -93,7 +95,7 @@ The controller is not shared between reports and is not reused after a terminal 
 
 ### Request integration
 
-The P4 model caller is the only component allowed to call the PR 1 request-time model validator. Immediately before that call it must also obtain a reservation from the P4 controller. The request uses:
+The P4 model caller is the only component allowed to call the PR 1 request-time model validator. Immediately before that call it must also obtain and durably persist a reservation from the P4 controller. The request uses:
 
 - the validated session model;
 - `max_tokens=P4_MAX_OUTPUT_TOKENS_PER_REQUEST`;
@@ -101,6 +103,8 @@ The P4 model caller is the only component allowed to call the PR 1 request-time 
 - SDK `max_retries=0` so one controller reservation corresponds to one provider request.
 
 The implementation must not retry with `max_completion_tokens`, a different output limit, another model, or another endpoint if the provider rejects these parameters.
+
+The budget and price configuration is resolved once at generation-run creation and stored as an immutable snapshot. Every later request uses that object. The live model configuration is still revalidated by PR 1 before each request, but live budget environment changes neither increase nor reduce an active run's limits. Starting another report creates a new snapshot.
 
 ## Whole-report planning and reservation
 
@@ -118,9 +122,29 @@ Before every request, the controller checks:
 6. estimated input cost plus the full reserved output cost fits the remaining planned-cost budget;
 7. when entering a content attempt, the remaining budget can cover every mandatory call needed to finish that attempt.
 
-Input estimation uses a documented deterministic UTF-8 byte-based calculation plus fixed message overhead. It is a planning estimate, not a provider Token guarantee. Consistency-call planning includes the full output reservation from the preceding writing call because that output becomes part of its input. Repair-prompt text is included. The estimate and method version are stored in the audit record.
+Input estimation runs only after the exact system and user messages for that request have been constructed. It uses a documented deterministic UTF-8 byte-based calculation plus fixed message overhead. It is a planning estimate, not a provider Token guarantee, and actual input Usage may be larger. Consistency-call planning includes the complete generated report content. Repair attempts include the complete repair instruction and all repeated context. The estimate and method version are stored in the audit record. No future call is admitted using a shortened placeholder payload.
 
 The controller never describes the local planned-cost ceiling as a provider account limit. A provider can tokenize differently, return Usage above the estimate, or bill additional categories.
+
+SDK timeouts are bounded by the remaining local run duration, but they are not an absolute physical wall-clock guarantee. Scheduling, cancellation, transport teardown, and persistence can finish after the requested timeout. The controller checks monotonic elapsed time again after each request and before any subsequent request.
+
+## Durable request reservation protocol
+
+Every potentially billable request receives stable `generation_run_id` and `model_call_id` values before SDK invocation. The protocol is deliberately conservative:
+
+1. Construct the exact request messages and calculate the input estimate, full output reservation, timeout, and planned cost.
+2. Ask the controller for admission without mutating counters.
+3. In one SQLite transaction, insert the legacy-compatible `p4_model_calls` row, insert its budget sidecar, increment the generation-run reservation totals, and set the call to `reserved_not_dispatched`.
+4. Commit the transaction. If it fails, do not construct or invoke an SDK request.
+5. In a second transaction immediately before the SDK call, set the call to `dispatch_pending`. If this transition cannot be committed, do not send.
+6. Invoke the SDK exactly once.
+7. In a response transaction, validate Usage and atomically replace the reservation with known Usage/cost or a terminal unknown/invalid state.
+
+No `finally`-only insert is considered sufficient audit. The same stable call ID is updated through the lifecycle; retries and repairs allocate new IDs and never create duplicate sidecars for an existing request.
+
+`reserved_not_dispatched` proves that no provider request was authorized to leave the process. `dispatch_pending` means transmission may have occurred. A process failure after the second transaction is therefore treated as potentially billable even when the SDK call had not yet begun. This can conservatively overstate unknown exposure, but it cannot silently erase a possible charge.
+
+If the SDK raises a timeout, connection error, or other exception after `dispatch_pending`, the call becomes `usage_unknown`, its reservation is not returned, and no retry is allowed. If the response arrives but the final Usage transaction fails, the durable state remains `dispatch_pending`; restart recovery converts it to `usage_unknown` rather than zero.
 
 ## Usage validation and failure rules
 
@@ -134,7 +158,7 @@ After each provider response, P4 validates `prompt_tokens`, `completion_tokens`,
 
 Valid Usage replaces that request's planning reservation in the known totals. Local Usage-derived cost is calculated with the immutable price snapshot and `Decimal`.
 
-If Usage is missing, malformed, contradictory, or exceeds a configured ceiling, the current response and any previously validated report chunks remain in the private generation record, but no further model request is allowed and no completed draft is created. The run becomes terminal with `usage_unknown`, `usage_invalid`, or `budget_exceeded_after_response`. Unknown Tokens are never converted to zero and local actual cost remains incomplete.
+If Usage is missing, malformed, contradictory, or exceeds a configured ceiling, the current response and any previously validated report chunks remain in the private generation record, but no further model request is allowed and no completed draft is created. The run becomes terminal with `usage_unknown`, `usage_invalid`, or `budget_exhausted`. Unknown Tokens are never converted to zero, their reservations are not refunded, and local actual cost remains incomplete.
 
 A connection error or timeout normally provides no auditable Usage. P4 therefore records the failed request and stops without a transport retry. Content/schema/evidence validation may still start the existing second content attempt only when the preceding provider request returned valid Usage and the controller grants a new reservation. This preserves controlled repair behavior without risking an uncounted duplicate charge.
 
@@ -168,6 +192,8 @@ One row per attempted model-backed draft stores:
 
 Partial content remains private, is never marked approved, and cannot be exported as a formal report.
 
+Only a writing result that passes structural/evidence validation and then passes its matching consistency response may be appended to `validated_partial_output`. A writing response that has not completed consistency checking is not a validated partial result. Raw provider text and rejected content are never labelled as validated output.
+
 ### `p4_model_call_budget`
 
 A one-to-one sidecar keyed by the existing model-call ID stores request ordinal, generation-run ID, input estimate, output reservation, request output limit, remaining duration at dispatch, Usage status, calculated local cost, pricing status, and post-request budget state.
@@ -175,6 +201,39 @@ A one-to-one sidecar keyed by the existing model-call ID stores request ordinal,
 No table stores API keys, endpoint values, full prompts, or raw provider exceptions. Existing `p4_model_calls.error` continues to store exception class or stable budget code only.
 
 Schema initialization must be idempotent for existing SQLite databases. Historical P4 drafts and calls remain readable with no fabricated budget values.
+
+## Generation and call state machines
+
+Generation runs use these stable states:
+
+- `configuration_failed`: required model or budget configuration did not validate; no request was sent;
+- `ready`: immutable configuration is recorded and no request is currently pending;
+- `request_reserved`: a call is durably reserved but not authorized for dispatch;
+- `dispatch_pending`: a call may have been transmitted and its final Usage is not durable;
+- `usage_valid`: the latest request completed with valid Usage and the run may continue;
+- `usage_unknown`: a possibly sent request has no auditable Usage; terminal;
+- `usage_invalid`: provider Usage is malformed or contradictory; terminal;
+- `budget_exhausted`: a pre-request or post-response limit prevents continuation; terminal;
+- `configuration_changed`: PR 1 detected model-runtime drift; terminal;
+- `interrupted`: recovery found a run that did not reach a safe completion point; terminal;
+- `completed`: every required writing and consistency check completed and the full draft was saved.
+
+Call sidecars use `reserved_not_dispatched`, `dispatch_pending`, `completed_usage_valid`, `usage_unknown`, `usage_invalid`, `configuration_blocked`, and `interrupted_not_sent`. Generation transitions and call transitions are updated in the same database transaction whenever both change.
+
+At application startup, deterministic recovery scans nonterminal generation runs. A `reserved_not_dispatched` call becomes `interrupted_not_sent`; it is not counted as a provider request. A `dispatch_pending` call becomes `usage_unknown`, remains potentially billable, and increments the run's unknown-Usage count. The run becomes `interrupted` while retaining a specific recovery reason. No run resumes automatically and no request is replayed.
+
+Configuration failure receives a stable generation-run ID and a minimal sanitized run record before the API returns. It has no model-call row because no provider request was reserved.
+
+## Read-only failure inspection
+
+Add authenticated, read-only endpoints:
+
+- `GET /api/review-report-projects/{project_id}/generation-runs`;
+- `GET /api/p4-generation-runs/{generation_run_id}`.
+
+They return the terminal reason, attempted and potentially billable request counts, known input/output totals, unknown-Usage count, planned cost, Usage-derived cost, cost-completeness status, and whether validated partial output exists. They never return raw prompts, raw model responses, credentials, endpoint values, environment-file paths, or unvalidated partial text.
+
+Runtime error responses include the safe `generation_run_id`, allowing an authorized user to retrieve the audit record. Interrupted content cannot be approved or exported through draft endpoints because no complete `p4_drafts` row is created.
 
 ## API behavior
 
@@ -223,6 +282,8 @@ All tests use fake clients and temporary configuration files. No test may access
 ### Persistence and compatibility tests
 
 - every attempted provider request has both the existing call row and budget sidecar;
+- reservation persistence failure and dispatch-state persistence failure both produce zero SDK calls;
+- a crash after dispatch but before Usage persistence recovers as potentially billable `usage_unknown`;
 - interruption retains prior completed calls and validated partial chunks;
 - restart/readback preserves terminal status without resuming automatically;
 - old databases and P4 Schema 1.0/1.1 drafts remain readable;
