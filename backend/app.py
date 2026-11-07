@@ -35,11 +35,16 @@ from backend.p2c_schema import CandidateConsolidationResult
 from backend.p3_engine import run_p3
 from backend.p3_sources import validate_p3_inputs
 from backend.p4_api import initialize_p4_tables, register_p4_routes
+from backend.p4_budget import (P4_BUDGET_ENV_KEYS, P4_WORKER_ENV_KEYS,
+                               recover_p4_generation_runs,
+                               require_p4_budget_configuration,
+                               require_p4_single_worker)
 from backend.model_runtime import (REQUIRED_MODEL_ENV_KEYS,
                                    ModelConfigurationError,
                                    create_model_session,
                                    create_validated_chat_completion,
-                                   require_model_runtime_config)
+                                   require_model_runtime_config,
+                                   validate_model_session_configuration)
 
 
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
@@ -54,7 +59,8 @@ def load_local_environment(path: Path):
         # error.  Importing the application must not expose parser details.
         return
     for key, value in values.items():
-        if key not in REQUIRED_MODEL_ENV_KEYS and value is not None:
+        if key not in (REQUIRED_MODEL_ENV_KEYS + P4_BUDGET_ENV_KEYS
+                       + P4_WORKER_ENV_KEYS) and value is not None:
             os.environ[key] = value
 
 
@@ -145,6 +151,7 @@ def select_evidence(blocks, question):
 
 
 def create_app(data_dir: Path) -> FastAPI:
+    require_p4_single_worker(environment_file=MODEL_ENVIRONMENT_FILE)
     access = AccessPolicy()
     data_dir = Path(data_dir)
     data_dir.mkdir(parents=True, exist_ok=True)
@@ -181,6 +188,11 @@ def create_app(data_dir: Path) -> FastAPI:
     def model_completion(session, **request):
         return create_validated_chat_completion(
             session, MODEL_ENVIRONMENT_FILE, **request
+        )
+
+    def model_session_preflight(session, requested_model):
+        validate_model_session_configuration(
+            session, MODEL_ENVIRONMENT_FILE, requested_model=requested_model
         )
 
     with connect() as db:
@@ -344,6 +356,9 @@ def create_app(data_dir: Path) -> FastAPI:
             );
         """)
         initialize_p4_tables(db)
+        recover_p4_generation_runs(
+            db, time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        )
         columns = {row[1] for row in db.execute("PRAGMA table_info(review_findings)")}
         if "support_assessment" not in columns:
             db.execute("ALTER TABLE review_findings ADD COLUMN support_assessment TEXT NOT NULL DEFAULT ''")
@@ -1810,6 +1825,8 @@ def create_app(data_dir: Path) -> FastAPI:
         lambda: model_session_or_503(timeout=180, max_retries=0),
         model_completion,
         model_configuration_or_503,
+        model_session_preflight,
+        lambda: require_p4_budget_configuration(MODEL_ENVIRONMENT_FILE),
     )
     return app
 

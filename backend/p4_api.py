@@ -63,6 +63,34 @@ def initialize_p4_tables(db):
             created_at TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS p4_calls_project ON p4_model_calls(project_id);
+        CREATE TABLE IF NOT EXISTS p4_generation_runs (
+            id TEXT PRIMARY KEY, draft_id TEXT, project_id TEXT NOT NULL,
+            kind TEXT NOT NULL, language TEXT NOT NULL, budget_json TEXT NOT NULL,
+            state TEXT NOT NULL, reason TEXT, request_count INTEGER NOT NULL DEFAULT 0,
+            potentially_billable_requests INTEGER NOT NULL DEFAULT 0,
+            input_tokens INTEGER NOT NULL DEFAULT 0,
+            output_tokens INTEGER NOT NULL DEFAULT 0,
+            unknown_usage_calls INTEGER NOT NULL DEFAULT 0,
+            planned_cost_usd TEXT NOT NULL DEFAULT '0', usage_cost_usd TEXT,
+            cost_complete INTEGER NOT NULL DEFAULT 1,
+            validated_partial_json TEXT NOT NULL DEFAULT '[]',
+            provider_billed_cost_usd TEXT, provider_account_limit_usd TEXT,
+            created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS p4_generation_runs_project
+            ON p4_generation_runs(project_id);
+        CREATE TABLE IF NOT EXISTS p4_model_call_budget (
+            model_call_id TEXT PRIMARY KEY, generation_run_id TEXT NOT NULL,
+            request_index INTEGER NOT NULL, estimated_input_tokens INTEGER NOT NULL,
+            reserved_output_tokens INTEGER NOT NULL, max_tokens INTEGER NOT NULL,
+            remaining_duration_ms INTEGER NOT NULL, planned_cost_usd TEXT NOT NULL,
+            pricing_status TEXT NOT NULL, dispatch_state TEXT NOT NULL,
+            usage_status TEXT NOT NULL, actual_total_tokens INTEGER,
+            usage_cost_usd TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+            UNIQUE(generation_run_id, request_index)
+        );
+        CREATE INDEX IF NOT EXISTS p4_model_call_budget_run
+            ON p4_model_call_budget(generation_run_id);
     """)
 
 
@@ -119,7 +147,8 @@ class ReviewerIssueInput(BaseModel):
 
 
 def register_p4_routes(app, connect, files_dir, load_p3_inputs,
-                       model_session_factory, model_completion, model_preflight):
+                       model_session_factory, model_completion, model_preflight,
+                       model_session_preflight, budget_configuration_factory):
     def project_or_404(db, project_id):
         row = db.execute("SELECT * FROM p4_report_projects WHERE id = ?", (project_id,)).fetchone()
         if not row:
@@ -177,6 +206,39 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs,
                             "approval_status": item["approval_status"]} for item in db.execute(
                     "SELECT * FROM p4_drafts WHERE project_id = ? ORDER BY rowid DESC", (row["id"],))]}
 
+    def generation_run_view(db, row):
+        partials = json.loads(row["validated_partial_json"] or "[]")
+        unsettled = db.execute(
+            "SELECT count(*) FROM p4_model_call_budget "
+            "WHERE generation_run_id = ? AND dispatch_state = 'dispatch_pending'",
+            (row["id"],),
+        ).fetchone()[0]
+        return {
+            "generation_run_id": row["id"],
+            "draft_id": row["draft_id"],
+            "project_id": row["project_id"],
+            "kind": row["kind"],
+            "language": row["language"],
+            "state": row["state"],
+            "termination_reason": row["reason"],
+            "reserved_requests": row["request_count"],
+            "attempted_requests": row["potentially_billable_requests"],
+            "potentially_billable_requests": row["potentially_billable_requests"],
+            "known_input_tokens": row["input_tokens"],
+            "known_output_tokens": row["output_tokens"],
+            "unknown_usage_requests": row["unknown_usage_calls"] + unsettled,
+            "unsettled_dispatch_requests": unsettled,
+            "planned_cost_usd": row["planned_cost_usd"],
+            "usage_calculated_cost_usd": row["usage_cost_usd"],
+            "cost_complete": bool(row["cost_complete"]) and unsettled == 0,
+            "provider_billed_cost_usd": row["provider_billed_cost_usd"],
+            "provider_account_limit_usd": row["provider_account_limit_usd"],
+            "has_validated_partial_output": bool(partials),
+            "validated_partial_count": len(partials),
+            "created_at": row["created_at"],
+            "updated_at": row["updated_at"],
+        }
+
     def invalidate_approvals(db, project_id):
         db.execute("UPDATE p4_drafts SET approval_status = 'pending', approved_body_sha256 = NULL "
                    "WHERE project_id = ? AND approval_status = 'approved'", (project_id,))
@@ -196,6 +258,25 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs,
             return [dict(row) for row in db.execute(
                 "SELECT id, document_id, p3_run_id, created_at FROM p4_report_projects "
                 "WHERE document_id = ? ORDER BY rowid DESC", (document_id,))]
+
+    @app.get("/api/review-report-projects/{project_id}/generation-runs")
+    def list_p4_generation_runs(project_id: str):
+        with connect() as db:
+            project_or_404(db, project_id)
+            return [generation_run_view(db, row) for row in db.execute(
+                "SELECT * FROM p4_generation_runs WHERE project_id = ? ORDER BY rowid DESC",
+                (project_id,),
+            )]
+
+    @app.get("/api/review-report-generation-runs/{generation_run_id}")
+    def get_p4_generation_run(generation_run_id: str):
+        with connect() as db:
+            row = db.execute(
+                "SELECT * FROM p4_generation_runs WHERE id = ?", (generation_run_id,)
+            ).fetchone()
+            if not row:
+                raise HTTPException(404, "P4 生成运行不存在")
+            return generation_run_view(db, row)
 
     @app.post("/api/evidence-verification-runs/{run_id}/report-projects", status_code=201)
     def create_report_project(run_id: str):
@@ -407,7 +488,8 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs,
             return item.model_dump()
 
     register_p4_draft_routes(app, connect, model_session_factory, model_completion,
-                             model_preflight, {
+                             model_preflight, model_session_preflight,
+                             budget_configuration_factory, {
         "project_or_404": project_or_404, "snapshot_of": snapshot_of,
         "decision_records": decision_records, "evidence_records": evidence_records,
         "external_evidence_records": external_evidence_records,

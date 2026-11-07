@@ -206,6 +206,23 @@ def create_validated_chat_completion(
     process_environment: Mapping[str, str | None] | None = None,
     **request,
 ):
+    validate_model_session_configuration(
+        session,
+        environment_file,
+        process_environment=process_environment,
+        requested_model=request.get("model"),
+    )
+    return session.client.chat.completions.create(**request)
+
+
+def validate_model_session_configuration(
+    session: ModelRuntimeSession,
+    environment_file: Path,
+    *,
+    process_environment: Mapping[str, str | None] | None = None,
+    requested_model: str | None = None,
+) -> None:
+    """Fail closed before dispatch if live configuration drifted from a session."""
     current = require_model_runtime_config(
         environment_file, process_environment=process_environment
     )
@@ -220,8 +237,7 @@ def create_validated_chat_completion(
     ]
     if changed:
         raise ModelConfigurationError(["model_configuration_changed"], changed)
-    if request.get("model") != session.configuration.model:
+    if requested_model is not None and requested_model != session.configuration.model:
         raise ModelConfigurationError(
             ["model_request_model_mismatch"], ["OPENAI_MODEL"]
         )
-    return session.client.chat.completions.create(**request)

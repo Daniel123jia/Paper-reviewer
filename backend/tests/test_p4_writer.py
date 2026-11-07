@@ -60,6 +60,23 @@ def test_advisory_consistency_rejection_stops_report(tmp_path):
         write_report(plan, pack, model)
 
 
+def test_failed_consistency_never_marks_writing_as_validated_partial(tmp_path):
+    plan, pack, writing = case(tmp_path)
+    partials = []
+
+    def model(stage, version, system, user):
+        if stage.startswith("writing-"):
+            return {"content": writing.model_dump_json()}
+        return {"content": json.dumps({"acceptable": False,
+            "unsupported_facts": ["unsupported"], "state_promotions": [],
+            "refuted_accusations": [], "language_or_scope_changes": []})}
+
+    with pytest.raises(ValueError, match="unsupported wording"):
+        write_report(plan, pack, model, validated_partial_callback=partials.append)
+
+    assert partials == []
+
+
 def test_internal_chunks_preserve_all_distinct_issue_groups(tmp_path):
     client, _ = seeded_p4_client(tmp_path, reportable=True)
     frozen = snapshot(tmp_path, client)
@@ -108,6 +125,48 @@ def test_internal_chunks_preserve_all_distinct_issue_groups(tmp_path):
     assert "coverage_gap_" not in report
     assert "table_ev_x" not in report and "figure_ev_y" not in report
     assert "table-structure limitation records" in report
+
+
+def test_interruption_keeps_only_the_previously_consistency_validated_chunk(tmp_path):
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    frozen = snapshot(tmp_path, client)
+    plan, pack = build_report_plan(frozen, [], [], [], "internal", "en")
+    second_group = plan.groups[0].model_copy(deep=True)
+    second_group.group_id = "report_group_second"
+    second_group.source_issue_ids = ["consolidated_second"]
+    plan.groups.append(second_group)
+    plan.selected_issue_ids.append("consolidated_second")
+    second_issue = pack.issues[0].model_copy(deep=True)
+    second_issue.source_issue_id = "consolidated_second"
+    pack.issues.append(second_issue)
+    pack.groups.append(second_group)
+    partials = []
+
+    def model(stage, version, system, user):
+        if stage == "writing-2-attempt-1":
+            raise RuntimeError("simulated interruption")
+        if stage.startswith("consistency-"):
+            return {"content": json.dumps({"acceptable": True,
+                "unsupported_facts": [], "state_promotions": [],
+                "refuted_accusations": [], "language_or_scope_changes": []})}
+        payload = json.loads(user)
+        group = payload["plan"]["groups"][0]
+        comment = ReportComment(report_comment_id=group["group_id"],
+            source_issue_ids=group["source_issue_ids"], source="p3",
+            title_zh="具体问题", title_en="Specific question",
+            comment_body="Could the authors clarify the method claim and its evidence scope?",
+            scientific_question=group["scientific_question"], evidence_refs=[],
+            author_action_requested="Clarify the method claim.",
+            comment_category=group["category"], uncertainty_qualification="Unverified")
+        return {"content": ReportWritingResult(prompt_version=version, language="en",
+            report_kind="internal", general_assessment="Authors present a method.",
+            comments=[comment]).model_dump_json()}
+
+    with pytest.raises(RuntimeError, match="simulated interruption"):
+        write_report(plan, pack, model, validated_partial_callback=partials.append)
+
+    assert len(partials) == 1
+    assert partials[0]["comments"][0]["report_comment_id"] == plan.groups[0].group_id
 
 
 def test_second_language_receives_fact_alignment_without_translation(tmp_path):

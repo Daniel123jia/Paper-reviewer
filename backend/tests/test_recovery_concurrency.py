@@ -3,9 +3,11 @@ import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 
 import fitz
+import pytest
 from fastapi.testclient import TestClient
 
 from backend.app import create_app
+from backend.p4_budget import P4WorkerConfigurationError
 
 
 def valid_pdf():
@@ -27,6 +29,18 @@ def test_restart_marks_interrupted_jobs_failed(tmp_path):
         verification = db.execute("SELECT status, error, finished_at FROM finding_verifications WHERE id = 'v1'").fetchone()
     assert run[0] == verification[0] == "failed"
     assert run[1] and verification[1] and run[2] and verification[2]
+
+
+def test_declared_multi_worker_startup_fails_before_recovery_or_data_mutation(
+        tmp_path, monkeypatch):
+    monkeypatch.setenv("PAPER_REVIEW_WORKER_COUNT", "2")
+
+    with pytest.raises(P4WorkerConfigurationError) as caught:
+        create_app(tmp_path)
+
+    assert caught.value.safe_detail()["blockers"] == ["p4_single_worker_required"]
+    assert not (tmp_path / "review.db").exists()
+    assert not (tmp_path / "files").exists()
 
 
 def test_parallel_same_pdf_upload_keeps_one_snapshot_and_original_file(tmp_path):

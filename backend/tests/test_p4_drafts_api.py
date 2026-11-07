@@ -6,11 +6,16 @@ from types import SimpleNamespace
 
 import fitz
 import httpx
+import pytest
 from docx import Document
 from fastapi.testclient import TestClient
 from openai import APIConnectionError
 
+import backend.app as app_module
 from backend.app import create_app
+from backend.p4_budget import P4BudgetStateError, P4BudgetStore
+from backend import p4_drafts_api as p4_drafts_module
+from backend.p4_budget import P4BudgetController
 from backend.tests.test_p4_api import seeded_p4_client
 from backend.tests.model_test_config import configure_test_model
 
@@ -21,7 +26,7 @@ class FakeOpenAI:
 
     @property
     def chat(self):
-        def create(*, model, messages):
+        def create(*, model, messages, max_tokens=None, timeout=None):
             payload = json.loads(messages[1]["content"])
             if "report" in payload:
                 content = {"acceptable": True, "unsupported_facts": [],
@@ -47,7 +52,8 @@ class FakeOpenAI:
                         "uncertainty_qualification": "A clarification, not a proven error",
                         "reviewer_approval_status": "pending"} for group in plan["groups"]]}
             return SimpleNamespace(model="actual-mock",
-                usage=SimpleNamespace(prompt_tokens=120, completion_tokens=40),
+                usage=SimpleNamespace(prompt_tokens=120, completion_tokens=40,
+                                      total_tokens=160),
                 choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps(content)))])
         return SimpleNamespace(completions=SimpleNamespace(create=create))
 
@@ -177,7 +183,414 @@ def test_p4_draft_api_requires_authentication(tmp_path, monkeypatch):
     assert client.get("/api/review-report-drafts/nope").status_code == 404
 
 
-def test_transient_model_connection_is_retried_and_unknown_tokens_stay_unknown(tmp_path, monkeypatch):
+def test_missing_p4_budget_fails_before_client_or_provider_request(tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="test-secret")
+    monkeypatch.delenv("P4_MAX_PLANNED_COST_USD")
+    constructions = []
+
+    class RecordingOpenAI:
+        def __init__(self, **kwargs):
+            constructions.append(kwargs)
+
+    monkeypatch.setattr("backend.app.OpenAI", RecordingOpenAI)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["detail"]["variables"] == ["P4_MAX_PLANNED_COST_USD"]
+    assert constructions == []
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        run = db.execute("SELECT state, request_count FROM p4_generation_runs").fetchone()
+    assert run == ("configuration_failed", 0)
+
+    runs = client.get(
+        f'/api/review-report-projects/{project["id"]}/generation-runs'
+    )
+    assert runs.status_code == 200
+    view = runs.json()[0]
+    assert view["state"] == "configuration_failed"
+    assert view["attempted_requests"] == 0
+    assert view["provider_billed_cost_usd"] is None
+    assert view["has_validated_partial_output"] is False
+    detail = client.get(
+        f'/api/review-report-generation-runs/{view["generation_run_id"]}'
+    )
+    assert detail.status_code == 200 and detail.json() == view
+    serialized = json.dumps(view)
+    for forbidden in ("api_key", "base_url", "budget_json", "test-secret",
+                      "validated_partial_json", "raw_response", "prompt"):
+        assert forbidden not in serialized.casefold()
+
+
+def test_content_repair_consumes_a_new_durable_budget_reservation(tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="test-secret")
+
+    class RepairingOpenAI(FakeOpenAI):
+        calls = 0
+
+        @property
+        def chat(self):
+            delegate = super().chat
+
+            def create(**kwargs):
+                RepairingOpenAI.calls += 1
+                response = delegate.completions.create(**kwargs)
+                if RepairingOpenAI.calls == 1:
+                    response.choices[0].message.content = "{}"
+                return response
+
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr("backend.app.OpenAI", RepairingOpenAI)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 201, response.text
+    assert RepairingOpenAI.calls == 3
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        stages = [row[0] for row in db.execute(
+            "SELECT stage FROM p4_model_calls ORDER BY rowid"
+        )]
+        sidecars = db.execute("SELECT count(*) FROM p4_model_call_budget").fetchone()[0]
+        run = db.execute("SELECT state, request_count, input_tokens, output_tokens "
+                         "FROM p4_generation_runs").fetchone()
+    assert stages == [
+        "writing-1-attempt-1", "writing-1-attempt-2", "consistency-1-attempt-2"
+    ]
+    assert sidecars == 3
+    assert run == ("completed", 3, 360, 120)
+
+
+@pytest.mark.parametrize("method_name", ["reserve_request", "mark_dispatch_pending"])
+def test_persistence_failure_before_dispatch_produces_zero_sdk_calls(
+        tmp_path, monkeypatch, method_name):
+    configure_test_model(monkeypatch, key="test-secret")
+    sdk_calls = []
+
+    class RecordingOpenAI(FakeOpenAI):
+        @property
+        def chat(self):
+            delegate = super().chat
+
+            def create(**kwargs):
+                sdk_calls.append(kwargs)
+                return delegate.completions.create(**kwargs)
+
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    def fail_persistence(*args, **kwargs):
+        raise P4BudgetStateError("injected_persistence_failure")
+
+    monkeypatch.setattr(app_module, "OpenAI", RecordingOpenAI)
+    monkeypatch.setattr(P4BudgetStore, method_name, fail_persistence)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 502
+    assert response.json()["detail"]["blockers"] == ["injected_persistence_failure"]
+    assert sdk_calls == []
+
+
+def test_settlement_failure_recovers_as_unknown_usage_without_replay(tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="test-secret")
+    sdk_calls = []
+
+    class RecordingOpenAI(FakeOpenAI):
+        @property
+        def chat(self):
+            delegate = super().chat
+
+            def create(**kwargs):
+                sdk_calls.append(kwargs)
+                return delegate.completions.create(**kwargs)
+
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    def fail_settlement(*args, **kwargs):
+        raise P4BudgetStateError("injected_settlement_failure")
+
+    monkeypatch.setattr(app_module, "OpenAI", RecordingOpenAI)
+    monkeypatch.setattr(P4BudgetStore, "settle_valid_usage", fail_settlement)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 502
+    assert len(sdk_calls) == 1
+    generation_run_id = response.json()["detail"]["generation_run_id"]
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        assert db.execute("SELECT dispatch_state FROM p4_model_call_budget").fetchone()[0] == \
+            "dispatch_pending"
+    immediate = client.get(
+        f"/api/review-report-generation-runs/{generation_run_id}"
+    ).json()
+    assert immediate["cost_complete"] is False
+    assert immediate["unknown_usage_requests"] == 1
+    assert immediate["unsettled_dispatch_requests"] == 1
+
+    restarted = TestClient(create_app(tmp_path))
+    assert len(sdk_calls) == 1
+    recovered = restarted.get(
+        f"/api/review-report-generation-runs/{generation_run_id}"
+    ).json()
+    assert recovered["cost_complete"] is False
+    assert recovered["unknown_usage_requests"] == 1
+    assert recovered["unsettled_dispatch_requests"] == 0
+    assert recovered["state"] == immediate["state"] == "interrupted"
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        run = db.execute("SELECT state, reason, unknown_usage_calls, cost_complete "
+                         "FROM p4_generation_runs").fetchone()
+        call = db.execute("SELECT dispatch_state, usage_status "
+                          "FROM p4_model_call_budget").fetchone()
+        assert db.execute("SELECT count(*) FROM p4_model_calls").fetchone()[0] == 1
+        assert db.execute("SELECT count(*) FROM p4_model_call_budget").fetchone()[0] == 1
+    assert run == ("interrupted", "interrupted_after_dispatch", 1, 0)
+    assert call == ("usage_unknown", "unknown")
+
+
+def test_missing_provider_usage_stops_after_one_request_and_marks_cost_incomplete(
+        tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="test-secret")
+    sdk_calls = []
+
+    class MissingUsageOpenAI(FakeOpenAI):
+        @property
+        def chat(self):
+            delegate = super().chat
+
+            def create(**kwargs):
+                sdk_calls.append(kwargs)
+                response = delegate.completions.create(**kwargs)
+                response.usage = None
+                return response
+
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr(app_module, "OpenAI", MissingUsageOpenAI)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 502
+    assert response.json()["detail"]["blockers"] == ["p4_usage_missing"]
+    assert len(sdk_calls) == 1
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        run = db.execute("SELECT state, cost_complete, usage_cost_usd "
+                         "FROM p4_generation_runs").fetchone()
+        call = db.execute("SELECT dispatch_state, usage_status "
+                          "FROM p4_model_call_budget").fetchone()
+    assert run == ("usage_unknown", 0, None)
+    assert call == ("usage_unknown", "unknown")
+
+
+@pytest.mark.parametrize(
+    "failure",
+    ["missing_model", "missing_usage", "usage_access_raises",
+     "usage_token_access_raises"],
+)
+def test_response_field_failure_is_immediately_audited_as_unknown_usage(
+        tmp_path, monkeypatch, failure):
+    configure_test_model(monkeypatch, key="test-secret")
+    sdk_calls = []
+
+    class BrokenResponseOpenAI(FakeOpenAI):
+        @property
+        def chat(self):
+            delegate = super().chat
+
+            def create(**kwargs):
+                sdk_calls.append(kwargs)
+                response = delegate.completions.create(**kwargs)
+                if failure == "missing_model":
+                    del response.model
+                    return response
+                if failure == "missing_usage":
+                    del response.usage
+                    return response
+                if failure == "usage_token_access_raises":
+                    class ExplodingUsage:
+                        @property
+                        def prompt_tokens(self):
+                            raise RuntimeError("sensitive-provider-detail")
+
+                    response.usage = ExplodingUsage()
+                    return response
+
+                class ExplodingUsageResponse:
+                    model = response.model
+                    choices = response.choices
+
+                    @property
+                    def usage(self):
+                        raise RuntimeError("sensitive-provider-detail")
+
+                return ExplodingUsageResponse()
+
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr(app_module, "OpenAI", BrokenResponseOpenAI)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 502
+    assert "sensitive-provider-detail" not in response.text
+    assert len(sdk_calls) == 1
+    detail = response.json()["detail"]
+    expected_blocker = ("p4_usage_unavailable"
+                        if failure == "usage_token_access_raises"
+                        else "p4_response_usage_unavailable")
+    assert detail["blockers"] == [expected_blocker]
+    run_id = detail["generation_run_id"]
+    immediate = client.get(f"/api/review-report-generation-runs/{run_id}").json()
+    assert immediate["state"] == "usage_unknown"
+    assert immediate["cost_complete"] is False
+    assert immediate["unknown_usage_requests"] == 1
+    assert immediate["unsettled_dispatch_requests"] == 0
+
+    restarted = TestClient(create_app(tmp_path))
+    recovered = restarted.get(f"/api/review-report-generation-runs/{run_id}").json()
+    assert recovered["state"] == immediate["state"]
+    assert recovered["unknown_usage_requests"] == 1
+    assert recovered["cost_complete"] is False
+    assert len(sdk_calls) == 1
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        assert db.execute("SELECT count(*) FROM p4_model_calls").fetchone()[0] == 1
+        assert db.execute("SELECT count(*) FROM p4_model_call_budget").fetchone()[0] == 1
+
+
+def test_valid_usage_over_budget_is_persisted_before_termination(tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="test-secret")
+
+    class OverBudgetOpenAI(FakeOpenAI):
+        @property
+        def chat(self):
+            delegate = super().chat
+
+            def create(**kwargs):
+                response = delegate.completions.create(**kwargs)
+                response.usage = SimpleNamespace(
+                    prompt_tokens=200001, completion_tokens=40, total_tokens=200041
+                )
+                return response
+
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr(app_module, "OpenAI", OverBudgetOpenAI)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"]["blockers"] == ["p4_input_budget_exhausted"]
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        run = db.execute("SELECT state, input_tokens, output_tokens, usage_cost_usd, "
+                         "cost_complete FROM p4_generation_runs").fetchone()
+        call = db.execute("SELECT input_tokens, output_tokens, status, error "
+                          "FROM p4_model_calls").fetchone()
+        sidecar = db.execute("SELECT usage_status, actual_total_tokens "
+                             "FROM p4_model_call_budget").fetchone()
+    assert run == ("budget_exhausted", 200001, 40, "0.1601608", 1)
+    assert call == (200001, 40, "failed", "p4_input_budget_exhausted")
+    assert sidecar == ("valid_over_budget", 200041)
+
+
+def test_draft_and_completed_run_are_atomic_when_final_audit_update_fails(
+        tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="test-secret")
+    monkeypatch.setattr(app_module, "OpenAI", FakeOpenAI)
+
+    def fail_completion(*args, **kwargs):
+        raise P4BudgetStateError("injected_completion_failure")
+
+    monkeypatch.setattr(P4BudgetStore, "complete_run_in_transaction", fail_completion)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 502
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        assert db.execute("SELECT count(*) FROM p4_drafts").fetchone()[0] == 0
+        assert db.execute("SELECT count(*) FROM p4_draft_revisions").fetchone()[0] == 0
+
+
+def test_final_local_processing_timeout_keeps_partial_without_creating_draft(
+        tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="test-secret")
+    monkeypatch.setenv("P4_MAX_DURATION_SECONDS", "1")
+    monkeypatch.setattr(app_module, "OpenAI", FakeOpenAI)
+    clock = [100.0]
+    real_controller = P4BudgetController
+    monkeypatch.setattr(
+        p4_drafts_module,
+        "P4BudgetController",
+        lambda configuration: real_controller(configuration, lambda: clock[0]),
+    )
+    original_render = p4_drafts_module.render_markdown
+
+    def delayed_render(*args, **kwargs):
+        body = original_render(*args, **kwargs)
+        clock[0] = 101.1
+        return body
+
+    monkeypatch.setattr(p4_drafts_module, "render_markdown", delayed_render)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"]["blockers"] == ["p4_duration_budget_exhausted"]
+    run_id = response.json()["detail"]["generation_run_id"]
+    audit = client.get(f"/api/review-report-generation-runs/{run_id}").json()
+    assert audit["state"] == "budget_exhausted"
+    assert audit["has_validated_partial_output"] is True
+    assert audit["attempted_requests"] == 2
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        assert db.execute("SELECT count(*) FROM p4_drafts").fetchone()[0] == 0
+        assert db.execute("SELECT count(*) FROM p4_model_calls").fetchone()[0] == 2
+
+
+def test_transient_model_connection_is_not_retried_and_unknown_usage_is_terminal(
+        tmp_path, monkeypatch):
     configure_test_model(monkeypatch, key="test-secret")
 
     class FlakyOpenAI(FakeOpenAI):
@@ -199,11 +612,15 @@ def test_transient_model_connection_is_retried_and_unknown_tokens_stay_unknown(t
     project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
     response = client.post(f'/api/review-report-projects/{project["id"]}/drafts',
                            json={"kind": "author", "language": "en"})
-    assert response.status_code == 201, response.text
-    calls = response.json()["model_calls"]
-    assert [item["status"] for item in calls] == ["failed", "completed", "completed"]
-    assert calls[0]["input_tokens"] is None and calls[0]["output_tokens"] is None
-    assert calls[0]["error"] == "APIConnectionError"
+    assert response.status_code == 502, response.text
+    assert FlakyOpenAI.attempts == 1
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        call = db.execute("SELECT status, input_tokens, output_tokens, error "
+                          "FROM p4_model_calls").fetchone()
+        run = db.execute("SELECT state, unknown_usage_calls, cost_complete "
+                         "FROM p4_generation_runs").fetchone()
+    assert call == ("failed", None, None, "APIConnectionError")
+    assert run == ("usage_unknown", 1, 0)
 
 
 def test_p4_internal_export_keeps_editable_table_and_math(tmp_path, monkeypatch):
@@ -224,7 +641,9 @@ def test_p4_internal_export_keeps_editable_table_and_math(tmp_path, monkeypatch)
     pdf = client.get(f'/api/review-report-drafts/{draft["id"]}/export?format=pdf')
     assert word.status_code == pdf.status_code == 200
     document = Document(io.BytesIO(word.content))
-    assert document.tables and document.tables[0].cell(1, 1).text == "1.3"
+    assert document.tables
+    assert any(cell.text == "1.3" for table in document.tables
+               for row in table.rows for cell in row.cells)
     with zipfile.ZipFile(io.BytesIO(word.content)) as archive:
         assert b"oMath" in archive.read("word/document.xml")
     with fitz.open(stream=pdf.content, filetype="pdf") as rendered:

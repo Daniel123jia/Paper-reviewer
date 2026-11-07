@@ -103,11 +103,16 @@ also remains a local operation.
 `.env.local` remains local and ignored. Real credentials must never be added to
 the repository, copied into diagnostics, or placed in API error messages.
 
+## Follow-up P4 budget control
+
+The separately reviewed P5-R4 PR 2 now supplies P4 whole-report request,
+Token, duration, Usage, and planned-cost controls. It removes P4 transport
+retries while retaining the bounded content-repair path only when the prior
+response has valid Usage and another request passes the durable budget gate.
+See `docs/p5r4-p4-report-budget.md` for the operator contract.
+
 ## Deliberately unchanged risks
 
-- P4 keeps its existing retry behavior in this PR. Explicit request, Token,
-  duration, Usage, and cost budgets belong to the separately reviewed P5-R4
-  PR 2.
 - Endpoint and requested-model validation do not prove the provider's backend
   model identity, routing, price, data handling, or actual billed amount.
 - No real model request is made by this change or its tests.
