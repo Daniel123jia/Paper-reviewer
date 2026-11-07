@@ -411,7 +411,7 @@ def recover_p4_generation_runs(db, timestamp: str) -> None:
         db.execute(
             """UPDATE p4_generation_runs SET state = 'interrupted',
                    reason = 'interrupted_before_dispatch', updated_at = ?
-               WHERE id = ? AND state NOT IN ('completed', 'interrupted')""",
+               WHERE id = ? AND state != 'completed'""",
             (timestamp, call["generation_run_id"]),
         )
 
@@ -437,7 +437,7 @@ def recover_p4_generation_runs(db, timestamp: str) -> None:
                    reason = 'interrupted_after_dispatch',
                    unknown_usage_calls = unknown_usage_calls + 1,
                    cost_complete = 0, updated_at = ?
-               WHERE id = ? AND state NOT IN ('completed', 'interrupted')""",
+               WHERE id = ? AND state != 'completed'""",
             (timestamp, call["generation_run_id"]),
         )
 

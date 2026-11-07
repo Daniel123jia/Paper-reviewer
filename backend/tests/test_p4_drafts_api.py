@@ -6,11 +6,14 @@ from types import SimpleNamespace
 
 import fitz
 import httpx
+import pytest
 from docx import Document
 from fastapi.testclient import TestClient
 from openai import APIConnectionError
 
+import backend.app as app_module
 from backend.app import create_app
+from backend.p4_budget import P4BudgetStateError, P4BudgetStore
 from backend.tests.test_p4_api import seeded_p4_client
 from backend.tests.model_test_config import configure_test_model
 
@@ -263,6 +266,125 @@ def test_content_repair_consumes_a_new_durable_budget_reservation(tmp_path, monk
     ]
     assert sidecars == 3
     assert run == ("completed", 3, 360, 120)
+
+
+@pytest.mark.parametrize("method_name", ["reserve_request", "mark_dispatch_pending"])
+def test_persistence_failure_before_dispatch_produces_zero_sdk_calls(
+        tmp_path, monkeypatch, method_name):
+    configure_test_model(monkeypatch, key="test-secret")
+    sdk_calls = []
+
+    class RecordingOpenAI(FakeOpenAI):
+        @property
+        def chat(self):
+            delegate = super().chat
+
+            def create(**kwargs):
+                sdk_calls.append(kwargs)
+                return delegate.completions.create(**kwargs)
+
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    def fail_persistence(*args, **kwargs):
+        raise P4BudgetStateError("injected_persistence_failure")
+
+    monkeypatch.setattr(app_module, "OpenAI", RecordingOpenAI)
+    monkeypatch.setattr(P4BudgetStore, method_name, fail_persistence)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 502
+    assert response.json()["detail"]["blockers"] == ["injected_persistence_failure"]
+    assert sdk_calls == []
+
+
+def test_settlement_failure_recovers_as_unknown_usage_without_replay(tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="test-secret")
+    sdk_calls = []
+
+    class RecordingOpenAI(FakeOpenAI):
+        @property
+        def chat(self):
+            delegate = super().chat
+
+            def create(**kwargs):
+                sdk_calls.append(kwargs)
+                return delegate.completions.create(**kwargs)
+
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    def fail_settlement(*args, **kwargs):
+        raise P4BudgetStateError("injected_settlement_failure")
+
+    monkeypatch.setattr(app_module, "OpenAI", RecordingOpenAI)
+    monkeypatch.setattr(P4BudgetStore, "settle_valid_usage", fail_settlement)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 502
+    assert len(sdk_calls) == 1
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        assert db.execute("SELECT dispatch_state FROM p4_model_call_budget").fetchone()[0] == \
+            "dispatch_pending"
+
+    TestClient(create_app(tmp_path))
+    assert len(sdk_calls) == 1
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        run = db.execute("SELECT state, reason, unknown_usage_calls, cost_complete "
+                         "FROM p4_generation_runs").fetchone()
+        call = db.execute("SELECT dispatch_state, usage_status "
+                          "FROM p4_model_call_budget").fetchone()
+    assert run == ("interrupted", "interrupted_after_dispatch", 1, 0)
+    assert call == ("usage_unknown", "unknown")
+
+
+def test_missing_provider_usage_stops_after_one_request_and_marks_cost_incomplete(
+        tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="test-secret")
+    sdk_calls = []
+
+    class MissingUsageOpenAI(FakeOpenAI):
+        @property
+        def chat(self):
+            delegate = super().chat
+
+            def create(**kwargs):
+                sdk_calls.append(kwargs)
+                response = delegate.completions.create(**kwargs)
+                response.usage = None
+                return response
+
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr(app_module, "OpenAI", MissingUsageOpenAI)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 502
+    assert response.json()["detail"]["blockers"] == ["p4_usage_missing"]
+    assert len(sdk_calls) == 1
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        run = db.execute("SELECT state, cost_complete, usage_cost_usd "
+                         "FROM p4_generation_runs").fetchone()
+        call = db.execute("SELECT dispatch_state, usage_status "
+                          "FROM p4_model_call_budget").fetchone()
+    assert run == ("usage_invalid", 0, None)
+    assert call == ("usage_invalid", "invalid")
 
 
 def test_transient_model_connection_is_not_retried_and_unknown_usage_is_terminal(

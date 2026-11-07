@@ -172,6 +172,15 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
         draft_id = uuid.uuid4().hex
         generation_run_id = uuid.uuid4().hex
         store = P4BudgetStore(connect, now)
+
+        def terminate_run_safely(reason):
+            if not plan.groups:
+                return
+            try:
+                store.fail_run(generation_run_id, "interrupted", reason)
+            except P4BudgetStateError:
+                pass
+
         try:
             controller = session = None
             if plan.groups:
@@ -265,6 +274,8 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
             detail["generation_run_id"] = generation_run_id
             raise HTTPException(status_code=409, detail=detail) from None
         except (P4UsageError, P4BudgetStateError) as exc:
+            if isinstance(exc, P4BudgetStateError):
+                terminate_run_safely(exc.blocker)
             detail = exc.safe_detail()
             detail["generation_run_id"] = generation_run_id
             raise HTTPException(status_code=502, detail=detail) from None
@@ -275,8 +286,10 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
         except HTTPException:
             raise
         except (ValueError, KeyError, TypeError) as exc:
+            terminate_run_safely("report_content_validation_failed")
             raise HTTPException(422, f"P4 写作校验失败：{type(exc).__name__}: {exc}") from None
         except Exception as exc:
+            terminate_run_safely("model_request_failed")
             raise HTTPException(502, f"P4 模型调用失败：{type(exc).__name__}") from None
 
     @app.get("/api/review-report-drafts/{draft_id}")
