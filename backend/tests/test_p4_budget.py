@@ -431,3 +431,21 @@ def test_controller_rejects_actual_usage_above_report_budget():
         )
 
     assert caught.value.blocker == "p4_input_budget_exhausted"
+
+
+@pytest.mark.parametrize(
+    ("overrides", "blocker"),
+    [
+        ({"P4_MAX_PROVIDER_REQUESTS": "3"}, "p4_request_budget_exhausted"),
+        ({"P4_MAX_PROVIDER_REQUESTS": "4", "P4_MAX_OUTPUT_TOKENS": "399",
+          "P4_MAX_OUTPUT_TOKENS_PER_REQUEST": "100"},
+         "p4_output_budget_exhausted"),
+    ],
+)
+def test_controller_rejects_a_report_without_minimum_success_path(overrides, blocker):
+    controller = P4BudgetController(controller_configuration(**overrides), lambda: 100.0)
+
+    with pytest.raises(P4BudgetExceededError) as caught:
+        controller.ensure_minimum_success_path(batch_count=2)
+
+    assert caught.value.blocker == blocker

@@ -283,6 +283,14 @@ class P4BudgetController:
         return sum((item.planned_cost_usd for item in self._outstanding.values()),
                    Decimal("0"))
 
+    def ensure_minimum_success_path(self, batch_count: int) -> None:
+        minimum_requests = batch_count * 2
+        if self.configuration.max_provider_requests < minimum_requests:
+            raise P4BudgetExceededError("p4_request_budget_exhausted")
+        if (self.configuration.max_output_tokens <
+                minimum_requests * self.configuration.max_output_tokens_per_request):
+            raise P4BudgetExceededError("p4_output_budget_exhausted")
+
     def plan_request(
         self,
         *,
@@ -407,6 +415,29 @@ class P4BudgetStore:
                        VALUES (?, ?, ?, ?, ?, ?, 'ready', ?, ?)""",
                     (generation_run_id, draft_id, project_id, kind, language,
                      _configuration_json(configuration), timestamp, timestamp),
+                )
+        except sqlite3.Error:
+            raise P4BudgetStateError("p4_generation_run_persist_failed") from None
+
+    def create_configuration_failed_run(
+        self,
+        generation_run_id: str,
+        draft_id: str | None,
+        project_id: str,
+        kind: str,
+        language: str,
+        reason: str,
+    ) -> None:
+        timestamp = self._now()
+        try:
+            with self._connect() as db:
+                db.execute(
+                    """INSERT INTO p4_generation_runs
+                       (id, draft_id, project_id, kind, language, budget_json,
+                        state, reason, cost_complete, created_at, updated_at)
+                       VALUES (?, ?, ?, ?, ?, '{}', 'configuration_failed', ?, 0, ?, ?)""",
+                    (generation_run_id, draft_id, project_id, kind, language,
+                     reason, timestamp, timestamp),
                 )
         except sqlite3.Error:
             raise P4BudgetStateError("p4_generation_run_persist_failed") from None
@@ -598,6 +629,114 @@ class P4BudgetStore:
             raise
         except sqlite3.Error:
             raise P4BudgetStateError("p4_usage_persist_failed") from None
+
+    def fail_not_sent(
+        self,
+        generation_run_id: str,
+        model_call_id: str,
+        reason: str,
+        duration_ms: int,
+    ) -> None:
+        timestamp = self._now()
+        try:
+            with self._connect() as db:
+                changed = db.execute(
+                    """UPDATE p4_model_call_budget
+                       SET dispatch_state = 'configuration_blocked',
+                           usage_status = 'not_available', updated_at = ?
+                       WHERE model_call_id = ? AND generation_run_id = ?
+                         AND dispatch_state = 'dispatch_pending'""",
+                    (timestamp, model_call_id, generation_run_id),
+                ).rowcount
+                if changed != 1:
+                    raise P4BudgetStateError("p4_dispatch_transition_failed")
+                db.execute(
+                    """UPDATE p4_model_calls SET duration_ms = ?, status = 'failed', error = ?
+                       WHERE id = ? AND status = 'reserved'""",
+                    (duration_ms, reason, model_call_id),
+                )
+                db.execute(
+                    """UPDATE p4_generation_runs
+                       SET state = 'configuration_changed', reason = ?,
+                           potentially_billable_requests =
+                               MAX(potentially_billable_requests - 1, 0),
+                           updated_at = ? WHERE id = ?""",
+                    (reason, timestamp, generation_run_id),
+                )
+        except P4BudgetStateError:
+            raise
+        except sqlite3.Error:
+            raise P4BudgetStateError("p4_configuration_failure_persist_failed") from None
+
+    def fail_usage_invalid(
+        self,
+        generation_run_id: str,
+        model_call_id: str,
+        reason: str,
+        duration_ms: int,
+        *,
+        run_state: str = "usage_invalid",
+    ) -> None:
+        timestamp = self._now()
+        try:
+            with self._connect() as db:
+                changed = db.execute(
+                    """UPDATE p4_model_call_budget
+                       SET dispatch_state = 'usage_invalid', usage_status = 'invalid',
+                           updated_at = ? WHERE model_call_id = ? AND generation_run_id = ?
+                           AND dispatch_state = 'dispatch_pending'""",
+                    (timestamp, model_call_id, generation_run_id),
+                ).rowcount
+                if changed != 1:
+                    raise P4BudgetStateError("p4_usage_transition_failed")
+                db.execute(
+                    """UPDATE p4_model_calls SET duration_ms = ?, status = 'failed', error = ?
+                       WHERE id = ? AND status = 'reserved'""",
+                    (duration_ms, reason, model_call_id),
+                )
+                db.execute(
+                    """UPDATE p4_generation_runs
+                       SET state = ?, reason = ?, cost_complete = 0,
+                           updated_at = ? WHERE id = ?""",
+                    (run_state, reason, timestamp, generation_run_id),
+                )
+        except P4BudgetStateError:
+            raise
+        except sqlite3.Error:
+            raise P4BudgetStateError("p4_usage_persist_failed") from None
+
+    def complete_run(self, generation_run_id: str) -> None:
+        timestamp = self._now()
+        try:
+            with self._connect() as db:
+                changed = db.execute(
+                    """UPDATE p4_generation_runs SET state = 'completed', reason = NULL,
+                           updated_at = ? WHERE id = ? AND state IN ('ready', 'usage_valid')""",
+                    (timestamp, generation_run_id),
+                ).rowcount
+                if changed != 1:
+                    raise P4BudgetStateError("p4_generation_run_transition_failed")
+        except P4BudgetStateError:
+            raise
+        except sqlite3.Error:
+            raise P4BudgetStateError("p4_generation_run_persist_failed") from None
+
+    def fail_run(self, generation_run_id: str, state: str, reason: str) -> None:
+        timestamp = self._now()
+        try:
+            with self._connect() as db:
+                changed = db.execute(
+                    """UPDATE p4_generation_runs SET state = ?, reason = ?, updated_at = ?
+                       WHERE id = ? AND state NOT IN
+                           ('completed', 'usage_unknown', 'usage_invalid', 'interrupted')""",
+                    (state, reason, timestamp, generation_run_id),
+                ).rowcount
+                if changed != 1:
+                    raise P4BudgetStateError("p4_generation_run_transition_failed")
+        except P4BudgetStateError:
+            raise
+        except sqlite3.Error:
+            raise P4BudgetStateError("p4_generation_run_persist_failed") from None
 
     def save_validated_partial(self, generation_run_id: str, payload: Mapping) -> None:
         """Append only caller-validated structured output to the private run record."""

@@ -52,7 +52,8 @@ def _model_chunk(plan, pack, groups):
 
 
 def write_report(plan: ReportPlan, pack: ReportEvidencePack, model_call,
-                 bilingual_reference: ReportWritingResult | None = None):
+                 bilingual_reference: ReportWritingResult | None = None,
+                 validated_partial_callback=None):
     version = WRITING_VERSIONS[plan.language]
     if not plan.groups:
         return ReportWritingResult(prompt_version=version, language=plan.language,
@@ -117,6 +118,8 @@ def write_report(plan: ReportPlan, pack: ReportEvidencePack, model_call,
                                                      assessment.refuted_accusations,
                                                      assessment.language_or_scope_changes)):
                     raise ValueError("model report consistency review flagged unsupported wording")
+                if validated_partial_callback is not None:
+                    validated_partial_callback(partial.model_dump())
                 break
             except ModelConfigurationError:
                 raise

@@ -8,11 +8,13 @@ from typing import Literal
 
 from fastapi import HTTPException
 from fastapi.responses import Response
-from openai import APIConnectionError, APITimeoutError
 from pydantic import BaseModel, Field
 
 from backend.exporter import render_export
 from backend.model_runtime import ModelConfigurationError
+from backend.p4_budget import (P4BudgetConfigurationError, P4BudgetController,
+                               P4BudgetExceededError, P4BudgetStateError,
+                               P4BudgetStore, P4UsageError)
 from backend.p4_planner import build_report_plan
 from backend.p4_report_schema import ReportEvidencePack, ReportPlan, ReportWritingResult
 from backend.p4_validator import (numeric_claims, validate_author_body,
@@ -36,7 +38,8 @@ class ApproveDraftInput(BaseModel):
 
 
 def register_p4_draft_routes(app, connect, model_session_factory, model_completion,
-                             model_preflight, helpers):
+                             model_preflight, model_session_preflight,
+                             budget_configuration_factory, helpers):
     project_or_404 = helpers["project_or_404"]
     snapshot_of = helpers["snapshot_of"]
     decision_records = helpers["decision_records"]
@@ -66,48 +69,74 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
             "WHERE draft_id = ? ORDER BY rowid", (row["id"],))]
         return result
 
-    def call_model(project_id, draft_id):
-        session = None
-
+    def call_model(project_id, draft_id, generation_run_id, session, controller, store):
         def invoke(stage, version, system, user):
-            nonlocal session
-            for attempt in range(2):
-                started = time.perf_counter()
-                actual = None
-                input_tokens = output_tokens = None
-                error = None
-                try:
-                    if session is None:
-                        session = model_session_factory()
-                    requested = session.configuration.model
-                    response = model_completion(session, model=requested,
-                        messages=[{"role": "system", "content": system},
-                                  {"role": "user", "content": user}])
-                    actual = response.model or None
-                    usage = response.usage
-                    input_tokens = getattr(usage, "prompt_tokens", None)
-                    output_tokens = getattr(usage, "completion_tokens", None)
-                    content = response.choices[0].message.content
-                    if not content:
-                        raise ValueError("empty model response")
-                    return {"content": content, "model_identifier": actual,
-                            "input_tokens": input_tokens, "output_tokens": output_tokens}
-                except (APIConnectionError, APITimeoutError) as exc:
-                    error = type(exc).__name__
-                    if attempt:
-                        raise
-                except Exception as exc:
-                    error = type(exc).__name__
-                    raise
-                finally:
-                    recorded_model = (session.configuration.model if session is not None
-                                      else "unresolved")
-                    with connect() as db:
-                        db.execute("INSERT INTO p4_model_calls VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                            (uuid.uuid4().hex, draft_id, project_id, stage, version, recorded_model,
-                             actual, input_tokens, output_tokens,
-                             round((time.perf_counter() - started) * 1000),
-                             "failed" if error else "completed", error, now()))
+            requested = session.configuration.model
+            messages = [{"role": "system", "content": system},
+                        {"role": "user", "content": user}]
+            try:
+                model_session_preflight(session, requested)
+            except ModelConfigurationError:
+                store.fail_run(generation_run_id, "configuration_changed",
+                               "model_configuration_changed")
+                raise
+            model_call_id = uuid.uuid4().hex
+            try:
+                reservation = controller.plan_request(
+                    model_call_id=model_call_id, stage=stage, prompt_version=version,
+                    messages=messages,
+                )
+            except P4BudgetExceededError as exc:
+                store.fail_run(generation_run_id, "budget_exhausted", exc.blocker)
+                raise
+            store.reserve_request(generation_run_id, reservation, requested)
+            controller.apply_reserved(reservation)
+            store.mark_dispatch_pending(generation_run_id, model_call_id)
+            started = time.perf_counter()
+            try:
+                response = model_completion(
+                    session,
+                    model=requested,
+                    messages=messages,
+                    max_tokens=reservation.max_tokens,
+                    timeout=reservation.remaining_duration_ms / 1000,
+                )
+            except ModelConfigurationError:
+                duration_ms = round((time.perf_counter() - started) * 1000)
+                store.fail_not_sent(generation_run_id, model_call_id,
+                                    "ModelConfigurationError", duration_ms)
+                raise
+            except Exception as exc:
+                duration_ms = round((time.perf_counter() - started) * 1000)
+                store.fail_usage_unknown(generation_run_id, model_call_id,
+                                         type(exc).__name__, duration_ms)
+                raise
+            duration_ms = round((time.perf_counter() - started) * 1000)
+            try:
+                settlement = controller.validate_usage(reservation, response.usage)
+            except P4UsageError as exc:
+                store.fail_usage_invalid(generation_run_id, model_call_id,
+                                         exc.blocker, duration_ms)
+                raise
+            except P4BudgetExceededError as exc:
+                store.fail_usage_invalid(generation_run_id, model_call_id,
+                                         exc.blocker, duration_ms,
+                                         run_state="budget_exhausted")
+                raise
+            actual = response.model or None
+            store.settle_valid_usage(
+                generation_run_id, model_call_id, actual_model=actual,
+                input_tokens=settlement.input_tokens,
+                output_tokens=settlement.output_tokens,
+                total_tokens=settlement.total_tokens,
+                duration_ms=duration_ms,
+                usage_cost_usd=settlement.usage_cost_usd,
+            )
+            controller.apply_settlement(settlement)
+            content = response.choices[0].message.content
+            return {"content": content, "model_identifier": actual,
+                    "input_tokens": settlement.input_tokens,
+                    "output_tokens": settlement.output_tokens}
         return invoke
 
     def frozen_plan(db, project_id, kind, language):
@@ -140,10 +169,50 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
     def create_p4_draft(project_id: str, payload: CreateDraftInput):
         with connect() as db:
             (plan, pack), _ = frozen_plan(db, project_id, payload.kind, payload.language)
-        if plan.groups:
-            model_preflight()
         draft_id = uuid.uuid4().hex
+        generation_run_id = uuid.uuid4().hex
+        store = P4BudgetStore(connect, now)
         try:
+            controller = session = None
+            if plan.groups:
+                try:
+                    model_preflight()
+                    budget_configuration = budget_configuration_factory()
+                except HTTPException as exc:
+                    code = (exc.detail.get("code") if isinstance(exc.detail, dict)
+                            else "model_configuration_invalid")
+                    store.create_configuration_failed_run(
+                        generation_run_id, draft_id, project_id, payload.kind,
+                        payload.language, code,
+                    )
+                    raise
+                except P4BudgetConfigurationError as exc:
+                    store.create_configuration_failed_run(
+                        generation_run_id, draft_id, project_id, payload.kind,
+                        payload.language, exc.code,
+                    )
+                    raise
+                store.create_run(
+                    generation_run_id, draft_id, project_id, payload.kind,
+                    payload.language, budget_configuration,
+                )
+                controller = P4BudgetController(budget_configuration)
+                try:
+                    batch_count = (1 if payload.kind == "author" else len(plan.groups))
+                    controller.ensure_minimum_success_path(batch_count)
+                except P4BudgetExceededError as exc:
+                    store.fail_run(generation_run_id, "budget_exhausted", exc.blocker)
+                    raise
+                try:
+                    session = model_session_factory()
+                except HTTPException:
+                    store.fail_run(generation_run_id, "configuration_changed",
+                                   "model_configuration_invalid")
+                    raise
+                except ModelConfigurationError:
+                    store.fail_run(generation_run_id, "configuration_changed",
+                                   "model_configuration_invalid")
+                    raise
             with connect() as db:
                 other = db.execute("SELECT writing_json FROM p4_drafts WHERE project_id = ? "
                     "AND kind = ? AND language != ? AND selected_issue_ids = ? "
@@ -151,7 +220,14 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                     json.dumps(plan.selected_issue_ids))).fetchone()
             counterpart = (ReportWritingResult.model_validate_json(other["writing_json"])
                            if other and other["writing_json"] else None)
-            writing = write_report(plan, pack, call_model(project_id, draft_id), counterpart)
+            model_call = (call_model(project_id, draft_id, generation_run_id,
+                                     session, controller, store)
+                          if plan.groups else None)
+            writing = write_report(
+                plan, pack, model_call, counterpart,
+                (lambda partial: store.save_validated_partial(
+                    generation_run_id, partial)) if plan.groups else None,
+            )
             body = render_markdown(plan, pack, writing)
             if payload.kind == "author":
                 validate_author_body(body, pack)
@@ -170,7 +246,16 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                     writing.prompt_version, stamp, stamp))
                 db.execute("INSERT INTO p4_draft_revisions VALUES (?, 1, ?, ?, 'pending', ?)",
                            (draft_id, body, digest(body), stamp))
-                return draft_view(db, draft_or_404(db, draft_id))
+                result = draft_view(db, draft_or_404(db, draft_id))
+            if plan.groups:
+                store.complete_run(generation_run_id)
+            return result
+        except P4BudgetConfigurationError as exc:
+            raise HTTPException(status_code=503, detail=exc.safe_detail()) from None
+        except P4BudgetExceededError as exc:
+            raise HTTPException(status_code=409, detail=exc.safe_detail()) from None
+        except (P4UsageError, P4BudgetStateError) as exc:
+            raise HTTPException(status_code=502, detail=exc.safe_detail()) from None
         except ModelConfigurationError as exc:
             raise HTTPException(status_code=503, detail=exc.safe_detail()) from None
         except HTTPException:

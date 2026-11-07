@@ -13,6 +13,7 @@ from backend.app import create_app
 from backend.model_runtime import ModelConfigurationError, ModelRuntimeConfiguration
 from backend.tests.test_p4_api import seeded_p4_client
 from backend.tests.test_p4_drafts_api import FakeOpenAI
+from backend.tests.model_test_config import configure_test_model
 
 
 MODEL_KEYS = ("OPENAI_API_KEY", "OPENAI_BASE_URL", "OPENAI_MODEL")
@@ -29,9 +30,8 @@ def sample_pdf():
 
 
 def set_explicit_model_environment(monkeypatch):
-    monkeypatch.setenv("OPENAI_API_KEY", "test-only-key")
-    monkeypatch.setenv("OPENAI_BASE_URL", "https://provider.example/v1")
-    monkeypatch.setenv("OPENAI_MODEL", "validated-test-model")
+    configure_test_model(monkeypatch, key="test-only-key",
+                         model="validated-test-model")
 
 
 def upload_document(client):
@@ -231,7 +231,7 @@ def test_p4_client_and_request_use_the_same_validated_runtime_configuration(
         tmp_path, monkeypatch):
     set_explicit_model_environment(monkeypatch)
     constructor_arguments = []
-    requested_models = []
+    requests = []
 
     class RecordingOpenAI(FakeOpenAI):
         def __init__(self, **kwargs):
@@ -242,7 +242,7 @@ def test_p4_client_and_request_use_the_same_validated_runtime_configuration(
             delegate = super().chat
 
             def create(**kwargs):
-                requested_models.append(kwargs["model"])
+                requests.append(kwargs)
                 return delegate.completions.create(**kwargs)
 
             return SimpleNamespace(completions=SimpleNamespace(create=create))
@@ -263,7 +263,11 @@ def test_p4_client_and_request_use_the_same_validated_runtime_configuration(
         "timeout": 180,
         "max_retries": 0,
     }]
-    assert requested_models == ["validated-test-model", "validated-test-model"]
+    assert [item["model"] for item in requests] == [
+        "validated-test-model", "validated-test-model"
+    ]
+    assert all(item["max_tokens"] == 1000 for item in requests)
+    assert all(0 < item["timeout"] <= 180 for item in requests)
 
 
 def test_p4_revalidates_configuration_after_preflight_before_first_request(
@@ -349,11 +353,13 @@ def test_p4_stops_before_second_request_if_session_configuration_changes_and_kee
             "SELECT stage, requested_model, status, error "
             "FROM p4_model_calls ORDER BY rowid"
         ).fetchall()
+        run = db.execute(
+            "SELECT state, reason, request_count FROM p4_generation_runs"
+        ).fetchone()
     assert calls == [
         ("writing-1-attempt-1", "validated-test-model", "completed", None),
-        ("consistency-1-attempt-1", "validated-test-model", "failed",
-         "ModelConfigurationError"),
     ]
+    assert run == ("configuration_changed", "model_configuration_changed", 1)
 
 
 def test_all_production_model_entrypoints_use_central_preflight_and_session():

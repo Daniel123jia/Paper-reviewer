@@ -21,7 +21,7 @@ class FakeOpenAI:
 
     @property
     def chat(self):
-        def create(*, model, messages):
+        def create(*, model, messages, max_tokens=None, timeout=None):
             payload = json.loads(messages[1]["content"])
             if "report" in payload:
                 content = {"acceptable": True, "unsupported_facts": [],
@@ -177,7 +177,78 @@ def test_p4_draft_api_requires_authentication(tmp_path, monkeypatch):
     assert client.get("/api/review-report-drafts/nope").status_code == 404
 
 
-def test_transient_model_connection_is_retried_and_unknown_tokens_stay_unknown(tmp_path, monkeypatch):
+def test_missing_p4_budget_fails_before_client_or_provider_request(tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="test-secret")
+    monkeypatch.delenv("P4_MAX_PLANNED_COST_USD")
+    constructions = []
+
+    class RecordingOpenAI:
+        def __init__(self, **kwargs):
+            constructions.append(kwargs)
+
+    monkeypatch.setattr("backend.app.OpenAI", RecordingOpenAI)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["detail"]["variables"] == ["P4_MAX_PLANNED_COST_USD"]
+    assert constructions == []
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        run = db.execute("SELECT state, request_count FROM p4_generation_runs").fetchone()
+    assert run == ("configuration_failed", 0)
+
+
+def test_content_repair_consumes_a_new_durable_budget_reservation(tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="test-secret")
+
+    class RepairingOpenAI(FakeOpenAI):
+        calls = 0
+
+        @property
+        def chat(self):
+            delegate = super().chat
+
+            def create(**kwargs):
+                RepairingOpenAI.calls += 1
+                response = delegate.completions.create(**kwargs)
+                if RepairingOpenAI.calls == 1:
+                    response.choices[0].message.content = "{}"
+                return response
+
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr("backend.app.OpenAI", RepairingOpenAI)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 201, response.text
+    assert RepairingOpenAI.calls == 3
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        stages = [row[0] for row in db.execute(
+            "SELECT stage FROM p4_model_calls ORDER BY rowid"
+        )]
+        sidecars = db.execute("SELECT count(*) FROM p4_model_call_budget").fetchone()[0]
+        run = db.execute("SELECT state, request_count, input_tokens, output_tokens "
+                         "FROM p4_generation_runs").fetchone()
+    assert stages == [
+        "writing-1-attempt-1", "writing-1-attempt-2", "consistency-1-attempt-2"
+    ]
+    assert sidecars == 3
+    assert run == ("completed", 3, 360, 120)
+
+
+def test_transient_model_connection_is_not_retried_and_unknown_usage_is_terminal(
+        tmp_path, monkeypatch):
     configure_test_model(monkeypatch, key="test-secret")
 
     class FlakyOpenAI(FakeOpenAI):
@@ -199,11 +270,15 @@ def test_transient_model_connection_is_retried_and_unknown_tokens_stay_unknown(t
     project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
     response = client.post(f'/api/review-report-projects/{project["id"]}/drafts',
                            json={"kind": "author", "language": "en"})
-    assert response.status_code == 201, response.text
-    calls = response.json()["model_calls"]
-    assert [item["status"] for item in calls] == ["failed", "completed", "completed"]
-    assert calls[0]["input_tokens"] is None and calls[0]["output_tokens"] is None
-    assert calls[0]["error"] == "APIConnectionError"
+    assert response.status_code == 502, response.text
+    assert FlakyOpenAI.attempts == 1
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        call = db.execute("SELECT status, input_tokens, output_tokens, error "
+                          "FROM p4_model_calls").fetchone()
+        run = db.execute("SELECT state, unknown_usage_calls, cost_complete "
+                         "FROM p4_generation_runs").fetchone()
+    assert call == ("failed", None, None, "APIConnectionError")
+    assert run == ("usage_unknown", 1, 0)
 
 
 def test_p4_internal_export_keeps_editable_table_and_math(tmp_path, monkeypatch):
