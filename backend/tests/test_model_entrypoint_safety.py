@@ -304,7 +304,10 @@ def test_p4_revalidates_configuration_after_preflight_before_first_request(
     )
 
     assert response.status_code == 503
-    assert response.json()["detail"] == {
+    detail = response.json()["detail"]
+    generation_run_id = detail.pop("generation_run_id")
+    assert len(generation_run_id) == 32
+    assert detail == {
         "code": "model_configuration_invalid",
         "blockers": ["model_configuration_source_conflict"],
         "variables": ["OPENAI_BASE_URL"],
@@ -340,7 +343,10 @@ def test_p4_stops_before_second_request_if_session_configuration_changes_and_kee
     )
 
     assert response.status_code == 503
-    assert response.json()["detail"] == {
+    detail = response.json()["detail"]
+    generation_run_id = detail.pop("generation_run_id")
+    assert len(generation_run_id) == 32
+    assert detail == {
         "code": "model_configuration_invalid",
         "blockers": ["model_configuration_changed"],
         "variables": ["OPENAI_MODEL"],

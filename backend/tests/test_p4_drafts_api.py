@@ -202,6 +202,24 @@ def test_missing_p4_budget_fails_before_client_or_provider_request(tmp_path, mon
         run = db.execute("SELECT state, request_count FROM p4_generation_runs").fetchone()
     assert run == ("configuration_failed", 0)
 
+    runs = client.get(
+        f'/api/review-report-projects/{project["id"]}/generation-runs'
+    )
+    assert runs.status_code == 200
+    view = runs.json()[0]
+    assert view["state"] == "configuration_failed"
+    assert view["attempted_requests"] == 0
+    assert view["provider_billed_cost_usd"] is None
+    assert view["has_validated_partial_output"] is False
+    detail = client.get(
+        f'/api/review-report-generation-runs/{view["generation_run_id"]}'
+    )
+    assert detail.status_code == 200 and detail.json() == view
+    serialized = json.dumps(view)
+    for forbidden in ("api_key", "base_url", "budget_json", "test-secret",
+                      "validated_partial_json", "raw_response", "prompt"):
+        assert forbidden not in serialized.casefold()
+
 
 def test_content_repair_consumes_a_new_durable_budget_reservation(tmp_path, monkeypatch):
     configure_test_model(monkeypatch, key="test-secret")

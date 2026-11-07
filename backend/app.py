@@ -36,6 +36,7 @@ from backend.p3_engine import run_p3
 from backend.p3_sources import validate_p3_inputs
 from backend.p4_api import initialize_p4_tables, register_p4_routes
 from backend.p4_budget import (P4_BUDGET_ENV_KEYS,
+                               recover_p4_generation_runs,
                                require_p4_budget_configuration)
 from backend.model_runtime import (REQUIRED_MODEL_ENV_KEYS,
                                    ModelConfigurationError,
@@ -352,6 +353,9 @@ def create_app(data_dir: Path) -> FastAPI:
             );
         """)
         initialize_p4_tables(db)
+        recover_p4_generation_runs(
+            db, time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        )
         columns = {row[1] for row in db.execute("PRAGMA table_info(review_findings)")}
         if "support_assessment" not in columns:
             db.execute("ALTER TABLE review_findings ADD COLUMN support_assessment TEXT NOT NULL DEFAULT ''")

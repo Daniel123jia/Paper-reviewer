@@ -185,7 +185,10 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                         generation_run_id, draft_id, project_id, payload.kind,
                         payload.language, code,
                     )
-                    raise
+                    detail = (dict(exc.detail) if isinstance(exc.detail, dict)
+                              else {"code": code})
+                    detail["generation_run_id"] = generation_run_id
+                    raise HTTPException(exc.status_code, detail=detail) from None
                 except P4BudgetConfigurationError as exc:
                     store.create_configuration_failed_run(
                         generation_run_id, draft_id, project_id, payload.kind,
@@ -205,10 +208,13 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                     raise
                 try:
                     session = model_session_factory()
-                except HTTPException:
+                except HTTPException as exc:
                     store.fail_run(generation_run_id, "configuration_changed",
                                    "model_configuration_invalid")
-                    raise
+                    detail = (dict(exc.detail) if isinstance(exc.detail, dict)
+                              else {"code": "model_configuration_invalid"})
+                    detail["generation_run_id"] = generation_run_id
+                    raise HTTPException(exc.status_code, detail=detail) from None
                 except ModelConfigurationError:
                     store.fail_run(generation_run_id, "configuration_changed",
                                    "model_configuration_invalid")
@@ -251,13 +257,21 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                 store.complete_run(generation_run_id)
             return result
         except P4BudgetConfigurationError as exc:
-            raise HTTPException(status_code=503, detail=exc.safe_detail()) from None
+            detail = exc.safe_detail()
+            detail["generation_run_id"] = generation_run_id
+            raise HTTPException(status_code=503, detail=detail) from None
         except P4BudgetExceededError as exc:
-            raise HTTPException(status_code=409, detail=exc.safe_detail()) from None
+            detail = exc.safe_detail()
+            detail["generation_run_id"] = generation_run_id
+            raise HTTPException(status_code=409, detail=detail) from None
         except (P4UsageError, P4BudgetStateError) as exc:
-            raise HTTPException(status_code=502, detail=exc.safe_detail()) from None
+            detail = exc.safe_detail()
+            detail["generation_run_id"] = generation_run_id
+            raise HTTPException(status_code=502, detail=detail) from None
         except ModelConfigurationError as exc:
-            raise HTTPException(status_code=503, detail=exc.safe_detail()) from None
+            detail = exc.safe_detail()
+            detail["generation_run_id"] = generation_run_id
+            raise HTTPException(status_code=503, detail=detail) from None
         except HTTPException:
             raise
         except (ValueError, KeyError, TypeError) as exc:

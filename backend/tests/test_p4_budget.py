@@ -18,6 +18,7 @@ from backend.p4_budget import (
     P4RequestReservation,
     P4UsageError,
     estimate_p4_input_tokens,
+    recover_p4_generation_runs,
     require_p4_budget_configuration,
 )
 from backend.p4_api import initialize_p4_tables
@@ -449,3 +450,41 @@ def test_controller_rejects_a_report_without_minimum_success_path(overrides, blo
         controller.ensure_minimum_success_path(batch_count=2)
 
     assert caught.value.blocker == blocker
+
+
+@pytest.mark.parametrize(
+    ("dispatch", "call_state", "reason", "unknown", "billable"),
+    [
+        (False, "interrupted_not_sent", "interrupted_before_dispatch", 0, 0),
+        (True, "usage_unknown", "interrupted_after_dispatch", 1, 1),
+    ],
+)
+def test_recover_interrupted_request_is_conservative_and_idempotent(
+    tmp_path, dispatch, call_state, reason, unknown, billable
+):
+    path = tmp_path / "review.db"
+    connect = database_connect(path)
+    with connect() as db:
+        initialize_p4_tables(db)
+    store = P4BudgetStore(connect, lambda: "2026-11-07T00:00:00+00:00")
+    store.create_run("run-1", "draft-1", "project-1", "author", "en",
+                     budget_configuration())
+    store.reserve_request("run-1", reservation(), "model-1")
+    if dispatch:
+        store.mark_dispatch_pending("run-1", "call-1")
+
+    with connect() as db:
+        recover_p4_generation_runs(db, "2026-11-07T01:00:00+00:00")
+        recover_p4_generation_runs(db, "2026-11-07T01:00:01+00:00")
+        run = db.execute(
+            "SELECT state, reason, unknown_usage_calls, potentially_billable_requests, "
+            "cost_complete FROM p4_generation_runs WHERE id = 'run-1'"
+        ).fetchone()
+        call = db.execute(
+            "SELECT dispatch_state, actual_total_tokens FROM p4_model_call_budget "
+            "WHERE model_call_id = 'call-1'"
+        ).fetchone()
+
+    assert tuple(run) == ("interrupted", reason, unknown, billable,
+                          0 if dispatch else 1)
+    assert tuple(call) == (call_state, None)

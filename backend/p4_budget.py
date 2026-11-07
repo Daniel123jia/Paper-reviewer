@@ -389,6 +389,66 @@ class P4BudgetController:
         self._usage_cost_usd += settlement.usage_cost_usd
 
 
+def recover_p4_generation_runs(db, timestamp: str) -> None:
+    """Fail closed on restart; never replay or refund an uncertain request."""
+    reserved = db.execute(
+        """SELECT model_call_id, generation_run_id FROM p4_model_call_budget
+           WHERE dispatch_state = 'reserved_not_dispatched'"""
+    ).fetchall()
+    for call in reserved:
+        db.execute(
+            """UPDATE p4_model_call_budget
+               SET dispatch_state = 'interrupted_not_sent', updated_at = ?
+               WHERE model_call_id = ? AND dispatch_state = 'reserved_not_dispatched'""",
+            (timestamp, call["model_call_id"]),
+        )
+        db.execute(
+            """UPDATE p4_model_calls SET status = 'failed',
+                   error = 'interrupted_before_dispatch'
+               WHERE id = ? AND status = 'reserved'""",
+            (call["model_call_id"],),
+        )
+        db.execute(
+            """UPDATE p4_generation_runs SET state = 'interrupted',
+                   reason = 'interrupted_before_dispatch', updated_at = ?
+               WHERE id = ? AND state NOT IN ('completed', 'interrupted')""",
+            (timestamp, call["generation_run_id"]),
+        )
+
+    pending = db.execute(
+        """SELECT model_call_id, generation_run_id FROM p4_model_call_budget
+           WHERE dispatch_state = 'dispatch_pending'"""
+    ).fetchall()
+    for call in pending:
+        db.execute(
+            """UPDATE p4_model_call_budget SET dispatch_state = 'usage_unknown',
+                   usage_status = 'unknown', updated_at = ?
+               WHERE model_call_id = ? AND dispatch_state = 'dispatch_pending'""",
+            (timestamp, call["model_call_id"]),
+        )
+        db.execute(
+            """UPDATE p4_model_calls SET status = 'failed',
+                   error = 'interrupted_after_dispatch'
+               WHERE id = ? AND status = 'reserved'""",
+            (call["model_call_id"],),
+        )
+        db.execute(
+            """UPDATE p4_generation_runs SET state = 'interrupted',
+                   reason = 'interrupted_after_dispatch',
+                   unknown_usage_calls = unknown_usage_calls + 1,
+                   cost_complete = 0, updated_at = ?
+               WHERE id = ? AND state NOT IN ('completed', 'interrupted')""",
+            (timestamp, call["generation_run_id"]),
+        )
+
+    db.execute(
+        """UPDATE p4_generation_runs SET state = 'interrupted',
+               reason = 'interrupted_between_requests', updated_at = ?
+           WHERE state IN ('ready', 'usage_valid')""",
+        (timestamp,),
+    )
+
+
 class P4BudgetStore:
     """Durable P4 budget state; no provider call may precede its reservation."""
 
