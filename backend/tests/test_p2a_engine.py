@@ -3,7 +3,8 @@ import json
 import pytest
 
 from backend.model_runtime import ModelConfigurationError
-from backend.p2a_engine import BudgetExceeded, P2AError, RunBudget, chunk_reading_units, run_p2a
+from backend.p2a_engine import (BudgetExceeded, P2AError, RunBudget, UnknownUsageError,
+                                chunk_reading_units, run_p2a)
 from backend.p2a_schema import validate_source_references
 
 
@@ -109,8 +110,8 @@ def test_chunking_preserves_every_unit_and_failure_is_explicit():
 
     with pytest.raises(P2AError, match="paper-understanding") as failure:
         run_p2a(bundle, "run2", broken, requested_model="model", chunk_chars=10000)
-    assert len(failure.value.traces) == 3
-    assert failure.value.traces[-1].status == "failed"
+    assert len(failure.value.traces) == 2
+    assert failure.value.traces[-1].status == "unknown_usage"
 
 
 def test_long_input_uses_global_synthesis_and_preserves_coverage():
@@ -193,7 +194,8 @@ def test_global_model_failure_keeps_partial_facts_and_marks_gap():
         if auxiliary := _aux_reply(stage, user):
             return auxiliary
         if stage == "paper-understanding" and "Global synthesis" in user:
-            raise RuntimeError("upstream unavailable")
+            return {"content": "not-json", "model_identifier": "returned-model",
+                    "input_tokens": 100, "output_tokens": 30, "duration_ms": 12}
         return _reply({"paper-type-planner": PLAN, "paper-understanding": PROFILE,
                        "contribution-evidence-mapper": MAP}[stage])
 
@@ -202,10 +204,10 @@ def test_global_model_failure_keeps_partial_facts_and_marks_gap():
     assert profile.main_results[0].evidence_ref_ids == ["ru2"]
     assert any("Global scalar synthesis failed" in gap for gap in profile.unresolved_source_gaps)
     assert len(mapping.contributions) == 1
-    assert [trace.status for trace in traces].count("failed") == 2
+    assert [trace.status for trace in traces].count("invalid_output") == 2
 
 
-def test_mapping_splits_source_part_after_repeated_connection_failure():
+def test_mapping_connection_failure_stops_without_retry_or_recursive_split():
     class APIConnectionError(RuntimeError):
         pass
 
@@ -220,13 +222,12 @@ def test_mapping_splits_source_part_after_repeated_connection_failure():
         return _reply({"paper-type-planner": PLAN, "paper-understanding": PROFILE,
                        "contribution-evidence-mapper": MAP}[stage])
 
-    _, _, mapping, traces = run_p2a(_bundle(), "run7", model_call, "model", chunk_chars=10000)
-    assert len(mapping.contributions) == 1
-    assert mapping.input_coverage.included_unit_count == 2
-    assert [trace.status for trace in traces].count("failed") == 2
+    with pytest.raises(UnknownUsageError, match="unknown_usage:APIConnectionError"):
+        run_p2a(_bundle(), "run7", model_call, "model", chunk_chars=10000)
+    assert sum(stage == "contribution-evidence-mapper" for stage, _ in calls) == 1
 
 
-def test_understanding_splits_source_part_after_repeated_connection_failure():
+def test_understanding_connection_failure_stops_without_retry_or_recursive_split():
     class APIConnectionError(RuntimeError):
         pass
 
@@ -239,10 +240,16 @@ def test_understanding_splits_source_part_after_repeated_connection_failure():
         return _reply({"paper-type-planner": PLAN, "paper-understanding": PROFILE,
                        "contribution-evidence-mapper": MAP}[stage])
 
-    _, profile, mapping, traces = run_p2a(_bundle(), "run9", model_call, "model", chunk_chars=10000)
-    assert profile.input_coverage.included_unit_count == 2
-    assert mapping.input_coverage.included_unit_count == 2
-    assert [trace.status for trace in traces].count("failed") == 2
+    calls = []
+    original = model_call
+
+    def counted(stage, system, user):
+        calls.append(stage)
+        return original(stage, system, user)
+
+    with pytest.raises(UnknownUsageError, match="unknown_usage:APIConnectionError"):
+        run_p2a(_bundle(), "run9", counted, "model", chunk_chars=10000)
+    assert calls == ["paper-type-planner", "paper-understanding"]
 
 
 def test_model_error_never_enters_diagnostic_traces():
@@ -503,8 +510,56 @@ def test_failed_call_reserves_unknown_tokens_in_budget():
     budget = RunBudget(max_calls=1)
     def unavailable(stage, system, user):
         raise RuntimeError("provider disconnected")
-    with pytest.raises(RuntimeError):
+    with pytest.raises(UnknownUsageError, match="unknown_usage:RuntimeError"):
         budget.call("paper-understanding", "system", "source text", unavailable)
+    assert budget.unknown_usage_calls == 1
+    assert budget.reserved_input_tokens > 0
+    assert budget.reserved_output_tokens == 4096
+
+
+def test_fourth_call_unknown_usage_latches_budget_before_fifth_supplier_request():
+    budget = RunBudget(max_calls=10)
+    supplier_calls = []
+
+    def provider(stage, system, user):
+        supplier_calls.append(stage)
+        if len(supplier_calls) == 4:
+            raise RuntimeError("private provider diagnostic")
+        return _reply(PLAN)
+
+    for index in range(3):
+        budget.call(f"stage-{index}", "system", "user", provider)
+    with pytest.raises(UnknownUsageError, match="unknown_usage:RuntimeError"):
+        budget.call("stage-4", "system", "user", provider)
+    with pytest.raises(UnknownUsageError, match="unknown_usage:previous_call_unsettled"):
+        budget.call("stage-5", "system", "user", provider)
+
+    assert supplier_calls == ["stage-0", "stage-1", "stage-2", "stage-4"]
+    assert budget.calls == 4
+    assert budget.unknown_usage_calls == 1
+    assert "private provider diagnostic" not in str(budget)
+
+
+@pytest.mark.parametrize("input_tokens,output_tokens", [
+    (None, 1), (1, None), (-1, 1), (1, -1), (True, 1), (1, False), (1.5, 1), (1, "2"),
+])
+def test_invalid_supplier_usage_latches_without_treating_unknown_as_zero(
+        input_tokens, output_tokens):
+    budget = RunBudget(max_calls=2)
+    calls = []
+
+    def provider(*args):
+        calls.append(args[0])
+        response = _reply(PLAN)
+        response["input_tokens"] = input_tokens
+        response["output_tokens"] = output_tokens
+        return response
+
+    with pytest.raises(UnknownUsageError, match="unknown_usage:invalid_usage"):
+        budget.call("first", "system", "user", provider)
+    with pytest.raises(UnknownUsageError, match="unknown_usage:previous_call_unsettled"):
+        budget.call("second", "system", "user", provider)
+    assert calls == ["first"]
     assert budget.unknown_usage_calls == 1
     assert budget.reserved_input_tokens > 0
     assert budget.reserved_output_tokens == 4096
@@ -517,6 +572,9 @@ def test_configuration_change_stops_p2a_without_content_retry():
         calls.append(args[0])
         raise ModelConfigurationError(["model_configuration_changed"], ["OPENAI_MODEL"])
 
+    budget = RunBudget()
     with pytest.raises(ModelConfigurationError):
-        run_p2a(_bundle(), "configuration-change", changed, "model")
+        run_p2a(_bundle(), "configuration-change", changed, "model", budget=budget)
     assert calls == ["paper-type-planner"]
+    assert budget.calls == 0
+    assert budget.unknown_usage_calls == 0

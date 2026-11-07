@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from backend.model_runtime import ModelConfigurationError
-from backend.p2a_engine import BudgetExceeded, RunBudget
+from backend.p2a_engine import BudgetExceeded, RunBudget, UnknownUsageError
 from backend.p2a_schema import source_reference_index
 from backend.p3_adjudication import (JUDGMENT_PROMPT_VERSION, PROMPTS,
     SOURCE_PROMPT_VERSION, adjudicate, fallback_adjudication,
@@ -153,6 +153,14 @@ def run_p3(bundle, plan, profile, mapping, review, consolidation, pdf_path,
                 value = validate(parse_model_json(reply["content"]))
                 status, error = "completed", None
             except ModelConfigurationError:
+                raise
+            except UnknownUsageError as exc:
+                trace = P3CallTrace(stage, version, requested_model, exc.actual_model,
+                    None, None, exc.duration_ms, "unknown_usage",
+                    f"unknown_usage:{exc.reason}")
+                traces.append(trace)
+                if on_trace:
+                    on_trace(trace)
                 raise
             except BudgetExceeded:
                 exhausted = True

@@ -3,7 +3,7 @@ import json
 import pytest
 
 from backend.model_runtime import ModelConfigurationError
-from backend.p2a_engine import RunBudget
+from backend.p2a_engine import RunBudget, UnknownUsageError
 from backend.p2c_engine import run_p2c
 from backend.p3_engine import run_p3, validate_p3_result
 from backend.p3_schema import ToolCheck
@@ -92,10 +92,10 @@ def test_invalid_json_and_budget_limit_preserve_task_lineage(tmp_path):
     bundle, plan, profile, mapping, review, consolidation, pdf_path = frozen_case(tmp_path)
     bad = run_p3(bundle, plan, profile, mapping, review, consolidation,
         pdf_path, "v3", lambda *args: {"content": "not-json",
-        "model_identifier": "mock", "input_tokens": None,
-        "output_tokens": None, "duration_ms": 1}, "requested")
+        "model_identifier": "mock", "input_tokens": 10,
+        "output_tokens": 2, "duration_ms": 1}, "requested")
     assert bad.execution_status == "limited"
-    assert bad.unknown_token_calls == bad.call_count > 0
+    assert bad.unknown_token_calls == 0 and bad.call_count > 0
     assert len(bad.adjudications) == len(consolidation.verification_tasks)
     assert bad.uncovered_tasks
     limited = run_p3(bundle, plan, profile, mapping, review, consolidation,
@@ -170,3 +170,20 @@ def test_configuration_change_stops_p3_without_verification_retry(tmp_path):
         run_p3(bundle, plan, profile, mapping, review, consolidation, pdf_path,
                "config-change", changed, "requested")
     assert len(calls) == 1
+
+
+def test_unknown_usage_stops_p3_before_next_verification_request(tmp_path):
+    bundle, plan, profile, mapping, review, consolidation, pdf_path = frozen_case(tmp_path)
+    calls = []
+    traces = []
+
+    def disconnected(stage, system, user):
+        calls.append(stage)
+        raise RuntimeError("private provider detail")
+
+    with pytest.raises(UnknownUsageError):
+        run_p3(bundle, plan, profile, mapping, review, consolidation, pdf_path,
+               "unknown-usage", disconnected, "requested", on_trace=traces.append)
+    assert len(calls) == 1
+    assert len(traces) == 1 and traces[0].status == "unknown_usage"
+    assert "private provider detail" not in str(traces)

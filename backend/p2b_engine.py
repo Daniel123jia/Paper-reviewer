@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Callable
 
 from backend.model_runtime import ModelConfigurationError
-from backend.p2a_engine import BudgetExceeded, RunBudget
+from backend.p2a_engine import BudgetExceeded, RunBudget, UnknownUsageError
 from backend.p2a_schema import (ClaimEvidenceMap, PaperProfile, ReviewPlan,
                                  source_reference_index, validate_source_references)
 from backend.p2b_context import DIMENSION_FACT_FIELDS, assemble_context
@@ -212,6 +212,14 @@ def run_p2b(bundle: dict, plan: ReviewPlan, profile: PaperProfile, mapping: Clai
                     limits, state, payload)
                 trace_status, last_error = "completed", None
             except ModelConfigurationError:
+                raise
+            except UnknownUsageError as exc:
+                trace = CallTrace(rule.id, version, bundle["bundle_id"], pack.source_ref_ids,
+                    requested_model, exc.actual_model, None, None, exc.duration_ms,
+                    "unknown_usage", f"unknown_usage:{exc.reason}")
+                traces.append(trace)
+                if on_trace:
+                    on_trace(trace)
                 raise
             except BudgetExceeded:
                 budget_exhausted = True

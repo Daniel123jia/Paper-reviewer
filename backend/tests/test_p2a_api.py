@@ -142,11 +142,11 @@ def test_understanding_run_reports_model_failure_and_missing_key(tmp_path, monke
     assert created.status_code == 202
     result = client.get(f'/api/understanding-runs/{created.json()["id"]}').json()
     assert result["status"] == "failed"
-    assert result["error"] == "paper-type-planner: model_call_failed:RuntimeError"
-    assert len(result["model_calls"]) == 2
-    assert all(call["status"] == "failed" for call in result["model_calls"])
+    assert result["error"] == "paper-type-planner: unknown_usage:RuntimeError"
+    assert len(result["model_calls"]) == 1
+    assert result["model_calls"][0]["status"] == "unknown_usage"
     usage = client.get("/api/usage/summary").json()
-    assert usage["total"]["unknown_token_calls"] == 2
+    assert usage["total"]["unknown_token_calls"] == 1
 
 
 def test_completed_plan_survives_downstream_model_failure(tmp_path, monkeypatch):
@@ -176,6 +176,50 @@ def test_completed_plan_survives_downstream_model_failure(tmp_path, monkeypatch)
     assert result["review_plan"]["paper_type"] == "AI algorithm research"
     assert result["paper_profile"] is None
     assert "secret-bearing" not in str(result)
+
+
+def test_completed_plan_and_profile_survive_unknown_usage_without_replay_on_restart(
+        tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="fake-key", model="requested-model")
+    provider_calls = []
+
+    class ProfileOnlyOpenAI:
+        def __init__(self, **kwargs):
+            pass
+
+        @property
+        def chat(self):
+            def create(**kwargs):
+                system = kwargs["messages"][0]["content"]
+                provider_calls.append(system.splitlines()[0])
+                if "contribution-evidence-mapper/v2" in system:
+                    raise RuntimeError("private provider diagnostic")
+                return _fake_completion(kwargs["messages"])
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr("backend.app.OpenAI", ProfileOnlyOpenAI)
+    client = TestClient(create_app(tmp_path))
+    document = client.post("/api/documents", files={"file": (
+        "paper.pdf", io.BytesIO(_pdf()), "application/pdf")}).json()
+    created = client.post(f'/api/documents/{document["id"]}/understanding-runs', json={})
+    run_id = created.json()["id"]
+    before_restart = client.get(f"/api/understanding-runs/{run_id}").json()
+
+    assert before_restart["status"] == "failed"
+    assert before_restart["review_plan"] is not None
+    assert before_restart["paper_profile"] is not None
+    assert before_restart["claim_evidence_map"] is None
+    assert [call["status"] for call in before_restart["model_calls"]] == [
+        "completed", "completed", "unknown_usage"]
+    assert before_restart["model_calls"][-1]["input_tokens"] is None
+    assert before_restart["model_calls"][-1]["output_tokens"] is None
+    assert "private provider diagnostic" not in str(before_restart)
+
+    call_count = len(provider_calls)
+    restarted = TestClient(create_app(tmp_path))
+    after_restart = restarted.get(f"/api/understanding-runs/{run_id}").json()
+    assert len(provider_calls) == call_count
+    assert after_restart == before_restart
 
 
 def test_understanding_budget_exceeded_is_explicit(tmp_path, monkeypatch):

@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Callable
 
 from backend.model_runtime import ModelConfigurationError
-from backend.p2a_engine import BudgetExceeded, RunBudget
+from backend.p2a_engine import BudgetExceeded, RunBudget, UnknownUsageError
 from backend.p2a_schema import ClaimEvidenceMap
 from backend.p2b_schema import CandidateSourceRef
 from backend.p2c_schema import (CandidateLineage, CandidateRelation, ConsolidatedIssue,
@@ -234,6 +234,14 @@ def run_semantic_grouping(inventory: OriginalCandidateInventory, mapping: ClaimE
                 result = validate(parse_model_json(reply["content"]))
                 status, error = "completed", None
             except ModelConfigurationError:
+                raise
+            except UnknownUsageError as exc:
+                trace = GroupingTrace(stage, version, requested_model, exc.actual_model,
+                    None, None, exc.duration_ms, "unknown_usage",
+                    f"unknown_usage:{exc.reason}")
+                traces.append(trace)
+                if on_trace:
+                    on_trace(trace)
                 raise
             except BudgetExceeded:
                 exhausted = True

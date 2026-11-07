@@ -3,6 +3,7 @@ import json
 import pytest
 
 from backend.model_runtime import ModelConfigurationError
+from backend.p2a_engine import UnknownUsageError
 from backend.p2c_engine import run_p2c
 from backend.p2c_schema import CandidateConsolidationResult
 from backend.tests.test_p2c_normalizer import fixture_review
@@ -134,3 +135,20 @@ def test_configuration_change_stops_p2c_without_grouping_retry():
         run_p2c(bundle, plan, profile, mapping, review, "u1", "b1", "config-change",
                 changed, "requested", p2b_status="limited")
     assert len(calls) == 1
+
+
+def test_unknown_usage_stops_p2c_without_retry_or_reconciliation():
+    bundle, plan, profile, mapping, review = fixture_review()
+    calls = []
+    traces = []
+
+    def disconnected(stage, system, user):
+        calls.append(stage)
+        raise RuntimeError("private relay detail")
+
+    with pytest.raises(UnknownUsageError):
+        run_p2c(bundle, plan, profile, mapping, review, "u1", "b1", "unknown-usage",
+                disconnected, "requested", p2b_status="limited", on_trace=traces.append)
+    assert len(calls) == 1
+    assert len(traces) == 1 and traces[0].status == "unknown_usage"
+    assert "private relay detail" not in str(traces)

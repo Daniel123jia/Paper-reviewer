@@ -55,6 +55,17 @@ class BudgetExceeded(P2AError):
     pass
 
 
+class UnknownUsageError(P2AError):
+    """A possibly dispatched request has no trustworthy supplier usage."""
+
+    def __init__(self, stage: str, reason: str, *, actual_model: str | None = None,
+                 duration_ms: int = 0):
+        self.reason = reason
+        self.actual_model = actual_model
+        self.duration_ms = duration_ms
+        super().__init__(stage, f"unknown_usage:{reason}", [])
+
+
 @dataclass
 class RunBudget:
     max_calls: int = 32
@@ -66,8 +77,17 @@ class RunBudget:
     reserved_output_tokens: int = 0
     elapsed_ms: int = 0
     unknown_usage_calls: int = 0
+    unknown_usage_latched: bool = False
+
+    def _mark_unknown(self, estimated_input, estimated_output):
+        self.reserved_input_tokens += estimated_input
+        self.reserved_output_tokens += estimated_output
+        self.unknown_usage_calls += 1
+        self.unknown_usage_latched = True
 
     def call(self, stage, system, user, model_call):
+        if self.unknown_usage_latched:
+            raise UnknownUsageError(stage, "previous_call_unsettled")
         estimated_input = max(1, (len(system) + len(user) + 3) // 4)
         estimated_output = 4096
         if (self.calls >= self.max_calls or
@@ -77,19 +97,39 @@ class RunBudget:
             raise BudgetExceeded(stage, "budget_exceeded", [])
         self.calls += 1
         started = time.perf_counter()
-        reply = None
         try:
             reply = model_call(stage, system, user)
-            return reply
-        finally:
+        except ModelConfigurationError:
+            # The runtime session validates configuration before SDK dispatch.
+            self.calls -= 1
             self.elapsed_ms += round((time.perf_counter() - started) * 1000)
-            if isinstance(reply, dict) and reply.get("input_tokens") is not None and reply.get("output_tokens") is not None:
-                self.reserved_input_tokens += reply["input_tokens"]
-                self.reserved_output_tokens += reply["output_tokens"]
-            else:
-                self.reserved_input_tokens += estimated_input
-                self.reserved_output_tokens += estimated_output
-                self.unknown_usage_calls += 1
+            raise
+        except Exception as exc:
+            duration_ms = round((time.perf_counter() - started) * 1000)
+            self.elapsed_ms += duration_ms
+            self._mark_unknown(estimated_input, estimated_output)
+            raise UnknownUsageError(stage, type(exc).__name__, duration_ms=duration_ms) from exc
+
+        duration_ms = round((time.perf_counter() - started) * 1000)
+        self.elapsed_ms += duration_ms
+        try:
+            input_tokens = reply.get("input_tokens") if isinstance(reply, dict) else None
+            output_tokens = reply.get("output_tokens") if isinstance(reply, dict) else None
+            actual_model = reply.get("model_identifier") if isinstance(reply, dict) else None
+            usage_valid = (type(input_tokens) is int and input_tokens >= 0 and
+                           type(output_tokens) is int and output_tokens >= 0)
+        except Exception:
+            input_tokens = output_tokens = actual_model = None
+            usage_valid = False
+        if not usage_valid:
+            self._mark_unknown(estimated_input, estimated_output)
+            raise UnknownUsageError(
+                stage, "invalid_usage",
+                actual_model=actual_model if isinstance(actual_model, str) else None,
+                duration_ms=duration_ms)
+        self.reserved_input_tokens += input_tokens
+        self.reserved_output_tokens += output_tokens
+        return reply
 
 
 def chunk_reading_units(units: list[dict], max_chars: int = 12000) -> list[list[dict]]:
@@ -225,6 +265,15 @@ def _invoke(stage: str, user_text: str, bundle: dict, run_id: str, included_unit
             return result
         except ModelConfigurationError:
             raise
+        except UnknownUsageError as exc:
+            trace = CallTrace(stage, VERSIONS[stage], requested_model, exc.actual_model,
+                              None, None, exc.duration_ms, "unknown_usage",
+                              f"unknown_usage:{exc.reason}")
+            traces.append(trace)
+            exc.traces = list(traces)
+            if on_trace:
+                on_trace(trace)
+            raise
         except BudgetExceeded:
             raise
         except Exception as exc:
@@ -264,6 +313,15 @@ def _aux_json(stage, payload, requested_model, model_call, traces, on_trace):
                 on_trace(trace)
             return result
         except ModelConfigurationError:
+            raise
+        except UnknownUsageError as exc:
+            trace = CallTrace(stage, VERSIONS[stage], requested_model, exc.actual_model,
+                              None, None, exc.duration_ms, "unknown_usage",
+                              f"unknown_usage:{exc.reason}")
+            traces.append(trace)
+            exc.traces = list(traces)
+            if on_trace:
+                on_trace(trace)
             raise
         except BudgetExceeded:
             raise
@@ -327,6 +385,8 @@ def _global_profile(partials, context, bundle, run_id, quality, requested_model,
             "Cite the provided source IDs.\n" + json.dumps(summaries, ensure_ascii=False),
             bundle, run_id, bundle["reading_units"], quality, requested_model,
             model_call, traces, PaperProfile, on_trace)
+    except UnknownUsageError:
+        raise
     except P2AError:
         global_result = partials[0]
         fallback = True
@@ -583,18 +643,11 @@ def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: st
     partial_profiles = []
 
     def profile_part(part, label):
-        try:
-            return [_invoke(
-                "paper-understanding", profile_context + f"\nPart {label}. "
-                "Other parts will be processed separately; do not call them missing.\n" +
-                _source_text(part), bundle, run_id, part, quality, requested_model,
-                model_call, traces, PaperProfile, on_trace)]
-        except P2AError as exc:
-            if len(part) < 2 or not any(code in str(exc) for code in
-                                         ("APIConnectionError", "APITimeoutError")):
-                raise
-            middle = len(part) // 2
-            return profile_part(part[:middle], label + "a") + profile_part(part[middle:], label + "b")
+        return [_invoke(
+            "paper-understanding", profile_context + f"\nPart {label}. "
+            "Other parts will be processed separately; do not call them missing.\n" +
+            _source_text(part), bundle, run_id, part, quality, requested_model,
+            model_call, traces, PaperProfile, on_trace)]
 
     for index, part in enumerate(chunks):
         partial_profiles.extend(profile_part(part, f"{index + 1}/{len(chunks)}"))
@@ -608,20 +661,13 @@ def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: st
     partial_maps = []
 
     def map_part(part, label):
-        try:
-            return [_invoke(
-                "contribution-evidence-mapper", map_context +
-                f"\nPart {label}. Map claims from these reading units; "
-                "the PaperProfile facts below are projected by their source IDs.\n" +
-                _profile_context_for_part(profile, part) + "\nReading units:\n" +
-                _source_text(part), bundle, run_id, part, quality, requested_model,
-                model_call, traces, ClaimEvidenceMap, on_trace)]
-        except P2AError as exc:
-            if len(part) < 2 or not any(code in str(exc) for code in
-                                         ("APIConnectionError", "APITimeoutError")):
-                raise
-            middle = len(part) // 2
-            return map_part(part[:middle], label + "a") + map_part(part[middle:], label + "b")
+        return [_invoke(
+            "contribution-evidence-mapper", map_context +
+            f"\nPart {label}. Map claims from these reading units; "
+            "the PaperProfile facts below are projected by their source IDs.\n" +
+            _profile_context_for_part(profile, part) + "\nReading units:\n" +
+            _source_text(part), bundle, run_id, part, quality, requested_model,
+            model_call, traces, ClaimEvidenceMap, on_trace)]
 
     for index, part in enumerate(map_chunks):
         partial_maps.extend(map_part(part, f"{index + 1}/{len(map_chunks)}"))
