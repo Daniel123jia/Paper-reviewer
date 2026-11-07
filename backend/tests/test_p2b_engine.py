@@ -5,7 +5,7 @@ import pytest
 from backend.model_runtime import ModelConfigurationError
 from backend.p2a_schema import (ClaimEvidenceMap, PaperProfile, ReviewPlan, SourceConflict,
                                  source_reference_index)
-from backend.p2a_engine import RunBudget
+from backend.p2a_engine import RunBudget, UnknownUsageError
 from backend.p2b_context import assemble_context
 from backend.p2b_engine import run_p2b, validate_understanding_snapshot
 
@@ -178,12 +178,11 @@ def test_model_error_is_classified_without_exposing_private_message():
         if stage == "D2":
             raise RuntimeError("secret-bearing upstream diagnostic")
         return reply()
-    result = run_p2b(bundle, plan, profile, mapping, "u1", "p2e", model,
-                     "requested", on_trace=traces.append)
-    assert result.execution_status == "partial_failed"
-    assert result.unknown_token_calls == 2
-    assert result.dimensions[2].execution_status == "limited"
-    assert "secret-bearing" not in str(result.model_dump())
+    with pytest.raises(UnknownUsageError):
+        run_p2b(bundle, plan, profile, mapping, "u1", "p2e", model,
+                "requested", on_trace=traces.append)
+    assert len(traces) == 2
+    assert traces[-1].status == "unknown_usage"
     assert all("secret-bearing" not in str(trace) for trace in traces)
 
 
@@ -216,13 +215,11 @@ def test_budget_exhaustion_retains_prior_dimension_and_unknown_usage():
         response["input_tokens"] = None
         response["output_tokens"] = None
         return response
-    result = run_p2b(bundle, plan, profile, mapping, "u1", "p4", model, "requested",
-                     budget=RunBudget(max_calls=1))
-    assert result.execution_status == "budget_exceeded"
-    assert result.dimensions[0].execution_status == "limited"
-    assert result.dimensions[1].execution_status == "budget_exceeded"
-    assert result.call_count == 1 and result.unknown_token_calls == 1
-    assert result.input_tokens is None and result.output_tokens is None
+    budget = RunBudget(max_calls=1)
+    with pytest.raises(UnknownUsageError, match="unknown_usage:invalid_usage"):
+        run_p2b(bundle, plan, profile, mapping, "u1", "p4", model, "requested",
+                budget=budget)
+    assert budget.calls == 1 and budget.unknown_usage_calls == 1
 
 
 def test_unreadable_source_blocks_reviews_without_inventing_defect():
