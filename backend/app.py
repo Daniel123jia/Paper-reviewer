@@ -93,6 +93,10 @@ class UnderstandingRunRequest(BaseModel):
     special_requirements: str | None = Field(default=None, max_length=2000)
 
 
+class ProfessionalReviewRunRequest(BaseModel):
+    review_requirements: str | None = Field(default=None, max_length=2000)
+
+
 class ConsolidationRunRequest(BaseModel):
     retry: bool = False
 
@@ -326,7 +330,7 @@ def create_app(data_dir: Path) -> FastAPI:
             CREATE TABLE IF NOT EXISTS professional_review_runs (
                 id TEXT PRIMARY KEY, understanding_run_id TEXT NOT NULL,
                 document_id TEXT NOT NULL, source_bundle_id TEXT NOT NULL,
-                status TEXT NOT NULL, error TEXT, result_json TEXT,
+                review_requirements TEXT, status TEXT NOT NULL, error TEXT, result_json TEXT,
                 created_at TEXT NOT NULL, finished_at TEXT
             );
             CREATE TABLE IF NOT EXISTS professional_review_dimensions (
@@ -399,6 +403,11 @@ def create_app(data_dir: Path) -> FastAPI:
         understanding_columns = {row[1] for row in db.execute("PRAGMA table_info(paper_understanding_runs)")}
         if "source_bundle_json" not in understanding_columns:
             db.execute("ALTER TABLE paper_understanding_runs ADD COLUMN source_bundle_json TEXT")
+        professional_review_columns = {
+            row[1] for row in db.execute("PRAGMA table_info(professional_review_runs)")
+        }
+        if "review_requirements" not in professional_review_columns:
+            db.execute("ALTER TABLE professional_review_runs ADD COLUMN review_requirements TEXT")
         db.execute("UPDATE review_runs SET status = 'failed', error = '服务重启中断，请重新运行分析', "
                    "finished_at = datetime('now') WHERE status IN ('queued', 'running')")
         db.execute("UPDATE finding_verifications SET status = 'failed', error = '服务重启中断，请重新运行复核', "
@@ -1160,6 +1169,12 @@ def create_app(data_dir: Path) -> FastAPI:
         try:
             row, bundle, plan, profile, mapping = load_professional_inputs(understanding_run_id)
             with connect() as db:
+                review_run = db.execute(
+                    "SELECT review_requirements FROM professional_review_runs WHERE id = ?",
+                    (run_id,),
+                ).fetchone()
+                if not review_run:
+                    raise RuntimeError("professional review run missing")
                 db.execute("UPDATE professional_review_runs SET status = 'running' WHERE id = ?", (run_id,))
             session = model_session(timeout=180, max_retries=0)
             model = session.configuration.model
@@ -1199,7 +1214,7 @@ def create_app(data_dir: Path) -> FastAPI:
                                 trace.status, trace.error))
 
             result = run_p2b(bundle, plan, profile, mapping, understanding_run_id, run_id,
-                model_call, model, row["target_journal"], row["special_requirements"],
+                model_call, model, row["target_journal"], review_run["review_requirements"],
                 budget=RunBudget(
                     max_calls=int(os.environ.get("P2B_MAX_CALLS", "18")),
                     max_input_tokens=int(os.environ.get("P2B_MAX_INPUT_TOKENS", "180000")),
@@ -1220,19 +1235,26 @@ def create_app(data_dir: Path) -> FastAPI:
                             f"professional_review:{type(exc).__name__}", run_id))
 
     @app.post("/api/understanding-runs/{run_id}/professional-review-runs", status_code=202)
-    def create_professional_review_run(run_id: str, background_tasks: BackgroundTasks):
+    def create_professional_review_run(
+        run_id: str,
+        background_tasks: BackgroundTasks,
+        request: ProfessionalReviewRunRequest | None = None,
+    ):
         model_configuration_or_503()
         row, bundle, _, _, _ = load_professional_inputs(run_id)
         new_id = uuid.uuid4().hex
+        review_requirements = request.review_requirements if request else None
         with connect() as db:
             active = db.execute("SELECT 1 FROM professional_review_runs WHERE understanding_run_id = ? "
                                 "AND status IN ('queued', 'running')", (run_id,)).fetchone()
             if active:
                 raise HTTPException(409, "该论文已有正在运行的专业审查任务")
             db.execute("INSERT INTO professional_review_runs "
-                       "(id, understanding_run_id, document_id, source_bundle_id, status, created_at) "
-                       "VALUES (?, ?, ?, ?, 'queued', datetime('now'))",
-                       (new_id, run_id, row["document_id"], bundle["bundle_id"]))
+                       "(id, understanding_run_id, document_id, source_bundle_id, "
+                       "review_requirements, status, created_at) "
+                       "VALUES (?, ?, ?, ?, ?, 'queued', datetime('now'))",
+                       (new_id, run_id, row["document_id"], bundle["bundle_id"],
+                        review_requirements))
         background_tasks.add_task(run_professional_review, run_id, new_id)
         return {"id": new_id, "understanding_run_id": run_id, "status": "queued"}
 

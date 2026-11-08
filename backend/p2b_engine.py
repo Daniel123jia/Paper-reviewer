@@ -149,7 +149,7 @@ def _project_input(rule, pack, plan, profile, mapping):
 
 def run_p2b(bundle: dict, plan: ReviewPlan, profile: PaperProfile, mapping: ClaimEvidenceMap,
             understanding_run_id: str, run_id: str, model_call: Callable, requested_model: str,
-            target_journal: str | None = None, special_requirements: str | None = None,
+            target_journal: str | None = None, review_requirements: str | None = None,
             budget: RunBudget | None = None, on_dimension: Callable | None = None,
             on_trace: Callable | None = None, max_context_chars: int = 28000):
     validate_understanding_snapshot(bundle, plan, profile, mapping, understanding_run_id, "completed")
@@ -191,7 +191,7 @@ def run_p2b(bundle: dict, plan: ReviewPlan, profile: PaperProfile, mapping: Clai
             continue
         user = json.dumps({"configuration": config_name,
             **_project_input(rule, pack, plan, profile, mapping),
-            "target_journal": target_journal, "special_requirements": special_requirements,
+            "target_journal": target_journal, "review_requirements": review_requirements,
             "context": pack.text, "allowed_source_ids": pack.source_ref_ids,
             "coverage_status": pack.coverage_status}, ensure_ascii=False, separators=(",", ":"))
         result = None
