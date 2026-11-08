@@ -6,6 +6,7 @@ from backend.model_runtime import ModelConfigurationError
 from backend.p2a_engine import (BudgetExceeded, P2AError, RunBudget, UnknownUsageError,
                                 chunk_reading_units, run_p2a)
 from backend.p2a_schema import validate_source_references
+from backend.p2b_engine import validate_understanding_snapshot
 
 
 def _bundle():
@@ -427,6 +428,78 @@ def test_n2_global_source_lead_reclassifies_local_missing_support():
     assert mapping.support_relations[0].evidence_ref_id == "ru2"
     assert mapping.support_relations[0].relation == "unverified"
     validate_source_references(mapping, bundle)
+
+
+@pytest.mark.parametrize(("rejected_ref", "reason"), [
+    ("ev1", "not_in_profile_facts"),
+    ("missing-source", "not_in_source_bundle"),
+])
+def test_optional_global_support_outside_allowed_sources_is_quarantined(
+        rejected_ref, reason):
+    bundle = _bundle()
+    local_gap = "Keep this independently reported evidence gap"
+
+    def model_call(stage, system, user):
+        if stage == "contribution-normalizer":
+            data = json.loads(user)
+            return _reply({
+                "contribution_groups": [list(range(len(data["contributions"])))],
+                "claim_groups": [list(range(len(data["claims"])))],
+                "global_support": [{"claim_index": 0,
+                                    "evidence_ref_ids": [rejected_ref]}],
+            })
+        if stage == "contribution-evidence-mapper":
+            return _reply({
+                **MAP,
+                "support_relations": [
+                    *MAP["support_relations"],
+                    {"claim_id": "cl1", "evidence_ref_id": "ru2",
+                     "relation": "unverified", "explanation": "Keep unverified lead"},
+                ],
+                "evidence_gaps": [{"claim_id": "cl1", "description": local_gap,
+                                   "status": "support_not_found"}],
+            })
+        return _reply({"paper-type-planner": PLAN, "paper-understanding": PROFILE}[stage])
+
+    plan, profile, mapping, _ = run_p2a(
+        bundle, f"quarantine-{reason}", model_call, "model", chunk_chars=60)
+
+    assert {(item.evidence_ref_id, item.relation) for item in mapping.support_relations} == {
+        ("ru1", "direct_source"), ("ru2", "model_interpretation"),
+        ("ru2", "unverified")}
+    assert any(item.description == local_gap for item in mapping.evidence_gaps)
+    rejected = [item for item in mapping.evidence_gaps if reason in item.description]
+    assert len(rejected) == 1
+    assert "ref_sha256=" in rejected[0].description
+    assert rejected[0].status == "source_unverified"
+    validate_source_references(mapping, bundle)
+    validate_understanding_snapshot(
+        bundle, plan, profile, mapping, mapping.review_run_id, "completed")
+
+
+@pytest.mark.parametrize(("candidate", "error"), [
+    ({"claim_index": 99, "evidence_ref_ids": ["ru1"]},
+     "invalid_global_support_claim"),
+    ({"claim_index": 0}, "invalid_global_support_structure"),
+    ("not-an-object", "invalid_global_support_structure"),
+])
+def test_malformed_or_wrong_claim_global_support_still_fails_closed(candidate, error):
+    bundle = _bundle()
+
+    def model_call(stage, system, user):
+        if stage == "contribution-normalizer":
+            data = json.loads(user)
+            return _reply({
+                "contribution_groups": [list(range(len(data["contributions"])))],
+                "claim_groups": [list(range(len(data["claims"])))],
+                "global_support": [candidate],
+            })
+        if stage == "contribution-evidence-mapper":
+            return _reply(MAP)
+        return _reply({"paper-type-planner": PLAN, "paper-understanding": PROFILE}[stage])
+
+    with pytest.raises(P2AError, match=error):
+        run_p2a(bundle, f"reject-{error}", model_call, "model", chunk_chars=60)
 
 
 def test_ancillary_release_statement_is_excluded_only_by_model_decision():

@@ -9,6 +9,7 @@ from backend.p2a_resume import (
     checkpoint_result_hash,
     run_p2a_n3,
 )
+from backend.p2b_engine import validate_understanding_snapshot
 from backend.tests.test_p2a_engine import MAP, _aux_reply, _reply
 from backend.tests.test_p2b_engine import inputs
 
@@ -133,6 +134,47 @@ def test_n3_unknown_usage_stops_and_authorized_continuation_reuses_only_valid_ch
     assert all(item.result.review_run_id == "continued-run" for item in persisted)
     assert result.review_run_id == "continued-run"
     assert len(traces) == 3
+
+
+def test_continuation_with_all_five_checkpoints_calls_only_normalizer_and_passes_p2b():
+    bundle, plan, profile, _ = five_part_inputs()
+    source_run_id = "all-parts-source"
+    continued_run_id = "normalizer-only-continuation"
+    source_profile = profile.model_copy(update={"review_run_id": source_run_id}, deep=True)
+    checkpoints = []
+
+    def source_model(stage, system, user):
+        if stage == "contribution-evidence-mapper":
+            return _reply(MAP)
+        return _aux_reply(stage, user)
+
+    run_p2a_n3(
+        bundle, source_profile, source_run_id, source_model, "requested-model",
+        chunk_chars=1, on_checkpoint=checkpoints.append)
+    assert len(checkpoints) == 5
+    stored = {item.input_fingerprint: item for item in checkpoints}
+    calls = []
+    inherited = []
+
+    def continuation_model(stage, system, user):
+        calls.append(stage)
+        return _aux_reply(stage, user)
+
+    continued_profile = profile.model_copy(
+        update={"review_run_id": continued_run_id}, deep=True)
+    mapping, _ = run_p2a_n3(
+        bundle, continued_profile, continued_run_id, continuation_model,
+        "requested-model", chunk_chars=1,
+        checkpoint_loader=lambda descriptor: stored.get(descriptor.input_fingerprint),
+        on_checkpoint=inherited.append,
+    )
+
+    assert calls == ["contribution-normalizer"]
+    assert len(inherited) == 5
+    assert all(item.generation_mode == "inherited" for item in inherited)
+    continued_plan = plan.model_copy(update={"review_run_id": continued_run_id}, deep=True)
+    validate_understanding_snapshot(
+        bundle, continued_plan, continued_profile, mapping, continued_run_id, "completed")
 
 
 @pytest.mark.parametrize("damage", ["hash", "fingerprint", "payload", "evidence"])
