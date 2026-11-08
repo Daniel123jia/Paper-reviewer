@@ -28,8 +28,9 @@ from backend.parse_quality import assess_parse_quality
 from backend.p2a_engine import BudgetExceeded, P2AError, RunBudget, VERSIONS, run_p2a
 from backend.p2a_resume import (N3_SCHEMA_VERSION, StoredN3Checkpoint,
                                 build_n3_partition_descriptors,
+                                checkpoint_content_rebinds_exactly,
                                 checkpoint_result_hash, inherit_n3_checkpoint, run_p2a_n3,
-                                validate_checkpoint)
+                                validate_checkpoint, validate_inherited_understanding_assets)
 from backend.p2a_schema import (ClaimEvidenceMap, PaperProfile, ReviewPlan,
                                 validate_source_references)
 from backend.p2b_engine import run_p2b, validate_understanding_snapshot
@@ -738,29 +739,123 @@ def create_app(data_dir: Path) -> FastAPI:
             with connect() as db:
                 write(db)
 
-    def load_run_checkpoints(db, run_id, bundle):
+    def validate_understanding_lineage_chain(db, run_id, frozen_bundle, document):
+        if frozen_bundle["document"]["id"] != document["id"]:
+            raise ValueError("understanding lineage document mismatch")
+        chain = []
+        seen = set()
+        current_run_id = run_id
+        while True:
+            if current_run_id in seen:
+                raise ValueError("understanding lineage cycle")
+            seen.add(current_run_id)
+            row = db.execute(
+                "SELECT * FROM paper_understanding_runs WHERE id = ?", (current_run_id,)
+            ).fetchone()
+            if not row or not row["source_bundle_json"] or not row["review_plan"] or not row["paper_profile"]:
+                raise ValueError("understanding lineage run missing")
+            run_bundle = json.loads(row["source_bundle_json"])
+            if (run_bundle != frozen_bundle or row["document_id"] != document["id"] or
+                    row["source_bundle_id"] != frozen_bundle["bundle_id"] or
+                    run_bundle["document"]["snapshot_id"] != document["snapshot_id"] or
+                    run_bundle["document"].get("sha256") != document["sha256"]):
+                raise ValueError("understanding lineage source mismatch")
+            plan = ReviewPlan.model_validate_json(row["review_plan"])
+            profile = PaperProfile.model_validate_json(row["paper_profile"])
+            validate_inherited_understanding_assets(
+                frozen_bundle, current_run_id, plan, profile)
+            lineage = db.execute(
+                "SELECT * FROM paper_understanding_run_lineage WHERE run_id = ?",
+                (current_run_id,),
+            ).fetchone()
+            if lineage and (
+                lineage["document_id"] != document["id"]
+                or lineage["source_bundle_id"] != frozen_bundle["bundle_id"]
+                or lineage["source_snapshot_id"] != document["snapshot_id"]
+                or lineage["pdf_sha256"] != document["sha256"]
+                or lineage["plan_prompt_version"] != plan.prompt_version
+                or lineage["plan_schema_version"] != plan.schema_version
+                or lineage["profile_prompt_version"] != profile.prompt_version
+                or lineage["profile_schema_version"] != profile.schema_version
+                or lineage["n3_prompt_version"] != VERSIONS["contribution-evidence-mapper"]
+                or lineage["n3_schema_version"] != N3_SCHEMA_VERSION
+            ):
+                raise ValueError("understanding lineage metadata mismatch")
+            chain.append((current_run_id, plan, profile, lineage))
+            if not lineage:
+                break
+            current_run_id = lineage["parent_run_id"]
+
+        chain_index = {item[0]: item for item in chain}
+        for index, (current_id, plan, profile, lineage) in enumerate(chain):
+            if not lineage:
+                continue
+            ancestors = {item[0] for item in chain[index + 1:]}
+            plan_source_id = lineage["plan_source_run_id"]
+            profile_source_id = lineage["profile_source_run_id"]
+            if plan_source_id not in ancestors or profile_source_id not in ancestors:
+                raise ValueError("understanding lineage source is not an ancestor")
+            source_plan = chain_index[plan_source_id][1].model_copy(
+                update={"review_run_id": current_id}, deep=True)
+            source_profile = chain_index[profile_source_id][2].model_copy(
+                update={"review_run_id": current_id}, deep=True)
+            if (source_plan.model_dump(mode="json") != plan.model_dump(mode="json") or
+                    source_profile.model_dump(mode="json") != profile.model_dump(mode="json")):
+                raise ValueError("inherited understanding content mismatch")
+        return chain[0][3]
+
+    def checkpoint_row_matches_bundle(row, bundle):
+        return (
+            row["document_id"] == bundle["document"]["id"]
+            and row["source_bundle_id"] == bundle["bundle_id"]
+            and row["source_snapshot_id"] == bundle["document"]["snapshot_id"]
+            and row["pdf_sha256"] == bundle["document"].get("sha256", "")
+        )
+
+    def validate_checkpoint_chain(db, row, descriptor, bundle):
+        seen = set()
+        current_row = row
+        while True:
+            checkpoint_id = current_row["id"]
+            if checkpoint_id in seen:
+                raise ValueError("checkpoint origin cycle")
+            seen.add(checkpoint_id)
+            if not checkpoint_row_matches_bundle(current_row, bundle):
+                raise ValueError("checkpoint frozen source mismatch")
+            current = checkpoint_from_row(current_row)
+            validate_checkpoint(
+                current, descriptor, bundle, current.generating_run_id)
+            if current.generation_mode == "generated":
+                return checkpoint_from_row(row)
+            lineage = db.execute(
+                "SELECT parent_run_id FROM paper_understanding_run_lineage WHERE run_id = ?",
+                (current.generating_run_id,),
+            ).fetchone()
+            if not lineage or lineage["parent_run_id"] != current.origin_run_id:
+                raise ValueError("checkpoint origin run is not the lineage parent")
+            origin_row = db.execute(
+                "SELECT * FROM paper_understanding_n3_checkpoints WHERE id = ? AND run_id = ?",
+                (current.origin_checkpoint_id, current.origin_run_id),
+            ).fetchone()
+            if not origin_row or origin_row["input_fingerprint"] != current.input_fingerprint:
+                raise ValueError("checkpoint origin mismatch")
+            origin = checkpoint_from_row(origin_row)
+            validate_checkpoint(origin, descriptor, bundle, origin.generating_run_id)
+            if not checkpoint_content_rebinds_exactly(origin, current):
+                raise ValueError("checkpoint inherited content mismatch")
+            current_row = origin_row
+
+    def load_run_checkpoints(db, run_id, bundle, descriptor_index):
         rows = db.execute(
             "SELECT * FROM paper_understanding_n3_checkpoints "
             "WHERE run_id = ? ORDER BY partition_index", (run_id,)
         ).fetchall()
         checkpoints = []
         for row in rows:
-            if (row["document_id"] != bundle["document"]["id"] or
-                    row["source_bundle_id"] != bundle["bundle_id"] or
-                    row["source_snapshot_id"] != bundle["document"]["snapshot_id"] or
-                    row["pdf_sha256"] != bundle["document"].get("sha256", "")):
-                raise ValueError("checkpoint frozen source mismatch")
-            if row["generation_mode"] == "inherited":
-                origin = db.execute(
-                    "SELECT run_id, input_fingerprint, result_hash FROM "
-                    "paper_understanding_n3_checkpoints WHERE id = ?",
-                    (row["origin_checkpoint_id"],),
-                ).fetchone()
-                if (not origin or origin["run_id"] != row["origin_run_id"] or
-                        origin["input_fingerprint"] != row["input_fingerprint"] or
-                        origin["result_hash"] == ""):
-                    raise ValueError("checkpoint origin mismatch")
-            checkpoints.append(checkpoint_from_row(row))
+            descriptor = descriptor_index.get(row["partition_id"])
+            if descriptor is None:
+                raise ValueError("checkpoint partition mismatch")
+            checkpoints.append(validate_checkpoint_chain(db, row, descriptor, bundle))
         return checkpoints
 
     def run_understanding(document_id: str, run_id: str, request: UnderstandingRunRequest):
@@ -834,22 +929,13 @@ def create_app(data_dir: Path) -> FastAPI:
                     raise ValueError("continuation frozen source mismatch")
                 plan = ReviewPlan.model_validate_json(row["review_plan"])
                 profile = PaperProfile.model_validate_json(row["paper_profile"])
-                if (plan.review_run_id != run_id or profile.review_run_id != run_id or
-                        lineage["plan_prompt_version"] != plan.prompt_version or
-                        lineage["profile_prompt_version"] != profile.prompt_version or
-                        lineage["n3_prompt_version"] != VERSIONS["contribution-evidence-mapper"] or
-                        lineage["n3_schema_version"] != N3_SCHEMA_VERSION):
-                    raise ValueError("continuation version mismatch")
-                validate_source_references(profile, bundle)
-                checkpoints = load_run_checkpoints(db, run_id, bundle)
+                validate_inherited_understanding_assets(bundle, run_id, plan, profile)
+                validate_understanding_lineage_chain(db, run_id, bundle, document)
                 descriptors = build_n3_partition_descriptors(
                     bundle, profile, row["target_journal"], row["special_requirements"])
                 by_partition = {item.partition_id: item for item in descriptors}
-                for checkpoint in checkpoints:
-                    descriptor = by_partition.get(checkpoint.partition_id)
-                    if descriptor is None:
-                        raise ValueError("checkpoint partition mismatch")
-                    validate_checkpoint(checkpoint, descriptor, bundle, run_id)
+                checkpoints = load_run_checkpoints(
+                    db, run_id, bundle, by_partition)
                 db.execute(
                     "UPDATE paper_understanding_runs SET status = 'running' WHERE id = ?",
                     (run_id,),
@@ -955,28 +1041,22 @@ def create_app(data_dir: Path) -> FastAPI:
                     raise ValueError("parent frozen source mismatch")
                 source_plan = ReviewPlan.model_validate_json(parent["review_plan"])
                 source_profile = PaperProfile.model_validate_json(parent["paper_profile"])
-                parent_lineage = db.execute(
-                    "SELECT * FROM paper_understanding_run_lineage WHERE run_id = ?",
-                    (parent_run_id,),
-                ).fetchone()
-                if (source_plan.review_run_id != parent_run_id or
-                        source_profile.review_run_id != parent_run_id or
-                        source_plan.prompt_version != VERSIONS["paper-type-planner"] or
-                        source_profile.prompt_version != VERSIONS["paper-understanding"]):
-                    raise ValueError("parent result version mismatch")
-                validate_source_references(source_profile, bundle)
+                validate_inherited_understanding_assets(
+                    bundle, parent_run_id, source_plan, source_profile)
+                parent_lineage = validate_understanding_lineage_chain(
+                    db, parent_run_id, bundle, document)
 
                 run_id = uuid.uuid4().hex
                 plan = source_plan.model_copy(update={"review_run_id": run_id}, deep=True)
                 profile = source_profile.model_copy(update={"review_run_id": run_id}, deep=True)
+                validate_inherited_understanding_assets(bundle, run_id, plan, profile)
                 descriptors = build_n3_partition_descriptors(
                     bundle, profile, parent["target_journal"], parent["special_requirements"])
                 descriptor_index = {item.partition_id: item for item in descriptors}
                 inherited = []
-                for checkpoint in load_run_checkpoints(db, parent_run_id, bundle):
-                    descriptor = descriptor_index.get(checkpoint.partition_id)
-                    if descriptor is None:
-                        raise ValueError("parent checkpoint partition mismatch")
+                for checkpoint in load_run_checkpoints(
+                        db, parent_run_id, bundle, descriptor_index):
+                    descriptor = descriptor_index[checkpoint.partition_id]
                     inherited.append(inherit_n3_checkpoint(
                         checkpoint, descriptor, bundle, run_id))
 

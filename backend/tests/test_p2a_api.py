@@ -10,7 +10,9 @@ from fastapi.testclient import TestClient
 
 from backend.app import create_app
 from backend.p2a_engine import RunBudget, UnknownUsageError, VERSIONS
-from backend.p2a_resume import run_p2a_n3
+from backend.p2a_resume import (build_n3_partition_descriptors,
+                                checkpoint_result_hash, inherit_n3_checkpoint,
+                                run_p2a_n3)
 from backend.p2b_engine import validate_understanding_snapshot
 from backend.p2a_schema import ClaimEvidenceMap, PaperProfile, ReviewPlan
 from backend.tests.test_p2a_engine import MAP, _aux_reply, _reply
@@ -529,3 +531,297 @@ def test_api_resume_inherits_three_valid_checkpoints_and_runs_only_two_missing_p
     assert len(child["model_calls"]) == 3
     assert all(item["stage"] not in {"paper-type-planner", "paper-understanding"}
                for item in child["model_calls"])
+
+
+def _failed_parent_client(tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="fake-key", model="requested-model")
+    supplier_calls = []
+
+    class N3FailsOpenAI:
+        def __init__(self, **kwargs):
+            pass
+
+        @property
+        def chat(self):
+            def create(**kwargs):
+                system = kwargs["messages"][0]["content"]
+                supplier_calls.append(system)
+                if "contribution-evidence-mapper/v2" in system:
+                    raise RuntimeError("private upstream detail")
+                return _fake_completion(kwargs["messages"])
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr("backend.app.OpenAI", N3FailsOpenAI)
+    client = TestClient(create_app(tmp_path))
+    document = client.post("/api/documents", files={"file": (
+        "paper.pdf", io.BytesIO(_pdf()), "application/pdf")}).json()
+    parent_id = client.post(
+        f'/api/documents/{document["id"]}/understanding-runs', json={}).json()["id"]
+    assert client.get(f"/api/understanding-runs/{parent_id}").json()["status"] == "failed"
+    return client, document, parent_id, supplier_calls
+
+
+@pytest.mark.parametrize(("column", "field"), [
+    ("review_plan", "document_id"),
+    ("review_plan", "source_bundle_id"),
+    ("paper_profile", "document_id"),
+    ("paper_profile", "source_bundle_id"),
+])
+def test_resume_rejects_foreign_understanding_metadata_before_supplier_call(
+        tmp_path, monkeypatch, column, field):
+    client, _, parent_id, supplier_calls = _failed_parent_client(tmp_path, monkeypatch)
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        result = json.loads(db.execute(
+            f"SELECT {column} FROM paper_understanding_runs WHERE id = ?", (parent_id,)
+        ).fetchone()[0])
+        result[field] = f"foreign-{field}"
+        db.execute(f"UPDATE paper_understanding_runs SET {column} = ? WHERE id = ?",
+                   (json.dumps(result), parent_id))
+        before_runs = db.execute("SELECT count(*) FROM paper_understanding_runs").fetchone()[0]
+    calls_before = len(supplier_calls)
+
+    response = client.post(f"/api/understanding-runs/{parent_id}/n3-resume-runs")
+
+    assert response.status_code == 409
+    assert response.json() == {"detail": "父任务续跑资产无效"}
+    assert len(supplier_calls) == calls_before
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        assert db.execute("SELECT count(*) FROM paper_understanding_runs").fetchone()[0] == before_runs
+
+
+def test_continuation_revalidates_inherited_assets_before_first_supplier_call(
+        tmp_path, monkeypatch):
+    client, _, parent_id, supplier_calls = _failed_parent_client(tmp_path, monkeypatch)
+
+    class CapturedBackground:
+        task = None
+        args = ()
+
+        def add_task(self, task, *args, **kwargs):
+            assert not kwargs
+            self.task = task
+            self.args = args
+
+    route = next(
+        item for item in client.app.routes
+        if item.path == "/api/understanding-runs/{parent_run_id}/n3-resume-runs"
+    )
+    background = CapturedBackground()
+    created = route.endpoint(parent_id, background)
+    assert background.task is not None
+
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        plan = json.loads(db.execute(
+            "SELECT review_plan FROM paper_understanding_runs WHERE id = ?",
+            (created["id"],),
+        ).fetchone()[0])
+        plan["source_bundle_id"] = "foreign-bundle-after-creation"
+        db.execute(
+            "UPDATE paper_understanding_runs SET review_plan = ? WHERE id = ?",
+            (json.dumps(plan), created["id"]),
+        )
+    calls_before = len(supplier_calls)
+
+    background.task(*background.args)
+
+    result = client.get(f'/api/understanding-runs/{created["id"]}').json()
+    assert result["status"] == "failed"
+    assert result["error"] == "resume: ValueError"
+    assert len(supplier_calls) == calls_before
+
+
+@pytest.mark.parametrize("lineage_field", ["plan_schema_version", "source_snapshot_id"])
+def test_resume_rejects_parent_lineage_version_or_source_drift_before_supplier_call(
+        tmp_path, monkeypatch, lineage_field):
+    client, document, parent_id, supplier_calls = _failed_parent_client(tmp_path, monkeypatch)
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        db.row_factory = sqlite3.Row
+        parent = db.execute(
+            "SELECT * FROM paper_understanding_runs WHERE id = ?", (parent_id,)
+        ).fetchone()
+        plan = ReviewPlan.model_validate_json(parent["review_plan"])
+        profile = PaperProfile.model_validate_json(parent["paper_profile"])
+        source_id = "n1n2-source"
+        source_plan = plan.model_copy(update={"review_run_id": source_id}, deep=True)
+        source_profile = profile.model_copy(update={"review_run_id": source_id}, deep=True)
+        db.execute(
+            "INSERT INTO paper_understanding_runs "
+            "(id, document_id, source_bundle_id, source_bundle_json, status, review_plan, "
+            "paper_profile, created_at, finished_at) VALUES "
+            "(?, ?, ?, ?, 'failed', ?, ?, datetime('now'), datetime('now'))",
+            (source_id, parent["document_id"], parent["source_bundle_id"],
+             parent["source_bundle_json"], source_plan.model_dump_json(),
+             source_profile.model_dump_json()),
+        )
+        lineage = {
+            "run_id": parent_id,
+            "parent_run_id": source_id,
+            "plan_source_run_id": source_id,
+            "profile_source_run_id": source_id,
+            "document_id": document["id"],
+            "source_bundle_id": parent["source_bundle_id"],
+            "source_snapshot_id": document["snapshot_id"],
+            "pdf_sha256": document["sha256"],
+            "plan_prompt_version": plan.prompt_version,
+            "plan_schema_version": plan.schema_version,
+            "profile_prompt_version": profile.prompt_version,
+            "profile_schema_version": profile.schema_version,
+            "n3_prompt_version": VERSIONS["contribution-evidence-mapper"],
+            "n3_schema_version": "1.1",
+        }
+        lineage[lineage_field] = ("foreign-snapshot" if lineage_field == "source_snapshot_id"
+                                  else "1.0" if plan.schema_version != "1.0" else "1.1")
+        db.execute(
+            "INSERT INTO paper_understanding_run_lineage "
+            "(run_id, parent_run_id, plan_source_run_id, profile_source_run_id, document_id, "
+            "source_bundle_id, source_snapshot_id, pdf_sha256, plan_prompt_version, "
+            "plan_schema_version, profile_prompt_version, profile_schema_version, "
+            "n3_prompt_version, n3_schema_version, created_at) VALUES "
+            "(:run_id, :parent_run_id, :plan_source_run_id, :profile_source_run_id, "
+            ":document_id, :source_bundle_id, :source_snapshot_id, :pdf_sha256, "
+            ":plan_prompt_version, :plan_schema_version, :profile_prompt_version, "
+            ":profile_schema_version, :n3_prompt_version, :n3_schema_version, datetime('now'))",
+            lineage,
+        )
+    calls_before = len(supplier_calls)
+
+    response = client.post(f"/api/understanding-runs/{parent_id}/n3-resume-runs")
+
+    assert response.status_code == 409
+    assert len(supplier_calls) == calls_before
+
+
+def _insert_checkpoint(db, bundle, checkpoint):
+    db.execute(
+        "INSERT INTO paper_understanding_n3_checkpoints "
+        "(id, run_id, origin_checkpoint_id, origin_run_id, generation_mode, partition_id, "
+        "partition_index, partition_count, unit_ids_json, input_fingerprint, document_id, "
+        "source_bundle_id, source_snapshot_id, pdf_sha256, prompt_version, schema_version, "
+        "result_json, result_hash, created_at) VALUES "
+        "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))",
+        (checkpoint.checkpoint_id, checkpoint.generating_run_id,
+         checkpoint.origin_checkpoint_id, checkpoint.origin_run_id,
+         checkpoint.generation_mode, checkpoint.partition_id,
+         checkpoint.partition_index, checkpoint.partition_count,
+         json.dumps(checkpoint.unit_ids), checkpoint.input_fingerprint,
+         bundle["document"]["id"], bundle["bundle_id"],
+         bundle["document"]["snapshot_id"], bundle["document"]["sha256"],
+         checkpoint.prompt_version, checkpoint.schema_version,
+         checkpoint.result.model_dump_json(), checkpoint.result_hash),
+    )
+
+
+def _seed_inherited_checkpoint_parent(tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="fake-key", model="requested-model")
+    supplier_calls = []
+
+    class RecordingOpenAI:
+        def __init__(self, **kwargs):
+            pass
+
+        @property
+        def chat(self):
+            def create(**kwargs):
+                supplier_calls.append(kwargs["messages"][0]["content"])
+                return _fake_completion(kwargs["messages"])
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr("backend.app.OpenAI", RecordingOpenAI)
+    app = create_app(tmp_path)
+    bundle, plan, profile, _ = p2a_inputs()
+    bundle["document"]["sha256"] = "frozen-pdf-sha"
+    root_id, child_id = "checkpoint-root", "checkpoint-child"
+    root_plan = plan.model_copy(update={
+        "review_run_id": root_id, "prompt_version": VERSIONS["paper-type-planner"]}, deep=True)
+    root_profile = profile.model_copy(update={
+        "review_run_id": root_id, "prompt_version": VERSIONS["paper-understanding"]}, deep=True)
+    generated = []
+
+    def model(stage, system, user):
+        if stage == "contribution-evidence-mapper":
+            return _reply(MAP)
+        return _aux_reply(stage, user)
+
+    run_p2a_n3(bundle, root_profile, root_id, model, "requested-model",
+                on_checkpoint=generated.append)
+    descriptor = build_n3_partition_descriptors(bundle, root_profile, None, None)[0]
+    child_checkpoint = inherit_n3_checkpoint(generated[0], descriptor, bundle, child_id)
+    child_plan = root_plan.model_copy(update={"review_run_id": child_id}, deep=True)
+    child_profile = root_profile.model_copy(update={"review_run_id": child_id}, deep=True)
+
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        db.row_factory = sqlite3.Row
+        db.execute("INSERT INTO documents VALUES (?, 'paper.pdf', ?, ?, 1, '[]', '[]')",
+                   (bundle["document"]["id"], bundle["document"]["sha256"],
+                    bundle["document"]["snapshot_id"]))
+        for run_id, run_plan, run_profile in (
+                (root_id, root_plan, root_profile), (child_id, child_plan, child_profile)):
+            db.execute(
+                "INSERT INTO paper_understanding_runs "
+                "(id, document_id, source_bundle_id, source_bundle_json, status, error, "
+                "review_plan, paper_profile, created_at, finished_at) VALUES "
+                "(?, ?, ?, ?, 'failed', 'unknown_usage', ?, ?, datetime('now'), datetime('now'))",
+                (run_id, bundle["document"]["id"], bundle["bundle_id"], json.dumps(bundle),
+                 run_plan.model_dump_json(), run_profile.model_dump_json()),
+            )
+        db.execute(
+            "INSERT INTO paper_understanding_run_lineage VALUES "
+            "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))",
+            (child_id, root_id, root_id, root_id, bundle["document"]["id"],
+             bundle["bundle_id"], bundle["document"]["snapshot_id"],
+             bundle["document"]["sha256"], root_plan.prompt_version,
+             root_plan.schema_version, root_profile.prompt_version,
+             root_profile.schema_version, VERSIONS["contribution-evidence-mapper"], "1.1"),
+        )
+        _insert_checkpoint(db, bundle, generated[0])
+        _insert_checkpoint(db, bundle, child_checkpoint)
+    return TestClient(app), bundle, root_id, child_id, generated[0], child_checkpoint, supplier_calls
+
+
+@pytest.mark.parametrize("damage", ["origin_json", "origin_hash", "descendant_content", "cycle"])
+def test_resume_rejects_corrupt_checkpoint_origin_chain_before_supplier_call(
+        tmp_path, monkeypatch, damage):
+    client, _, root_id, child_id, root_checkpoint, child_checkpoint, calls = \
+        _seed_inherited_checkpoint_parent(tmp_path, monkeypatch)
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        if damage == "origin_json":
+            db.execute("UPDATE paper_understanding_n3_checkpoints SET result_json = '{' "
+                       "WHERE id = ?", (root_checkpoint.checkpoint_id,))
+        elif damage == "origin_hash":
+            db.execute("UPDATE paper_understanding_n3_checkpoints SET result_hash = ? WHERE id = ?",
+                       ("f" * 64, root_checkpoint.checkpoint_id))
+        elif damage == "descendant_content":
+            result = child_checkpoint.result.model_copy(deep=True)
+            result.contributions[0].title = "tampered but structurally valid"
+            db.execute("UPDATE paper_understanding_n3_checkpoints SET result_json = ?, result_hash = ? "
+                       "WHERE id = ?", (result.model_dump_json(), checkpoint_result_hash(result),
+                                        child_checkpoint.checkpoint_id))
+        else:
+            db.execute("UPDATE paper_understanding_n3_checkpoints SET origin_checkpoint_id = ?, "
+                       "origin_run_id = ? WHERE id = ?",
+                       (child_checkpoint.checkpoint_id, child_id, child_checkpoint.checkpoint_id))
+    calls_before = len(calls)
+
+    response = client.post(f"/api/understanding-runs/{child_id}/n3-resume-runs")
+
+    assert response.status_code == 409
+    assert response.json() == {"detail": "父任务续跑资产无效"}
+    assert len(calls) == calls_before
+
+
+def test_valid_multigeneration_checkpoint_chain_preserves_original_n1_n2_sources(
+        tmp_path, monkeypatch):
+    client, _, root_id, child_id, _, child_checkpoint, calls = \
+        _seed_inherited_checkpoint_parent(tmp_path, monkeypatch)
+    calls_before = len(calls)
+
+    response = client.post(f"/api/understanding-runs/{child_id}/n3-resume-runs")
+
+    assert response.status_code == 202, response.json()
+    grandchild = client.get(f'/api/understanding-runs/{response.json()["id"]}').json()
+    assert grandchild["status"] == "completed", grandchild["error"]
+    assert grandchild["lineage"]["parent_run_id"] == child_id
+    assert grandchild["lineage"]["plan_source_run_id"] == root_id
+    assert grandchild["lineage"]["profile_source_run_id"] == root_id
+    assert grandchild["n3_checkpoints"][0]["origin_checkpoint_id"] == child_checkpoint.checkpoint_id
+    assert len(calls) - calls_before == 1

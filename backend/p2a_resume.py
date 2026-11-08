@@ -26,6 +26,7 @@ from backend.p2a_schema import ClaimEvidenceMap, validate_source_references
 N3_PROMPT_VERSION = VERSIONS["contribution-evidence-mapper"]
 N3_SCHEMA_VERSION = "1.1"
 CHECKPOINT_SCHEMA_VERSION = "1.0"
+SUPPORTED_RESULT_SCHEMA_VERSIONS = {"1.0", "1.1"}
 
 
 @dataclass(frozen=True)
@@ -72,6 +73,36 @@ def _document_sha(bundle: dict) -> str:
 def checkpoint_result_hash(result) -> str:
     payload = result.model_dump(mode="json")
     return hashlib.sha256(_canonical_json(payload).encode("utf-8")).hexdigest()
+
+
+def validate_inherited_understanding_assets(bundle: dict, run_id: str, plan, profile) -> None:
+    """Validate the complete N1/N2 identity used by an N3-only continuation."""
+    expected_document_id = bundle["document"]["id"]
+    expected_bundle_id = bundle["bundle_id"]
+    for result, prompt_key in (
+        (plan, "paper-type-planner"),
+        (profile, "paper-understanding"),
+    ):
+        if (
+            result.document_id != expected_document_id
+            or result.source_bundle_id != expected_bundle_id
+            or result.review_run_id != run_id
+            or result.prompt_version != VERSIONS[prompt_key]
+            or result.schema_version not in SUPPORTED_RESULT_SCHEMA_VERSIONS
+        ):
+            raise ValueError("inherited understanding result metadata mismatch")
+    if plan.schema_version != profile.schema_version:
+        raise ValueError("inherited understanding schema versions disagree")
+    validate_source_references(profile, bundle)
+
+
+def checkpoint_content_rebinds_exactly(
+    origin: StoredN3Checkpoint, descendant: StoredN3Checkpoint
+) -> bool:
+    rebound = origin.result.model_copy(
+        update={"review_run_id": descendant.generating_run_id}, deep=True
+    )
+    return rebound.model_dump(mode="json") == descendant.result.model_dump(mode="json")
 
 
 def build_n3_partition_descriptors(
