@@ -524,16 +524,40 @@ def _merge_claim_maps(partials, profile, bundle, run_id, quality, requested_mode
                 payload["support_relations"].append({**relation.model_dump(), "claim_id": claim_id})
     profile_refs = {ref for fact in profile_facts for ref in fact["evidence_ref_ids"]}
     canonical_refs = source_reference_index(bundle)
-    for candidate in grouping.get("global_support", []):
+    rejected_global_support = {}
+    global_support = grouping.get("global_support", [])
+    if not isinstance(global_support, list):
+        raise P2AError("contribution-normalizer", "invalid_global_support_structure", traces)
+    for candidate in global_support:
+        if (not isinstance(candidate, dict)
+                or "claim_index" not in candidate
+                or not isinstance(candidate.get("evidence_ref_ids"), list)
+                or not candidate["evidence_ref_ids"]
+                or any(not isinstance(ref, str) or not ref
+                       or any(character.isspace() for character in ref)
+                       for ref in candidate["evidence_ref_ids"])):
+            raise P2AError("contribution-normalizer", "invalid_global_support_structure", traces)
         index = candidate["claim_index"]
-        if not isinstance(index, int) or index not in claim_index.values():
+        if type(index) is not int or index not in claim_index.values():
             raise P2AError("contribution-normalizer", "invalid_global_support_claim", traces)
         claim_id = merged_claim_ids.get(index)
         if claim_id is None:
             continue
         for ref in candidate["evidence_ref_ids"]:
-            if ref not in profile_refs or ref not in canonical_refs:
-                raise P2AError("contribution-normalizer", "invalid_global_support_source", traces)
+            if ref not in canonical_refs or ref not in profile_refs:
+                reason = ("not_in_source_bundle" if ref not in canonical_refs
+                          else "not_in_profile_facts")
+                reference_hash = hashlib.sha256(ref.encode()).hexdigest()[:16]
+                rejected_global_support[(claim_id, reason, reference_hash)] = {
+                    "claim_id": claim_id,
+                    "status": "source_unverified",
+                    "description": (
+                        "Rejected optional global_support lead "
+                        f"(reason={reason}; ref_sha256={reference_hash}); "
+                        "the source was not added and no evidence gap was resolved."
+                    ),
+                }
+                continue
             key = (claim_id, ref, "unverified")
             if key not in relation_keys:
                 relation_keys.add(key)
@@ -566,6 +590,7 @@ def _merge_claim_maps(partials, profile, bundle, run_id, quality, requested_mode
             deduplicated[key] = {"claim_id": claim_id, "status": "source_unverified",
                                  "description": gap["description"]}
     payload["evidence_gaps"].extend(deduplicated.values())
+    payload["evidence_gaps"].extend(rejected_global_support.values())
     for claim in payload["claims"]:
         if any(gap["claim_id"] == claim["id"] for gap in payload["evidence_gaps"]):
             continue
