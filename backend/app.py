@@ -25,8 +25,14 @@ from backend.exporter import render_export
 from backend.access import AccessPolicy, COOKIE_NAME, SESSION_SECONDS
 from backend.source_bundle import build_source_bundle
 from backend.parse_quality import assess_parse_quality
-from backend.p2a_engine import BudgetExceeded, P2AError, RunBudget, run_p2a
-from backend.p2a_schema import ClaimEvidenceMap, PaperProfile, ReviewPlan
+from backend.p2a_engine import BudgetExceeded, P2AError, RunBudget, VERSIONS, run_p2a
+from backend.p2a_resume import (N3_SCHEMA_VERSION, StoredN3Checkpoint,
+                                build_n3_partition_descriptors,
+                                checkpoint_content_rebinds_exactly,
+                                checkpoint_result_hash, inherit_n3_checkpoint, run_p2a_n3,
+                                validate_checkpoint, validate_inherited_understanding_assets)
+from backend.p2a_schema import (ClaimEvidenceMap, PaperProfile, ReviewPlan,
+                                validate_source_references)
 from backend.p2b_engine import run_p2b, validate_understanding_snapshot
 from backend.p2b_schema import ProfessionalReviewResult
 from backend.p2c_engine import run_p2c
@@ -289,6 +295,34 @@ def create_app(data_dir: Path) -> FastAPI:
                 status TEXT NOT NULL, error TEXT
             );
             CREATE INDEX IF NOT EXISTS p2a_calls_run ON paper_understanding_model_calls(run_id);
+            CREATE TABLE IF NOT EXISTS paper_understanding_run_lineage (
+                run_id TEXT PRIMARY KEY, parent_run_id TEXT NOT NULL,
+                plan_source_run_id TEXT NOT NULL, profile_source_run_id TEXT NOT NULL,
+                document_id TEXT NOT NULL, source_bundle_id TEXT NOT NULL,
+                source_snapshot_id TEXT NOT NULL, pdf_sha256 TEXT NOT NULL,
+                plan_prompt_version TEXT NOT NULL, plan_schema_version TEXT NOT NULL,
+                profile_prompt_version TEXT NOT NULL, profile_schema_version TEXT NOT NULL,
+                n3_prompt_version TEXT NOT NULL, n3_schema_version TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS p2a_lineage_parent
+                ON paper_understanding_run_lineage(parent_run_id);
+            CREATE TABLE IF NOT EXISTS paper_understanding_n3_checkpoints (
+                id TEXT PRIMARY KEY, run_id TEXT NOT NULL,
+                origin_checkpoint_id TEXT, origin_run_id TEXT,
+                generation_mode TEXT NOT NULL,
+                partition_id TEXT NOT NULL, partition_index INTEGER NOT NULL,
+                partition_count INTEGER NOT NULL, unit_ids_json TEXT NOT NULL,
+                input_fingerprint TEXT NOT NULL,
+                document_id TEXT NOT NULL, source_bundle_id TEXT NOT NULL,
+                source_snapshot_id TEXT NOT NULL, pdf_sha256 TEXT NOT NULL,
+                prompt_version TEXT NOT NULL, schema_version TEXT NOT NULL,
+                result_json TEXT NOT NULL, result_hash TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(run_id, partition_id)
+            );
+            CREATE INDEX IF NOT EXISTS p2a_n3_checkpoint_run
+                ON paper_understanding_n3_checkpoints(run_id, partition_index);
             CREATE TABLE IF NOT EXISTS professional_review_runs (
                 id TEXT PRIMARY KEY, understanding_run_id TEXT NOT NULL,
                 document_id TEXT NOT NULL, source_bundle_id TEXT NOT NULL,
@@ -385,6 +419,11 @@ def create_app(data_dir: Path) -> FastAPI:
                    "WHERE t.run_id = evidence_verification_runs.id) THEN 'partial_failed' "
                    "ELSE 'failed' END, error = 'interrupted_by_restart', "
                    "finished_at = datetime('now') WHERE status IN ('queued', 'running')")
+        db.execute("CREATE UNIQUE INDEX IF NOT EXISTS p2a_one_active_per_document "
+                   "ON paper_understanding_runs(document_id) "
+                   "WHERE status IN ('queued', 'running')")
+        db.execute("CREATE UNIQUE INDEX IF NOT EXISTS p2a_one_continuation_per_parent "
+                   "ON paper_understanding_run_lineage(parent_run_id)")
 
     app = FastAPI(title="AI 论文深度审稿工作台")
     app.add_middleware(
@@ -589,6 +628,236 @@ def create_app(data_dir: Path) -> FastAPI:
     def get_parse_quality(document_id: str):
         return assess_parse_quality(source_bundle_for_document(document_id))
 
+    def p2a_budget():
+        return RunBudget(
+            max_calls=int(os.environ.get("P2A_MAX_CALLS", "32")),
+            max_input_tokens=int(os.environ.get("P2A_MAX_INPUT_TOKENS", "300000")),
+            max_output_tokens=int(os.environ.get("P2A_MAX_OUTPUT_TOKENS", "100000")),
+            max_duration_ms=int(os.environ.get("P2A_MAX_DURATION_MS", "1800000")),
+        )
+
+    def streamed_understanding_call(session, model, stage, system, user):
+        started = time.perf_counter()
+        stream = model_completion(
+            session,
+            model=model,
+            messages=[{"role": "system", "content": system},
+                      {"role": "user", "content": user}],
+            stream=True,
+            stream_options={"include_usage": True},
+        )
+        pieces = []
+        actual_model = None
+        usage = None
+        for chunk in stream:
+            actual_model = chunk.model or actual_model
+            usage = chunk.usage or usage
+            if chunk.choices and chunk.choices[0].delta.content:
+                pieces.append(chunk.choices[0].delta.content)
+        return {
+            "content": "".join(pieces),
+            "model_identifier": actual_model,
+            "input_tokens": getattr(usage, "prompt_tokens", None),
+            "output_tokens": getattr(usage, "completion_tokens", None),
+            "duration_ms": round((time.perf_counter() - started) * 1000),
+        }
+
+    def persist_understanding_trace(run_id, trace):
+        with connect() as db:
+            db.execute(
+                "INSERT INTO paper_understanding_model_calls VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (uuid.uuid4().hex, run_id, trace.stage, trace.prompt_version,
+                 trace.requested_model, trace.actual_model, trace.input_tokens,
+                 trace.output_tokens, trace.duration_ms, trace.status, trace.error),
+            )
+
+    def checkpoint_from_row(row):
+        return StoredN3Checkpoint(
+            checkpoint_id=row["id"],
+            generating_run_id=row["run_id"],
+            origin_checkpoint_id=row["origin_checkpoint_id"],
+            origin_run_id=row["origin_run_id"],
+            generation_mode=row["generation_mode"],
+            partition_id=row["partition_id"],
+            partition_index=row["partition_index"],
+            partition_count=row["partition_count"],
+            unit_ids=tuple(json.loads(row["unit_ids_json"])),
+            input_fingerprint=row["input_fingerprint"],
+            prompt_version=row["prompt_version"],
+            schema_version=row["schema_version"],
+            result_hash=row["result_hash"],
+            result=ClaimEvidenceMap.model_validate_json(row["result_json"]),
+        )
+
+    def persist_n3_checkpoint(run_id, bundle, checkpoint, connection=None):
+        if checkpoint.generating_run_id != run_id:
+            raise ValueError("checkpoint run mismatch")
+        if checkpoint.result_hash != checkpoint_result_hash(checkpoint.result):
+            raise ValueError("checkpoint result hash mismatch")
+        if (checkpoint.result.document_id != bundle["document"]["id"] or
+                checkpoint.result.source_bundle_id != bundle["bundle_id"]):
+            raise ValueError("checkpoint source mismatch")
+        validate_source_references(checkpoint.result, bundle)
+        values = (
+            checkpoint.checkpoint_id, run_id, checkpoint.origin_checkpoint_id,
+            checkpoint.origin_run_id, checkpoint.generation_mode,
+            checkpoint.partition_id, checkpoint.partition_index,
+            checkpoint.partition_count, json.dumps(checkpoint.unit_ids),
+            checkpoint.input_fingerprint, bundle["document"]["id"],
+            bundle["bundle_id"], bundle["document"]["snapshot_id"],
+            bundle["document"].get("sha256", ""), checkpoint.prompt_version,
+            checkpoint.schema_version, checkpoint.result.model_dump_json(),
+            checkpoint.result_hash,
+        )
+        def write(db):
+            existing = db.execute(
+                "SELECT * FROM paper_understanding_n3_checkpoints "
+                "WHERE run_id = ? AND partition_id = ?",
+                (run_id, checkpoint.partition_id),
+            ).fetchone()
+            if existing:
+                current = checkpoint_from_row(existing)
+                if (current.checkpoint_id != checkpoint.checkpoint_id or
+                        current.input_fingerprint != checkpoint.input_fingerprint or
+                        current.result_hash != checkpoint.result_hash or
+                        current.result.model_dump(mode="json") !=
+                        checkpoint.result.model_dump(mode="json")):
+                    raise ValueError("checkpoint duplicate mismatch")
+                return
+            db.execute(
+                "INSERT INTO paper_understanding_n3_checkpoints "
+                "(id, run_id, origin_checkpoint_id, origin_run_id, generation_mode, "
+                "partition_id, partition_index, partition_count, unit_ids_json, "
+                "input_fingerprint, document_id, source_bundle_id, source_snapshot_id, "
+                "pdf_sha256, prompt_version, schema_version, result_json, result_hash, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))",
+                values,
+            )
+        if connection is not None:
+            write(connection)
+        else:
+            with connect() as db:
+                write(db)
+
+    def validate_understanding_lineage_chain(db, run_id, frozen_bundle, document):
+        if frozen_bundle["document"]["id"] != document["id"]:
+            raise ValueError("understanding lineage document mismatch")
+        chain = []
+        seen = set()
+        current_run_id = run_id
+        while True:
+            if current_run_id in seen:
+                raise ValueError("understanding lineage cycle")
+            seen.add(current_run_id)
+            row = db.execute(
+                "SELECT * FROM paper_understanding_runs WHERE id = ?", (current_run_id,)
+            ).fetchone()
+            if not row or not row["source_bundle_json"] or not row["review_plan"] or not row["paper_profile"]:
+                raise ValueError("understanding lineage run missing")
+            run_bundle = json.loads(row["source_bundle_json"])
+            if (run_bundle != frozen_bundle or row["document_id"] != document["id"] or
+                    row["source_bundle_id"] != frozen_bundle["bundle_id"] or
+                    run_bundle["document"]["snapshot_id"] != document["snapshot_id"] or
+                    run_bundle["document"].get("sha256") != document["sha256"]):
+                raise ValueError("understanding lineage source mismatch")
+            plan = ReviewPlan.model_validate_json(row["review_plan"])
+            profile = PaperProfile.model_validate_json(row["paper_profile"])
+            validate_inherited_understanding_assets(
+                frozen_bundle, current_run_id, plan, profile)
+            lineage = db.execute(
+                "SELECT * FROM paper_understanding_run_lineage WHERE run_id = ?",
+                (current_run_id,),
+            ).fetchone()
+            if lineage and (
+                lineage["document_id"] != document["id"]
+                or lineage["source_bundle_id"] != frozen_bundle["bundle_id"]
+                or lineage["source_snapshot_id"] != document["snapshot_id"]
+                or lineage["pdf_sha256"] != document["sha256"]
+                or lineage["plan_prompt_version"] != plan.prompt_version
+                or lineage["plan_schema_version"] != plan.schema_version
+                or lineage["profile_prompt_version"] != profile.prompt_version
+                or lineage["profile_schema_version"] != profile.schema_version
+                or lineage["n3_prompt_version"] != VERSIONS["contribution-evidence-mapper"]
+                or lineage["n3_schema_version"] != N3_SCHEMA_VERSION
+            ):
+                raise ValueError("understanding lineage metadata mismatch")
+            chain.append((current_run_id, plan, profile, lineage))
+            if not lineage:
+                break
+            current_run_id = lineage["parent_run_id"]
+
+        chain_index = {item[0]: item for item in chain}
+        for index, (current_id, plan, profile, lineage) in enumerate(chain):
+            if not lineage:
+                continue
+            ancestors = {item[0] for item in chain[index + 1:]}
+            plan_source_id = lineage["plan_source_run_id"]
+            profile_source_id = lineage["profile_source_run_id"]
+            if plan_source_id not in ancestors or profile_source_id not in ancestors:
+                raise ValueError("understanding lineage source is not an ancestor")
+            source_plan = chain_index[plan_source_id][1].model_copy(
+                update={"review_run_id": current_id}, deep=True)
+            source_profile = chain_index[profile_source_id][2].model_copy(
+                update={"review_run_id": current_id}, deep=True)
+            if (source_plan.model_dump(mode="json") != plan.model_dump(mode="json") or
+                    source_profile.model_dump(mode="json") != profile.model_dump(mode="json")):
+                raise ValueError("inherited understanding content mismatch")
+        return chain[0][3]
+
+    def checkpoint_row_matches_bundle(row, bundle):
+        return (
+            row["document_id"] == bundle["document"]["id"]
+            and row["source_bundle_id"] == bundle["bundle_id"]
+            and row["source_snapshot_id"] == bundle["document"]["snapshot_id"]
+            and row["pdf_sha256"] == bundle["document"].get("sha256", "")
+        )
+
+    def validate_checkpoint_chain(db, row, descriptor, bundle):
+        seen = set()
+        current_row = row
+        while True:
+            checkpoint_id = current_row["id"]
+            if checkpoint_id in seen:
+                raise ValueError("checkpoint origin cycle")
+            seen.add(checkpoint_id)
+            if not checkpoint_row_matches_bundle(current_row, bundle):
+                raise ValueError("checkpoint frozen source mismatch")
+            current = checkpoint_from_row(current_row)
+            validate_checkpoint(
+                current, descriptor, bundle, current.generating_run_id)
+            if current.generation_mode == "generated":
+                return checkpoint_from_row(row)
+            lineage = db.execute(
+                "SELECT parent_run_id FROM paper_understanding_run_lineage WHERE run_id = ?",
+                (current.generating_run_id,),
+            ).fetchone()
+            if not lineage or lineage["parent_run_id"] != current.origin_run_id:
+                raise ValueError("checkpoint origin run is not the lineage parent")
+            origin_row = db.execute(
+                "SELECT * FROM paper_understanding_n3_checkpoints WHERE id = ? AND run_id = ?",
+                (current.origin_checkpoint_id, current.origin_run_id),
+            ).fetchone()
+            if not origin_row or origin_row["input_fingerprint"] != current.input_fingerprint:
+                raise ValueError("checkpoint origin mismatch")
+            origin = checkpoint_from_row(origin_row)
+            validate_checkpoint(origin, descriptor, bundle, origin.generating_run_id)
+            if not checkpoint_content_rebinds_exactly(origin, current):
+                raise ValueError("checkpoint inherited content mismatch")
+            current_row = origin_row
+
+    def load_run_checkpoints(db, run_id, bundle, descriptor_index):
+        rows = db.execute(
+            "SELECT * FROM paper_understanding_n3_checkpoints "
+            "WHERE run_id = ? ORDER BY partition_index", (run_id,)
+        ).fetchall()
+        checkpoints = []
+        for row in rows:
+            descriptor = descriptor_index.get(row["partition_id"])
+            if descriptor is None:
+                raise ValueError("checkpoint partition mismatch")
+            checkpoints.append(validate_checkpoint_chain(db, row, descriptor, bundle))
+        return checkpoints
+
     def run_understanding(document_id: str, run_id: str, request: UnderstandingRunRequest):
         try:
             with connect() as db:
@@ -601,24 +870,7 @@ def create_app(data_dir: Path) -> FastAPI:
             model = session.configuration.model
 
             def model_call(stage, system, user):
-                started = time.perf_counter()
-                stream = model_completion(session,
-                    model=model, messages=[{"role": "system", "content": system},
-                                           {"role": "user", "content": user}],
-                    stream=True, stream_options={"include_usage": True})
-                pieces = []
-                actual_model = None
-                usage = None
-                for chunk in stream:
-                    actual_model = chunk.model or actual_model
-                    usage = chunk.usage or usage
-                    if chunk.choices and chunk.choices[0].delta.content:
-                        pieces.append(chunk.choices[0].delta.content)
-                return {"content": "".join(pieces),
-                        "model_identifier": actual_model,
-                        "input_tokens": getattr(usage, "prompt_tokens", None),
-                        "output_tokens": getattr(usage, "completion_tokens", None),
-                        "duration_ms": round((time.perf_counter() - started) * 1000)}
+                return streamed_understanding_call(session, model, stage, system, user)
 
             def persist_result(column, result):
                 if column not in {"review_plan", "paper_profile", "claim_evidence_map"}:
@@ -627,21 +879,13 @@ def create_app(data_dir: Path) -> FastAPI:
                     db.execute(f"UPDATE paper_understanding_runs SET {column} = ? WHERE id = ?",
                                (result.model_dump_json(), run_id))
 
-            def persist_trace(trace):
-                with connect() as db:
-                    db.execute("INSERT INTO paper_understanding_model_calls VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                               (uuid.uuid4().hex, run_id, trace.stage, trace.prompt_version,
-                                trace.requested_model, trace.actual_model, trace.input_tokens,
-                                trace.output_tokens, trace.duration_ms, trace.status, trace.error))
-
             run_p2a(
                 bundle, run_id, model_call, model, request.target_journal,
-                request.special_requirements, on_result=persist_result, on_trace=persist_trace,
-                budget=RunBudget(
-                    max_calls=int(os.environ.get("P2A_MAX_CALLS", "32")),
-                    max_input_tokens=int(os.environ.get("P2A_MAX_INPUT_TOKENS", "300000")),
-                    max_output_tokens=int(os.environ.get("P2A_MAX_OUTPUT_TOKENS", "100000")),
-                    max_duration_ms=int(os.environ.get("P2A_MAX_DURATION_MS", "1800000"))))
+                request.special_requirements, on_result=persist_result,
+                on_trace=lambda trace: persist_understanding_trace(run_id, trace),
+                on_n3_checkpoint=lambda checkpoint: persist_n3_checkpoint(
+                    run_id, bundle, checkpoint),
+                budget=p2a_budget())
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET status = 'completed', "
                            "finished_at = datetime('now') WHERE id = ?", (run_id,))
@@ -660,23 +904,194 @@ def create_app(data_dir: Path) -> FastAPI:
                            "finished_at = datetime('now') WHERE id = ?",
                            (f"source: {type(exc).__name__}", run_id))
 
+    def run_n3_continuation(document_id: str, run_id: str):
+        try:
+            with connect() as db:
+                row = db.execute(
+                    "SELECT * FROM paper_understanding_runs WHERE id = ?", (run_id,)
+                ).fetchone()
+                lineage = db.execute(
+                    "SELECT * FROM paper_understanding_run_lineage WHERE run_id = ?", (run_id,)
+                ).fetchone()
+                document = db.execute(
+                    "SELECT id, snapshot_id, sha256 FROM documents WHERE id = ?", (document_id,)
+                ).fetchone()
+                if not row or not lineage or not document:
+                    raise ValueError("continuation state missing")
+                bundle = json.loads(row["source_bundle_json"])
+                if (row["status"] != "queued" or row["source_bundle_id"] != bundle["bundle_id"] or
+                        lineage["document_id"] != document["id"] or
+                        lineage["source_bundle_id"] != bundle["bundle_id"] or
+                        lineage["source_snapshot_id"] != document["snapshot_id"] or
+                        lineage["pdf_sha256"] != document["sha256"] or
+                        bundle["document"]["snapshot_id"] != document["snapshot_id"] or
+                        bundle["document"].get("sha256") != document["sha256"]):
+                    raise ValueError("continuation frozen source mismatch")
+                plan = ReviewPlan.model_validate_json(row["review_plan"])
+                profile = PaperProfile.model_validate_json(row["paper_profile"])
+                validate_inherited_understanding_assets(bundle, run_id, plan, profile)
+                validate_understanding_lineage_chain(db, run_id, bundle, document)
+                descriptors = build_n3_partition_descriptors(
+                    bundle, profile, row["target_journal"], row["special_requirements"])
+                by_partition = {item.partition_id: item for item in descriptors}
+                checkpoints = load_run_checkpoints(
+                    db, run_id, bundle, by_partition)
+                db.execute(
+                    "UPDATE paper_understanding_runs SET status = 'running' WHERE id = ?",
+                    (run_id,),
+                )
+
+            session = model_session(timeout=180, max_retries=0)
+            model = session.configuration.model
+            checkpoint_index = {item.input_fingerprint: item for item in checkpoints}
+
+            mapping, _ = run_p2a_n3(
+                bundle,
+                profile,
+                run_id,
+                lambda stage, system, user: streamed_understanding_call(
+                    session, model, stage, system, user),
+                model,
+                row["target_journal"],
+                row["special_requirements"],
+                budget=p2a_budget(),
+                checkpoint_loader=lambda descriptor: checkpoint_index.get(
+                    descriptor.input_fingerprint),
+                on_checkpoint=lambda checkpoint: persist_n3_checkpoint(
+                    run_id, bundle, checkpoint),
+                on_trace=lambda trace: persist_understanding_trace(run_id, trace),
+            )
+            validate_understanding_snapshot(
+                bundle, plan, profile, mapping, run_id, "completed")
+            with connect() as db:
+                db.execute(
+                    "UPDATE paper_understanding_runs SET claim_evidence_map = ?, status = 'completed', "
+                    "error = NULL, finished_at = datetime('now') WHERE id = ?",
+                    (mapping.model_dump_json(), run_id),
+                )
+        except BudgetExceeded as exc:
+            with connect() as db:
+                db.execute(
+                    "UPDATE paper_understanding_runs SET status = 'budget_exceeded', error = ?, "
+                    "finished_at = datetime('now') WHERE id = ?", (str(exc), run_id))
+        except P2AError as exc:
+            with connect() as db:
+                db.execute(
+                    "UPDATE paper_understanding_runs SET status = 'failed', error = ?, "
+                    "finished_at = datetime('now') WHERE id = ?", (str(exc), run_id))
+        except Exception as exc:
+            with connect() as db:
+                db.execute(
+                    "UPDATE paper_understanding_runs SET status = 'failed', error = ?, "
+                    "finished_at = datetime('now') WHERE id = ?",
+                    (f"resume: {type(exc).__name__}", run_id),
+                )
+
     @app.post("/api/documents/{document_id}/understanding-runs", status_code=202)
     def create_understanding_run(document_id: str, payload: UnderstandingRunRequest,
                                  background_tasks: BackgroundTasks):
         model_configuration_or_503()
-        with connect() as db:
-            document_or_404(db, document_id)
-            active = db.execute("SELECT 1 FROM paper_understanding_runs WHERE document_id = ? "
-                                "AND status IN ('queued', 'running')", (document_id,)).fetchone()
-            if active:
-                raise HTTPException(409, "该论文已有正在运行的理解任务")
-            run_id = uuid.uuid4().hex
-            db.execute("INSERT INTO paper_understanding_runs "
-                       "(id, document_id, status, target_journal, special_requirements, created_at) "
-                       "VALUES (?, ?, 'queued', ?, ?, datetime('now'))",
-                       (run_id, document_id, payload.target_journal, payload.special_requirements))
+        try:
+            with connect() as db:
+                db.execute("BEGIN IMMEDIATE")
+                document_or_404(db, document_id)
+                active = db.execute("SELECT 1 FROM paper_understanding_runs WHERE document_id = ? "
+                                    "AND status IN ('queued', 'running')", (document_id,)).fetchone()
+                if active:
+                    raise HTTPException(409, "该论文已有正在运行的理解任务")
+                run_id = uuid.uuid4().hex
+                db.execute("INSERT INTO paper_understanding_runs "
+                           "(id, document_id, status, target_journal, special_requirements, created_at) "
+                           "VALUES (?, ?, 'queued', ?, ?, datetime('now'))",
+                           (run_id, document_id, payload.target_journal, payload.special_requirements))
+        except HTTPException:
+            raise
+        except sqlite3.IntegrityError:
+            raise HTTPException(409, "该论文已有正在运行的理解任务") from None
         background_tasks.add_task(run_understanding, document_id, run_id, payload)
         return {"id": run_id, "document_id": document_id, "status": "queued"}
+
+    @app.post("/api/understanding-runs/{parent_run_id}/n3-resume-runs", status_code=202)
+    def create_n3_resume_run(parent_run_id: str, background_tasks: BackgroundTasks):
+        model_configuration_or_503()
+        try:
+            with connect() as db:
+                db.execute("BEGIN IMMEDIATE")
+                parent = db.execute(
+                    "SELECT * FROM paper_understanding_runs WHERE id = ?", (parent_run_id,)
+                ).fetchone()
+                if not parent:
+                    raise HTTPException(404, "论文理解任务不存在")
+                if (parent["status"] not in {"failed", "budget_exceeded"} or
+                        not parent["source_bundle_json"] or not parent["review_plan"] or
+                        not parent["paper_profile"] or parent["claim_evidence_map"]):
+                    raise HTTPException(409, "父任务不满足N3续跑条件")
+                document = document_or_404(db, parent["document_id"])
+                if db.execute(
+                    "SELECT 1 FROM paper_understanding_runs WHERE document_id = ? "
+                    "AND status IN ('queued', 'running')", (parent["document_id"],)
+                ).fetchone():
+                    raise HTTPException(409, "该论文已有正在运行的理解任务")
+
+                bundle = json.loads(parent["source_bundle_json"])
+                if (parent["source_bundle_id"] != bundle["bundle_id"] or
+                        bundle["document"]["id"] != document["id"] or
+                        bundle["document"]["snapshot_id"] != document["snapshot_id"] or
+                        bundle["document"].get("sha256") != document["sha256"]):
+                    raise ValueError("parent frozen source mismatch")
+                source_plan = ReviewPlan.model_validate_json(parent["review_plan"])
+                source_profile = PaperProfile.model_validate_json(parent["paper_profile"])
+                validate_inherited_understanding_assets(
+                    bundle, parent_run_id, source_plan, source_profile)
+                parent_lineage = validate_understanding_lineage_chain(
+                    db, parent_run_id, bundle, document)
+
+                run_id = uuid.uuid4().hex
+                plan = source_plan.model_copy(update={"review_run_id": run_id}, deep=True)
+                profile = source_profile.model_copy(update={"review_run_id": run_id}, deep=True)
+                validate_inherited_understanding_assets(bundle, run_id, plan, profile)
+                descriptors = build_n3_partition_descriptors(
+                    bundle, profile, parent["target_journal"], parent["special_requirements"])
+                descriptor_index = {item.partition_id: item for item in descriptors}
+                inherited = []
+                for checkpoint in load_run_checkpoints(
+                        db, parent_run_id, bundle, descriptor_index):
+                    descriptor = descriptor_index[checkpoint.partition_id]
+                    inherited.append(inherit_n3_checkpoint(
+                        checkpoint, descriptor, bundle, run_id))
+
+                db.execute(
+                    "INSERT INTO paper_understanding_runs "
+                    "(id, document_id, source_bundle_id, source_bundle_json, status, error, "
+                    "target_journal, special_requirements, review_plan, paper_profile, "
+                    "claim_evidence_map, created_at, finished_at) "
+                    "VALUES (?, ?, ?, ?, 'queued', NULL, ?, ?, ?, ?, NULL, datetime('now'), NULL)",
+                    (run_id, parent["document_id"], bundle["bundle_id"],
+                     parent["source_bundle_json"], parent["target_journal"],
+                     parent["special_requirements"], plan.model_dump_json(),
+                     profile.model_dump_json()),
+                )
+                db.execute(
+                    "INSERT INTO paper_understanding_run_lineage VALUES "
+                    "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))",
+                    (run_id, parent_run_id,
+                     parent_lineage["plan_source_run_id"] if parent_lineage else parent_run_id,
+                     parent_lineage["profile_source_run_id"] if parent_lineage else parent_run_id,
+                     parent["document_id"], bundle["bundle_id"],
+                     bundle["document"]["snapshot_id"], document["sha256"],
+                     source_plan.prompt_version, source_plan.schema_version,
+                     source_profile.prompt_version, source_profile.schema_version,
+                     VERSIONS["contribution-evidence-mapper"], N3_SCHEMA_VERSION),
+                )
+                for checkpoint in inherited:
+                    persist_n3_checkpoint(run_id, bundle, checkpoint, connection=db)
+        except HTTPException:
+            raise
+        except (KeyError, TypeError, ValueError, sqlite3.DatabaseError):
+            raise HTTPException(409, "父任务续跑资产无效") from None
+        background_tasks.add_task(run_n3_continuation, parent["document_id"], run_id)
+        return {"id": run_id, "document_id": parent["document_id"],
+                "parent_run_id": parent_run_id, "status": "queued"}
 
     @app.get("/api/understanding-runs/{run_id}")
     def get_understanding_run(run_id: str):
@@ -686,11 +1101,23 @@ def create_app(data_dir: Path) -> FastAPI:
                 raise HTTPException(404, "论文理解任务不存在")
             calls = [dict(item) for item in db.execute(
                 "SELECT * FROM paper_understanding_model_calls WHERE run_id = ? ORDER BY rowid", (run_id,))]
+            lineage_row = db.execute(
+                "SELECT * FROM paper_understanding_run_lineage WHERE run_id = ?", (run_id,)
+            ).fetchone()
+            checkpoint_rows = db.execute(
+                "SELECT id, origin_checkpoint_id, origin_run_id, generation_mode, "
+                "partition_id, partition_index, partition_count, input_fingerprint, "
+                "prompt_version, schema_version, result_hash, created_at "
+                "FROM paper_understanding_n3_checkpoints WHERE run_id = ? "
+                "ORDER BY partition_index", (run_id,)
+            ).fetchall()
         result = dict(row)
         result.pop("source_bundle_json")
         for key in ("review_plan", "paper_profile", "claim_evidence_map"):
             result[key] = json.loads(result[key]) if result[key] else None
         result["model_calls"] = calls
+        result["lineage"] = dict(lineage_row) if lineage_row else None
+        result["n3_checkpoints"] = [dict(item) for item in checkpoint_rows]
         return result
 
     @app.get("/api/understanding-runs/{run_id}/source-bundle")

@@ -609,7 +609,8 @@ def _profile_context_for_part(profile, part):
 def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: str,
             target_journal: str | None = None, special_requirements: str | None = None,
             chunk_chars: int = 12000, on_result: Callable | None = None,
-            on_trace: Callable | None = None, budget: RunBudget | None = None):
+            on_trace: Callable | None = None, budget: RunBudget | None = None,
+            on_n3_checkpoint: Callable | None = None):
     """Run N1–N3; caller persists results and trace metadata in private storage."""
     units = bundle["reading_units"]
     if not units:
@@ -656,26 +657,22 @@ def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: st
     profile = _check_source_conflicts(profile, bundle, requested_model, model_call, traces, on_trace)
     if on_result:
         on_result("paper_profile", profile)
-    map_context = context
-    map_chunks = chunk_reading_units(units, min(chunk_chars, 9000))
-    partial_maps = []
+    # Local import avoids coupling the versioned continuation contract to N1/N2.
+    from backend.p2a_resume import run_p2a_n3
 
-    def map_part(part, label):
-        return [_invoke(
-            "contribution-evidence-mapper", map_context +
-            f"\nPart {label}. Map claims from these reading units; "
-            "the PaperProfile facts below are projected by their source IDs.\n" +
-            _profile_context_for_part(profile, part) + "\nReading units:\n" +
-            _source_text(part), bundle, run_id, part, quality, requested_model,
-            model_call, traces, ClaimEvidenceMap, on_trace)]
-
-    for index, part in enumerate(map_chunks):
-        partial_maps.extend(map_part(part, f"{index + 1}/{len(map_chunks)}"))
-    mapping = _merge_claim_maps(partial_maps, profile, bundle, run_id, quality,
-                                requested_model, model_call, traces, on_trace)
-    if any(gap.startswith("Global scalar synthesis failed") for gap in profile.unresolved_source_gaps):
-        mapping.execution_status = "limited"
-        mapping.input_coverage.limitations.append("upstream_global_synthesis_failed")
-    if on_result:
-        on_result("claim_evidence_map", mapping)
+    mapping, n3_traces = run_p2a_n3(
+        bundle,
+        profile,
+        run_id,
+        raw_model_call,
+        requested_model,
+        target_journal,
+        special_requirements,
+        chunk_chars=chunk_chars,
+        budget=budget,
+        on_checkpoint=on_n3_checkpoint,
+        on_result=on_result,
+        on_trace=on_trace,
+    )
+    traces.extend(n3_traces)
     return plan, profile, mapping, traces
