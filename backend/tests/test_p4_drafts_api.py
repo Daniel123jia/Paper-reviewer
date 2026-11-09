@@ -37,7 +37,7 @@ class FakeOpenAI:
                 issues = {item["source_issue_id"]: item for item in
                           payload["evidence_pack"]["issues"]}
                 content = {"schema_version": "1.0",
-                    "prompt_version": f'review-comment-writing-{plan["language"]}/v1',
+                    "prompt_version": f'review-comment-writing-{plan["language"]}/v2',
                     "language": plan["language"], "report_kind": plan["report_kind"],
                     "general_assessment": "The authors describe a method requiring careful scope clarification.",
                     "comments": [{"report_comment_id": group["group_id"],
@@ -269,6 +269,100 @@ def test_content_repair_consumes_a_new_durable_budget_reservation(tmp_path, monk
     ]
     assert sidecars == 3
     assert run == ("completed", 3, 360, 120)
+
+
+def test_schema_version_repair_uses_v2_prompt_and_is_audited(tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="test-secret")
+
+    class SchemaRepairingOpenAI(FakeOpenAI):
+        calls = []
+
+        @property
+        def chat(self):
+            delegate = super().chat
+
+            def create(**kwargs):
+                SchemaRepairingOpenAI.calls.append(kwargs)
+                response = delegate.completions.create(**kwargs)
+                if len(SchemaRepairingOpenAI.calls) == 1:
+                    content = json.loads(response.choices[0].message.content)
+                    content["schema_version"] = "1.1"
+                    response.choices[0].message.content = json.dumps(content)
+                return response
+
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr("backend.app.OpenAI", SchemaRepairingOpenAI)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 201, response.text
+    assert len(SchemaRepairingOpenAI.calls) == 3
+    assert 'ReportWritingResult.schema_version must be exactly "1.0"' in \
+        SchemaRepairingOpenAI.calls[1]["messages"][0]["content"]
+    assert response.json()["plan"]["schema_version"] == "1.1"
+    assert response.json()["writing"]["schema_version"] == "1.0"
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        calls = db.execute(
+            "SELECT stage, prompt_version, status FROM p4_model_calls ORDER BY rowid"
+        ).fetchall()
+    assert calls == [
+        ("writing-1-attempt-1", "review-comment-writing-en/v2", "completed"),
+        ("writing-1-attempt-2", "review-comment-writing-en/v2", "completed"),
+        ("consistency-1-attempt-2", "review-report-consistency/v1", "completed"),
+    ]
+
+
+def test_two_schema_version_mismatches_save_no_draft(tmp_path, monkeypatch):
+    configure_test_model(monkeypatch, key="test-secret")
+
+    class RepeatingWrongSchemaOpenAI(FakeOpenAI):
+        calls = 0
+
+        @property
+        def chat(self):
+            delegate = super().chat
+
+            def create(**kwargs):
+                RepeatingWrongSchemaOpenAI.calls += 1
+                response = delegate.completions.create(**kwargs)
+                content = json.loads(response.choices[0].message.content)
+                content["schema_version"] = "1.1"
+                response.choices[0].message.content = json.dumps(content)
+                return response
+
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr("backend.app.OpenAI", RepeatingWrongSchemaOpenAI)
+    client, _ = seeded_p4_client(tmp_path, reportable=True)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+
+    response = client.post(
+        f'/api/review-report-projects/{project["id"]}/drafts',
+        json={"kind": "author", "language": "en"},
+    )
+
+    assert response.status_code == 422
+    assert RepeatingWrongSchemaOpenAI.calls == 2
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        assert db.execute("SELECT count(*) FROM p4_drafts").fetchone()[0] == 0
+        stages = db.execute(
+            "SELECT stage, prompt_version FROM p4_model_calls ORDER BY rowid"
+        ).fetchall()
+        run = db.execute(
+            "SELECT state, reason, request_count, unknown_usage_calls "
+            "FROM p4_generation_runs"
+        ).fetchone()
+    assert stages == [
+        ("writing-1-attempt-1", "review-comment-writing-en/v2"),
+        ("writing-1-attempt-2", "review-comment-writing-en/v2"),
+    ]
+    assert run == ("interrupted", "report_content_validation_failed", 2, 0)
 
 
 @pytest.mark.parametrize("method_name", ["reserve_request", "mark_dispatch_pending"])

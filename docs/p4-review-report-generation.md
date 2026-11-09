@@ -30,7 +30,7 @@ P4 独立使用 SQLite `p4_report_projects`、`p4_reviewer_decisions`、`p4_evid
 
 ## 写作与验证
 
-四个 Prompt 版本：`review-report-planning/v1`、`review-comment-writing-zh/v1`、`review-comment-writing-en/v1`、`review-report-consistency/v1`。中英文分别从同一冻结证据包撰写；生成第二语言时仅传递首语言的来源 ID 和数值集合以对齐事实，不自由翻译整篇 Markdown。内部报告按问题分片请求模型，完整证据包和全部 P3 状态仍保存在来源快照和报告计划中。连接错误只重试一次，每次尝试单独记账；未知 Token 保持 `NULL`。
+当前 Prompt 版本：`review-report-planning/v1`、`review-comment-writing-zh/v2`、`review-comment-writing-en/v2`、`review-report-consistency/v1`；历史 v1 写作 Prompt 保留供旧审计读取。输入 `ReportPlan` 与 `ReportEvidencePack` 使用 P4 Schema 1.1，模型写作输出继续严格使用 `ReportWritingResult` Schema 1.0。v2 写作 Prompt 明确禁止把输入的 `schema_version="1.1"` 复制到输出；若第一次响应只因该字段违反 Literal 契约，第二次提示会以固定脱敏文字指出 `ReportWritingResult.schema_version` 必须为 `"1.0"`，但不会放宽其他结构、证据或科学约束。中英文分别从同一冻结证据包撰写；生成第二语言时仅传递首语言的来源 ID 和数值集合以对齐事实，不自由翻译整篇 Markdown。内部报告按问题分片请求模型，完整证据包和全部 P3 状态仍保存在来源快照和报告计划中。连接错误不进入内容修复；每次已发送请求单独记账，未知 Token 保持 `NULL` 并终止后续请求。
 
 服务端校验模型 JSON 与 Pydantic Schema、问题成员及分类、Evidence 归属、数字来源、禁止的内部 ID 和录用决定，并检查中英文意见的来源、数字和问题范围。模型一致性检查是辅助解释，不等于独立验证。任意自然语言的全部科学含义无法仅用确定性规则证明，生成草稿仍需审稿人逐条阅读。
 

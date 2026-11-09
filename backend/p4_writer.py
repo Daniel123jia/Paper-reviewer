@@ -4,7 +4,7 @@ import json
 import re
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, ValidationError
 
 from backend.model_runtime import ModelConfigurationError
 from backend.p2a_schema import StrictModel
@@ -16,8 +16,10 @@ from backend.review import parse_model_json
 PROMPTS = Path(__file__).with_name("prompts") / "p4"
 PLANNING_VERSION = "review-report-planning/v1"
 CONSISTENCY_VERSION = "review-report-consistency/v1"
-WRITING_VERSIONS = {"zh": "review-comment-writing-zh/v1",
-                    "en": "review-comment-writing-en/v1"}
+WRITING_VERSIONS = {"zh": "review-comment-writing-zh/v2",
+                    "en": "review-comment-writing-en/v2"}
+WRITING_PROMPT_FILES = {"zh": "review-comment-writing-zh.v2.txt",
+                        "en": "review-comment-writing-en.v2.txt"}
 
 
 class ConsistencyAssessment(StrictModel):
@@ -30,6 +32,23 @@ class ConsistencyAssessment(StrictModel):
 
 def _prompt(filename):
     return (PROMPTS / filename).read_text(encoding="utf-8")
+
+
+def _repair_instruction(error: ValueError) -> str:
+    generic = ("\nThe preceding attempt failed strict schema, evidence, bilingual, or "
+               "consistency checks. Return corrected JSON using only the frozen "
+               "evidence and exact alignment values. Remove unsupported claims.")
+    if isinstance(error, ValidationError) and any(
+            tuple(item.get("loc", ())) == ("schema_version",)
+            and item.get("type") == "literal_error"
+            for item in error.errors(include_input=False, include_url=False)):
+        return generic + (
+            '\nReportWritingResult.schema_version must be exactly "1.0". '
+            'Do not copy schema_version "1.1" from ReportPlan or ReportEvidencePack. '
+            'Correct every other schema, evidence, and scientific constraint as well; '
+            'this field-level instruction does not relax any validation rule.'
+        )
+    return generic
 
 
 def _model_chunk(plan, pack, groups):
@@ -59,7 +78,7 @@ def write_report(plan: ReportPlan, pack: ReportEvidencePack, model_call,
         return ReportWritingResult(prompt_version=version, language=plan.language,
             report_kind=plan.report_kind, general_assessment="", comments=[])
     system = _prompt("review-report-planning.v1.txt") + "\n" + \
-             _prompt(f"review-comment-writing-{plan.language}.v1.txt")
+             _prompt(WRITING_PROMPT_FILES[plan.language])
     reference = {item.report_comment_id: item for item in bilingual_reference.comments} \
         if bilingual_reference else {}
     group_batches = ([[group] for group in plan.groups] if plan.report_kind != "author"
@@ -88,11 +107,8 @@ def write_report(plan: ReportPlan, pack: ReportEvidencePack, model_call,
                            "general_assessment_numeric_claims": sorted(
                                numeric_claims(bilingual_reference.general_assessment))
                                if bilingual_reference else []}, ensure_ascii=False)
+        repair = ""
         for attempt in range(2):
-            repair = ("\nThe preceding attempt failed strict schema, evidence, bilingual, or "
-                      "consistency checks. Return corrected JSON using only the frozen "
-                      "evidence and exact alignment values. Remove unsupported claims."
-                      if attempt else "")
             try:
                 raw = model_call(f"writing-{number}-attempt-{attempt + 1}", version,
                                  system + repair, user)
@@ -123,9 +139,10 @@ def write_report(plan: ReportPlan, pack: ReportEvidencePack, model_call,
                 break
             except ModelConfigurationError:
                 raise
-            except ValueError:
+            except ValueError as exc:
                 if attempt:
                     raise
+                repair = _repair_instruction(exc)
         if not general:
             general = partial.general_assessment
         comments.extend(partial.comments)
