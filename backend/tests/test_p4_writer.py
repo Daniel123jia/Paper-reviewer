@@ -1,3 +1,4 @@
+import hashlib
 import json
 
 import pytest
@@ -219,6 +220,33 @@ def test_current_writing_prompt_separates_input_1_1_from_output_1_0(language):
     assert 'ReportWritingResult.schema_version must be exactly the string "1.0"' in prompt
     assert 'ReportPlan and ReportEvidencePack may have schema_version "1.1"' in prompt
     assert f'prompt_version="{version}"' in prompt
+
+
+@pytest.mark.parametrize("language", ["zh", "en"])
+def test_current_writing_prompt_preserves_alignment_and_strict_comment_contract(language):
+    prompt = (PROMPTS / f"review-comment-writing-{language}.v2.txt").read_text()
+    assert "If bilingual_alignment is supplied" in prompt
+    assert "use exactly its evidence_refs and numeric_claims" in prompt
+    assert "do not translate the other language's wording" in prompt
+    assert "general_assessment_numeric_claims" in prompt
+    exact_keys = (
+        "report_comment_id, source_issue_ids, source, title_zh, title_en, "
+        "comment_body, scientific_question, evidence_refs, "
+        "author_action_requested, comment_category, uncertainty_qualification, "
+        "reviewer_approval_status"
+    )
+    assert f"ReportComment must contain exactly these keys: {exact_keys}" in prompt
+    assert "Do not include verdict, report_eligibility, human_review_status" in prompt
+    assert "other P3 metadata as ReportComment keys" in prompt
+
+
+@pytest.mark.parametrize(("language", "expected_hash"), [
+    ("zh", "54bd8271db6a3840bd224216924e4c6b0f31d946c4ccf7989162ddda2d434ae1"),
+    ("en", "c1c811303bb7ee715bfd674124446c61a54efc3c8a6c5c1ea2bc7ceb80c22446"),
+])
+def test_historical_v1_writing_prompt_is_unchanged(language, expected_hash):
+    prompt = PROMPTS / f"review-comment-writing-{language}.v1.txt"
+    assert hashlib.sha256(prompt.read_bytes()).hexdigest() == expected_hash
 
 
 def test_schema_version_mismatch_gets_exact_repair_and_then_succeeds(tmp_path):
