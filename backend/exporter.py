@@ -108,26 +108,6 @@ def _postprocess_docx(path: Path):
             cant_split = _get_or_add(trpr, "w:cantSplit")
             cant_split.set(qn("w:val"), "true")
 
-    appendix_index = next(
-        (index for index, paragraph in enumerate(doc.paragraphs)
-         if "技术核验附录" in paragraph.text
-         or "Technical Verification Appendix" in paragraph.text),
-        None,
-    )
-    if appendix_index is not None:
-        appendix_paragraphs = doc.paragraphs[appendix_index + 1:]
-        subsection_indices = [
-            index for index, paragraph in enumerate(appendix_paragraphs)
-            if paragraph.style.name == "Heading 3"
-        ]
-        if len(subsection_indices) >= 2:
-            tail = appendix_paragraphs[subsection_indices[-2]:]
-            # Keep only a compact appendix tail together. Longer material must remain
-            # free to paginate naturally instead of creating a new global constraint.
-            if len(tail) <= 14 and sum(len(paragraph.text) for paragraph in tail) <= 1200:
-                for paragraph in tail[:-1]:
-                    paragraph.paragraph_format.keep_with_next = True
-
     doc.save(path)
 
 
@@ -165,7 +145,7 @@ def reference_docx(kind: str, language: str, path: Path):
     configure_style(doc.styles["Title"], 18 if kind == "report" else 17, True, "233E54", 1.2, font)
     configure_style(doc.styles["Heading 1"], 14 if kind == "report" else 13, True, "284B62", 1.2, font)
     configure_style(doc.styles["Heading 2"], 11.5, True, "35546A", 1.2, font)
-    for name in ("Heading 1", "Heading 2"):
+    for name in ("Heading 1", "Heading 2", "Heading 3"):
         doc.styles[name].paragraph_format.keep_with_next = True
         doc.styles[name].paragraph_format.space_before = Pt(13)
     header = section.header.paragraphs[0]

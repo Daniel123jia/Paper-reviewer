@@ -47,6 +47,66 @@ def export_fixture() -> str:
     ])
 
 
+def balanced_appendix_fixture() -> str:
+    parts = ["# DRAFT", ""]
+    paragraph = (
+        "正文用于验证技术报告分页。相对位置表示、实验设置、证据限制与人工复核状态必须完整保留。"
+        * 3
+    )
+    for index in range(22):
+        if index % 5 == 0:
+            parts.extend([f"## {index + 1}. 审稿内容", ""])
+        parts.extend([paragraph, ""])
+    parts.extend([
+        "## 技术核验附录", "", "### 原始意见与调整映射", "",
+        "| 原始Issue | 原P3状态 | 本候选版处理 | 反证/限定 |",
+        "|---|---|---|---|",
+    ])
+    parts.extend(
+        f"| `consolidated_{index:02d}_abcdefghijklmnopqrstuvwxyz` | "
+        "inconclusive / internal_only / requires_human_review / pending | "
+        "保留证据与限制 | 反证与待核验说明 |"
+        for index in range(5)
+    )
+    parts.extend([
+        "", "### AI辅助视觉检查（不是人工确认）", "",
+        "- Table 1：数值与配置仍待用户确认。",
+        "- Table 3：Key/Value消融仍待用户确认。",
+        "- 边界：未改变P3裁定。", "", "### 尚未完成的检查", "",
+    ])
+    parts.extend(f"{index}. 尚未完成的检查项目，需要人工复核。" for index in range(1, 6))
+    return "\n".join(parts)
+
+
+def long_appendix_fixture() -> str:
+    parts = [
+        "# DRAFT", "", "## 技术核验附录", "", "### 超长附录小节", "",
+    ]
+    parts.extend(
+        f"{index}. 很长附录项目 {index}：保留来源、反证、限制和人工复核状态，允许自然跨页。"
+        for index in range(1, 55)
+    )
+    return "\n".join(parts)
+
+
+def multiple_long_tables_fixture() -> str:
+    parts = ["# DRAFT", "", "## 技术核验附录", ""]
+    for table_index in range(1, 3):
+        parts.extend([
+            f"### 长技术表 {table_index}", "",
+            "| Issue ID | Evidence ID | 说明 |",
+            "|---|---|---|",
+        ])
+        parts.extend(
+            f"| `consolidated_{table_index}_{row:02d}_abcdefghijklmnopqrstuvwxyz` | "
+            f"`ru_ev_{table_index}_{row:02d}_abcdefghijklmnopqrstuvwxyz` | "
+            f"中文与 English mixed evidence {row} |"
+            for row in range(1, 19)
+        )
+        parts.append("")
+    return "\n".join(parts)
+
+
 def xml_parts(blob: bytes):
     with zipfile.ZipFile(io.BytesIO(blob)) as archive:
         return {
@@ -115,8 +175,11 @@ def test_docx_tables_repeat_headers_and_split_only_between_rows():
         if paragraph.text.startswith("AI辅助视觉检查")
     )
     appendix_tail = doc.paragraphs[tail_start:]
-    assert len(appendix_tail) >= 5
-    assert all(paragraph.paragraph_format.keep_with_next for paragraph in appendix_tail[:-1])
+    headings = [paragraph for paragraph in appendix_tail if paragraph.style.name == "Heading 3"]
+    body_paragraphs = [paragraph for paragraph in appendix_tail if paragraph.style.name != "Heading 3"]
+    assert len(headings) == 2 and body_paragraphs
+    assert all(paragraph.style.paragraph_format.keep_with_next for paragraph in headings)
+    assert all(not paragraph.paragraph_format.keep_with_next for paragraph in body_paragraphs)
 
 
 def test_pdf_keeps_short_table_together_and_splits_long_table_with_repeated_header():
@@ -130,6 +193,37 @@ def test_pdf_keeps_short_table_together_and_splits_long_table_with_repeated_head
     assert "row_key_value_14" in joined
     assert sum("原始Issue" in page for page in pages) >= 2
     assert len(pages[-1].replace("内部完整审稿报告", "").strip()) >= 180
+
+
+def test_pdf_balances_short_appendix_without_forcing_two_sections_together():
+    pdf = render_export(balanced_appendix_fixture(), "report", "zh", "pdf")
+    with fitz.open(stream=pdf, filetype="pdf") as rendered:
+        pages = [page.get_text() for page in rendered]
+    assert len(pages) <= 3
+    assert min(len(page) for page in pages) >= 700
+    assert "AI辅助视觉检查" in pages[-1]
+    assert "尚未完成的检查" in pages[-1]
+
+
+def test_pdf_long_appendix_naturally_spans_pages_with_heading_and_first_item_together():
+    pdf = render_export(long_appendix_fixture(), "report", "zh", "pdf")
+    with fitz.open(stream=pdf, filetype="pdf") as rendered:
+        pages = [page.get_text() for page in rendered]
+    matching_pages = [page for page in pages if "很长附录项目" in page]
+    assert len(matching_pages) >= 2
+    heading_page = next(page for page in pages if "超长附录小节" in page)
+    assert "很长附录项目 1" in heading_page
+    assert "很长附录项目 54" in "".join(pages)
+
+
+def test_pdf_multiple_long_tables_repeat_headers_and_preserve_long_ids():
+    pdf = render_export(multiple_long_tables_fixture(), "report", "zh", "pdf")
+    with fitz.open(stream=pdf, filetype="pdf") as rendered:
+        pages = [page.get_text() for page in rendered]
+    joined = "".join(pages).replace("\n", "")
+    assert sum(page.count("Evidence ID") for page in pages) >= 4
+    assert "consolidated_1_01_abcdefghijklmnopqrstuvwxyz" in joined
+    assert "ru_ev_2_18_abcdefghijklmnopqrstuvwxyz" in joined
 
 
 def test_markdown_export_is_byte_for_byte_unchanged():
