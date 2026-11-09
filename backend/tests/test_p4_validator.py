@@ -25,7 +25,7 @@ def case(tmp_path):
         scientific_question=group.scientific_question, evidence_refs=pack.issues[0].source_refs[:1],
         author_action_requested="Clarify the method's specific novelty scope.",
         comment_category="clarification", uncertainty_qualification="A clarification, not a proven error")
-    writing = ReportWritingResult(prompt_version="review-comment-writing-en/v1",
+    writing = ReportWritingResult(prompt_version="review-comment-writing-en/v2",
         language="en", report_kind="author",
         general_assessment="The authors describe a method and its novelty claim.", comments=[comment])
     return plan, pack, writing

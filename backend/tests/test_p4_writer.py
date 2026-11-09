@@ -1,8 +1,9 @@
+import hashlib
 import json
 
 import pytest
 
-from backend.p4_writer import render_markdown, write_report
+from backend.p4_writer import PROMPTS, WRITING_VERSIONS, render_markdown, write_report
 from backend.tests.test_p4_validator import case
 from backend.tests.test_p4_planner import snapshot
 from backend.tests.test_p4_api import seeded_p4_client
@@ -173,7 +174,7 @@ def test_second_language_receives_fact_alignment_without_translation(tmp_path):
     plan, pack, english = case(tmp_path)
     chinese = english.model_copy(deep=True)
     chinese.language = "zh"
-    chinese.prompt_version = "review-comment-writing-zh/v1"
+    chinese.prompt_version = "review-comment-writing-zh/v2"
     chinese.comments[0].comment_body = "请作者明确方法的具体主张及原文依据，并说明这一主张的适用范围。"
 
     def model(stage, version, system, user):
@@ -209,3 +210,108 @@ def test_invalid_first_chunk_is_rewritten_before_next_issue(tmp_path):
         writing.comments[0].comment_body
     assert stages == ["writing-1-attempt-1", "writing-1-attempt-2",
                       "consistency-1-attempt-2"]
+
+
+@pytest.mark.parametrize("language", ["zh", "en"])
+def test_current_writing_prompt_separates_input_1_1_from_output_1_0(language):
+    version = WRITING_VERSIONS[language]
+    assert version == f"review-comment-writing-{language}/v2"
+    prompt = (PROMPTS / f"review-comment-writing-{language}.v2.txt").read_text()
+    assert 'ReportWritingResult.schema_version must be exactly the string "1.0"' in prompt
+    assert 'ReportPlan and ReportEvidencePack may have schema_version "1.1"' in prompt
+    assert f'prompt_version="{version}"' in prompt
+
+
+@pytest.mark.parametrize("language", ["zh", "en"])
+def test_current_writing_prompt_preserves_alignment_and_strict_comment_contract(language):
+    prompt = (PROMPTS / f"review-comment-writing-{language}.v2.txt").read_text()
+    assert "If bilingual_alignment is supplied" in prompt
+    assert "use exactly its evidence_refs and numeric_claims" in prompt
+    assert "do not translate the other language's wording" in prompt
+    assert "general_assessment_numeric_claims" in prompt
+    exact_keys = (
+        "report_comment_id, source_issue_ids, source, title_zh, title_en, "
+        "comment_body, scientific_question, evidence_refs, "
+        "author_action_requested, comment_category, uncertainty_qualification, "
+        "reviewer_approval_status"
+    )
+    assert f"ReportComment must contain exactly these keys: {exact_keys}" in prompt
+    assert "Do not include verdict, report_eligibility, human_review_status" in prompt
+    assert "other P3 metadata as ReportComment keys" in prompt
+
+
+@pytest.mark.parametrize(("language", "expected_hash"), [
+    ("zh", "54bd8271db6a3840bd224216924e4c6b0f31d946c4ccf7989162ddda2d434ae1"),
+    ("en", "c1c811303bb7ee715bfd674124446c61a54efc3c8a6c5c1ea2bc7ceb80c22446"),
+])
+def test_historical_v1_writing_prompt_is_unchanged(language, expected_hash):
+    prompt = PROMPTS / f"review-comment-writing-{language}.v1.txt"
+    assert hashlib.sha256(prompt.read_bytes()).hexdigest() == expected_hash
+
+
+def test_schema_version_mismatch_gets_exact_repair_and_then_succeeds(tmp_path):
+    plan, pack, writing = case(tmp_path)
+    assert plan.schema_version == pack.schema_version == "1.1"
+    stages = []
+
+    def model(stage, version, system, user):
+        stages.append((stage, version, system))
+        if stage == "writing-1-attempt-1":
+            candidate = writing.model_dump(mode="json")
+            candidate["schema_version"] = "1.1"
+            candidate["prompt_version"] = version
+            return {"content": json.dumps(candidate)}
+        if stage == "writing-1-attempt-2":
+            assert 'ReportWritingResult.schema_version must be exactly "1.0"' in system
+            assert 'Do not copy schema_version "1.1" from ReportPlan or ReportEvidencePack' in system
+            candidate = writing.model_dump(mode="json")
+            candidate["prompt_version"] = version
+            return {"content": json.dumps(candidate)}
+        return {"content": json.dumps({"acceptable": True, "unsupported_facts": [],
+            "state_promotions": [], "refuted_accusations": [],
+            "language_or_scope_changes": []})}
+
+    result = write_report(plan, pack, model)
+
+    assert result.schema_version == "1.0"
+    assert result.prompt_version == "review-comment-writing-en/v2"
+    assert [(stage, version) for stage, version, _ in stages] == [
+        ("writing-1-attempt-1", "review-comment-writing-en/v2"),
+        ("writing-1-attempt-2", "review-comment-writing-en/v2"),
+        ("consistency-1-attempt-2", "review-report-consistency/v1"),
+    ]
+
+
+def test_two_schema_version_mismatches_fail_closed(tmp_path):
+    plan, pack, writing = case(tmp_path)
+    stages = []
+
+    def model(stage, version, system, user):
+        stages.append(stage)
+        candidate = writing.model_dump(mode="json")
+        candidate["schema_version"] = "1.1"
+        candidate["prompt_version"] = version
+        return {"content": json.dumps(candidate)}
+
+    with pytest.raises(ValueError):
+        write_report(plan, pack, model)
+
+    assert stages == ["writing-1-attempt-1", "writing-1-attempt-2"]
+
+
+def test_fixing_version_does_not_bypass_other_evidence_validation(tmp_path):
+    plan, pack, writing = case(tmp_path)
+    stages = []
+
+    def model(stage, version, system, user):
+        stages.append(stage)
+        candidate = writing.model_dump(mode="json")
+        candidate["schema_version"] = "1.1" if stage.endswith("attempt-1") else "1.0"
+        candidate["prompt_version"] = version
+        candidate["comments"][0]["evidence_refs"] = ["foreign-paper-source"]
+        return {"content": json.dumps(candidate)}
+
+    with pytest.raises(ValueError, match="another issue"):
+        write_report(plan, pack, model)
+
+    assert stages == ["writing-1-attempt-1", "writing-1-attempt-2"]
