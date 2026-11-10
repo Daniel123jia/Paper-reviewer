@@ -6,10 +6,110 @@ import subprocess
 import tempfile
 
 from docx import Document
+from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
+from lxml import etree
+
+
+EAST_ASIA_FONT = "Source Han Sans SC"
+EAST_ASIA_LANGUAGE = "zh-CN"
+CJK_COMPATIBILITY_FONT = "Arial Unicode MS"
+
+
+def _get_or_add(parent, tag):
+    child = parent.find(qn(tag))
+    if child is None:
+        child = OxmlElement(tag)
+        parent.append(child)
+    return child
+
+
+def _set_east_asian_properties(rpr, *, include_hint=True, direct_cjk_run=False):
+    fonts = _get_or_add(rpr, "w:rFonts")
+    fonts.set(qn("w:eastAsia"), EAST_ASIA_FONT)
+    fonts.set(qn("w:eastAsiaTheme"), "minorEastAsia")
+    if direct_cjk_run:
+        # LibreOffice does not consistently honor only w:eastAsia on mixed-script runs.
+        # Its generic Unicode family also gives readers a system-font fallback when
+        # Source Han Sans SC is not installed, without embedding a font file.
+        fonts.set(qn("w:ascii"), CJK_COMPATIBILITY_FONT)
+        fonts.set(qn("w:hAnsi"), CJK_COMPATIBILITY_FONT)
+    if include_hint:
+        fonts.set(qn("w:hint"), "eastAsia")
+    lang = _get_or_add(rpr, "w:lang")
+    lang.set(qn("w:eastAsia"), EAST_ASIA_LANGUAGE)
+
+
+def _contains_cjk(text):
+    return any("\u3400" <= character <= "\u9fff" for character in text)
+
+
+def _register_east_asian_font(doc):
+    font_table = next(
+        (part for part in doc.part.package.parts if str(part.partname) == "/word/fontTable.xml"),
+        None,
+    )
+    if font_table is None:
+        return
+    root = etree.fromstring(font_table.blob)
+    selector = f'./w:font[@w:name="{EAST_ASIA_FONT}"]'
+    if root.xpath(selector, namespaces={"w": qn("w:fonts").split("}")[0][1:]}):
+        return
+    font = OxmlElement("w:font")
+    font.set(qn("w:name"), EAST_ASIA_FONT)
+    alt_name = OxmlElement("w:altName")
+    alt_name.set(qn("w:val"), "思源黑体")
+    family = OxmlElement("w:family")
+    family.set(qn("w:val"), "swiss")
+    pitch = OxmlElement("w:pitch")
+    pitch.set(qn("w:val"), "variable")
+    font.extend((alt_name, family, pitch))
+    root.append(font)
+    font_table._blob = etree.tostring(
+        root, xml_declaration=True, encoding="UTF-8", standalone=True
+    )
+
+
+def _postprocess_docx(path: Path):
+    """Add portable CJK metadata and row-safe table pagination in place."""
+    doc = Document(path)
+
+    for style in doc.styles:
+        rpr = style.element.get_or_add_rPr()
+        _set_east_asian_properties(rpr, include_hint=False)
+
+    roots = [doc.element]
+    for section in doc.sections:
+        roots.extend((section.header._element, section.footer._element))
+    for root in roots:
+        for run in root.iter(qn("w:r")):
+            text = "".join(node.text or "" for node in run.iter(qn("w:t")))
+            if not _contains_cjk(text):
+                continue
+            rpr = run.find(qn("w:rPr"))
+            if rpr is None:
+                rpr = OxmlElement("w:rPr")
+                run.insert(0, rpr)
+            _set_east_asian_properties(rpr, direct_cjk_run=True)
+
+    settings = doc.settings._element
+    theme_lang = _get_or_add(settings, "w:themeFontLang")
+    theme_lang.set(qn("w:eastAsia"), EAST_ASIA_LANGUAGE)
+    _register_east_asian_font(doc)
+
+    for table in doc.tables:
+        for index, row in enumerate(table.rows):
+            trpr = row._tr.get_or_add_trPr()
+            if index == 0:
+                header = _get_or_add(trpr, "w:tblHeader")
+                header.set(qn("w:val"), "true")
+            cant_split = _get_or_add(trpr, "w:cantSplit")
+            cant_split.set(qn("w:val"), "true")
+
+    doc.save(path)
 
 
 def configure_style(style, size, bold=False, color="233944", spacing=1.4, latin_font="Times New Roman"):
@@ -24,9 +124,32 @@ def configure_style(style, size, bold=False, color="233944", spacing=1.4, latin_
         rpr.insert(0, fonts)
     fonts.set(qn("w:ascii"), latin_font)
     fonts.set(qn("w:hAnsi"), latin_font)
-    fonts.set(qn("w:eastAsia"), "Source Han Sans SC")
+    fonts.set(qn("w:eastAsia"), EAST_ASIA_FONT)
+    fonts.set(qn("w:eastAsiaTheme"), "minorEastAsia")
+    lang = _get_or_add(rpr, "w:lang")
+    lang.set(qn("w:eastAsia"), EAST_ASIA_LANGUAGE)
     style.paragraph_format.line_spacing = spacing
     style.paragraph_format.space_after = Pt(6)
+
+
+def _add_pandoc_table_styles(doc):
+    """Define styles that Pandoc references for pipe-table output."""
+    table_style = doc.styles.add_style("Table", WD_STYLE_TYPE.TABLE)
+    table_style.base_style = doc.styles["Normal Table"]
+    table_properties = _get_or_add(table_style.element, "w:tblPr")
+    indent = _get_or_add(table_properties, "w:tblInd")
+    indent.set(qn("w:w"), "0")
+    indent.set(qn("w:type"), "dxa")
+    margins = _get_or_add(table_properties, "w:tblCellMar")
+    for side, width in (("top", "0"), ("left", "108"), ("bottom", "0"), ("right", "108")):
+        margin = _get_or_add(margins, f"w:{side}")
+        margin.set(qn("w:w"), width)
+        margin.set(qn("w:type"), "dxa")
+
+    compact = doc.styles.add_style("Compact", WD_STYLE_TYPE.PARAGRAPH)
+    compact.base_style = doc.styles["Body Text"]
+    compact.paragraph_format.space_before = Pt(1.8)
+    compact.paragraph_format.space_after = Pt(1.8)
 
 
 def reference_docx(kind: str, language: str, path: Path):
@@ -43,7 +166,8 @@ def reference_docx(kind: str, language: str, path: Path):
     configure_style(doc.styles["Title"], 18 if kind == "report" else 17, True, "233E54", 1.2, font)
     configure_style(doc.styles["Heading 1"], 14 if kind == "report" else 13, True, "284B62", 1.2, font)
     configure_style(doc.styles["Heading 2"], 11.5, True, "35546A", 1.2, font)
-    for name in ("Heading 1", "Heading 2"):
+    _add_pandoc_table_styles(doc)
+    for name in ("Heading 1", "Heading 2", "Heading 3"):
         doc.styles[name].paragraph_format.keep_with_next = True
         doc.styles[name].paragraph_format.space_before = Pt(13)
     header = section.header.paragraphs[0]
@@ -77,6 +201,7 @@ def render_export(body: str, kind: str, language: str, output_format: str) -> by
         subprocess.run([pandoc, "--from=markdown+pipe_tables+tex_math_dollars", "--to=docx",
                         "--standalone", f"--reference-doc={reference}", "--output", str(word), str(source)],
                        check=True, timeout=60, capture_output=True)
+        _postprocess_docx(word)
         if output_format == "docx":
             return word.read_bytes()
         html = root / "review.html"

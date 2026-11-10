@@ -14,10 +14,22 @@ try {
     return ['file:', 'data:', 'about:'].includes(protocol) ? route.continue() : route.abort();
   });
   await page.goto(pathToFileURL(htmlPath).href, {waitUntil: 'load'});
+  await page.evaluate(() => {
+    for (const table of document.querySelectorAll('table')) {
+      const rows = [...table.querySelectorAll('tr')];
+      const textLength = table.textContent?.length ?? 0;
+      const longTechnicalTable = rows.length >= 6 || textLength >= 900;
+      table.classList.add(longTechnicalTable ? 'export-table--splittable' : 'export-table--keep');
+      for (const cell of table.querySelectorAll('th, td')) {
+        const hasLongIdentifier = [...cell.textContent.split(/\s+/)].some(token => token.length >= 32);
+        if (hasLongIdentifier) cell.classList.add('export-cell--long-identifier');
+      }
+    }
+  });
   const font = language === 'zh'
     ? '"Source Han Sans SC", "Arial Unicode MS", "Hiragino Sans GB", sans-serif'
     : '"Times New Roman", Georgia, serif';
-  const margin = kind === 'report' ? '22mm' : '25mm';
+  const margin = kind === 'report' ? '20mm' : '25mm';
   await page.addStyleTag({content: `
     @page { size: A4; }
     html, body { margin: 0; padding: 0; }
@@ -28,15 +40,23 @@ try {
     h2 { font-size: 13pt; color: #284b62; border-bottom: 0.5pt solid #b9ccd3;
       padding-bottom: 4pt; margin: 16pt 0 7pt; }
     h3 { font-size: 11.5pt; color: #35546a; margin: 12pt 0 5pt; }
-    h1, h2, h3 { break-after: avoid; }
+    h1, h2, h3 { break-after: avoid-page; }
+    h2 + p, h3 + p, h2 + ul, h3 + ul, h2 + ol, h3 + ol,
+    h2 + table, h3 + table { break-before: avoid-page; }
     p { margin: 0 0 7pt; orphans: 2; widows: 2; }
-    table { border-collapse: collapse; width: 100%; margin: 10pt 0; font-size: 9.2pt; break-inside: avoid; }
+    table { border-collapse: collapse; width: 100%; margin: 10pt 0; font-size: 9.2pt; }
+    table.export-table--keep { break-inside: avoid-page; }
+    table.export-table--splittable { break-inside: auto; }
+    table.export-table--splittable tr { break-inside: avoid-page; page-break-inside: avoid; }
     th, td { border-bottom: 0.5pt solid #bacbd1; padding: 5pt 4pt; text-align: left; }
+    th.export-cell--long-identifier, td.export-cell--long-identifier {
+      overflow-wrap: anywhere; word-break: break-word;
+    }
     th { border-top: 1pt solid #557380; color: #233e54; }
     tr:last-child td { border-bottom: 1pt solid #557380; }
     thead { display: table-header-group; }
     ul, ol { padding-left: 1.5em; }
-    li { margin-bottom: 4pt; }
+    li { margin-bottom: 4pt; break-inside: avoid-page; }
     code { font-family: Menlo, monospace; font-size: 9pt; }
     math[display="block"] { display: block; text-align: center; margin: 10pt 0; overflow: visible; }
     blockquote { margin: 8pt 0; padding: 4pt 10pt; border-left: 2pt solid #6e9da7; background: #f4f8f9; }

@@ -1,0 +1,58 @@
+# P5-B2.1 导出质量设计规格
+
+## 范围
+
+本变更只处理 P4 已有 Markdown 草稿到 DOCX/PDF 的确定性导出质量，不修改报告内容、模型 Prompt、P1—P3、科学准入、审批状态、`reviewer_added` 或历史数据。
+
+## 已确认根因
+
+1. PDF 样式对所有表格使用 `break-inside: avoid`。技术附录长表无法在页间拆分，容易整体推到下一页并产生末页孤立内容。
+2. DOCX 参考文档只在段落样式中声明 `w:eastAsia` 字体。Pandoc 生成的具体文本运行、表格单元格、页眉页脚没有稳定的东亚字体提示、语言信息和主题回退信息，LibreOffice 等阅读器可能错误替换中文字体。
+3. DOCX 表格未显式重复表头或禁止单行拆页，长表跨页时结构和可读性不稳定。
+4. Issue ID、Evidence ID 等长技术标识在窄表格单元格中缺少明确的可断行布局策略。
+5. python-docx 创建的 reference.docx 缺少 Pandoc pipe-table 输出会引用的 `Table` 和 `Compact` 样式。Pandoc 仍写入样式引用，但 LibreOffice 无法按预期建立表格布局，导致四列内容纵向堆叠；该问题在 DOCX 后处理之前已经存在。
+
+## 设计
+
+### DOCX 后处理
+
+Pandoc 完成 DOCX 生成后，使用 `python-docx` 对结果做确定性后处理：
+
+- 在文档默认字体、相关样式和每个实际文本运行中补齐 `w:ascii`、`w:hAnsi`、`w:eastAsia`、`w:hint=eastAsia` 与 `w:lang`。
+- 中文主字体声明为 `Source Han Sans SC`，同时保留 Office 主题字体回退和 `zh-CN` 语言提示；不嵌入或分发字体文件。
+- 覆盖正文、表格、页眉和页脚中的运行，不改变文本内容。
+- 表格允许在行间跨页；表头行重复；每一数据行本身禁止跨页。
+- Heading 1—3 仅以样式级 `keep_with_next` 保护标题与首段；不对连续正文或完整附录小节建立分页链。
+- 表格保持可编辑，不通过全局缩小字号或压缩行距换取分页。
+
+### Pandoc reference 样式契约
+
+- reference.docx 必须定义 `Table` 表格样式和 `Compact` 段落样式，与 Pandoc 生成的 `w:tblStyle`/`w:pStyle` 引用一致。
+- `Table` 基于 `TableNormal`，仅提供零缩进和常规单元格边距；不改写 Pandoc 的表格内容、四列网格或相对宽度。
+- `Compact` 基于 `BodyText`，只提供 1.8pt 段前/段后间距。
+- 测试必须保证文档中的所有表格/段落样式引用均能在 `styles.xml` 中解析，避免再次产生阅读器相关的退化布局。
+
+### PDF 分页
+
+在浏览器渲染前根据表格行数、文本量和长技术标识确定性标记长技术表：
+
+- 短表继续保持整体分页保护。
+- 长表只允许在行边界跨页，表头在新页重复，单行保持完整。
+- 对包含长 Issue/Evidence ID 的单元格启用 `overflow-wrap:anywhere` 和 `word-break:break-word`。
+- 标题仍与其后首段保持，正文、列表和表格不使用极端字号或行距压缩。
+- 不把最后两个附录小节无条件包装成同页区域；短小节可自然落在同页，长小节必须能跨页。
+- 报告 PDF 采用 20mm 常规页边距，在不改变字号和行距的前提下提升页面利用率。
+- 页眉、页脚及 DRAFT 内容保持原有行为。
+
+### 验证边界
+
+- Markdown、DOCX、PDF 三种导出必须保留相同正文信息、中文字符、公式文本、Issue ID 和 Evidence ID。
+- 真实 Shaw2018 P5-B1 候选报告用于离线前后对比，产物保存在私有目录，不提交仓库。
+- Microsoft Word/WPS 若当前环境不可用，兼容性明确标记为未验证；LibreOffice 只能提供辅助证据。
+
+## 非目标
+
+- 不修改 reviewer_added 去重或报告阅读层级（留给 B2.2）。
+- 不修改任何科学结论、模型调用或人工批准状态。
+- 不保证所有第三方阅读器使用完全相同的替代字体。
+
