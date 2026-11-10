@@ -20,5 +20,14 @@
 .p4-controls label {min-width: 140px; flex: 1;}
 .p4-drafts {margin: 15px 0;}
 .p4-drafts strong {width: 100%; font-size: 11px;}
+.p4-report > .p4-controls {margin-top: 14px;}
+.p4-audit > summary {cursor: pointer; color: #234a56; font-size: 14px; font-weight: 700;}
+.p4-audit[open] > summary {padding-bottom: 12px; border-bottom: 1px solid #d7e4e4;}
+.p4-coverage {margin-top: 14px; padding: 10px; border: 1px solid #dae9e6; border-radius: 4px;}
+.p4-coverage summary, .p4-edit summary {cursor: pointer; color: #2c6a6c; font-weight: 700;}
+.p4-coverage li {margin: 10px 0; overflow-wrap: anywhere;}
+.p4-edit {margin: 16px 0; padding: 10px; border: 1px solid #dae9e6; border-radius: 4px;}
+.p4-edit textarea {margin: 10px 0;}
+.draft-preview {margin: 16px 0; padding: 16px; border: 1px solid #e2ebea; border-radius: 4px; background: #fff;}
 .p4-confirm {display: flex !important; flex-direction: row; align-items: center; font-weight: 400 !important;}
 .p4-confirm input {width: auto;}

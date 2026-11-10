@@ -2,11 +2,12 @@
 
 import hashlib
 import json
+import unicodedata
 import uuid
 from datetime import datetime, timezone
 from typing import Literal
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 from pydantic import BaseModel, Field
 
 from backend.p2a_schema import source_reference_index
@@ -41,6 +42,11 @@ def initialize_p4_tables(db):
         );
         CREATE TABLE IF NOT EXISTS p4_reviewer_added_issues (
             id TEXT PRIMARY KEY, project_id TEXT NOT NULL, record_json TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS p4_reviewer_issue_fingerprints (
+            project_id TEXT NOT NULL, request_fingerprint TEXT NOT NULL,
+            issue_id TEXT NOT NULL,
+            PRIMARY KEY(project_id, request_fingerprint), UNIQUE(issue_id)
         );
         CREATE TABLE IF NOT EXISTS p4_drafts (
             id TEXT PRIMARY KEY, project_id TEXT NOT NULL, kind TEXT NOT NULL,
@@ -92,6 +98,15 @@ def initialize_p4_tables(db):
         CREATE INDEX IF NOT EXISTS p4_model_call_budget_run
             ON p4_model_call_budget(generation_run_id);
     """)
+    # Register the oldest historical record for each exact request, without changing
+    # or deleting any older duplicate issue or its separate review decisions.
+    for row in db.execute(
+            "SELECT id, project_id, record_json FROM p4_reviewer_added_issues ORDER BY rowid"):
+        historical = ReviewerIssueInput.model_validate_json(row["record_json"])
+        db.execute(
+            "INSERT OR IGNORE INTO p4_reviewer_issue_fingerprints VALUES (?, ?, ?)",
+            (row["project_id"], reviewer_issue_fingerprint(historical), row["id"]),
+        )
 
 
 def now():
@@ -146,6 +161,28 @@ class ReviewerIssueInput(BaseModel):
     category: Literal["major", "minor", "clarification"] = "clarification"
 
 
+def _normalized_reviewer_text(value: str) -> str:
+    return " ".join(unicodedata.normalize("NFC", value).split())
+
+
+def _normalized_reviewer_source_refs(values: list[str]) -> list[str]:
+    return list(dict.fromkeys(_normalized_reviewer_text(value) for value in values))
+
+
+def reviewer_issue_fingerprint(payload: ReviewerIssueInput) -> str:
+
+    request = {
+        "scientific_question": _normalized_reviewer_text(payload.scientific_question),
+        "evidence_basis": _normalized_reviewer_text(payload.evidence_basis),
+        "source_refs": sorted(set(_normalized_reviewer_source_refs(payload.source_refs))),
+        "comment_body": _normalized_reviewer_text(payload.comment_body),
+        "category": payload.category,
+    }
+    canonical = json.dumps(request, ensure_ascii=False, sort_keys=True,
+                           separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 def register_p4_routes(app, connect, files_dir, load_p3_inputs,
                        model_session_factory, model_completion, model_preflight,
                        model_session_preflight, budget_configuration_factory):
@@ -182,6 +219,10 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs,
     def project_view(db, row):
         frozen = snapshot_of(row)
         result = EvidenceVerificationResult.model_validate(frozen["p3"])
+        consolidation = CandidateConsolidationResult.model_validate(frozen["consolidation"])
+        manual_issues = reviewer_issues(db, row["id"])
+        canonical_sources = source_reference_index(frozen["bundle"])
+        manual_source_ids = {source_id for item in manual_issues for source_id in item.source_refs}
         issues = issue_entries(frozen)
         issue_views = []
         for item in issues:
@@ -196,11 +237,15 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs,
                 "execution_status": result.execution_status,
                 "issues": issue_views,
                 "sources": [item.model_dump() for item in result.sources],
+                "coverage_gaps": [item.model_dump() for item in consolidation.coverage_audit.gaps],
+                "bundle_source_refs": {source_id: canonical_sources[source_id].model_dump()
+                                       for source_id in sorted(manual_source_ids)
+                                       if source_id in canonical_sources},
                 "decisions": [item.model_dump() for item in decision_records(db, row["id"])],
                 "evidence_reviews": [item.model_dump() for item in evidence_records(db, row["id"])],
                 "external_evidence_reviews": [item.model_dump() for item in
                                               external_evidence_records(db, row["id"])],
-                "reviewer_added": [item.model_dump() for item in reviewer_issues(db, row["id"])],
+                "reviewer_added": [item.model_dump() for item in manual_issues],
                 "drafts": [{"id": item["id"], "kind": item["kind"],
                             "language": item["language"], "revision_number": item["revision_number"],
                             "approval_status": item["approval_status"]} for item in db.execute(
@@ -470,21 +515,35 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs,
             return record.model_dump()
 
     @app.post("/api/review-report-projects/{project_id}/reviewer-issues", status_code=201)
-    def add_reviewer_issue(project_id: str, payload: ReviewerIssueInput):
+    def add_reviewer_issue(project_id: str, payload: ReviewerIssueInput, response: Response):
         with connect() as db:
+            db.execute("BEGIN IMMEDIATE")
             frozen = snapshot_of(project_or_404(db, project_id))
             canonical = source_reference_index(frozen["bundle"])
-            if not set(payload.source_refs).issubset(canonical):
+            source_refs = _normalized_reviewer_source_refs(payload.source_refs)
+            if not set(source_refs).issubset(canonical):
                 raise HTTPException(400, "人工意见引用了其他论文的来源")
             if payload.category not in {"major", "minor", "clarification"}:
                 raise HTTPException(400, "未知意见类别")
+            fingerprint = reviewer_issue_fingerprint(payload)
+            existing = db.execute(
+                "SELECT i.record_json FROM p4_reviewer_issue_fingerprints AS f "
+                "JOIN p4_reviewer_added_issues AS i ON i.id = f.issue_id "
+                "WHERE f.project_id = ? AND f.request_fingerprint = ?",
+                (project_id, fingerprint),
+            ).fetchone()
+            if existing:
+                response.status_code = 200
+                return ReviewerAddedIssue.model_validate_json(existing["record_json"]).model_dump()
             item = ReviewerAddedIssue(issue_id="reviewer_" + uuid.uuid4().hex,
                 report_project_id=project_id, scientific_question=payload.scientific_question,
-                evidence_basis=payload.evidence_basis, source_refs=payload.source_refs,
+                evidence_basis=payload.evidence_basis, source_refs=source_refs,
                 comment_body=payload.comment_body, category=payload.category,
                 created_at=now(), updated_at=now())
             db.execute("INSERT INTO p4_reviewer_added_issues VALUES (?, ?, ?)",
                        (item.issue_id, project_id, item.model_dump_json()))
+            db.execute("INSERT INTO p4_reviewer_issue_fingerprints VALUES (?, ?, ?)",
+                       (project_id, fingerprint, item.issue_id))
             return item.model_dump()
 
     register_p4_draft_routes(app, connect, model_session_factory, model_completion,
