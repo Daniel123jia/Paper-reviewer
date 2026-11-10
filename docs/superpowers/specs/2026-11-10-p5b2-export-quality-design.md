@@ -10,6 +10,7 @@
 2. DOCX 参考文档只在段落样式中声明 `w:eastAsia` 字体。Pandoc 生成的具体文本运行、表格单元格、页眉页脚没有稳定的东亚字体提示、语言信息和主题回退信息，LibreOffice 等阅读器可能错误替换中文字体。
 3. DOCX 表格未显式重复表头或禁止单行拆页，长表跨页时结构和可读性不稳定。
 4. Issue ID、Evidence ID 等长技术标识在窄表格单元格中缺少明确的可断行布局策略。
+5. python-docx 创建的 reference.docx 缺少 Pandoc pipe-table 输出会引用的 `Table` 和 `Compact` 样式。Pandoc 仍写入样式引用，但 LibreOffice 无法按预期建立表格布局，导致四列内容纵向堆叠；该问题在 DOCX 后处理之前已经存在。
 
 ## 设计
 
@@ -23,6 +24,13 @@ Pandoc 完成 DOCX 生成后，使用 `python-docx` 对结果做确定性后处�
 - 表格允许在行间跨页；表头行重复；每一数据行本身禁止跨页。
 - Heading 1—3 仅以样式级 `keep_with_next` 保护标题与首段；不对连续正文或完整附录小节建立分页链。
 - 表格保持可编辑，不通过全局缩小字号或压缩行距换取分页。
+
+### Pandoc reference 样式契约
+
+- reference.docx 必须定义 `Table` 表格样式和 `Compact` 段落样式，与 Pandoc 生成的 `w:tblStyle`/`w:pStyle` 引用一致。
+- `Table` 基于 `TableNormal`，仅提供零缩进和常规单元格边距；不改写 Pandoc 的表格内容、四列网格或相对宽度。
+- `Compact` 基于 `BodyText`，只提供 1.8pt 段前/段后间距。
+- 测试必须保证文档中的所有表格/段落样式引用均能在 `styles.xml` 中解析，避免再次产生阅读器相关的退化布局。
 
 ### PDF 分页
 

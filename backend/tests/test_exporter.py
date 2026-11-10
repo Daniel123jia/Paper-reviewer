@@ -107,6 +107,22 @@ def multiple_long_tables_fixture() -> str:
     return "\n".join(parts)
 
 
+def four_column_docx_appendix_fixture() -> str:
+    parts = [
+        "# DRAFT", "", "## 技术核验附录", "", "### 7.1 原始意见与调整映射", "",
+        "| 原始Issue | 原P3状态 | 本候选版处理 | 反证/限定 |",
+        "|---|---|---|---|",
+    ]
+    parts.extend(
+        f"| `consolidated_{row:02d}_abcdefghijklmnopqrstuvwxyz` | "
+        "inconclusive / internal_only / requires_human_review / pending | "
+        f"中文与 English mixed revision {row} | "
+        f"`ru_ev_{row:02d}_abcdefghijklmnopqrstuvwxyz` 与反证说明 |"
+        for row in range(1, 19)
+    )
+    return "\n".join(parts)
+
+
 def xml_parts(blob: bytes):
     with zipfile.ZipFile(io.BytesIO(blob)) as archive:
         return {
@@ -180,6 +196,38 @@ def test_docx_tables_repeat_headers_and_split_only_between_rows():
     assert len(headings) == 2 and body_paragraphs
     assert all(paragraph.style.paragraph_format.keep_with_next for paragraph in headings)
     assert all(not paragraph.paragraph_format.keep_with_next for paragraph in body_paragraphs)
+
+
+def test_docx_defines_pandoc_styles_for_real_four_column_appendix():
+    word = render_export(four_column_docx_appendix_fixture(), "report", "zh", "docx")
+    parts = xml_parts(word)
+    document = parts["word/document.xml"]
+    styles = parts["word/styles.xml"]
+
+    style_ids = {
+        style.get(f"{{{NS['w']}}}styleId")
+        for style in styles.xpath(".//w:style", namespaces=NS)
+    }
+    referenced_styles = {
+        node.get(f"{{{NS['w']}}}val")
+        for node in document.xpath(".//w:tblStyle | .//w:pStyle", namespaces=NS)
+    }
+    assert {"Table", "Compact"} <= style_ids
+    assert referenced_styles <= style_ids
+
+    table = document.xpath(".//w:tbl", namespaces=NS)[0]
+    assert len(table.xpath("./w:tblGrid/w:gridCol", namespaces=NS)) == 4
+    assert len(table.xpath("./w:tr", namespaces=NS)) == 19
+    assert table.find("w:tblPr/w:tblStyle", NS).get(f"{{{NS['w']}}}val") == "Table"
+    assert table.find("w:tblPr/w:tblW", NS).get(f"{{{NS['w']}}}type") == "pct"
+    assert all(row.find("w:trPr/w:cantSplit", NS) is not None
+               for row in table.xpath("./w:tr", namespaces=NS))
+    assert table.find("w:tr/w:trPr/w:tblHeader", NS) is not None
+
+    text = "".join(document.xpath(".//w:t/text()", namespaces=NS))
+    assert "consolidated_01_abcdefghijklmnopqrstuvwxyz" in text
+    assert "ru_ev_18_abcdefghijklmnopqrstuvwxyz" in text
+    assert "中文与 English mixed revision 18" in text
 
 
 def test_pdf_keeps_short_table_together_and_splits_long_table_with_repeated_header():

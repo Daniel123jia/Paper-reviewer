@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 
 from docx import Document
+from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -131,6 +132,26 @@ def configure_style(style, size, bold=False, color="233944", spacing=1.4, latin_
     style.paragraph_format.space_after = Pt(6)
 
 
+def _add_pandoc_table_styles(doc):
+    """Define styles that Pandoc references for pipe-table output."""
+    table_style = doc.styles.add_style("Table", WD_STYLE_TYPE.TABLE)
+    table_style.base_style = doc.styles["Normal Table"]
+    table_properties = _get_or_add(table_style.element, "w:tblPr")
+    indent = _get_or_add(table_properties, "w:tblInd")
+    indent.set(qn("w:w"), "0")
+    indent.set(qn("w:type"), "dxa")
+    margins = _get_or_add(table_properties, "w:tblCellMar")
+    for side, width in (("top", "0"), ("left", "108"), ("bottom", "0"), ("right", "108")):
+        margin = _get_or_add(margins, f"w:{side}")
+        margin.set(qn("w:w"), width)
+        margin.set(qn("w:type"), "dxa")
+
+    compact = doc.styles.add_style("Compact", WD_STYLE_TYPE.PARAGRAPH)
+    compact.base_style = doc.styles["Body Text"]
+    compact.paragraph_format.space_before = Pt(1.8)
+    compact.paragraph_format.space_after = Pt(1.8)
+
+
 def reference_docx(kind: str, language: str, path: Path):
     doc = Document()
     font = "Times New Roman"
@@ -145,6 +166,7 @@ def reference_docx(kind: str, language: str, path: Path):
     configure_style(doc.styles["Title"], 18 if kind == "report" else 17, True, "233E54", 1.2, font)
     configure_style(doc.styles["Heading 1"], 14 if kind == "report" else 13, True, "284B62", 1.2, font)
     configure_style(doc.styles["Heading 2"], 11.5, True, "35546A", 1.2, font)
+    _add_pandoc_table_styles(doc)
     for name in ("Heading 1", "Heading 2", "Heading 3"):
         doc.styles[name].paragraph_format.keep_with_next = True
         doc.styles[name].paragraph_format.space_before = Pt(13)

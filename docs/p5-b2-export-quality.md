@@ -16,6 +16,8 @@
 
 ## DOCX 字体和表格规则
 
+- 自建 reference.docx 显式定义 Pandoc pipe-table 会引用的 `Table` 表格样式和 `Compact` 段落样式。缺少这两个样式时，LibreOffice 会把完整四列表格渲染成纵向堆叠内容；该异常在 Pandoc 原始输出中已经存在，并非字体后处理引入。
+- `Table` 基于 `TableNormal`，使用零缩进和 108 twip 左右单元格边距；`Compact` 基于 `BodyText`，只设置紧凑的段前/段后间距。Pandoc 生成的四列 `tblGrid` 和 100% `tblW` 保持不变。
 - 中文样式与具体中文文本运行都包含 `w:eastAsia`、`w:hint=eastAsia` 和 `w:lang=zh-CN`。
 - 具体中英文混合运行同时声明通用 Unicode 兼容字体，避免 LibreOffice 忽略只存在于 `w:eastAsia` 的字体信息，并允许阅读器使用本机中文字体替代。
 - 字体表登记 `Source Han Sans SC` 及中文别名，并保留 Office `minorEastAsia` 主题回退；不嵌入或分发字体文件。
@@ -38,3 +40,4 @@ Microsoft Word/WPS 的最终兼容性必须在对应真实阅读器中人工打�
 - DOCX XML 中中文运行、表头重复和行级分页保护均已确定性验证。
 - LibreOffice 在显式提供思源黑体 Fontconfig 的辅助环境中无中文方框；字体不可见环境作为已知部署风险保留。
 - Markdown、DOCX、PDF 的 DRAFT 标识、四项原始问题、Issue ID、Evidence ID、数值和公式标记保持一致。
+- 复审修订后的真实 Shaw2018 DOCX 在思源黑体和系统中文回退字体两种 LibreOffice 条件下均为 6 页；7.1 保持四列，跨页时重复表头，没有旧版纵向堆叠或额外第 7 页。
