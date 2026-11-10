@@ -99,6 +99,9 @@ export default function P4ReportPane({documentId, onEvidence}: {
   useEffect(() => {
     let cancelled = false;
     setProject(null); setDraft(null); setBody('');
+    setConfirmContent(false); setRationales({}); setOrders({}); setVisual({});
+    setManualQuestion(''); setManualBasis(''); setManualRefs('');
+    setKind('author'); setLanguage('zh');
     if (projectId) api<Project>(`/api/review-report-projects/${projectId}`).then(async value => {
       if (cancelled || value.document_id !== documentId) return;
       setProject(value);
@@ -241,6 +244,7 @@ export default function P4ReportPane({documentId, onEvidence}: {
     </section>
     {project && <>
       <section className="p4-card p4-report"><h3>报告正文与导出</h3>
+        {project.drafts.length === 0 && <p className="draft-intro">当前项目尚无已保存报告。可在下方选择报告类型并明确生成新草稿。</p>}
         {draft && <div className="draft-editor"><div className="draft-editor-head"><strong>{draft.kind} · {draft.language} · 修订 {draft.revision_number} · {draft.approval_status} · {draft.revision_number > 1 ? '含人工修订' : '保存的报告草稿'}</strong></div>
           <div className="draft-preview"><strong>报告阅读视图</strong><div className="markdown-body"><ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{body}</ReactMarkdown></div></div>
           {draft.kind === 'author' && draft.selected_issue_ids.length === 0 && <p className="draft-intro">当前没有可进入作者意见的问题。请先新增并审核有依据的人工意见，再生成新草稿。</p>}
