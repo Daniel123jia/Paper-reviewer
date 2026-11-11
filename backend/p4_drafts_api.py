@@ -245,7 +245,7 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
         store = P4BudgetStore(connect, now)
 
         def terminate_run_safely(reason):
-            if not plan.groups:
+            if not plan.groups and not c1_control:
                 return
             try:
                 store.fail_run(generation_run_id, "interrupted", reason)

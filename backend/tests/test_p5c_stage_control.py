@@ -824,6 +824,25 @@ def test_c1_p4_first_claim_rejects_preexisting_internal_draft(tmp_path, monkeypa
     assert calls == []
 
 
+def test_c1_p4_empty_report_failure_does_not_leave_ready_run(tmp_path, monkeypatch):
+    (client, store, _, _, project_id, _, token, run_id,
+     calls) = _c1_p4_http_case(tmp_path, monkeypatch, empty_groups=True)
+    def invalid_body(*_):
+        raise ValueError("synthetic private content")
+    monkeypatch.setattr("backend.p4_drafts_api.render_markdown", invalid_body)
+    failed = client.post(f"/api/review-report-projects/{project_id}/drafts",
+                         json={"kind": "internal", "language": "zh"},
+                         headers={"X-P5C-Stage-Authorization": token})
+    assert failed.status_code == 422
+    with sqlite3.connect(tmp_path / "private" / "review.db") as db:
+        row = db.execute("SELECT state, request_count FROM p4_generation_runs WHERE id=?",
+                         (run_id,)).fetchone()
+        assert db.execute("SELECT COUNT(*) FROM p4_drafts").fetchone()[0] == 0
+    assert row == ("interrupted", 0)
+    assert store.get_run(run_id)["status"] == "failed"
+    assert calls == []
+
+
 def test_c1_p4_concurrent_retry_during_first_dispatch_does_not_generate_again(
         tmp_path, monkeypatch):
     started = Event()
