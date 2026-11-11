@@ -11,6 +11,9 @@ Run the backend from the independently reviewed, clean execution Commit. Set
 fresh private `PAPER_REVIEW_DATA_DIR` and a distinct private `P5C_OUTPUT_DIR`;
 both directories must have mode `0700`. The C1 server rejects a pre-existing
 `review.db` without its C1 ledger marker. Do not reuse a historical database.
+Backend startup holds an exclusive private worker lock before recovering
+interrupted requests. A second backend process on the same trial directory
+fails to start; do not use reload mode or multiple workers for C1.
 
 The following process settings identify the frozen execution assets:
 

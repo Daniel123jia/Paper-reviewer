@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import hashlib
+import fcntl
 import sqlite3
 from decimal import Decimal
 from pathlib import Path
@@ -43,9 +44,33 @@ class C1Runtime:
                 or output_dir.resolve() == self.data_dir.resolve()):
             raise C1ControlError("private_output_directory_required")
         self.output_dir = output_dir
-        self.store = C1Store(self.data_dir / "p5c-stage-control.db")
+        self._worker_lock_fd = None
         if recover_on_start:
-            self.store.recover_unknown_dispatches()
+            descriptor = os.open(self.data_dir / "p5c-worker.lock",
+                                 os.O_CREAT | os.O_RDWR, 0o600)
+            try:
+                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError:
+                os.close(descriptor)
+                raise C1ControlError("single_worker_process_required") from None
+            self._worker_lock_fd = descriptor
+        try:
+            self.store = C1Store(self.data_dir / "p5c-stage-control.db")
+            if recover_on_start:
+                self.store.recover_unknown_dispatches()
+        except Exception:
+            self.close()
+            raise
+
+    def close(self):
+        descriptor = getattr(self, "_worker_lock_fd", None)
+        if descriptor is not None:
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
+            os.close(descriptor)
+            self._worker_lock_fd = None
+
+    def __del__(self):
+        self.close()
 
     def identity(self) -> C1Identity:
         try:

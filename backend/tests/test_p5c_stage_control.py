@@ -395,6 +395,23 @@ def test_offline_authorization_runtime_does_not_recover_live_dispatch(
     assert status == "dispatch_pending"
 
 
+def test_second_backend_process_cannot_recover_active_c1_trial(tmp_path, monkeypatch):
+    private = tmp_path / "private"
+    private.mkdir(mode=0o700)
+    output = tmp_path / "output"
+    output.mkdir(mode=0o700)
+    monkeypatch.setenv("P5C_OUTPUT_DIR", str(output))
+    first = C1Runtime(private, root=Path(__file__).resolve().parents[2],
+                      environment_file=tmp_path / "synthetic.env")
+    with pytest.raises(C1ControlError, match="single_worker_process_required"):
+        C1Runtime(private, root=Path(__file__).resolve().parents[2],
+                  environment_file=tmp_path / "synthetic.env")
+    first.close()
+    restarted = C1Runtime(private, root=Path(__file__).resolve().parents[2],
+                          environment_file=tmp_path / "synthetic.env")
+    restarted.close()
+
+
 def test_verified_stage_completion_can_reconcile_after_restart(control):
     store, identity, _ = control
     token, run_id = grant(control)
@@ -585,7 +602,7 @@ def test_fake_c1_p2a_completes_and_enables_only_next_stage(tmp_path, monkeypatch
                                    acknowledgement="P5C_STAGE_AUTHORIZED")
     assert p2b_token != token
     runtime = C1Runtime(private, root=Path(__file__).resolve().parents[2],
-                        environment_file=tmp_path / "fake.env")
+                        environment_file=tmp_path / "fake.env", recover_on_start=False)
     runtime.validate_source("p2b", run_id, identity)
     (private / "files" / f'{doc["id"]}.pdf').write_bytes(pdf + b"tampered")
     with pytest.raises(C1ControlError, match="trial_pdf_mismatch"):
