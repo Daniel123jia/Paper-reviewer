@@ -217,11 +217,16 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                 raise HTTPException(409, detail={"code": exc.code}) from None
             if not c1_claimed[1]:
                 with connect() as db:
-                    previous = db.execute("SELECT draft_id FROM p4_generation_runs WHERE id=?",
+                    previous = db.execute("SELECT draft_id, state, project_id, kind, language "
+                                          "FROM p4_generation_runs WHERE id=?",
                                           (c1_claimed[0],)).fetchone()
-                    if previous and previous["draft_id"]:
-                        draft = db.execute("SELECT * FROM p4_drafts WHERE id=?",
-                                           (previous["draft_id"],)).fetchone()
+                    if (previous and previous["state"] == "completed"
+                            and previous["project_id"] == project_id
+                            and (previous["kind"], previous["language"]) == ("internal", "zh")
+                            and previous["draft_id"]):
+                        draft = db.execute("SELECT * FROM p4_drafts WHERE id=? AND project_id=? "
+                                           "AND kind='internal' AND language='zh'",
+                                           (previous["draft_id"], project_id)).fetchone()
                         if draft:
                             result = draft_view(db, draft)
                             result["generation_run_id"] = c1_claimed[0]
@@ -250,8 +255,10 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
         try:
             controller = session = None
             if c1_control and not plan.groups:
-                c1_control.check_p4_budget(generation_run_id,
-                                           budget_configuration_factory())
+                budget_configuration = budget_configuration_factory()
+                c1_control.check_p4_budget(generation_run_id, budget_configuration)
+                store.create_run(generation_run_id, draft_id, project_id,
+                                 payload.kind, payload.language, budget_configuration)
             if plan.groups:
                 try:
                     model_preflight()
@@ -338,7 +345,7 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                     writing.prompt_version, stamp, stamp))
                 db.execute("INSERT INTO p4_draft_revisions VALUES (?, 1, ?, ?, 'pending', ?)",
                            (draft_id, body, digest(body), stamp))
-                if plan.groups:
+                if plan.groups or c1_control:
                     store.complete_run_in_transaction(db, generation_run_id)
                 result = draft_view(db, draft_or_404(db, draft_id))
                 if c1_control:

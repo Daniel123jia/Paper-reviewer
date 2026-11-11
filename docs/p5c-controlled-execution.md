@@ -72,6 +72,13 @@ The P4 authorization budget must exactly match the existing nine explicit P4
 environment settings. At draft creation, the actual selected internal group
 count is checked by `P4BudgetController.ensure_minimum_success_path()` before
 the first provider request. C1 rejects `author`, `editor` and English drafts.
+The first P4 claim rejects an existing Chinese internal draft. A retry with the
+same already claimed authorization still verifies the execution identity,
+project, PDF and P3 lineage, then returns the original generation Run ID and
+saved draft without another request. A new authorization cannot create a
+second Chinese internal draft. If the frozen plan has no report groups, C1
+persists a completed zero-request generation run and an explanatory internal
+draft together; its Usage remains zero and supplier billed cost remains unknown.
 
 ## Idempotency and accounting
 

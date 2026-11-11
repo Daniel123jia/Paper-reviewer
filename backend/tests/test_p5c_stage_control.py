@@ -5,10 +5,12 @@ from __future__ import annotations
 import json
 import io
 import os
+import hashlib
 import sqlite3
 from decimal import Decimal
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Event
 from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
@@ -19,6 +21,8 @@ from backend.p5c_runtime import C1Runtime
 from backend.model_runtime import ModelConfigurationError
 from backend.tests.model_test_config import configure_test_model
 from backend.tests.test_p2a_api import _pdf, _fake_completion
+from backend.tests.test_p4_api import seeded_p4_client
+from backend.tests.test_p4_drafts_api import FakeOpenAI as P4FakeOpenAI
 from backend.p2a_engine import BudgetExceeded, RunBudget
 from scripts.p5c.stage_control import (
     C1ActualBudgetExceeded, C1Budget, C1ControlError, C1Identity, C1Store,
@@ -608,3 +612,252 @@ def test_fake_c1_p2a_completes_and_enables_only_next_stage(tmp_path, monkeypatch
     with pytest.raises(C1ControlError, match="trial_pdf_mismatch"):
         runtime.validate_source("p2b", run_id, identity)
     assert client.get("/api/professional-review-runs/absent").status_code == 404
+
+
+def _c1_p4_http_case(tmp_path, monkeypatch, *, empty_groups=False,
+                     before_response=None):
+    private = tmp_path / "private"
+    private.mkdir(mode=0o700)
+    output = tmp_path / "output"
+    output.mkdir(mode=0o700)
+    configure_test_model(monkeypatch, key="synthetic-only", model="gpt-6.1-sol")
+    monkeypatch.delenv("P5C_CONTROLLED_MODE", raising=False)
+    seed_client, _ = seeded_p4_client(private)
+    project_id = seed_client.post("/api/evidence-verification-runs/v1/report-projects").json()["id"]
+    pdf = private / "files" / "doc1.pdf"
+    pdf_sha = hashlib.sha256(pdf.read_bytes()).hexdigest()
+    store = C1Store(private / "p5c-stage-control.db")
+    identity = C1Identity(
+        paper_id="sardet100k-neurips2024", pdf_sha256=pdf_sha,
+        manifest_sha256="b" * 64, execution_lock_sha256="c" * 64,
+        execution_commit="d" * 40, execution_tree="e" * 40,
+        requested_model="gpt-6.1-sol", model_config_sha256="f" * 64,
+    )
+    store.freeze_trial(identity)
+    budget = C1Budget(
+        max_calls=20, max_input_tokens=200000, max_output_tokens=20000,
+        max_output_tokens_per_request=1000, max_duration_ms=180000,
+        max_transport_retries=0,
+        content_repair_policy="valid_usage_within_stage_budget",
+        max_planned_cost_usd="10", input_usd_per_million="0.80",
+        output_usd_per_million="4.00", pricing_status="estimated_unverified",
+    )
+    p3_token, p3_run_id = store.authorize(
+        "p3", "c1", identity, budget, acknowledgement="P5C_STAGE_AUTHORIZED")
+    store.claim(p3_token, "p3", "c1", identity)
+    store.finish_stage(p3_run_id, completed=True)
+    with sqlite3.connect(private / "review.db") as db:
+        db.execute("UPDATE documents SET id=? WHERE id='doc1'", (pdf_sha,))
+        db.execute("UPDATE evidence SET document_id=? WHERE document_id='doc1'", (pdf_sha,))
+        db.execute("UPDATE evidence_verification_runs SET id=?, document_id=? WHERE id='v1'",
+                   (p3_run_id, pdf_sha))
+        stored_snapshot = db.execute(
+            "SELECT source_snapshot_json FROM p4_report_projects WHERE id=?", (project_id,)
+        ).fetchone()[0]
+
+        def rebind(value):
+            if isinstance(value, str):
+                return {"doc1": pdf_sha, "v1": p3_run_id}.get(value, value)
+            if isinstance(value, list):
+                return [rebind(item) for item in value]
+            if isinstance(value, dict):
+                return {key: rebind(item) for key, item in value.items()}
+            return value
+
+        frozen = rebind(json.loads(stored_snapshot))
+        if empty_groups:
+            frozen["p3"]["adjudications"] = []
+            frozen["p3"]["uncovered_tasks"] = []
+            frozen["consolidation"]["inventory"]["candidates"] = []
+            frozen["consolidation"]["inventory"]["candidate_count"] = 0
+            for name in ("dimension_index", "claim_index", "contribution_index",
+                         "source_index"):
+                frozen["consolidation"]["inventory"][name] = {}
+            frozen["consolidation"]["relations"] = []
+            frozen["consolidation"]["lineage"] = []
+            frozen["consolidation"]["verification_tasks"] = []
+            frozen["consolidation"]["consolidated_issues"] = []
+        snapshot = json.dumps(frozen)
+        db.execute("UPDATE p4_report_projects SET document_id=?, p3_run_id=?, "
+                   "source_snapshot_json=? WHERE id=?",
+                   (pdf_sha, p3_run_id, snapshot, project_id))
+    pdf.rename(private / "files" / f"{pdf_sha}.pdf")
+    calls = []
+
+    class MatchingFakeOpenAI(P4FakeOpenAI):
+        @property
+        def chat(self):
+            inherited = super().chat
+
+            def create(**kwargs):
+                calls.append(kwargs)
+                if before_response is not None:
+                    before_response()
+                response = inherited.completions.create(**kwargs)
+                response.model = "gpt-6.1-sol"
+                return response
+
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+
+    monkeypatch.setattr("backend.app.OpenAI", MatchingFakeOpenAI)
+    monkeypatch.setattr(C1Runtime, "identity", lambda self: identity)
+    monkeypatch.setenv("P5C_CONTROLLED_MODE", "1")
+    monkeypatch.setenv("PAPER_REVIEW_WORKER_COUNT", "1")
+    monkeypatch.setenv("P5C_OUTPUT_DIR", str(output))
+    client = TestClient(create_app(private))
+    token, run_id = store.authorize("p4", project_id, identity, budget,
+                                     acknowledgement="P5C_STAGE_AUTHORIZED",
+                                     source_stage_run_id=p3_run_id)
+    return client, store, identity, budget, project_id, p3_run_id, token, run_id, calls
+
+
+def test_c1_p4_successful_http_retry_returns_original_draft(tmp_path, monkeypatch):
+    (client, store, identity, budget, project_id, p3_id,
+     token, run_id, calls) = _c1_p4_http_case(tmp_path, monkeypatch)
+    url = f"/api/review-report-projects/{project_id}/drafts"
+    headers = {"X-P5C-Stage-Authorization": token}
+    first = client.post(url, json={"kind": "internal", "language": "zh"}, headers=headers)
+    assert first.status_code == 201, first.text
+    draft_id = first.json()["id"]
+    assert first.json()["generation_run_id"] == run_id
+    count = len(calls)
+    assert count > 0
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        retries = list(pool.map(lambda _: client.post(
+            url, json={"kind": "internal", "language": "zh"}, headers=headers), range(4)))
+    assert all(row.status_code == 201 and row.json()["id"] == draft_id
+               and row.json()["generation_run_id"] == run_id for row in retries)
+    assert len(calls) == count
+    with sqlite3.connect(tmp_path / "private" / "review.db") as db:
+        assert db.execute("SELECT COUNT(*) FROM p4_drafts").fetchone()[0] == 1
+    with pytest.raises(C1ControlError, match="stage_already_completed"):
+        store.authorize("p4", project_id, identity, budget,
+                        acknowledgement="P5C_STAGE_AUTHORIZED",
+                        source_stage_run_id=p3_id)
+    wrong = client.post(url, json={"kind": "internal", "language": "zh"},
+                        headers={"X-P5C-Stage-Authorization": "wrong-token"})
+    other = client.post("/api/review-report-projects/wrong-project/drafts",
+                        json={"kind": "internal", "language": "zh"}, headers=headers)
+    assert wrong.status_code == other.status_code == 409
+    with sqlite3.connect(tmp_path / "private" / "review.db") as db:
+        db.execute("UPDATE p4_report_projects SET p3_run_id='wrong-parent' WHERE id=?",
+                   (project_id,))
+    wrong_parent = client.post(url, json={"kind": "internal", "language": "zh"},
+                               headers=headers)
+    assert wrong_parent.status_code == 409
+    with sqlite3.connect(tmp_path / "private" / "review.db") as db:
+        db.execute("UPDATE p4_report_projects SET p3_run_id=? WHERE id=?",
+                   (p3_id, project_id))
+    monkeypatch.setattr(C1Runtime, "identity", lambda self: identity.model_copy(
+        update={"execution_tree": "0" * 40}))
+    wrong_identity = client.post(url, json={"kind": "internal", "language": "zh"},
+                                 headers=headers)
+    assert wrong_identity.status_code == 409
+    assert len(calls) == count
+
+
+def test_c1_p4_empty_internal_report_has_completed_zero_call_run(tmp_path, monkeypatch):
+    (client, store, _, _, project_id, _, token, run_id,
+     calls) = _c1_p4_http_case(tmp_path, monkeypatch, empty_groups=True)
+    url = f"/api/review-report-projects/{project_id}/drafts"
+    headers = {"X-P5C-Stage-Authorization": token}
+    first = client.post(url, json={"kind": "internal", "language": "zh"}, headers=headers)
+    assert first.status_code == 201, first.text
+    assert first.json()["generation_run_id"] == run_id
+    assert first.json()["plan"]["groups"] == []
+    assert "0 个审查主题" in first.json()["body"]
+    retry = client.post(url, json={"kind": "internal", "language": "zh"}, headers=headers)
+    assert retry.status_code == 201 and retry.json()["id"] == first.json()["id"]
+    assert retry.json()["generation_run_id"] == run_id
+    audit = client.get(f"/api/p5c/stage-runs/{run_id}").json()
+    assert audit["status"] == "completed"
+    assert audit["p4_budget_audit"]["state"] == "completed"
+    assert audit["provider_request_count"] == 0
+    assert audit["known_input_tokens"] == audit["known_output_tokens"] == 0
+    assert audit["provider_billed_cost_usd"] is None
+    assert calls == []
+    assert store.get_run(run_id)["status"] == "completed"
+    with sqlite3.connect(tmp_path / "private" / "review.db") as db:
+        assert db.execute("SELECT COUNT(*) FROM p4_drafts").fetchone()[0] == 1
+
+
+def test_c1_p4_unknown_usage_stays_unknown_on_same_token_retry(tmp_path, monkeypatch):
+    def disconnect():
+        raise ConnectionError("synthetic private transport detail")
+
+    (client, store, _, _, project_id, _, token, run_id,
+     calls) = _c1_p4_http_case(tmp_path, monkeypatch, before_response=disconnect)
+    url = f"/api/review-report-projects/{project_id}/drafts"
+    headers = {"X-P5C-Stage-Authorization": token}
+    first = client.post(url, json={"kind": "internal", "language": "zh"}, headers=headers)
+    assert first.status_code == 502
+    assert len(calls) == 1
+    before = client.get(f"/api/p5c/stage-runs/{run_id}").json()
+    assert before["unknown_usage_calls"] == 1
+    assert before["cost_complete"] is False
+    retry = client.post(url, json={"kind": "internal", "language": "zh"}, headers=headers)
+    assert retry.status_code == 201
+    assert retry.json() == {"generation_run_id": run_id, "status": "unknown_usage"}
+    assert len(calls) == 1
+    assert store.get_run(run_id)["status"] == "unknown_usage"
+    assert "synthetic private transport detail" not in json.dumps(before)
+
+
+def test_c1_p4_first_claim_rejects_preexisting_internal_draft(tmp_path, monkeypatch):
+    (client, store, _, _, project_id, _, token, run_id,
+     calls) = _c1_p4_http_case(tmp_path, monkeypatch)
+    with sqlite3.connect(tmp_path / "private" / "review.db") as db:
+        db.execute(
+            "INSERT INTO p4_drafts (id, project_id, kind, language, revision_number, "
+            "body, plan_json, selected_issue_ids, generation_prompt_version, "
+            "approval_status, created_at, updated_at) VALUES "
+            "('existing-draft', ?, 'internal', 'zh', 1, 'synthetic body', '{}', '[]', "
+            "'review-comment-writing-zh/v2', 'pending', 'now', 'now')",
+            (project_id,),
+        )
+    denied = client.post(f"/api/review-report-projects/{project_id}/drafts",
+                         json={"kind": "internal", "language": "zh"},
+                         headers={"X-P5C-Stage-Authorization": token})
+    assert denied.status_code == 409
+    assert denied.json()["detail"]["code"] == "trial_internal_report_already_exists"
+    assert store.get_run(run_id)["status"] == "authorized"
+    assert calls == []
+
+
+def test_c1_p4_concurrent_retry_during_first_dispatch_does_not_generate_again(
+        tmp_path, monkeypatch):
+    started = Event()
+    release = Event()
+    invocations = 0
+
+    def pause_first_call():
+        nonlocal invocations
+        invocations += 1
+        if invocations == 1:
+            started.set()
+            assert release.wait(timeout=10)
+
+    (client, _, _, _, project_id, _, token, run_id,
+     calls) = _c1_p4_http_case(tmp_path, monkeypatch, before_response=pause_first_call)
+    url = f"/api/review-report-projects/{project_id}/drafts"
+    headers = {"X-P5C-Stage-Authorization": token}
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first_future = pool.submit(client.post, url,
+                                   json={"kind": "internal", "language": "zh"},
+                                   headers=headers)
+        assert started.wait(timeout=10)
+        try:
+            retry = pool.submit(client.post, url,
+                                json={"kind": "internal", "language": "zh"},
+                                headers=headers).result(timeout=10)
+            assert retry.status_code == 201
+            assert retry.json()["generation_run_id"] == run_id
+            assert retry.json()["status"] == "dispatch_pending"
+            assert len(calls) == 1
+        finally:
+            release.set()
+        first = first_future.result(timeout=10)
+    assert first.status_code == 201
+    assert len(calls) == 2
+    with sqlite3.connect(tmp_path / "private" / "review.db") as db:
+        assert db.execute("SELECT COUNT(*) FROM p4_drafts").fetchone()[0] == 1

@@ -85,7 +85,8 @@ class C1Runtime:
         except (KeyError, OSError, ModelConfigurationError):
             raise C1ControlError("execution_configuration_invalid") from None
 
-    def validate_source(self, stage: str, upstream_id: str, identity: C1Identity):
+    def validate_source(self, stage: str, upstream_id: str, identity: C1Identity,
+                        *, allow_existing_internal: bool = False):
         """Only completed current-trial ancestry may be authorized."""
         targets = {
             "p2a": ("documents", "id", None),
@@ -116,8 +117,9 @@ class C1Runtime:
             if actual_pdf_sha != identity.pdf_sha256:
                 raise C1ControlError("trial_pdf_mismatch")
             if stage == "p4":
-                if db.execute("SELECT 1 FROM p4_drafts WHERE kind='internal' "
-                              "AND language='zh' LIMIT 1").fetchone():
+                if not allow_existing_internal and db.execute(
+                        "SELECT 1 FROM p4_drafts WHERE kind='internal' "
+                        "AND language='zh' LIMIT 1").fetchone():
                     raise C1ControlError("trial_internal_report_already_exists")
                 p3 = db.execute("SELECT status, document_id FROM evidence_verification_runs "
                                 "WHERE id=?", (row["p3_run_id"],)).fetchone()
@@ -157,9 +159,12 @@ class C1Runtime:
         if not token:
             raise C1ControlError("authorization_missing")
         identity = self.identity()
-        self.validate_source(stage, upstream_id, identity)
+        source_stage_run_id = self.source_stage_run_id(stage, upstream_id)
         return self.store.claim(token, stage, upstream_id, identity,
-                                source_stage_run_id=self.source_stage_run_id(stage, upstream_id))
+                                source_stage_run_id=source_stage_run_id,
+                                source_validator=lambda previously_claimed: self.validate_source(
+                                    stage, upstream_id, identity,
+                                    allow_existing_internal=(stage == "p4" and previously_claimed)))
 
     def p2_budget(self, run_id: str):
         from backend.p2a_engine import RunBudget

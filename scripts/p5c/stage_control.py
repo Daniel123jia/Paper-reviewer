@@ -15,7 +15,7 @@ import time
 import uuid
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Mapping
+from typing import Callable, Mapping
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -226,7 +226,8 @@ class C1Store:
 
     def claim(self, token: str, stage: str, upstream_run_id: str,
               identity: C1Identity,
-              source_stage_run_id: str | None = None) -> tuple[str, bool]:
+              source_stage_run_id: str | None = None,
+              source_validator: Callable[[bool], None] | None = None) -> tuple[str, bool]:
         with self._connect() as db:
             db.execute("BEGIN IMMEDIATE")
             row = db.execute("SELECT * FROM c1_stage WHERE token_hash=?", (_digest(token),)).fetchone()
@@ -238,6 +239,8 @@ class C1Store:
             self._assert_trial(db, identity)
             if row["identity_json"] != _canonical(identity):
                 raise C1ControlError("execution_identity_mismatch")
+            if source_validator is not None:
+                source_validator(row["status"] != "authorized")
             if row["status"] == "authorized":
                 db.execute("UPDATE c1_stage SET status='dispatch_pending' WHERE run_id=?",
                            (row["run_id"],))
