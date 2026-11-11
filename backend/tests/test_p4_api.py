@@ -1,10 +1,13 @@
 import json
 import sqlite3
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 
 import fitz
 from fastapi.testclient import TestClient
 
 from backend.app import create_app
+from backend.p4_api import ReviewerIssueInput, reviewer_issue_fingerprint
 from backend.p3_engine import run_p3
 from backend.tests.test_p3_engine import model
 from backend.tests.test_p3_sources import frozen_case
@@ -101,6 +104,119 @@ def test_reviewer_added_issue_keeps_origin_and_separate_approval(tmp_path):
         "selected_source_refs": ["ru1"]})
     assert approved.status_code == 200, approved.text
     assert approved.json()["reviewer_approval_status"] == "approved_for_draft"
+
+
+def test_project_exposes_read_only_coverage_and_manual_source_navigation(tmp_path):
+    client, _ = seeded_p4_client(tmp_path)
+    project = client.post("/api/evidence-verification-runs/v1/report-projects").json()
+    project_id = project["id"]
+    client.post(f"/api/review-report-projects/{project_id}/reviewer-issues",
+                json=_manual_issue_payload())
+    view = client.get(f"/api/review-report-projects/{project_id}").json()
+    assert view["coverage_gaps"] == project["coverage_gaps"]
+    assert view["bundle_source_refs"]["ru1"]["evidence_ids"]
+    assert view["bundle_source_refs"]["ru1"]["page_index"] == 0
+
+
+def _manual_issue_payload():
+    return {"scientific_question": "Could the method's novelty scope be specified?",
+            "evidence_basis": "Reviewer inspected the method statement in the uploaded PDF.",
+            "source_refs": ["ru1"], "comment_body": "Clarify the method scope.",
+            "category": "clarification"}
+
+
+def test_reviewer_issue_fingerprint_is_unicode_and_source_order_stable():
+    original = ReviewerIssueInput(scientific_question="Café method?", evidence_basis="A cited result.",
+                                  source_refs=["ru1", "ru2"], comment_body="Please clarify.")
+    retry = ReviewerIssueInput(scientific_question="  Cafe\u0301   method? ", evidence_basis="A  cited result.",
+                               source_refs=["ru2", " ru1 ", "ru2"], comment_body="Please clarify.")
+    distinct = ReviewerIssueInput(scientific_question="Café method!", evidence_basis="A cited result.",
+                                  source_refs=["ru1", "ru2"], comment_body="Please clarify.")
+    assert reviewer_issue_fingerprint(original) == reviewer_issue_fingerprint(retry)
+    assert reviewer_issue_fingerprint(original) != reviewer_issue_fingerprint(distinct)
+
+
+def test_reviewer_issue_exact_retry_returns_original_without_changing_decision(tmp_path):
+    client, _ = seeded_p4_client(tmp_path)
+    project_id = client.post("/api/evidence-verification-runs/v1/report-projects").json()["id"]
+    path = f"/api/review-report-projects/{project_id}"
+    draft = client.post(path + "/drafts", json={"kind": "author", "language": "zh"})
+    assert draft.status_code == 201
+    first = client.post(path + "/reviewer-issues", json=_manual_issue_payload())
+    assert first.status_code == 201
+    issue = first.json()
+    approval = client.patch(path + f"/issues/{issue['issue_id']}/decision", json={
+        "decision": "approve_for_draft", "reviewer_rationale": "Reviewed the cited source.",
+        "selected_source_refs": ["ru1"]})
+    assert approval.status_code == 200
+    original_decisions = client.get(path).json()["decisions"]
+    original_draft = client.get(f"/api/review-report-drafts/{draft.json()['id']}").json()
+    retry = client.post(path + "/reviewer-issues", json={
+        **_manual_issue_payload(),
+        "scientific_question": "  Could  the method's novelty scope be specified?  ",
+        "evidence_basis": "Reviewer inspected the method\nstatement in the uploaded PDF.",
+        "source_refs": [" ru1 ", "ru1"],
+    })
+    assert retry.status_code == 200
+    assert retry.json() == issue
+    view = client.get(path).json()
+    assert [item["issue_id"] for item in view["reviewer_added"]] == [issue["issue_id"]]
+    assert view["decisions"] == original_decisions
+    assert client.get(f"/api/review-report-drafts/{draft.json()['id']}").json() == original_draft
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        assert db.execute("SELECT count(*) FROM p4_reviewer_added_issues").fetchone()[0] == 1
+        assert db.execute("SELECT count(*) FROM p4_draft_revisions").fetchone()[0] == 1
+
+
+def test_reviewer_issue_different_project_or_content_is_not_deduplicated(tmp_path):
+    client, _ = seeded_p4_client(tmp_path)
+    projects = [client.post("/api/evidence-verification-runs/v1/report-projects").json()["id"]
+                for _ in range(2)]
+    original = _manual_issue_payload()
+    first = client.post(f"/api/review-report-projects/{projects[0]}/reviewer-issues",
+                        json=original)
+    second = client.post(f"/api/review-report-projects/{projects[1]}/reviewer-issues",
+                         json=original)
+    distinct = client.post(f"/api/review-report-projects/{projects[0]}/reviewer-issues",
+                           json={**original, "scientific_question":
+                                 "Could the novelty claim's experimental scope be specified?"})
+    assert [response.status_code for response in (first, second, distinct)] == [201, 201, 201]
+    assert len({response.json()["issue_id"] for response in (first, second, distinct)}) == 3
+
+
+def test_reviewer_issue_concurrent_retries_create_one_record(tmp_path):
+    client, _ = seeded_p4_client(tmp_path)
+    project_id = client.post("/api/evidence-verification-runs/v1/report-projects").json()["id"]
+    barrier = Barrier(6)
+
+    def submit(_):
+        barrier.wait()
+        return client.post(f"/api/review-report-projects/{project_id}/reviewer-issues",
+                           json=_manual_issue_payload())
+
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        responses = list(pool.map(submit, range(6)))
+    assert sorted(item.status_code for item in responses) == [200] * 5 + [201]
+    assert len({item.json()["issue_id"] for item in responses}) == 1
+    assert len(client.get(f"/api/review-report-projects/{project_id}").json()["reviewer_added"]) == 1
+
+
+def test_reviewer_issue_historical_duplicates_remain_and_oldest_handles_retry(tmp_path):
+    client, _ = seeded_p4_client(tmp_path)
+    project_id = client.post("/api/evidence-verification-runs/v1/report-projects").json()["id"]
+    path = f"/api/review-report-projects/{project_id}"
+    oldest = client.post(path + "/reviewer-issues", json=_manual_issue_payload()).json()
+    duplicate = {**oldest, "issue_id": "reviewer_historical_duplicate"}
+    with sqlite3.connect(tmp_path / "review.db") as db:
+        db.execute("INSERT INTO p4_reviewer_added_issues VALUES (?, ?, ?)",
+                   (duplicate["issue_id"], project_id, json.dumps(duplicate)))
+        db.execute("DROP TABLE p4_reviewer_issue_fingerprints")
+    restarted = TestClient(create_app(tmp_path))
+    assert len(restarted.get(path).json()["reviewer_added"]) == 2
+    retry = restarted.post(path + "/reviewer-issues", json=_manual_issue_payload())
+    assert retry.status_code == 200
+    assert retry.json() == oldest
+    assert len(restarted.get(path).json()["reviewer_added"]) == 2
 
 
 def test_table_review_records_page_rows_values_metrics_and_does_not_change_p3(tmp_path):
