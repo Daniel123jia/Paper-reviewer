@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import socket
+import sys
 from pathlib import Path
 
 import pytest
@@ -51,8 +53,8 @@ def fixture_assets(tmp_path: Path, monkeypatch):
     import scripts.p5c.preflight as preflight
 
     manifest = build_manifest(root=ROOT).model_copy(deep=True)
-    prompt_dir = tmp_path / "prompts"
-    prompt_dir.mkdir()
+    prompt_dir = tmp_path / "backend/prompts"
+    prompt_dir.mkdir(parents=True)
     (prompt_dir / "test.v1.txt").write_text("fixed", encoding="utf-8")
     from scripts.p5.environment import prompt_inventory
     manifest.prompt_inventory = prompt_inventory(prompt_dir)
@@ -64,7 +66,8 @@ def fixture_assets(tmp_path: Path, monkeypatch):
         pdf.write_bytes(b"%PDF-1.4 fake " + paper.paper_id.encode())
         paper.pdf_sha256 = digest(pdf)
         paper_paths[paper.paper_id] = pdf
-        ref = tmp_path / f"{paper.paper_id}.json"
+        ref = tmp_path / manifest.references[paper.paper_id].path
+        ref.parent.mkdir(parents=True, exist_ok=True)
         issue_ids = ([f"h1-r{i}" for i in range(1, 7)] if paper.paper_id.startswith("sardet")
                      else [f"h2-r{i}" for i in range(1, 7)])
         ref.write_text(json.dumps({
@@ -93,8 +96,9 @@ def fixture_assets(tmp_path: Path, monkeypatch):
     lock = create_execution_lock(manifest_path, facts, {}, {})
     return {"manifest_path": manifest_path, "prompt_directory": prompt_dir,
             "paper_paths": paper_paths, "reference_paths": reference_paths,
-            "git_facts": facts, "lock": lock,
-            "lock_sha256": hashlib.sha256((json.dumps(lock, sort_keys=True) + "\n").encode()).hexdigest(),
+            "git_facts": facts,
+            "lock_bytes": (json.dumps(lock, sort_keys=True, indent=2) + "\n").encode(),
+            "lock_sha256": hashlib.sha256((json.dumps(lock, sort_keys=True, indent=2) + "\n").encode()).hexdigest(),
             "process_environment": {}, "environment_file_values": {}}
 
 
@@ -179,9 +183,10 @@ def test_paper_metadata_cannot_be_relabelled(fixture_assets):
     data = json.loads(path.read_text())
     data["papers"][0]["version"] = "unreviewed replacement"
     path.write_text(json.dumps(data))
-    fixture_assets["lock"]["manifest_sha256"] = digest(path)
-    fixture_assets["lock_sha256"] = hashlib.sha256(
-        (json.dumps(fixture_assets["lock"], sort_keys=True) + "\n").encode()).hexdigest()
+    lock = json.loads(fixture_assets["lock_bytes"])
+    lock["manifest_sha256"] = digest(path)
+    fixture_assets["lock_bytes"] = (json.dumps(lock, sort_keys=True, indent=2) + "\n").encode()
+    fixture_assets["lock_sha256"] = hashlib.sha256(fixture_assets["lock_bytes"]).hexdigest()
     with pytest.raises(PreflightError):
         validate_preflight(**fixture_assets)
 
@@ -204,3 +209,58 @@ def test_lock_creation_rejects_dirty_or_conflicting_sources(fixture_assets):
         create_execution_lock(fixture_assets["manifest_path"], fixture_assets["git_facts"],
                               {"OPENAI_BASE_URL": "https://a.example/v1"},
                               {"OPENAI_BASE_URL": "https://b.example/v1"})
+
+
+def test_cli_lock_sha_matches_actual_file_and_tampering_fails(
+    fixture_assets, tmp_path, monkeypatch, capsys,
+):
+    import scripts.p5c.preflight as preflight
+    import openai
+
+    monkeypatch.setattr(openai, "OpenAI", lambda **_: pytest.fail("model client constructed"))
+    monkeypatch.setattr(socket.socket, "connect", lambda *_: pytest.fail("network attempted"))
+    monkeypatch.setattr(preflight, "git_facts", lambda _: fixture_assets["git_facts"])
+    monkeypatch.setattr(preflight.os, "environ",
+                        {"OPENAI_API_KEY": "SYNTHETIC_KEY_SHOULD_NOT_PRINT"})
+    lock_path = tmp_path / "execution-lock.json"
+    monkeypatch.setattr(sys, "argv", ["preflight", "--root", str(tmp_path),
+        "--manifest", str(fixture_assets["manifest_path"]),
+        "--create-lock", str(lock_path)])
+    assert preflight.main() == 0
+    printed = json.loads(capsys.readouterr().out)
+    assert printed["lock_sha256"] == digest(lock_path)
+    assert printed["model_calls"] == 0
+    assert lock_path.stat().st_mode & 0o777 == 0o600
+    assert "Secret blind question" not in lock_path.read_text()
+    assert "SYNTHETIC_KEY_SHOULD_NOT_PRINT" not in lock_path.read_text()
+
+    fixture_assets["lock_bytes"] = lock_path.read_bytes()
+    fixture_assets["lock_sha256"] = printed["lock_sha256"]
+    assert validate_preflight(**fixture_assets)["assets_verified"] is True
+    report_path = tmp_path / "preflight-result.json"
+    argv = ["preflight", "--root", str(tmp_path),
+            "--manifest", str(fixture_assets["manifest_path"]),
+            "--lock", str(lock_path),
+            "--expected-lock-sha256", printed["lock_sha256"],
+            "--output", str(report_path)]
+    for paper_id, path in fixture_assets["paper_paths"].items():
+        argv.extend(["--paper", f"{paper_id}={path}"])
+    monkeypatch.setattr(sys, "argv", argv)
+    assert preflight.main() == 0
+    assert json.loads(report_path.read_text())["model_calls"] == 0
+    assert report_path.stat().st_mode & 0o777 == 0o600
+
+    lock = json.loads(lock_path.read_text())
+    lock["execution_tree"] = "c" * 40
+    lock_path.write_text(json.dumps(lock, sort_keys=True, indent=2) + "\n")
+    fixture_assets["lock_bytes"] = lock_path.read_bytes()
+    with pytest.raises(PreflightError, match="execution_lock_fingerprint_mismatch"):
+        validate_preflight(**fixture_assets)
+    assert preflight.main() == 2
+    fixture_assets["lock_sha256"] = "0" * 64
+    with pytest.raises(PreflightError, match="execution_lock_fingerprint_mismatch"):
+        validate_preflight(**fixture_assets)
+    captured = capsys.readouterr().out
+    assert "Secret blind question" not in captured
+    assert "OPENAI_API_KEY" not in captured
+    assert "SYNTHETIC_KEY_SHOULD_NOT_PRINT" not in captured

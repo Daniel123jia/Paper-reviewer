@@ -42,10 +42,6 @@ def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _json_sha(value: Mapping) -> str:
-    return hashlib.sha256((json.dumps(value, sort_keys=True) + "\n").encode()).hexdigest()
-
-
 def _write_private_json(path: Path, value: Mapping) -> None:
     """Create a private audit file exactly once, without a check/write race."""
     descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
@@ -140,7 +136,7 @@ def create_execution_lock(
 def validate_preflight(
     *, manifest_path: Path, prompt_directory: Path,
     paper_paths: Mapping[str, Path], reference_paths: Mapping[str, Path],
-    git_facts: Mapping[str, object], lock: Mapping,
+    git_facts: Mapping[str, object], lock_bytes: bytes,
     lock_sha256: str, process_environment: Mapping[str, str | None],
     environment_file_values: Mapping[str, str | None],
 ) -> dict:
@@ -150,12 +146,12 @@ def validate_preflight(
     manifest = _manifest(manifest_path)
     if runtime_schema_versions() != manifest.schema_versions:
         raise PreflightError("runtime_schema_mismatch")
+    if hashlib.sha256(lock_bytes).hexdigest() != lock_sha256:
+        raise PreflightError("execution_lock_fingerprint_mismatch")
     try:
-        binding = ExecutionLock.model_validate(lock)
+        binding = ExecutionLock.model_validate_json(lock_bytes)
     except ValidationError:
         raise PreflightError("execution_lock_invalid") from None
-    if _json_sha(binding.model_dump()) != lock_sha256:
-        raise PreflightError("execution_lock_fingerprint_mismatch")
     if (binding.manifest_sha256 != _sha(manifest_path) or
             binding.evaluation_version != manifest.evaluation_version or
             binding.asset_version != manifest.asset_version or
@@ -246,7 +242,7 @@ def main() -> int:
         if args.create_lock:
             value = create_execution_lock(args.manifest, facts, os.environ, file_values)
             _write_private_json(args.create_lock, value)
-            print(json.dumps({"lock_sha256": _json_sha(value), "model_calls": 0}))
+            print(json.dumps({"lock_sha256": _sha(args.create_lock), "model_calls": 0}))
             return 0
         if not args.lock or not args.expected_lock_sha256:
             raise PreflightError("reviewed_execution_lock_required")
@@ -256,7 +252,7 @@ def main() -> int:
             manifest_path=args.manifest, prompt_directory=args.root / "backend/prompts",
             paper_paths={key: Path(value) for key, value in paper_paths.items()},
             reference_paths={key: args.root / ref.path for key, ref in manifest.references.items()},
-            git_facts=facts, lock=json.loads(args.lock.read_text(encoding="utf-8")),
+            git_facts=facts, lock_bytes=args.lock.read_bytes(),
             lock_sha256=args.expected_lock_sha256,
             process_environment=os.environ, environment_file_values=file_values,
         )
