@@ -185,7 +185,8 @@ def reviewer_issue_fingerprint(payload: ReviewerIssueInput) -> str:
 
 def register_p4_routes(app, connect, files_dir, load_p3_inputs,
                        model_session_factory, model_completion, model_preflight,
-                       model_session_preflight, budget_configuration_factory):
+                       model_session_preflight, budget_configuration_factory,
+                       c1_control=None):
     def project_or_404(db, project_id):
         row = db.execute("SELECT * FROM p4_report_projects WHERE id = ?", (project_id,)).fetchone()
         if not row:
@@ -552,4 +553,5 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs,
         "project_or_404": project_or_404, "snapshot_of": snapshot_of,
         "decision_records": decision_records, "evidence_records": evidence_records,
         "external_evidence_records": external_evidence_records,
-        "reviewer_issues": reviewer_issues, "now": now, "digest": digest})
+        "reviewer_issues": reviewer_issues, "now": now, "digest": digest},
+                             c1_control=c1_control)

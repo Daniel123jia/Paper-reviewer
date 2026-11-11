@@ -6,7 +6,7 @@ import time
 import uuid
 from typing import Literal
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
@@ -20,6 +20,7 @@ from backend.p4_report_schema import ReportEvidencePack, ReportPlan, ReportWriti
 from backend.p4_validator import (numeric_claims, validate_author_body,
                                   validate_bilingual_pair)
 from backend.p4_writer import render_markdown, write_report, WRITING_VERSIONS
+from scripts.p5c.stage_control import C1ControlError
 
 
 class CreateDraftInput(BaseModel):
@@ -39,7 +40,7 @@ class ApproveDraftInput(BaseModel):
 
 def register_p4_draft_routes(app, connect, model_session_factory, model_completion,
                              model_preflight, model_session_preflight,
-                             budget_configuration_factory, helpers):
+                             budget_configuration_factory, helpers, c1_control=None):
     project_or_404 = helpers["project_or_404"]
     snapshot_of = helpers["snapshot_of"]
     decision_records = helpers["decision_records"]
@@ -75,8 +76,11 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
             messages = [{"role": "system", "content": system},
                         {"role": "user", "content": user}]
             try:
-                model_session_preflight(session, requested)
-            except ModelConfigurationError:
+                if c1_control:
+                    model_session_preflight(session, requested, c1_run_id=generation_run_id)
+                else:
+                    model_session_preflight(session, requested)
+            except (ModelConfigurationError, C1ControlError):
                 store.fail_run(generation_run_id, "configuration_changed",
                                "model_configuration_changed")
                 raise
@@ -151,6 +155,13 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                         reason=exc.blocker, run_state="budget_exhausted",
                     )
                 raise
+            if c1_control and actual != requested:
+                store.settle_terminal_usage(
+                    generation_run_id, model_call_id, actual_model=actual,
+                    settlement=settlement, duration_ms=duration_ms,
+                    reason="c1_response_model_mismatch", run_state="usage_invalid",
+                )
+                raise P4UsageError("c1_response_model_mismatch")
             store.settle_valid_usage(
                 generation_run_id, model_call_id, actual_model=actual,
                 input_tokens=settlement.input_tokens,
@@ -193,11 +204,39 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                         raise ValueError("refuted subcheck reappeared in author report")
 
     @app.post("/api/review-report-projects/{project_id}/drafts", status_code=201)
-    def create_p4_draft(project_id: str, payload: CreateDraftInput):
-        with connect() as db:
-            (plan, pack), _ = frozen_plan(db, project_id, payload.kind, payload.language)
+    def create_p4_draft(project_id: str, payload: CreateDraftInput,
+                        http_request: Request):
+        c1_claimed = None
+        if c1_control:
+            if (payload.kind, payload.language) != ("internal", "zh"):
+                raise HTTPException(409, detail={"code": "c1_report_scope_invalid"})
+            try:
+                c1_claimed = c1_control.claim(
+                    http_request.headers.get("X-P5C-Stage-Authorization"), "p4", project_id)
+            except C1ControlError as exc:
+                raise HTTPException(409, detail={"code": exc.code}) from None
+            if not c1_claimed[1]:
+                with connect() as db:
+                    previous = db.execute("SELECT draft_id FROM p4_generation_runs WHERE id=?",
+                                          (c1_claimed[0],)).fetchone()
+                    if previous and previous["draft_id"]:
+                        draft = db.execute("SELECT * FROM p4_drafts WHERE id=?",
+                                           (previous["draft_id"],)).fetchone()
+                        if draft:
+                            result = draft_view(db, draft)
+                            result["generation_run_id"] = c1_claimed[0]
+                            return result
+                return {"generation_run_id": c1_claimed[0],
+                        "status": c1_control.store.get_run(c1_claimed[0])["status"]}
+        try:
+            with connect() as db:
+                (plan, pack), _ = frozen_plan(db, project_id, payload.kind, payload.language)
+        except Exception:
+            if c1_control and c1_claimed:
+                c1_control.store.finish_stage(c1_claimed[0], completed=False)
+            raise
         draft_id = uuid.uuid4().hex
-        generation_run_id = uuid.uuid4().hex
+        generation_run_id = c1_claimed[0] if c1_claimed else uuid.uuid4().hex
         store = P4BudgetStore(connect, now)
 
         def terminate_run_safely(reason):
@@ -210,10 +249,15 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
 
         try:
             controller = session = None
+            if c1_control and not plan.groups:
+                c1_control.check_p4_budget(generation_run_id,
+                                           budget_configuration_factory())
             if plan.groups:
                 try:
                     model_preflight()
                     budget_configuration = budget_configuration_factory()
+                    if c1_control:
+                        c1_control.check_p4_budget(generation_run_id, budget_configuration)
                 except HTTPException as exc:
                     code = (exc.detail.get("code") if isinstance(exc.detail, dict)
                             else "model_configuration_invalid")
@@ -297,6 +341,8 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                 if plan.groups:
                     store.complete_run_in_transaction(db, generation_run_id)
                 result = draft_view(db, draft_or_404(db, draft_id))
+                if c1_control:
+                    result["generation_run_id"] = generation_run_id
             return result
         except P4BudgetConfigurationError as exc:
             detail = exc.safe_detail()
@@ -316,14 +362,31 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
             detail = exc.safe_detail()
             detail["generation_run_id"] = generation_run_id
             raise HTTPException(status_code=503, detail=detail) from None
+        except C1ControlError as exc:
+            terminate_run_safely(exc.code)
+            raise HTTPException(status_code=409, detail={"code": exc.code,
+                                                        "generation_run_id": generation_run_id}) from None
         except HTTPException:
             raise
         except (ValueError, KeyError, TypeError) as exc:
             terminate_run_safely("report_content_validation_failed")
+            if c1_control:
+                raise HTTPException(422, detail={"code": "report_content_validation_failed",
+                                                  "generation_run_id": generation_run_id}) from None
             raise HTTPException(422, f"P4 写作校验失败：{type(exc).__name__}: {exc}") from None
         except Exception as exc:
             terminate_run_safely("model_request_failed")
             raise HTTPException(502, f"P4 模型调用失败：{type(exc).__name__}") from None
+        finally:
+            if c1_control and c1_claimed:
+                with connect() as db:
+                    state = db.execute("SELECT state, unknown_usage_calls, cost_complete FROM p4_generation_runs "
+                                       "WHERE id=?", (generation_run_id,)).fetchone()
+                if state and (state["unknown_usage_calls"] or not state["cost_complete"]):
+                    c1_control.store.mark_stage_unknown(generation_run_id)
+                else:
+                    c1_control.store.finish_stage(
+                        generation_run_id, completed=bool(state and state["state"] == "completed"))
 
     @app.get("/api/review-report-drafts/{draft_id}")
     def get_p4_draft(draft_id: str):

@@ -5,6 +5,7 @@ import re
 import sqlite3
 import time
 import uuid
+from dataclasses import replace
 from pathlib import Path
 
 import fitz
@@ -51,6 +52,8 @@ from backend.model_runtime import (REQUIRED_MODEL_ENV_KEYS,
                                    create_validated_chat_completion,
                                    require_model_runtime_config,
                                    validate_model_session_configuration)
+from backend.p5c_runtime import C1Runtime
+from scripts.p5c.stage_control import C1ControlError, GuardedChatClient
 
 
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
@@ -66,7 +69,7 @@ def load_local_environment(path: Path):
         return
     for key, value in values.items():
         if key not in (REQUIRED_MODEL_ENV_KEYS + P4_BUDGET_ENV_KEYS
-                       + P4_WORKER_ENV_KEYS) and value is not None:
+                       + P4_WORKER_ENV_KEYS) and not key.startswith("P5C_") and value is not None:
             os.environ[key] = value
 
 
@@ -168,6 +171,11 @@ def create_app(data_dir: Path) -> FastAPI:
     files_dir = data_dir / "files"
     files_dir.mkdir(exist_ok=True)
     database = data_dir / "review.db"
+    c1 = (C1Runtime(data_dir, root=Path(__file__).resolve().parents[1],
+                    environment_file=MODEL_ENVIRONMENT_FILE)
+          if os.environ.get("P5C_CONTROLLED_MODE") == "1" else None)
+    if c1 and os.environ.get("PAPER_REVIEW_WORKER_COUNT") != "1":
+        raise C1ControlError("single_worker_declaration_required")
 
     def connect():
         connection = sqlite3.connect(database)
@@ -180,30 +188,56 @@ def create_app(data_dir: Path) -> FastAPI:
         except ModelConfigurationError as exc:
             raise HTTPException(status_code=503, detail=exc.safe_detail()) from None
 
-    def model_session(*, timeout, max_retries):
+    def model_session(*, timeout, max_retries, c1_run_id=None, allow_c1_p4=False):
+        if c1 and (max_retries != 0 or (c1_run_id is None and not allow_c1_p4)):
+            raise C1ControlError("c1_model_request_not_authorized")
         configuration = runtime_model_configuration()
-        return create_model_session(
+        session = create_model_session(
             configuration,
             timeout=timeout,
             max_retries=max_retries,
             client_factory=OpenAI,
         )
+        if c1_run_id is not None:
+            if c1 is None:
+                raise C1ControlError("c1_mode_not_enabled")
+            identity = c1.identity()
+            view = c1.store.get_run(c1_run_id)
+            if view["status"] != "dispatch_pending":
+                raise C1ControlError("c1_stage_not_dispatchable")
+            session = replace(session, client=GuardedChatClient(
+                session.client, c1.store, c1_run_id, identity, c1.identity))
+        return session
 
-    def model_session_or_503(*, timeout, max_retries):
+    def model_session_or_503(*, timeout, max_retries, allow_c1_p4=False):
         try:
-            return model_session(timeout=timeout, max_retries=max_retries)
+            return model_session(timeout=timeout, max_retries=max_retries,
+                                 allow_c1_p4=allow_c1_p4)
         except ModelConfigurationError as exc:
             raise HTTPException(status_code=503, detail=exc.safe_detail()) from None
+        except C1ControlError as exc:
+            raise HTTPException(status_code=409, detail={"code": exc.code}) from None
 
     def model_completion(session, **request):
         return create_validated_chat_completion(
             session, MODEL_ENVIRONMENT_FILE, **request
         )
 
-    def model_session_preflight(session, requested_model):
+    def model_session_preflight(session, requested_model, c1_run_id=None):
         validate_model_session_configuration(
             session, MODEL_ENVIRONMENT_FILE, requested_model=requested_model
         )
+        if c1 and c1_run_id:
+            c1.store.assert_run_identity(c1_run_id, c1.identity())
+
+    def c1_claim(request: Request, stage: str, upstream_run_id: str):
+        if c1 is None:
+            return None
+        try:
+            return c1.claim(request.headers.get("X-P5C-Stage-Authorization"),
+                            stage, upstream_run_id)
+        except C1ControlError as exc:
+            raise HTTPException(409, detail={"code": exc.code}) from None
 
     with connect() as db:
         db.executescript("""
@@ -434,6 +468,28 @@ def create_app(data_dir: Path) -> FastAPI:
         db.execute("CREATE UNIQUE INDEX IF NOT EXISTS p2a_one_continuation_per_parent "
                    "ON paper_understanding_run_lineage(parent_run_id)")
 
+    if c1:
+        with connect() as db:
+            uncertain_p4 = [row["id"] for row in db.execute(
+                "SELECT id FROM p4_generation_runs WHERE cost_complete=0 OR "
+                "unknown_usage_calls>0")]
+        for run_id in uncertain_p4:
+            c1.store.mark_stage_unknown(run_id)
+        for stage_row in c1.store.list_stage_states():
+            if stage_row["status"] != "interrupted":
+                continue
+            table = {"p2a": "paper_understanding_runs",
+                     "p2b": "professional_review_runs",
+                     "p2c": "candidate_consolidation_runs",
+                     "p3": "evidence_verification_runs",
+                     "p4": "p4_generation_runs"}[stage_row["stage"]]
+            column = "state" if stage_row["stage"] == "p4" else "status"
+            with connect() as db:
+                completed = db.execute(f"SELECT {column} FROM {table} WHERE id=?",
+                                       (stage_row["run_id"],)).fetchone()
+            if completed and completed[column] in {"completed", "limited"}:
+                c1.store.recover_verified_completion(stage_row["run_id"])
+
     app = FastAPI(title="AI 论文深度审稿工作台")
     app.add_middleware(
         CORSMiddleware,
@@ -453,6 +509,55 @@ def create_app(data_dir: Path) -> FastAPI:
     @app.get("/api/auth/status")
     def auth_status(request: Request):
         return {"required": access.required, "authenticated": access.valid(request.cookies.get(COOKIE_NAME))}
+
+    @app.get("/api/p5c/stage-runs/{run_id}")
+    def get_p5c_stage_run(run_id: str):
+        if c1 is None:
+            raise HTTPException(404, detail={"code": "c1_mode_not_enabled"})
+        try:
+            result = c1.store.get_run(run_id)
+        except C1ControlError:
+            raise HTTPException(404, detail={"code": "c1_run_missing"}) from None
+        stage_tables = {
+            "p2a": "paper_understanding_runs",
+            "p2b": "professional_review_runs",
+            "p2c": "candidate_consolidation_runs",
+            "p3": "evidence_verification_runs",
+        }
+        if result["stage"] in stage_tables:
+            with connect() as db:
+                row = db.execute(f"SELECT status FROM {stage_tables[result['stage']]} WHERE id=?",
+                                 (run_id,)).fetchone()
+            result["production_run_status"] = row["status"] if row else None
+        if result["stage"] == "p4":
+            with connect() as db:
+                row = db.execute("SELECT state, request_count, input_tokens, output_tokens, "
+                                 "unknown_usage_calls, planned_cost_usd, usage_cost_usd, "
+                                 "cost_complete, provider_billed_cost_usd "
+                                 "FROM p4_generation_runs WHERE id=?", (run_id,)).fetchone()
+                calls = [dict(item) for item in db.execute(
+                    "SELECT b.model_call_id, b.request_index, b.dispatch_state, b.usage_status, "
+                    "b.estimated_input_tokens, b.reserved_output_tokens, b.planned_cost_usd, "
+                    "c.input_tokens, c.output_tokens, b.actual_total_tokens, b.usage_cost_usd "
+                    "FROM p4_model_call_budget b LEFT JOIN p4_model_calls c "
+                    "ON c.id=b.model_call_id WHERE b.generation_run_id=? "
+                    "ORDER BY b.request_index", (run_id,))]
+            if row:
+                result["p4_budget_audit"] = dict(row)
+                result["model_calls"] = calls
+                result["provider_request_count"] = row["request_count"]
+                result["known_input_tokens"] = row["input_tokens"]
+                result["known_output_tokens"] = row["output_tokens"]
+                result["unknown_usage_calls"] = row["unknown_usage_calls"] + sum(
+                    call["dispatch_state"] == "dispatch_pending" for call in calls)
+                result["cost_complete"] = bool(row["cost_complete"]) and not any(
+                    call["dispatch_state"] == "dispatch_pending" for call in calls)
+                if not result["cost_complete"]:
+                    result["status"] = "unknown_usage"
+                result["planned_cost_usd"] = row["planned_cost_usd"]
+                result["known_usage_cost_usd"] = row["usage_cost_usd"]
+                result["provider_billed_cost_usd"] = row["provider_billed_cost_usd"]
+        return result
 
     @app.post("/api/auth/login")
     def auth_login(payload: LoginRequest):
@@ -875,7 +980,7 @@ def create_app(data_dir: Path) -> FastAPI:
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET source_bundle_id = ?, source_bundle_json = ? "
                            "WHERE id = ?", (bundle["bundle_id"], json.dumps(bundle), run_id))
-            session = model_session(timeout=180, max_retries=0)
+            session = model_session(timeout=180, max_retries=0, c1_run_id=run_id if c1 else None)
             model = session.configuration.model
 
             def model_call(stage, system, user):
@@ -894,24 +999,31 @@ def create_app(data_dir: Path) -> FastAPI:
                 on_trace=lambda trace: persist_understanding_trace(run_id, trace),
                 on_n3_checkpoint=lambda checkpoint: persist_n3_checkpoint(
                     run_id, bundle, checkpoint),
-                budget=p2a_budget())
+                budget=c1.p2_budget(run_id) if c1 else p2a_budget())
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET status = 'completed', "
                            "finished_at = datetime('now') WHERE id = ?", (run_id,))
         except BudgetExceeded as exc:
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET status = 'budget_exceeded', error = ?, "
-                           "finished_at = datetime('now') WHERE id = ?", (str(exc), run_id))
+                           "finished_at = datetime('now') WHERE id = ?",
+                           (f"{exc.stage}:budget_exceeded" if c1 else str(exc), run_id))
         except P2AError as exc:
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET status = 'failed', error = ?, "
                            "finished_at = datetime('now') WHERE id = ?",
-                           (str(exc), run_id))
+                           (f"{exc.stage}:{type(exc).__name__}" if c1 else str(exc), run_id))
         except Exception as exc:
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET status = 'failed', error = ?, "
                            "finished_at = datetime('now') WHERE id = ?",
                            (f"source: {type(exc).__name__}", run_id))
+        finally:
+            if c1:
+                with connect() as db:
+                    state = db.execute("SELECT status FROM paper_understanding_runs WHERE id=?",
+                                       (run_id,)).fetchone()
+                c1.store.finish_stage(run_id, completed=bool(state and state["status"] == "completed"))
 
     def run_n3_continuation(document_id: str, run_id: str):
         try:
@@ -950,7 +1062,7 @@ def create_app(data_dir: Path) -> FastAPI:
                     (run_id,),
                 )
 
-            session = model_session(timeout=180, max_retries=0)
+            session = model_session(timeout=180, max_retries=0, c1_run_id=run_id if c1 else None)
             model = session.configuration.model
             checkpoint_index = {item.input_fingerprint: item for item in checkpoints}
 
@@ -998,8 +1110,12 @@ def create_app(data_dir: Path) -> FastAPI:
 
     @app.post("/api/documents/{document_id}/understanding-runs", status_code=202)
     def create_understanding_run(document_id: str, payload: UnderstandingRunRequest,
-                                 background_tasks: BackgroundTasks):
+                                 background_tasks: BackgroundTasks, http_request: Request):
         model_configuration_or_503()
+        c1_claimed = c1_claim(http_request, "p2a", document_id)
+        if c1_claimed and not c1_claimed[1]:
+            return {"id": c1_claimed[0], "document_id": document_id,
+                    "status": c1.store.get_run(c1_claimed[0])["status"]}
         try:
             with connect() as db:
                 db.execute("BEGIN IMMEDIATE")
@@ -1008,7 +1124,7 @@ def create_app(data_dir: Path) -> FastAPI:
                                     "AND status IN ('queued', 'running')", (document_id,)).fetchone()
                 if active:
                     raise HTTPException(409, "该论文已有正在运行的理解任务")
-                run_id = uuid.uuid4().hex
+                run_id = c1_claimed[0] if c1_claimed else uuid.uuid4().hex
                 db.execute("INSERT INTO paper_understanding_runs "
                            "(id, document_id, status, target_journal, special_requirements, created_at) "
                            "VALUES (?, ?, 'queued', ?, ?, datetime('now'))",
@@ -1022,6 +1138,8 @@ def create_app(data_dir: Path) -> FastAPI:
 
     @app.post("/api/understanding-runs/{parent_run_id}/n3-resume-runs", status_code=202)
     def create_n3_resume_run(parent_run_id: str, background_tasks: BackgroundTasks):
+        if c1:
+            raise HTTPException(409, detail={"code": "c1_resume_not_authorized"})
         model_configuration_or_503()
         try:
             with connect() as db:
@@ -1176,7 +1294,7 @@ def create_app(data_dir: Path) -> FastAPI:
                 if not review_run:
                     raise RuntimeError("professional review run missing")
                 db.execute("UPDATE professional_review_runs SET status = 'running' WHERE id = ?", (run_id,))
-            session = model_session(timeout=180, max_retries=0)
+            session = model_session(timeout=180, max_retries=0, c1_run_id=run_id if c1 else None)
             model = session.configuration.model
 
             def model_call(stage, system, user):
@@ -1215,7 +1333,7 @@ def create_app(data_dir: Path) -> FastAPI:
 
             result = run_p2b(bundle, plan, profile, mapping, understanding_run_id, run_id,
                 model_call, model, row["target_journal"], review_run["review_requirements"],
-                budget=RunBudget(
+                budget=c1.p2_budget(run_id) if c1 else RunBudget(
                     max_calls=int(os.environ.get("P2B_MAX_CALLS", "18")),
                     max_input_tokens=int(os.environ.get("P2B_MAX_INPUT_TOKENS", "180000")),
                     max_output_tokens=int(os.environ.get("P2B_MAX_OUTPUT_TOKENS", "50000")),
@@ -1233,16 +1351,28 @@ def create_app(data_dir: Path) -> FastAPI:
                            "finished_at = datetime('now') WHERE id = ?",
                            ("partial_failed" if completed else "failed",
                             f"professional_review:{type(exc).__name__}", run_id))
+        finally:
+            if c1:
+                with connect() as db:
+                    state = db.execute("SELECT status FROM professional_review_runs WHERE id=?",
+                                       (run_id,)).fetchone()
+                c1.store.finish_stage(run_id, completed=bool(
+                    state and state["status"] in {"completed", "limited"}))
 
     @app.post("/api/understanding-runs/{run_id}/professional-review-runs", status_code=202)
     def create_professional_review_run(
         run_id: str,
         background_tasks: BackgroundTasks,
+        http_request: Request,
         request: ProfessionalReviewRunRequest | None = None,
     ):
         model_configuration_or_503()
         row, bundle, _, _, _ = load_professional_inputs(run_id)
-        new_id = uuid.uuid4().hex
+        c1_claimed = c1_claim(http_request, "p2b", run_id)
+        if c1_claimed and not c1_claimed[1]:
+            return {"id": c1_claimed[0], "understanding_run_id": run_id,
+                    "status": c1.store.get_run(c1_claimed[0])["status"]}
+        new_id = c1_claimed[0] if c1_claimed else uuid.uuid4().hex
         review_requirements = request.review_requirements if request else None
         with connect() as db:
             active = db.execute("SELECT 1 FROM professional_review_runs WHERE understanding_run_id = ? "
@@ -1307,7 +1437,7 @@ def create_app(data_dir: Path) -> FastAPI:
                 professional_review_run_id)
             with connect() as db:
                 db.execute("UPDATE candidate_consolidation_runs SET status = 'running' WHERE id = ?", (run_id,))
-            session = model_session(timeout=180, max_retries=0)
+            session = model_session(timeout=180, max_retries=0, c1_run_id=run_id if c1 else None)
             model = session.configuration.model
 
             def model_call(stage, system, user):
@@ -1352,7 +1482,7 @@ def create_app(data_dir: Path) -> FastAPI:
             result = run_p2c(bundle, plan, profile, mapping, review,
                 source["understanding_run_id"], professional_review_run_id,
                 run_id, model_call, model, p2b_status=source["status"],
-                budget=RunBudget(
+                budget=c1.p2_budget(run_id) if c1 else RunBudget(
                     max_calls=int(os.environ.get("P2C_MAX_CALLS", "16")),
                     max_input_tokens=int(os.environ.get("P2C_MAX_INPUT_TOKENS", "200000")),
                     max_output_tokens=int(os.environ.get("P2C_MAX_OUTPUT_TOKENS", "50000")),
@@ -1370,13 +1500,25 @@ def create_app(data_dir: Path) -> FastAPI:
                            "finished_at = datetime('now') WHERE id = ?",
                            ("partial_failed" if row and row["inventory_json"] else "failed",
                             f"consolidation:{type(exc).__name__}", run_id))
+        finally:
+            if c1:
+                with connect() as db:
+                    state = db.execute("SELECT status FROM candidate_consolidation_runs WHERE id=?",
+                                       (run_id,)).fetchone()
+                c1.store.finish_stage(run_id, completed=bool(
+                    state and state["status"] in {"completed", "limited"}))
 
     @app.post("/api/professional-review-runs/{run_id}/consolidation-runs", status_code=202)
     def create_consolidation_run(run_id: str, background_tasks: BackgroundTasks,
+                                 http_request: Request,
                                  payload: ConsolidationRunRequest | None = None):
         model_configuration_or_503()
         source, bundle, _, _, _, _ = load_consolidation_inputs(run_id)
-        new_id = uuid.uuid4().hex
+        c1_claimed = c1_claim(http_request, "p2c", run_id)
+        if c1_claimed and not c1_claimed[1]:
+            return {"id": c1_claimed[0], "professional_review_run_id": run_id,
+                    "status": c1.store.get_run(c1_claimed[0])["status"]}
+        new_id = c1_claimed[0] if c1_claimed else uuid.uuid4().hex
         try:
             with connect() as db:
                 existing = db.execute("SELECT id, status FROM candidate_consolidation_runs "
@@ -1449,7 +1591,7 @@ def create_app(data_dir: Path) -> FastAPI:
             with connect() as db:
                 db.execute("UPDATE evidence_verification_runs SET status = 'running' WHERE id = ?",
                            (run_id,))
-            session = model_session(timeout=180, max_retries=0)
+            session = model_session(timeout=180, max_retries=0, c1_run_id=run_id if c1 else None)
             model = session.configuration.model
 
             def model_call(stage, system, user):
@@ -1495,7 +1637,7 @@ def create_app(data_dir: Path) -> FastAPI:
 
             result = run_p3(bundle, plan, profile, mapping, review, consolidation,
                 pdf_path, run_id, model_call, model,
-                budget=RunBudget(
+                budget=c1.p2_budget(run_id) if c1 else RunBudget(
                     max_calls=int(os.environ.get("P3_MAX_CALLS", "48")),
                     max_input_tokens=int(os.environ.get("P3_MAX_INPUT_TOKENS", "450000")),
                     max_output_tokens=int(os.environ.get("P3_MAX_OUTPUT_TOKENS", "100000")),
@@ -1514,14 +1656,26 @@ def create_app(data_dir: Path) -> FastAPI:
                            "finished_at = datetime('now') WHERE id = ?",
                            ("partial_failed" if completed else "failed",
                             f"evidence_verification:{type(exc).__name__}", run_id))
+        finally:
+            if c1:
+                with connect() as db:
+                    state = db.execute("SELECT status FROM evidence_verification_runs WHERE id=?",
+                                       (run_id,)).fetchone()
+                c1.store.finish_stage(run_id, completed=bool(
+                    state and state["status"] in {"completed", "limited"}))
 
     @app.post("/api/candidate-consolidation-runs/{run_id}/evidence-verification-runs",
               status_code=202)
     def create_evidence_verification_run(run_id: str, background_tasks: BackgroundTasks,
+                                         http_request: Request,
                                          payload: EvidenceVerificationRunRequest | None = None):
         model_configuration_or_503()
         source, bundle, _, _, _, _, _, _ = load_p3_inputs(run_id)
-        new_id = uuid.uuid4().hex
+        c1_claimed = c1_claim(http_request, "p3", run_id)
+        if c1_claimed and not c1_claimed[1]:
+            return {"id": c1_claimed[0], "consolidation_run_id": run_id,
+                    "status": c1.store.get_run(c1_claimed[0])["status"]}
+        new_id = c1_claimed[0] if c1_claimed else uuid.uuid4().hex
         try:
             with connect() as db:
                 existing = db.execute("SELECT id, status FROM evidence_verification_runs "
@@ -2271,11 +2425,13 @@ def create_app(data_dir: Path) -> FastAPI:
 
     register_p4_routes(
         app, connect, files_dir, load_p3_inputs,
-        lambda: model_session_or_503(timeout=180, max_retries=0),
+        lambda: model_session_or_503(timeout=180, max_retries=0,
+                                     allow_c1_p4=True),
         model_completion,
         model_configuration_or_503,
         model_session_preflight,
         lambda: require_p4_budget_configuration(MODEL_ENVIRONMENT_FILE),
+        c1_control=c1,
     )
     return app
 
