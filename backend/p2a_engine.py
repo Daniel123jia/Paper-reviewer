@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Callable
 
 from backend.model_runtime import ModelConfigurationError
+from scripts.p5c.stage_control import C1ActualBudgetExceeded
 from backend.parse_quality import assess_input_readiness
 from backend.p2a_schema import (ClaimEvidenceMap, PaperProfile, ReviewPlan, SourceConflict,
                                  source_reference_index, validate_source_references)
@@ -99,6 +100,11 @@ class RunBudget:
         started = time.perf_counter()
         try:
             reply = model_call(stage, system, user)
+        except C1ActualBudgetExceeded as exc:
+            self.elapsed_ms += round((time.perf_counter() - started) * 1000)
+            self.reserved_input_tokens += exc.input_tokens
+            self.reserved_output_tokens += exc.output_tokens
+            raise BudgetExceeded(stage, "actual_budget_exceeded", []) from None
         except ModelConfigurationError:
             # The runtime session validates configuration before SDK dispatch.
             self.calls -= 1
