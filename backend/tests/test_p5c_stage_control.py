@@ -880,3 +880,132 @@ def test_c1_p4_concurrent_retry_during_first_dispatch_does_not_generate_again(
     assert len(calls) == 2
     with sqlite3.connect(tmp_path / "private" / "review.db") as db:
         assert db.execute("SELECT COUNT(*) FROM p4_drafts").fetchone()[0] == 1
+
+@pytest.mark.parametrize('failure,expected', [
+    ('create', 'sdk_create'), ('stream', 'stream_read'),
+    ('missing', 'usage_missing'), ('invalid', 'usage_invalid'),
+    ('model', 'model_mismatch'), ('settlement', 'ledger_settlement'),
+])
+def test_failure_diagnostics_are_classified_and_never_retry(control, monkeypatch, failure, expected):
+    store, identity, _ = control
+    token, run_id = grant(control)
+    store.claim(token, 'p2a', 'a' * 64, identity)
+    usage = SimpleNamespace(prompt_tokens=3, completion_tokens=2, total_tokens=5)
+    def broken_stream():
+        yield fake_chunk()
+        raise ConnectionError('sk-secret request body private endpoint')
+    if failure == 'create':
+        responses = [ConnectionError('sk-secret request body private endpoint')]
+    elif failure == 'stream':
+        responses = [broken_stream()]
+    elif failure == 'missing':
+        responses = [[fake_chunk()]]
+    elif failure == 'invalid':
+        responses = [[fake_chunk(usage=SimpleNamespace(prompt_tokens=-1, completion_tokens=2, total_tokens=1))]]
+    elif failure == 'model':
+        responses = [[fake_chunk(usage=usage, model='other-model')]]
+    else:
+        responses = [[fake_chunk(usage=usage)]]
+        monkeypatch.setattr(store, 'settle_usage', lambda *a: (_ for _ in ()).throw(sqlite3.OperationalError('private db path')))
+    sdk, completion = fake_client(responses)
+    client = GuardedChatClient(sdk, store, run_id, identity)
+    with pytest.raises(C1ControlError, match='usage_unknown'):
+        request(client)
+    with pytest.raises(ModelConfigurationError):
+        request(client)
+    view = store.get_run(run_id)
+    diagnostic = view['model_calls'][0]['diagnostic']
+    assert diagnostic['phase'] == expected
+    assert diagnostic['stream_chunk_received'] is (None if failure == 'create' else True)
+    assert diagnostic['usage_received'] is (None if failure == 'create' else failure in {'invalid', 'model', 'settlement'})
+    assert diagnostic['model_received'] is (None if failure == 'create' else True)
+    assert completion.calls == 1 and view['unknown_usage_calls'] == 1
+    assert all(s not in json.dumps(view) for s in ('sk-secret', 'private endpoint', 'request body', 'private db path'))
+
+@pytest.mark.parametrize('request_id,expected', [('req_ABC123456', 'req_ABC123456'),
+                                                ('req_sk-secret/path', None)])
+def test_sdk_status_diagnostic_sanitizes_request_id(control, request_id, expected):
+    import httpx
+    import openai
+    store, identity, _ = control
+    token, run_id = grant(control)
+    store.claim(token, 'p2a', 'a' * 64, identity)
+    response = httpx.Response(429, request=httpx.Request('POST', 'https://example.invalid'),
+                              headers={'x-request-id': request_id})
+    error = openai.APIStatusError('secret body', response=response, body=None)
+    sdk, completion = fake_client([error])
+    with pytest.raises(C1ControlError):
+        request(GuardedChatClient(sdk, store, run_id, identity))
+    view = store.get_run(run_id)
+    d = view['model_calls'][0]['diagnostic']
+    assert d['http_status'] == 429 and d['request_id'] == expected
+    assert d['exception_type'] == 'APIStatusError'
+    assert 'secret body' not in json.dumps(view)
+    if expected is None:
+        assert request_id not in json.dumps(view)
+    assert completion.calls == 1
+
+
+def test_unreadable_usage_fails_closed_with_diagnostic(control):
+    store, identity, _ = control
+    token, run_id = grant(control)
+    store.claim(token, 'p2a', 'a' * 64, identity)
+    class UnreadableUsage:
+        @property
+        def prompt_tokens(self):
+            raise ValueError('secret response')
+    sdk, completion = fake_client([[fake_chunk(usage=UnreadableUsage())]])
+    with pytest.raises(C1ControlError, match='usage_unknown'):
+        request(GuardedChatClient(sdk, store, run_id, identity))
+    view = store.get_run(run_id)
+    assert view['model_calls'][0]['diagnostic']['phase'] == 'usage_invalid'
+    assert view['model_calls'][0]['diagnostic']['exception_type'] == 'OtherError'
+    assert view['unknown_usage_calls'] == 1 and completion.calls == 1
+    assert 'secret response' not in json.dumps(view)
+
+
+def test_old_call_without_diagnostic_remains_readable(control):
+    store, identity, _ = control
+    token, run_id = grant(control)
+    store.claim(token, 'p2a', 'a' * 64, identity)
+    call_id, _ = store.reserve_request(run_id, identity, 'gpt-6.1-sol', [{'content': 'x'}])
+    store.mark_dispatch_pending(call_id)
+    store.mark_unknown(call_id)
+    reopened = C1Store(store.path)
+    assert reopened.get_run(run_id)['model_calls'][0]['diagnostic'] is None
+
+
+def test_diagnostic_persistence_failure_leaves_dispatch_unknown_and_blocks_replay(control):
+    store, identity, _ = control
+    token, run_id = grant(control)
+    store.claim(token, 'p2a', 'a' * 64, identity)
+    with sqlite3.connect(store.path) as db:
+        db.execute("CREATE TRIGGER fail_diagnostic BEFORE INSERT ON c1_call_diagnostic "
+                   "BEGIN SELECT RAISE(ABORT, 'synthetic failure'); END")
+    sdk, completion = fake_client([ConnectionError('sensitive')])
+    client = GuardedChatClient(sdk, store, run_id, identity)
+    with pytest.raises(sqlite3.Error):
+        request(client)
+    view = store.get_run(run_id)
+    assert view['status'] == 'unknown_usage' and not view['cost_complete']
+    assert view['model_calls'][0]['status'] == 'dispatch_pending'
+    with pytest.raises(ModelConfigurationError):
+        request(client)
+    assert completion.calls == 1
+
+
+def test_legacy_ledger_gains_empty_diagnostics_without_rewriting_calls(control):
+    store, identity, _ = control
+    token, run_id = grant(control)
+    store.claim(token, 'p2a', 'a' * 64, identity)
+    call_id, _ = store.reserve_request(run_id, identity, 'gpt-6.1-sol', [{'content': 'x'}])
+    store.mark_dispatch_pending(call_id)
+    store.mark_unknown(call_id, 'legacy_error')
+    with sqlite3.connect(store.path) as db:
+        before = db.execute('SELECT * FROM c1_call WHERE model_call_id=?', (call_id,)).fetchone()
+        db.execute('DROP TABLE c1_call_diagnostic')
+    reopened = C1Store(store.path)
+    with sqlite3.connect(store.path) as db:
+        after = db.execute('SELECT * FROM c1_call WHERE model_call_id=?', (call_id,)).fetchone()
+    assert before == after
+    assert reopened.get_run(run_id)['model_calls'][0]['diagnostic'] is None

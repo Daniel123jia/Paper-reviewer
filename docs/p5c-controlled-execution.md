@@ -109,3 +109,22 @@ physical wall-clock guarantee.
 No C1 request path loads the blind reference scientific questions into a model
 prompt. The frozen reference files are used only by the preflight to verify
 their identity and byte hashes; scoring occurs after a result is sealed.
+
+## Redacted failure diagnostics
+
+For future C1 calls, the private ledger records a diagnostic phase for SDK
+creation, stream reading, missing or invalid Usage, returned-model mismatch,
+or ledger settlement failure. The record contains only a fixed exception-class
+label, an HTTP status when supplied by the SDK, a strictly validated request ID,
+and tri-state indicators for receipt of a stream chunk, Usage, and model label.
+A null value means unknown. Request IDs not matching `req_` followed by 8–64
+alphanumeric characters are discarded; some valid supplier IDs may therefore
+be unavailable. The ledger does not save exception messages, headers, request
+or response bodies, credentials, or blind references in this diagnostic.
+
+The diagnostic and unknown-usage transition are persisted together. If the
+ledger cannot persist them, a previously dispatched call remains pending and
+is treated as unknown; the diagnostic may be unavailable. Old call rows remain
+readable without diagnostics and are not retroactively classified. Opening an
+existing C1 ledger adds an empty diagnostics table without rewriting old calls.
+These records do not establish whether the supplier processed or billed a call.

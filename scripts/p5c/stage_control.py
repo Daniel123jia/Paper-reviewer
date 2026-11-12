@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 import json
 import secrets
 import sqlite3
@@ -170,6 +171,14 @@ class C1Store:
                     UNIQUE(run_id, ordinal),
                     FOREIGN KEY(run_id) REFERENCES c1_stage(run_id)
                 );
+                CREATE TABLE IF NOT EXISTS c1_call_diagnostic (
+                    model_call_id TEXT PRIMARY KEY,
+                    phase TEXT NOT NULL, exception_type TEXT,
+                    http_status INTEGER, request_id TEXT,
+                    stream_chunk_received INTEGER, usage_received INTEGER,
+                    model_received INTEGER,
+                    FOREIGN KEY(model_call_id) REFERENCES c1_call(model_call_id)
+                );
             """)
         os.chmod(self.path, 0o600)
 
@@ -306,7 +315,7 @@ class C1Store:
             if db.total_changes != 1:
                 raise C1ControlError("reservation_missing")
 
-    def mark_unknown(self, call_id: str, code: str = "usage_unknown"):
+    def mark_unknown(self, call_id: str, code: str = "usage_unknown", *, diagnostic=None):
         with self._connect() as db:
             db.execute("BEGIN IMMEDIATE")
             row = db.execute("SELECT run_id, status FROM c1_call WHERE model_call_id=?", (call_id,)).fetchone()
@@ -315,6 +324,12 @@ class C1Store:
             db.execute("UPDATE c1_call SET status='unknown_usage', error_code=? WHERE model_call_id=?",
                        (code, call_id))
             db.execute("UPDATE c1_stage SET status='unknown_usage' WHERE run_id=?", (row["run_id"],))
+            if diagnostic is not None:
+                db.execute("INSERT OR IGNORE INTO c1_call_diagnostic VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                           (call_id, diagnostic["phase"], diagnostic["exception_type"],
+                            diagnostic["http_status"], diagnostic["request_id"],
+                            diagnostic["stream_chunk_received"], diagnostic["usage_received"],
+                            diagnostic["model_received"]))
 
     def settle_usage(self, call_id: str, usage, actual_model: str | None,
                      expected_model: str):
@@ -414,6 +429,16 @@ class C1Store:
                 raise C1ControlError("run_missing")
             calls = [dict(item) for item in db.execute("SELECT * FROM c1_call "
                     "WHERE run_id=? ORDER BY ordinal", (run_id,))]
+            for call in calls:
+                diagnostic = db.execute("SELECT phase, exception_type, http_status, request_id, "
+                                        "stream_chunk_received, usage_received, model_received "
+                                        "FROM c1_call_diagnostic WHERE model_call_id=?",
+                                        (call["model_call_id"],)).fetchone()
+                call["diagnostic"] = dict(diagnostic) if diagnostic else None
+                if diagnostic:
+                    for key in ("stream_chunk_received", "usage_received", "model_received"):
+                        if call["diagnostic"][key] is not None:
+                            call["diagnostic"][key] = bool(call["diagnostic"][key])
         return {
             "run_id": run_id, "stage": row["stage"],
             "status": ("unknown_usage" if any(item["status"] == "dispatch_pending"
@@ -480,31 +505,76 @@ class _CompletionsProxy:
         except Exception as exc:
             code = exc.code if isinstance(exc, C1ControlError) else "c1_reservation_persist_failed"
             raise ModelConfigurationError([code]) from None
+        def diagnostic(phase, exc=None, *, chunk=None, usage=None, model=None):
+            # Only fixed exception names and validated identifiers may enter audit records.
+            import openai
+            exception_type = None
+            for cls in (openai.APITimeoutError, openai.APIConnectionError,
+                        openai.APIStatusError, sqlite3.Error, ConnectionError, TimeoutError):
+                if isinstance(exc, cls):
+                    exception_type = cls.__name__
+                    break
+            if exc is not None and exception_type is None:
+                exception_type = "OtherError"
+            status = getattr(exc, "status_code", None) if isinstance(exc, openai.APIStatusError) else None
+            status = status if type(status) is int and 100 <= status <= 599 else None
+            request_id = getattr(exc, "request_id", None) if isinstance(exc, openai.APIStatusError) else None
+            request_id = (request_id if isinstance(request_id, str) and
+                          re.fullmatch(r"req_[A-Za-z0-9]{8,64}", request_id) else None)
+            return {"phase": phase, "exception_type": exception_type,
+                    "http_status": status, "request_id": request_id,
+                    "stream_chunk_received": chunk, "usage_received": usage,
+                    "model_received": model}
+
         try:
             stream = self._completions.create(**kwargs)
-        except Exception:
-            self._store.mark_unknown(call_id)
+        except Exception as exc:
+            self._store.mark_unknown(call_id, diagnostic=diagnostic("sdk_create", exc))
             raise C1ControlError("usage_unknown") from None
 
         def guarded_stream():
             usage = None
             actual_model = None
+            received_chunk = False
             try:
                 for chunk in stream:
+                    received_chunk = True
                     actual_model = getattr(chunk, "model", None) or actual_model
                     usage = getattr(chunk, "usage", None) or usage
                     yield chunk
-                if usage is None:
-                    raise C1ControlError("usage_unknown")
+            except Exception as exc:
+                self._store.mark_unknown(call_id, diagnostic=diagnostic(
+                    "stream_read", exc, chunk=received_chunk,
+                    usage=usage is not None, model=bool(actual_model)))
+                raise C1ControlError("usage_unknown") from None
+            flags = {"chunk": received_chunk, "usage": usage is not None,
+                     "model": bool(actual_model)}
+            if usage is None:
+                self._store.mark_unknown(call_id, diagnostic=diagnostic("usage_missing", **flags))
+                raise C1ControlError("usage_unknown") from None
+            usage_error = None
+            try:
+                values = (getattr(usage, "prompt_tokens", None),
+                          getattr(usage, "completion_tokens", None),
+                          getattr(usage, "total_tokens", None))
+                valid_usage = (all(type(value) is int and value >= 0 for value in values)
+                               and values[0] + values[1] == values[2])
+            except Exception as exc:
+                usage_error = exc
+                valid_usage = False
+            if not valid_usage:
+                self._store.mark_unknown(call_id, diagnostic=diagnostic("usage_invalid", usage_error, **flags))
+                raise C1ControlError("usage_unknown") from None
+            if actual_model != self._identity.requested_model:
+                self._store.mark_unknown(call_id, diagnostic=diagnostic("model_mismatch", **flags))
+                raise C1ControlError("usage_unknown") from None
+            try:
                 self._store.settle_usage(call_id, usage, actual_model,
                                          self._identity.requested_model)
             except C1ActualBudgetExceeded:
                 raise
-            except C1ControlError:
-                self._store.mark_unknown(call_id)
-                raise C1ControlError("usage_unknown") from None
-            except Exception:
-                self._store.mark_unknown(call_id)
+            except Exception as exc:
+                self._store.mark_unknown(call_id, diagnostic=diagnostic("ledger_settlement", exc, **flags))
                 raise C1ControlError("usage_unknown") from None
 
         return guarded_stream()
