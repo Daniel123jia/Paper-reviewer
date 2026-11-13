@@ -1294,7 +1294,7 @@ def create_app(data_dir: Path) -> FastAPI:
                 if not review_run:
                     raise RuntimeError("professional review run missing")
                 db.execute("UPDATE professional_review_runs SET status = 'running' WHERE id = ?", (run_id,))
-            session = model_session(timeout=180, max_retries=0, c1_run_id=run_id if c1 else None)
+            session = model_session(timeout=300, max_retries=0, c1_run_id=run_id if c1 else None)
             model = session.configuration.model
 
             def model_call(stage, system, user):

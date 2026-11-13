@@ -40,9 +40,10 @@ def test_api_persists_all_dimensions_and_safe_call_diagnostics(tmp_path, monkeyp
     monkeypatch.delenv("PAPER_REVIEW_ACCESS_TOKEN", raising=False)
     configure_test_model(monkeypatch, key="fake-secret", model="requested-model")
 
+    sdk_options = []
     class FakeOpenAI:
         def __init__(self, **kwargs):
-            pass
+            sdk_options.append(kwargs)
 
         @property
         def chat(self):
@@ -66,6 +67,9 @@ def test_api_persists_all_dimensions_and_safe_call_diagnostics(tmp_path, monkeyp
     assert result["review_requirements"] is None
     assert [item["dimension_id"] for item in result["dimensions"]] == [f"D{i}" for i in range(1, 7)]
     assert len(result["model_calls"]) == 6
+    assert len(sdk_options) == 1
+    assert sdk_options[0]["timeout"] == 300
+    assert sdk_options[0]["max_retries"] == 0
     assert all(item["source_bundle_id"] == "sb1" and item["actual_model"] == "actual-model"
                for item in result["model_calls"])
     assert "fake-secret" not in str(result)
