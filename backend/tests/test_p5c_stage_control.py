@@ -922,6 +922,27 @@ def test_failure_diagnostics_are_classified_and_never_retry(control, monkeypatch
     assert completion.calls == 1 and view['unknown_usage_calls'] == 1
     assert all(s not in json.dumps(view) for s in ('sk-secret', 'private endpoint', 'request body', 'private db path'))
 
+@pytest.mark.parametrize('exception_name', ['ReadTimeout', 'ConnectError', 'RemoteProtocolError'])
+def test_httpx_stream_errors_are_safely_classified_and_stop(control, exception_name):
+    import httpx
+    store, identity, _ = control
+    token, run_id = grant(control)
+    store.claim(token, 'p2a', 'a' * 64, identity)
+    def broken_stream():
+        yield fake_chunk()
+        raise getattr(httpx, exception_name)('sensitive private data')
+    sdk, completion = fake_client([broken_stream()])
+    client = GuardedChatClient(sdk, store, run_id, identity)
+    with pytest.raises(C1ControlError, match='usage_unknown'):
+        request(client)
+    with pytest.raises(ModelConfigurationError):
+        request(client)
+    view = store.get_run(run_id)
+    assert view['model_calls'][0]['diagnostic']['exception_type'] == exception_name
+    assert view['model_calls'][0]['diagnostic']['phase'] == 'stream_read'
+    assert view['unknown_usage_calls'] == 1 and completion.calls == 1
+    assert 'sensitive private data' not in json.dumps(view)
+
 @pytest.mark.parametrize('request_id,expected', [('req_ABC123456', 'req_ABC123456'),
                                                 ('req_sk-secret/path', None)])
 def test_sdk_status_diagnostic_sanitizes_request_id(control, request_id, expected):

@@ -508,9 +508,13 @@ class _CompletionsProxy:
         def diagnostic(phase, exc=None, *, chunk=None, usage=None, model=None):
             # Only fixed exception names and validated identifiers may enter audit records.
             import openai
+            import httpx
             exception_type = None
             for cls in (openai.APITimeoutError, openai.APIConnectionError,
-                        openai.APIStatusError, sqlite3.Error, ConnectionError, TimeoutError):
+                        openai.APIStatusError, httpx.ReadTimeout, httpx.ConnectTimeout,
+                        httpx.WriteTimeout, httpx.PoolTimeout, httpx.ConnectError,
+                        httpx.ReadError, httpx.WriteError, httpx.RemoteProtocolError,
+                        httpx.LocalProtocolError, sqlite3.Error, ConnectionError, TimeoutError):
                 if isinstance(exc, cls):
                     exception_type = cls.__name__
                     break
