@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import uuid
+import time
 from dataclasses import asdict, dataclass
 from decimal import Decimal
 from pathlib import Path
@@ -25,10 +26,11 @@ class AutoReviewBudget:
     max_cost_usd: Decimal
     input_usd_per_million: Decimal
     output_usd_per_million: Decimal
+    max_duration_seconds: int = 3600
 
     def __post_init__(self):
         ints = (self.max_calls, self.max_input_tokens, self.max_output_tokens,
-                self.max_output_tokens_per_request)
+                self.max_output_tokens_per_request, self.max_duration_seconds)
         amounts = (self.max_cost_usd, self.input_usd_per_million, self.output_usd_per_million)
         if (any(type(x) is not int or x <= 0 for x in ints)
                 or self.max_output_tokens_per_request > self.max_output_tokens
@@ -62,6 +64,10 @@ class AutoReviewLedger:
                status TEXT NOT NULL, input_estimate INTEGER NOT NULL, output_reservation INTEGER NOT NULL,
                input_tokens INTEGER, output_tokens INTEGER, known_cost TEXT, actual_model TEXT);
             ''')
+            for table in ('auto_review_budget_tasks', 'auto_review_stage_budgets'):
+                columns = {row['name'] for row in db.execute(f'PRAGMA table_info({table})')}
+                if 'started_at' not in columns:
+                    db.execute(f'ALTER TABLE {table} ADD COLUMN started_at REAL')
 
     def connect(self):
         db = sqlite3.connect(self.path, timeout=30)
@@ -76,8 +82,8 @@ class AutoReviewLedger:
                for budget in stages.values()):
             raise ValueError('price_snapshot_mismatch')
         with self.connect() as db:
-            db.execute('INSERT INTO auto_review_budget_tasks VALUES (?,?,?,?)', (task_id, total.encode(), 'running', requested_model))
-            db.executemany('INSERT INTO auto_review_stage_budgets VALUES (?,?,?)',
+            db.execute('INSERT INTO auto_review_budget_tasks (id,budget,status,requested_model,started_at) VALUES (?,?,?,?,?)', (task_id, total.encode(), 'running', requested_model,time.time()))
+            db.executemany('INSERT INTO auto_review_stage_budgets (task_id,stage,budget) VALUES (?,?,?)',
                            [(task_id, stage, budget.encode()) for stage, budget in stages.items()])
 
     @staticmethod
@@ -95,21 +101,27 @@ class AutoReviewLedger:
                 or output_used + output > budget.max_output_tokens or cost + reserve > budget.max_cost_usd):
             raise BudgetBlocked('budget_exhausted')
 
-    def reserve(self, task_id, stage, *, input_estimate, output_reservation):
+    def reserve(self, task_id, stage, *, input_estimate, output_reservation, call_id=None):
         if type(input_estimate) is not int or input_estimate < 0 or type(output_reservation) is not int or output_reservation <= 0:
             raise BudgetBlocked('invalid_reservation')
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
             task = db.execute('SELECT * FROM auto_review_budget_tasks WHERE id=?', (task_id,)).fetchone()
-            stage_row = db.execute('SELECT budget FROM auto_review_stage_budgets WHERE task_id=? AND stage=?', (task_id, stage)).fetchone()
+            stage_row = db.execute('SELECT * FROM auto_review_stage_budgets WHERE task_id=? AND stage=?', (task_id, stage)).fetchone()
             if not task or task['status'] != 'running' or not stage_row:
                 raise BudgetBlocked('task_blocked')
+            now = time.time()
+            if ((task['started_at'] is not None and now-task['started_at'] >= AutoReviewBudget.decode(task['budget']).max_duration_seconds)
+                    or (stage_row['started_at'] is not None and now-stage_row['started_at'] >= AutoReviewBudget.decode(stage_row['budget']).max_duration_seconds)):
+                raise BudgetBlocked('duration_exhausted')
+            if stage_row['started_at'] is None:
+                db.execute('UPDATE auto_review_stage_budgets SET started_at=? WHERE task_id=? AND stage=?', (now,task_id,stage))
             rows = db.execute('SELECT * FROM auto_review_calls WHERE task_id=?', (task_id,)).fetchall()
             if any(row['status'] in ('reserved', 'unknown_usage', 'dispatch_pending') for row in rows):
                 raise BudgetBlocked('unsettled_request')
             self._admit(AutoReviewBudget.decode(task['budget']), rows, input_estimate, output_reservation)
             self._admit(AutoReviewBudget.decode(stage_row['budget']), [r for r in rows if r['stage'] == stage], input_estimate, output_reservation)
-            call_id = uuid.uuid4().hex
+            call_id = call_id or uuid.uuid4().hex
             db.execute('INSERT INTO auto_review_calls (id,task_id,stage,status,input_estimate,output_reservation) VALUES (?,?,?,?,?,?)',
                        (call_id, task_id, stage, 'reserved', input_estimate, output_reservation))
             return call_id
@@ -135,7 +147,7 @@ class AutoReviewLedger:
             raise BudgetBlocked('usage_invalid')
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
-            row = db.execute("SELECT c.*,s.budget,t.requested_model FROM auto_review_calls c JOIN auto_review_stage_budgets s ON s.task_id=c.task_id AND s.stage=c.stage JOIN auto_review_budget_tasks t ON t.id=c.task_id WHERE c.id=? AND c.status='dispatch_pending'", (call_id,)).fetchone()
+            row = db.execute("SELECT c.*,s.budget,s.started_at AS stage_started_at,t.started_at AS task_started_at,t.requested_model,t.budget AS total_budget FROM auto_review_calls c JOIN auto_review_stage_budgets s ON s.task_id=c.task_id AND s.stage=c.stage JOIN auto_review_budget_tasks t ON t.id=c.task_id WHERE c.id=? AND c.status='dispatch_pending'", (call_id,)).fetchone()
             if not row:
                 raise BudgetBlocked('invalid_call_state')
             if actual_model != row['requested_model']:
@@ -153,7 +165,9 @@ class AutoReviewLedger:
                 return (sum(r['input_tokens'] or 0 for r in rows) > limits.max_input_tokens
                         or sum(r['output_tokens'] or 0 for r in rows) > limits.max_output_tokens
                         or sum((Decimal(r['known_cost'] or '0') for r in rows), Decimal(0)) > limits.max_cost_usd)
-            if output_tokens > row['output_reservation'] or exceeded(total, allrows) or exceeded(budget, stage_rows):
+            expired = ((row['task_started_at'] is not None and time.time()-row['task_started_at'] >= total.max_duration_seconds)
+                       or (row['stage_started_at'] is not None and time.time()-row['stage_started_at'] >= budget.max_duration_seconds))
+            if expired or output_tokens > row['output_reservation'] or exceeded(total, allrows) or exceeded(budget, stage_rows):
                 db.execute("UPDATE auto_review_budget_tasks SET status='budget_exhausted' WHERE id=?", (row['task_id'],))
 
     def recover_interrupted(self):

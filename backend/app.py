@@ -103,6 +103,11 @@ class AutoReviewCreateRequest(UnderstandingRunRequest):
     document_id: str
     total_budget: dict
     p2a_budget: dict
+    p2b_budget: dict | None = None
+    p2c_budget: dict | None = None
+    p3_budget: dict | None = None
+    p4_budget: dict | None = None
+    review_requirements: str | None = Field(default=None, max_length=2000)
 
 
 class AutoReviewStartRequest(BaseModel):
@@ -441,9 +446,18 @@ def create_app(data_dir: Path) -> FastAPI:
             );
         """)
         initialize_p4_tables(db)
-        recover_p4_generation_runs(
-            db, time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        )
+        # A second app instance may inspect this DB while its single auto worker
+        # is alive. Recovery must never relabel that worker's in-flight P4 call.
+        recovery_fd = os.open(data_dir / 'auto-review-worker.lock', os.O_CREAT | os.O_RDWR, 0o600)
+        try:
+            try:
+                fcntl.flock(recovery_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                pass
+            else:
+                recover_p4_generation_runs(db, time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
+        finally:
+            os.close(recovery_fd)
         columns = {row[1] for row in db.execute("PRAGMA table_info(review_findings)")}
         if "support_assessment" not in columns:
             db.execute("ALTER TABLE review_findings ADD COLUMN support_assessment TEXT NOT NULL DEFAULT ''")
@@ -514,6 +528,14 @@ def create_app(data_dir: Path) -> FastAPI:
                 status TEXT NOT NULL, p2a_run_id TEXT, error TEXT,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)''')
+            db.execute('''CREATE TABLE IF NOT EXISTS auto_review_artifacts (
+                task_id TEXT NOT NULL, stage TEXT NOT NULL, run_id TEXT NOT NULL,
+                source_bundle_id TEXT NOT NULL, sha256 TEXT NOT NULL,
+                PRIMARY KEY(task_id,stage))''')
+            columns = {row['name'] for row in db.execute('PRAGMA table_info(auto_review_tasks)')}
+            for name in ('p2b_run_id', 'p2c_run_id', 'p3_run_id', 'p4_project_id', 'p4_draft_id', 'review_requirements'):
+                if name not in columns:
+                    db.execute(f'ALTER TABLE auto_review_tasks ADD COLUMN {name} TEXT')
         recovery_fd = os.open(auto_lock_path, os.O_CREAT | os.O_RDWR, 0o600)
         try:
             try:
@@ -525,6 +547,8 @@ def create_app(data_dir: Path) -> FastAPI:
                 with connect() as db:
                     db.execute("UPDATE auto_review_tasks SET status=CASE WHEN id IN (SELECT id FROM auto_review_budget_tasks WHERE status='unknown_usage') THEN 'unknown_usage' ELSE 'interrupted' END, updated_at=CURRENT_TIMESTAMP WHERE status='running'")
                     db.execute("UPDATE paper_understanding_runs SET status='failed',error='auto_review_interrupted',finished_at=datetime('now') WHERE status IN ('queued','running') AND id IN (SELECT p2a_run_id FROM auto_review_tasks WHERE status IN ('unknown_usage','interrupted'))")
+                    for stage, table in (('p2b','professional_review_runs'),('p2c','candidate_consolidation_runs'),('p3','evidence_verification_runs')):
+                        db.execute(f"UPDATE {table} SET status='failed',error='auto_review_interrupted',finished_at=datetime('now') WHERE status IN ('queued','running') AND id IN (SELECT {stage}_run_id FROM auto_review_tasks WHERE status IN ('unknown_usage','interrupted'))")
         finally:
             os.close(recovery_fd)
     app = FastAPI(title="AI 论文深度审稿工作台")
@@ -787,14 +811,39 @@ def create_app(data_dir: Path) -> FastAPI:
             max_duration_ms=int(os.environ.get("P2A_MAX_DURATION_MS", "1800000")),
         )
 
-    def streamed_understanding_call(session, model, stage, system, user, auto_task_id=None, output_limit=None):
+    auto_stage_tables = {'p2a':'paper_understanding_runs','p2b':'professional_review_runs',
+                         'p2c':'candidate_consolidation_runs','p3':'evidence_verification_runs'}
+
+    def auto_artifact(db, task_id, stage, run_id, *, verify=False):
+        row = db.execute(f'SELECT * FROM {auto_stage_tables[stage]} WHERE id=?',(run_id,)).fetchone()
+        fields = ('source_bundle_json','review_plan','paper_profile','claim_evidence_map') if stage=='p2a' else ('result_json',)
+        if not row or row['status'] not in ('completed','limited') or not all(row[key] for key in fields):
+            raise ValueError('auto_review_artifact_incomplete')
+        payload = {key:json.loads(row[key]) for key in fields}
+        digest = hashlib.sha256(json.dumps(payload,sort_keys=True,ensure_ascii=False,separators=(',',':')).encode()).hexdigest()
+        if verify:
+            saved = db.execute('SELECT * FROM auto_review_artifacts WHERE task_id=? AND stage=?',(task_id,stage)).fetchone()
+            if not saved or saved['run_id']!=run_id or saved['source_bundle_id']!=row['source_bundle_id'] or saved['sha256']!=digest:
+                raise ValueError('auto_review_artifact_changed')
+        else:
+            db.execute('INSERT INTO auto_review_artifacts VALUES (?,?,?,?,?)',(task_id,stage,run_id,row['source_bundle_id'],digest))
+
+    def validate_auto_source(task_id):
+        with connect() as db:
+            job = db.execute('SELECT document_id,pdf_sha256 FROM auto_review_tasks WHERE id=?',(task_id,)).fetchone()
+            document = document_or_404(db,job['document_id']) if job else None
+        if not document or document['sha256'] != job['pdf_sha256'] or hashlib.sha256((files_dir / f"{job['document_id']}.pdf").read_bytes()).hexdigest() != job['pdf_sha256']:
+            raise ModelConfigurationError(['auto_review_source_changed'])
+
+    def streamed_understanding_call(session, model, stage, system, user, auto_task_id=None, output_limit=None, budget_stage='p2a'):
         started = time.perf_counter()
         messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
         call_id = None
         if auto_task_id:
             validate_model_session_configuration(session, MODEL_ENVIRONMENT_FILE, requested_model=model)
+            validate_auto_source(auto_task_id)
             try:
-                call_id = auto_ledger.reserve(auto_task_id, 'p2a', input_estimate=sum(len(m['content'].encode('utf-8')) for m in messages), output_reservation=output_limit)
+                call_id = auto_ledger.reserve(auto_task_id, budget_stage, input_estimate=sum(len(m['content'].encode('utf-8')) for m in messages), output_reservation=output_limit)
             except BudgetBlocked:
                 auto_ledger.mark_budget_exhausted(auto_task_id)
                 raise ModelConfigurationError(['auto_review_budget_exhausted']) from None
@@ -809,6 +858,8 @@ def create_app(data_dir: Path) -> FastAPI:
             stream = model_completion(session, **kwargs)
             for chunk in stream:
                 actual_model = chunk.model or actual_model
+                if auto_task_id and actual_model and actual_model != model:
+                    raise ModelConfigurationError(['auto_review_response_model_mismatch'])
                 usage = chunk.usage or usage
                 if chunk.choices and chunk.choices[0].delta.content:
                     pieces.append(chunk.choices[0].delta.content)
@@ -1068,7 +1119,7 @@ def create_app(data_dir: Path) -> FastAPI:
                 on_trace=lambda trace: persist_understanding_trace(run_id, trace),
                 on_n3_checkpoint=lambda checkpoint: persist_n3_checkpoint(
                     run_id, bundle, checkpoint),
-                budget=c1.p2_budget(run_id) if c1 else (RunBudget(max_calls=auto_budget.max_calls, max_input_tokens=auto_budget.max_input_tokens, max_output_tokens=auto_budget.max_output_tokens) if auto_budget else p2a_budget()))
+                budget=c1.p2_budget(run_id) if c1 else (RunBudget(max_calls=auto_budget.max_calls, max_input_tokens=auto_budget.max_input_tokens, max_output_tokens=auto_budget.max_output_tokens, max_duration_ms=auto_budget.max_duration_seconds*1000) if auto_budget else p2a_budget()))
             if auto_row:
                 validate_understanding_snapshot(bundle, plan, profile, mapping, run_id, 'completed')
             with connect() as db:
@@ -1093,10 +1144,14 @@ def create_app(data_dir: Path) -> FastAPI:
             if auto_row:
                 with connect() as db:
                     state = db.execute('SELECT status,error FROM paper_understanding_runs WHERE id=?', (run_id,)).fetchone()
+                    if state['status'] == 'completed':
+                        auto_artifact(db,auto_row['id'],'p2a',run_id)
                     budget_state = auto_ledger.task_status(auto_row['id'])
                     if auto_ledger.summary(auto_row['id'])['unknown_usage_calls']:
                         budget_state = 'unknown_usage'
                     final = budget_state if budget_state in ('unknown_usage', 'budget_exhausted') else state['status']
+                    if final == 'completed' and db.execute("SELECT 1 FROM auto_review_stage_budgets WHERE task_id=? AND stage='p2b'", (auto_row['id'],)).fetchone():
+                        final = 'running'
                     db.execute('UPDATE auto_review_tasks SET status=?,error=?,updated_at=CURRENT_TIMESTAMP WHERE id=?', (final, state['error'], auto_row['id']))
                     db.execute("UPDATE auto_review_budget_tasks SET status=? WHERE id=? AND status='running'", (final, auto_row['id']))
             if c1:
@@ -1200,6 +1255,10 @@ def create_app(data_dir: Path) -> FastAPI:
                 return AutoReviewBudget(**values)
             total = parse_budget(payload.total_budget)
             stage = parse_budget(payload.p2a_budget)
+            p2b_stage = parse_budget(payload.p2b_budget) if payload.p2b_budget is not None else None
+            p2c_stage = parse_budget(payload.p2c_budget) if payload.p2c_budget is not None else None
+            p3_stage = parse_budget(payload.p3_budget) if payload.p3_budget is not None else None
+            p4_stage = parse_budget(payload.p4_budget) if payload.p4_budget is not None else None
         except (ValueError, TypeError, KeyError, InvalidOperation):
             raise HTTPException(422, detail={'code': 'auto_review_budget_invalid'}) from None
         config = model_configuration_or_503()
@@ -1208,11 +1267,22 @@ def create_app(data_dir: Path) -> FastAPI:
             document = document_or_404(db, payload.document_id)
         if (total.input_usd_per_million, total.output_usd_per_million) != (stage.input_usd_per_million, stage.output_usd_per_million):
             raise HTTPException(422, detail={'code': 'auto_review_budget_invalid'}) from None
+        if p2b_stage and (total.input_usd_per_million, total.output_usd_per_million) != (p2b_stage.input_usd_per_million, p2b_stage.output_usd_per_million):
+            raise HTTPException(422, detail={'code': 'auto_review_budget_invalid'})
+        if any(stage_budget and (stage_budget.input_usd_per_million, stage_budget.output_usd_per_million) != (total.input_usd_per_million, total.output_usd_per_million) for stage_budget in (p2c_stage, p3_stage, p4_stage)):
+            raise HTTPException(422, detail={'code': 'auto_review_budget_invalid'})
+        if (p2c_stage and not p2b_stage) or (p3_stage and not p2c_stage) or (p4_stage and not p3_stage):
+            raise HTTPException(422, detail={'code': 'auto_review_stage_budget_missing'})
         with connect() as db:
-            db.execute('INSERT INTO auto_review_budget_tasks VALUES (?,?,?,?)', (task_id,total.encode(),'pending',config.model))
-            db.execute('INSERT INTO auto_review_stage_budgets VALUES (?,?,?)', (task_id,'p2a',stage.encode()))
-            db.execute('INSERT INTO auto_review_tasks (id,document_id,pdf_sha256,config_fingerprint,target_journal,special_requirements,status) VALUES (?,?,?,?,?,?,?)',
-                       (task_id,payload.document_id,document['sha256'],auto_config_fingerprint(config),payload.target_journal,payload.special_requirements,'pending'))
+            db.execute('INSERT INTO auto_review_budget_tasks (id,budget,status,requested_model) VALUES (?,?,?,?)', (task_id,total.encode(),'pending',config.model))
+            db.execute('INSERT INTO auto_review_stage_budgets (task_id,stage,budget) VALUES (?,?,?)', (task_id,'p2a',stage.encode()))
+            if p2b_stage:
+                db.execute('INSERT INTO auto_review_stage_budgets (task_id,stage,budget) VALUES (?,?,?)', (task_id,'p2b',p2b_stage.encode()))
+            for stage_name, stage_budget in (('p2c', p2c_stage), ('p3', p3_stage), ('p4', p4_stage)):
+                if stage_budget:
+                    db.execute('INSERT INTO auto_review_stage_budgets (task_id,stage,budget) VALUES (?,?,?)', (task_id,stage_name,stage_budget.encode()))
+            db.execute('INSERT INTO auto_review_tasks (id,document_id,pdf_sha256,config_fingerprint,target_journal,special_requirements,review_requirements,status) VALUES (?,?,?,?,?,?,?,?)',
+                       (task_id,payload.document_id,document['sha256'],auto_config_fingerprint(config),payload.target_journal,payload.special_requirements,payload.review_requirements,'pending'))
         return {'id': task_id, 'status': 'pending'}
 
     @app.post('/api/auto-review-tasks/{task_id}/start', status_code=202)
@@ -1222,12 +1292,24 @@ def create_app(data_dir: Path) -> FastAPI:
         if not payload.confirm_budget:
             raise HTTPException(409, detail={'code': 'budget_confirmation_required'})
         config = model_configuration_or_503()
+        with connect() as db:
+            previous = db.execute('SELECT * FROM auto_review_tasks WHERE id=?',(task_id,)).fetchone()
+            if not previous:
+                raise HTTPException(404, detail={'code':'auto_review_not_found'})
+            if previous['config_fingerprint'] != auto_config_fingerprint(config):
+                raise HTTPException(409, detail={'code':'model_configuration_changed'})
+            if previous['status'] != 'pending':
+                return {'id':task_id,'p2a_run_id':previous['p2a_run_id'],'status':previous['status']}
         run_id = uuid.uuid4().hex
         lock_fd = os.open(auto_lock_path, os.O_CREAT | os.O_RDWR, 0o600)
         try:
             fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             os.close(lock_fd)
+            with connect() as db:
+                current = db.execute('SELECT status,p2a_run_id FROM auto_review_tasks WHERE id=?',(task_id,)).fetchone()
+            if current and current['p2a_run_id']:
+                return {'id':task_id,'p2a_run_id':current['p2a_run_id'],'status':current['status']}
             raise HTTPException(409, detail={'code': 'auto_review_worker_busy'}) from None
         try:
             with connect() as db:
@@ -1253,7 +1335,7 @@ def create_app(data_dir: Path) -> FastAPI:
                     db.execute("INSERT INTO paper_understanding_runs (id,document_id,status,target_journal,special_requirements,created_at) VALUES (?,?,'queued',?,?,datetime('now'))", (run_id,row['document_id'],row['target_journal'],row['special_requirements']))
                 except sqlite3.IntegrityError:
                     raise HTTPException(409, detail={'code': 'understanding_run_active'}) from None
-                db.execute("UPDATE auto_review_budget_tasks SET status='running' WHERE id=? AND status='pending'", (task_id,))
+                db.execute("UPDATE auto_review_budget_tasks SET status='running',started_at=? WHERE id=? AND status='pending'", (time.time(),task_id))
                 db.execute("UPDATE auto_review_tasks SET status='running',p2a_run_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (run_id,task_id))
         except Exception:
             os.close(lock_fd)
@@ -1261,10 +1343,23 @@ def create_app(data_dir: Path) -> FastAPI:
         def execute():
             try:
                 run_understanding(row['document_id'], run_id, UnderstandingRunRequest(target_journal=row['target_journal'], special_requirements=row['special_requirements']), auto_task_id=task_id)
+                with connect() as db:
+                    job = db.execute('SELECT status FROM auto_review_tasks WHERE id=?', (task_id,)).fetchone()
+                    has_p2b = db.execute("SELECT 1 FROM auto_review_stage_budgets WHERE task_id=? AND stage='p2b'", (task_id,)).fetchone()
+                if job and job['status'] == 'running' and has_p2b:
+                    execute_auto_p2b(task_id, run_id)
             finally:
                 os.close(lock_fd)
         background_tasks.add_task(execute)
         return {'id': task_id, 'p2a_run_id': run_id, 'status': 'running'}
+
+    @app.get('/api/documents/{document_id}/auto-review-tasks')
+    def list_auto_tasks(document_id: str):
+        if c1:
+            raise HTTPException(409, detail={'code': 'auto_review_not_available_in_c1'})
+        with connect() as db:
+            document_or_404(db, document_id)
+            return [dict(r) for r in db.execute('SELECT id,status,created_at FROM auto_review_tasks WHERE document_id=? ORDER BY rowid DESC', (document_id,))]
 
     @app.get('/api/auto-review-tasks/{task_id}')
     def get_auto_review_task(task_id: str):
@@ -1277,13 +1372,28 @@ def create_app(data_dir: Path) -> FastAPI:
             budget = db.execute('SELECT budget,requested_model FROM auto_review_budget_tasks WHERE id=?', (task_id,)).fetchone()
             stage = db.execute("SELECT budget FROM auto_review_stage_budgets WHERE task_id=? AND stage='p2a'", (task_id,)).fetchone()
             progress = db.execute('SELECT stage FROM paper_understanding_model_calls WHERE run_id=? ORDER BY rowid DESC LIMIT 1', (row['p2a_run_id'],)).fetchone() if row['p2a_run_id'] else None
-        result = {key: row[key] for key in ('id','document_id','pdf_sha256','target_journal','special_requirements','status','p2a_run_id','error','created_at','updated_at')}
+        result = {key: row[key] for key in ('id','document_id','pdf_sha256','target_journal','special_requirements','review_requirements','status','p2a_run_id','p2b_run_id','p2c_run_id','p3_run_id','p4_project_id','p4_draft_id','error','created_at','updated_at')}
         result.update(auto_ledger.summary(task_id))
+        stages = [{'stage': 'p1', 'status': 'completed', 'run_id': row['document_id']}]
+        with connect() as db:
+            for name, table in (('p2a','paper_understanding_runs'),('p2b','professional_review_runs'),('p2c','candidate_consolidation_runs'),('p3','evidence_verification_runs')):
+                run_id = row[name+'_run_id']
+                state = db.execute(f'SELECT status FROM {table} WHERE id=?',(run_id,)).fetchone() if run_id else None
+                stages.append({'stage':name, 'run_id':run_id, 'status':state['status'] if state else 'pending'})
+            p4 = db.execute('SELECT id,state FROM p4_generation_runs WHERE project_id=? ORDER BY rowid DESC LIMIT 1',(row['p4_project_id'],)).fetchone() if row['p4_project_id'] else None
+            stages.append({'stage':'p4','run_id':p4['id'] if p4 else None,'status':p4['state'] if p4 else 'pending'})
+            all_budgets = {r['stage']:json.loads(r['budget']) for r in db.execute('SELECT stage,budget FROM auto_review_stage_budgets WHERE task_id=?',(task_id,))}
+        with connect() as db:
+            result['artifacts'] = [dict(r) for r in db.execute('SELECT stage,run_id,source_bundle_id,sha256 FROM auto_review_artifacts WHERE task_id=?',(task_id,))]
+        result['stages'] = stages
+        result['stage_budgets'] = all_budgets
+        result['report_url'] = f"/api/review-report-drafts/{row['p4_draft_id']}" if row['p4_draft_id'] else None
+
         result.update({'total_budget': json.loads(budget[0]), 'p2a_budget': json.loads(stage[0]),
                        'requested_model': budget['requested_model'],
                        'model_configuration_id': row['config_fingerprint'][:16],
                        'pricing_status': 'estimated_unverified',
-                       'current_phase': 'p2a' if row['p2a_run_id'] else None,
+                       'current_phase': next((s['stage'] for s in reversed(stages) if s['run_id']), 'p1'),
                        'current_stage': progress['stage'] if progress else None,
                        'p2a_result_url': f"/api/understanding-runs/{row['p2a_run_id']}" if row['p2a_run_id'] else None})
         if result['unknown_usage_calls']:
@@ -1473,7 +1583,7 @@ def create_app(data_dir: Path) -> FastAPI:
             raise HTTPException(409, f"论文理解快照无效：{type(exc).__name__}") from None
         return row, bundle, plan, profile, mapping
 
-    def run_professional_review(understanding_run_id, run_id):
+    def run_professional_review(understanding_run_id, run_id, auto_task_id=None):
         try:
             row, bundle, plan, profile, mapping = load_professional_inputs(understanding_run_id)
             with connect() as db:
@@ -1486,8 +1596,19 @@ def create_app(data_dir: Path) -> FastAPI:
                 db.execute("UPDATE professional_review_runs SET status = 'running' WHERE id = ?", (run_id,))
             session = model_session(timeout=300, max_retries=0, c1_run_id=run_id if c1 else None)
             model = session.configuration.model
+            auto_budget = None
+            if auto_task_id:
+                with connect() as db:
+                    job = db.execute('SELECT * FROM auto_review_tasks WHERE id=? AND p2b_run_id=? AND status=?', (auto_task_id, run_id, 'running')).fetchone()
+                    budget_row = db.execute("SELECT budget FROM auto_review_stage_budgets WHERE task_id=? AND stage='p2b'", (auto_task_id,)).fetchone()
+                if not job or not budget_row or job['config_fingerprint'] != auto_config_fingerprint(session.configuration):
+                    raise ModelConfigurationError(['auto_review_configuration_invalid'])
+                auto_budget = AutoReviewBudget.decode(budget_row['budget'])
 
             def model_call(stage, system, user):
+                if auto_task_id:
+                    return streamed_understanding_call(session, model, stage, system, user,
+                        auto_task_id, auto_budget.max_output_tokens_per_request, budget_stage='p2b')
                 started = time.perf_counter()
                 stream = model_completion(session,
                     model=model, messages=[{"role": "system", "content": system},
@@ -1523,11 +1644,11 @@ def create_app(data_dir: Path) -> FastAPI:
 
             result = run_p2b(bundle, plan, profile, mapping, understanding_run_id, run_id,
                 model_call, model, row["target_journal"], review_run["review_requirements"],
-                budget=c1.p2_budget(run_id) if c1 else RunBudget(
+                budget=c1.p2_budget(run_id) if c1 else (RunBudget(max_calls=auto_budget.max_calls, max_input_tokens=auto_budget.max_input_tokens, max_output_tokens=auto_budget.max_output_tokens, max_duration_ms=auto_budget.max_duration_seconds*1000) if auto_budget else RunBudget(
                     max_calls=int(os.environ.get("P2B_MAX_CALLS", "18")),
                     max_input_tokens=int(os.environ.get("P2B_MAX_INPUT_TOKENS", "180000")),
                     max_output_tokens=int(os.environ.get("P2B_MAX_OUTPUT_TOKENS", "50000")),
-                    max_duration_ms=int(os.environ.get("P2B_MAX_DURATION_MS", "1800000"))),
+                    max_duration_ms=int(os.environ.get("P2B_MAX_DURATION_MS", "1800000")))),
                 on_dimension=persist_dimension, on_trace=persist_trace)
             with connect() as db:
                 db.execute("UPDATE professional_review_runs SET status = ?, result_json = ?, "
@@ -1542,12 +1663,48 @@ def create_app(data_dir: Path) -> FastAPI:
                            ("partial_failed" if completed else "failed",
                             f"professional_review:{type(exc).__name__}", run_id))
         finally:
+            if auto_task_id:
+                with connect() as db:
+                    state = db.execute('SELECT status,error FROM professional_review_runs WHERE id=?', (run_id,)).fetchone()
+                    if state['status'] in ('completed','limited'):
+                        auto_artifact(db,auto_task_id,'p2b',run_id)
+                    budget_state = auto_ledger.task_status(auto_task_id)
+                    if auto_ledger.summary(auto_task_id)['unknown_usage_calls']:
+                        budget_state = 'unknown_usage'
+                    final = budget_state if budget_state in ('unknown_usage', 'budget_exhausted') else state['status']
+                    if final in ('completed', 'limited') and db.execute("SELECT 1 FROM auto_review_stage_budgets WHERE task_id=? AND stage='p2c'", (auto_task_id,)).fetchone():
+                        final = 'running'
+                    db.execute('UPDATE auto_review_tasks SET status=?,error=?,updated_at=CURRENT_TIMESTAMP WHERE id=?', (final, state['error'], auto_task_id))
+                    db.execute("UPDATE auto_review_budget_tasks SET status=? WHERE id=? AND status='running'", (final, auto_task_id))
             if c1:
                 with connect() as db:
                     state = db.execute("SELECT status FROM professional_review_runs WHERE id=?",
                                        (run_id,)).fetchone()
                 c1.store.finish_stage(run_id, completed=bool(
                     state and state["status"] in {"completed", "limited"}))
+
+    def execute_auto_p2b(task_id, understanding_id):
+        try:
+            with connect() as db:
+                auto_artifact(db,task_id,'p2a',understanding_id,verify=True)
+            source, bundle, _, _, _ = load_professional_inputs(understanding_id)
+            new_id = uuid.uuid4().hex
+            with connect() as db:
+                db.execute('BEGIN IMMEDIATE')
+                job = db.execute("SELECT * FROM auto_review_tasks WHERE id=? AND p2a_run_id=? AND status='running'", (task_id, understanding_id)).fetchone()
+                if not job:
+                    raise ValueError('auto_review_source_invalid')
+                db.execute("INSERT INTO professional_review_runs (id,understanding_run_id,document_id,source_bundle_id,review_requirements,status,created_at) VALUES (?,?,?,?,?,'queued',datetime('now'))", (new_id,understanding_id,source['document_id'],bundle['bundle_id'],job['review_requirements']))
+                db.execute('UPDATE auto_review_tasks SET p2b_run_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=?', (new_id,task_id))
+            run_professional_review(understanding_id, new_id, auto_task_id=task_id)
+            with connect() as db:
+                job = db.execute('SELECT status FROM auto_review_tasks WHERE id=?', (task_id,)).fetchone()
+            if job and job['status'] == 'running':
+                execute_auto_p2c(task_id, new_id)
+        except Exception:
+            with connect() as db:
+                db.execute("UPDATE auto_review_tasks SET status='failed',error='p2b_source_invalid',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='running'", (task_id,))
+                db.execute("UPDATE auto_review_budget_tasks SET status='failed' WHERE id=? AND status='running'", (task_id,))
 
     @app.post("/api/understanding-runs/{run_id}/professional-review-runs", status_code=202)
     def create_professional_review_run(
@@ -1621,7 +1778,7 @@ def create_app(data_dir: Path) -> FastAPI:
             raise HTTPException(409, f"专业审查快照无效：{type(exc).__name__}") from None
         return row, bundle, plan, profile, mapping, review
 
-    def run_candidate_consolidation(professional_review_run_id, run_id):
+    def run_candidate_consolidation(professional_review_run_id, run_id, auto_task_id=None):
         try:
             source, bundle, plan, profile, mapping, review = load_consolidation_inputs(
                 professional_review_run_id)
@@ -1629,8 +1786,19 @@ def create_app(data_dir: Path) -> FastAPI:
                 db.execute("UPDATE candidate_consolidation_runs SET status = 'running' WHERE id = ?", (run_id,))
             session = model_session(timeout=180, max_retries=0, c1_run_id=run_id if c1 else None)
             model = session.configuration.model
+            auto_budget = None
+            if auto_task_id:
+                with connect() as db:
+                    job = db.execute("SELECT * FROM auto_review_tasks WHERE id=? AND p2c_run_id=? AND status='running'", (auto_task_id,run_id)).fetchone()
+                    budget_row = db.execute("SELECT budget FROM auto_review_stage_budgets WHERE task_id=? AND stage='p2c'", (auto_task_id,)).fetchone()
+                if not job or not budget_row or job['config_fingerprint'] != auto_config_fingerprint(session.configuration):
+                    raise ModelConfigurationError(['auto_review_configuration_invalid'])
+                auto_budget = AutoReviewBudget.decode(budget_row['budget'])
 
             def model_call(stage, system, user):
+                if auto_task_id:
+                    return streamed_understanding_call(session, model, stage, system, user,
+                        auto_task_id, auto_budget.max_output_tokens_per_request, budget_stage='p2c')
                 started = time.perf_counter()
                 stream = model_completion(session,
                     model=model, messages=[{"role": "system", "content": system},
@@ -1672,11 +1840,11 @@ def create_app(data_dir: Path) -> FastAPI:
             result = run_p2c(bundle, plan, profile, mapping, review,
                 source["understanding_run_id"], professional_review_run_id,
                 run_id, model_call, model, p2b_status=source["status"],
-                budget=c1.p2_budget(run_id) if c1 else RunBudget(
+                budget=c1.p2_budget(run_id) if c1 else (RunBudget(max_calls=auto_budget.max_calls, max_input_tokens=auto_budget.max_input_tokens, max_output_tokens=auto_budget.max_output_tokens, max_duration_ms=auto_budget.max_duration_seconds*1000) if auto_budget else RunBudget(
                     max_calls=int(os.environ.get("P2C_MAX_CALLS", "16")),
                     max_input_tokens=int(os.environ.get("P2C_MAX_INPUT_TOKENS", "200000")),
                     max_output_tokens=int(os.environ.get("P2C_MAX_OUTPUT_TOKENS", "50000")),
-                    max_duration_ms=int(os.environ.get("P2C_MAX_DURATION_MS", "1800000"))),
+                    max_duration_ms=int(os.environ.get("P2C_MAX_DURATION_MS", "1800000")))),
                 on_inventory=persist_inventory, on_batch=persist_batch, on_trace=persist_trace)
             with connect() as db:
                 db.execute("UPDATE candidate_consolidation_runs SET status = ?, result_json = ?, "
@@ -1691,12 +1859,48 @@ def create_app(data_dir: Path) -> FastAPI:
                            ("partial_failed" if row and row["inventory_json"] else "failed",
                             f"consolidation:{type(exc).__name__}", run_id))
         finally:
+            if auto_task_id:
+                with connect() as db:
+                    state = db.execute('SELECT status,error FROM candidate_consolidation_runs WHERE id=?', (run_id,)).fetchone()
+                    if state['status'] in ('completed','limited'):
+                        auto_artifact(db,auto_task_id,'p2c',run_id)
+                    budget_state = auto_ledger.task_status(auto_task_id)
+                    if auto_ledger.summary(auto_task_id)['unknown_usage_calls']:
+                        budget_state = 'unknown_usage'
+                    final = budget_state if budget_state in ('unknown_usage', 'budget_exhausted') else state['status']
+                    if final in ('completed', 'limited') and db.execute("SELECT 1 FROM auto_review_stage_budgets WHERE task_id=? AND stage='p3'", (auto_task_id,)).fetchone():
+                        final = 'running'
+                    db.execute('UPDATE auto_review_tasks SET status=?,error=?,updated_at=CURRENT_TIMESTAMP WHERE id=?', (final, state['error'], auto_task_id))
+                    db.execute("UPDATE auto_review_budget_tasks SET status=? WHERE id=? AND status='running'", (final, auto_task_id))
             if c1:
                 with connect() as db:
                     state = db.execute("SELECT status FROM candidate_consolidation_runs WHERE id=?",
                                        (run_id,)).fetchone()
                 c1.store.finish_stage(run_id, completed=bool(
                     state and state["status"] in {"completed", "limited"}))
+
+    def execute_auto_p2c(task_id, professional_id):
+        try:
+            with connect() as db:
+                auto_artifact(db,task_id,'p2b',professional_id,verify=True)
+            source, bundle, _, _, _, _ = load_consolidation_inputs(professional_id)
+            new_id = uuid.uuid4().hex
+            with connect() as db:
+                db.execute('BEGIN IMMEDIATE')
+                job = db.execute("SELECT * FROM auto_review_tasks WHERE id=? AND p2b_run_id=? AND status='running'", (task_id,professional_id)).fetchone()
+                if not job:
+                    raise ValueError('auto_review_source_invalid')
+                db.execute("INSERT INTO candidate_consolidation_runs (id,professional_review_run_id,understanding_run_id,document_id,source_bundle_id,status,created_at) VALUES (?,?,?,?,?,'queued',datetime('now'))", (new_id,professional_id,source['understanding_run_id'],source['document_id'],bundle['bundle_id']))
+                db.execute('UPDATE auto_review_tasks SET p2c_run_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=?', (new_id,task_id))
+            run_candidate_consolidation(professional_id, new_id, auto_task_id=task_id)
+            with connect() as db:
+                job = db.execute('SELECT status FROM auto_review_tasks WHERE id=?', (task_id,)).fetchone()
+            if job and job['status'] == 'running':
+                execute_auto_p3(task_id, new_id)
+        except Exception:
+            with connect() as db:
+                db.execute("UPDATE auto_review_tasks SET status='failed',error='p2c_source_invalid',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='running'", (task_id,))
+                db.execute("UPDATE auto_review_budget_tasks SET status='failed' WHERE id=? AND status='running'", (task_id,))
 
     @app.post("/api/professional-review-runs/{run_id}/consolidation-runs", status_code=202)
     def create_consolidation_run(run_id: str, background_tasks: BackgroundTasks,
@@ -1774,7 +1978,7 @@ def create_app(data_dir: Path) -> FastAPI:
             raise HTTPException(409, f"证据核验来源快照无效：{type(exc).__name__}") from None
         return row, bundle, plan, profile, mapping, review, consolidation, pdf_path
 
-    def run_evidence_verification(consolidation_run_id, run_id):
+    def run_evidence_verification(consolidation_run_id, run_id, auto_task_id=None):
         try:
             _, bundle, plan, profile, mapping, review, consolidation, pdf_path = \
                 load_p3_inputs(consolidation_run_id)
@@ -1783,8 +1987,19 @@ def create_app(data_dir: Path) -> FastAPI:
                            (run_id,))
             session = model_session(timeout=180, max_retries=0, c1_run_id=run_id if c1 else None)
             model = session.configuration.model
+            auto_budget = None
+            if auto_task_id:
+                with connect() as db:
+                    job = db.execute("SELECT * FROM auto_review_tasks WHERE id=? AND p3_run_id=? AND status='running'", (auto_task_id,run_id)).fetchone()
+                    budget_row = db.execute("SELECT budget FROM auto_review_stage_budgets WHERE task_id=? AND stage='p3'", (auto_task_id,)).fetchone()
+                if not job or not budget_row or job['config_fingerprint'] != auto_config_fingerprint(session.configuration):
+                    raise ModelConfigurationError(['auto_review_configuration_invalid'])
+                auto_budget = AutoReviewBudget.decode(budget_row['budget'])
 
             def model_call(stage, system, user):
+                if auto_task_id:
+                    return streamed_understanding_call(session, model, stage, system, user,
+                        auto_task_id, auto_budget.max_output_tokens_per_request, budget_stage='p3')
                 started = time.perf_counter()
                 stream = model_completion(session,
                     model=model, messages=[{"role": "system", "content": system},
@@ -1827,11 +2042,11 @@ def create_app(data_dir: Path) -> FastAPI:
 
             result = run_p3(bundle, plan, profile, mapping, review, consolidation,
                 pdf_path, run_id, model_call, model,
-                budget=c1.p2_budget(run_id) if c1 else RunBudget(
+                budget=c1.p2_budget(run_id) if c1 else (RunBudget(max_calls=auto_budget.max_calls, max_input_tokens=auto_budget.max_input_tokens, max_output_tokens=auto_budget.max_output_tokens, max_duration_ms=auto_budget.max_duration_seconds*1000) if auto_budget else RunBudget(
                     max_calls=int(os.environ.get("P3_MAX_CALLS", "48")),
                     max_input_tokens=int(os.environ.get("P3_MAX_INPUT_TOKENS", "450000")),
                     max_output_tokens=int(os.environ.get("P3_MAX_OUTPUT_TOKENS", "100000")),
-                    max_duration_ms=int(os.environ.get("P3_MAX_DURATION_MS", "2700000"))),
+                    max_duration_ms=int(os.environ.get("P3_MAX_DURATION_MS", "2700000")))),
                 region_dir=data_dir / "p3-regions" / run_id,
                 on_trace=persist_trace, on_task=persist_task, on_tool=persist_tool)
             with connect() as db:
@@ -1847,12 +2062,48 @@ def create_app(data_dir: Path) -> FastAPI:
                            ("partial_failed" if completed else "failed",
                             f"evidence_verification:{type(exc).__name__}", run_id))
         finally:
+            if auto_task_id:
+                with connect() as db:
+                    state = db.execute('SELECT status,error FROM evidence_verification_runs WHERE id=?', (run_id,)).fetchone()
+                    if state['status'] in ('completed','limited'):
+                        auto_artifact(db,auto_task_id,'p3',run_id)
+                    budget_state = auto_ledger.task_status(auto_task_id)
+                    if auto_ledger.summary(auto_task_id)['unknown_usage_calls']:
+                        budget_state = 'unknown_usage'
+                    final = budget_state if budget_state in ('unknown_usage', 'budget_exhausted') else state['status']
+                    if final in ('completed', 'limited') and db.execute("SELECT 1 FROM auto_review_stage_budgets WHERE task_id=? AND stage='p4'", (auto_task_id,)).fetchone():
+                        final = 'running'
+                    db.execute('UPDATE auto_review_tasks SET status=?,error=?,updated_at=CURRENT_TIMESTAMP WHERE id=?', (final, state['error'], auto_task_id))
+                    db.execute("UPDATE auto_review_budget_tasks SET status=? WHERE id=? AND status='running'", (final, auto_task_id))
             if c1:
                 with connect() as db:
                     state = db.execute("SELECT status FROM evidence_verification_runs WHERE id=?",
                                        (run_id,)).fetchone()
                 c1.store.finish_stage(run_id, completed=bool(
                     state and state["status"] in {"completed", "limited"}))
+
+    def execute_auto_p3(task_id, consolidation_id):
+        try:
+            with connect() as db:
+                auto_artifact(db,task_id,'p2c',consolidation_id,verify=True)
+            source, bundle, _, _, _, _, _, _ = load_p3_inputs(consolidation_id)
+            new_id = uuid.uuid4().hex
+            with connect() as db:
+                db.execute('BEGIN IMMEDIATE')
+                job = db.execute("SELECT * FROM auto_review_tasks WHERE id=? AND p2c_run_id=? AND status='running'", (task_id,consolidation_id)).fetchone()
+                if not job:
+                    raise ValueError('auto_review_source_invalid')
+                db.execute("INSERT INTO evidence_verification_runs (id,consolidation_run_id,professional_review_run_id,understanding_run_id,document_id,source_bundle_id,status,created_at) VALUES (?,?,?,?,?,?,'queued',datetime('now'))", (new_id,consolidation_id,source['professional_review_run_id'],source['understanding_run_id'],source['document_id'],bundle['bundle_id']))
+                db.execute('UPDATE auto_review_tasks SET p3_run_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=?', (new_id,task_id))
+            run_evidence_verification(consolidation_id, new_id, auto_task_id=task_id)
+            with connect() as db:
+                job = db.execute('SELECT status FROM auto_review_tasks WHERE id=?', (task_id,)).fetchone()
+            if job and job['status'] == 'running':
+                execute_auto_p4(task_id, new_id)
+        except Exception:
+            with connect() as db:
+                db.execute("UPDATE auto_review_tasks SET status='failed',error='p3_source_invalid',updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='running'", (task_id,))
+                db.execute("UPDATE auto_review_budget_tasks SET status='failed' WHERE id=? AND status='running'", (task_id,))
 
     @app.post("/api/candidate-consolidation-runs/{run_id}/evidence-verification-runs",
               status_code=202)
@@ -2613,7 +2864,43 @@ def create_app(data_dir: Path) -> FastAPI:
                  "pdf": "application/pdf"}[format]
         return Response(data, media_type=media, headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
-    register_p4_routes(
+    def execute_auto_p4(task_id, verification_id):
+        from backend.auto_review_p4 import AutoP4Bridge
+        from backend.p4_drafts_api import CreateDraftInput
+        try:
+            with connect() as db:
+                auto_artifact(db,task_id,'p3',verification_id,verify=True)
+                job = db.execute("SELECT * FROM auto_review_tasks WHERE id=? AND p3_run_id=? AND status='running'", (task_id,verification_id)).fetchone()
+                budget_row = db.execute("SELECT budget FROM auto_review_stage_budgets WHERE task_id=? AND stage='p4'", (task_id,)).fetchone()
+            if not job or not budget_row or job['config_fingerprint'] != auto_config_fingerprint(model_configuration_or_503()):
+                raise ValueError('auto_review_configuration_invalid')
+            bridge = AutoP4Bridge(auto_ledger, task_id, AutoReviewBudget.decode(budget_row['budget']), source_check=lambda:validate_auto_source(task_id), config_check=lambda config:auto_config_fingerprint(config)==job['config_fingerprint'])
+            project = p4_services[0](verification_id)
+            with connect() as db:
+                db.execute('UPDATE auto_review_tasks SET p4_project_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=?', (project['id'],task_id))
+            draft = p4_services[1](project['id'], CreateDraftInput(kind='internal', language='zh'), auto_context=bridge)
+            bridge.ensure_reconciled()
+            with connect() as db:
+                source = db.execute("SELECT source_bundle_id FROM auto_review_artifacts WHERE task_id=? AND stage='p3'",(task_id,)).fetchone()
+                digest = hashlib.sha256(json.dumps({k:draft[k] for k in ('body','plan','writing')},sort_keys=True,ensure_ascii=False,separators=(',',':')).encode()).hexdigest()
+                db.execute('INSERT INTO auto_review_artifacts VALUES (?,?,?,?,?)',(task_id,'p4',draft['generation_run_id'],source['source_bundle_id'],digest))
+                db.execute("UPDATE auto_review_tasks SET status='completed',p4_draft_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND status='running'", (draft['id'],task_id))
+                db.execute("UPDATE auto_review_budget_tasks SET status='completed' WHERE id=? AND status='running'", (task_id,))
+        except Exception as exc:
+            code = 'p4_generation_failed'
+            if isinstance(exc, HTTPException) and isinstance(exc.detail,dict):
+                safe_codes = {'p4_budget_exhausted','p4_usage_invalid','p4_budget_state_invalid','p4_budget_configuration_invalid','report_content_validation_failed','model_configuration_invalid'}
+                if exc.detail.get('code') in safe_codes:
+                    code = exc.detail['code']
+                if code == 'p4_budget_exhausted':
+                    auto_ledger.mark_budget_exhausted(task_id)
+            final = auto_ledger.task_status(task_id)
+            final = final if final in ('unknown_usage','budget_exhausted') else 'failed'
+            with connect() as db:
+                db.execute('UPDATE auto_review_tasks SET status=?,error=?,updated_at=CURRENT_TIMESTAMP WHERE id=?', (final,code,task_id))
+                db.execute("UPDATE auto_review_budget_tasks SET status=? WHERE id=? AND status='running'", (final,task_id))
+
+    p4_services = register_p4_routes(
         app, connect, files_dir, load_p3_inputs,
         lambda: model_session_or_503(timeout=180, max_retries=0,
                                      allow_c1_p4=True),

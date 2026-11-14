@@ -1,0 +1,34 @@
+import {test, expect} from '@playwright/test';
+import {readFile} from 'node:fs/promises';
+
+test('complete review uses real backend and fake SDK, refresh never dispatches', async ({page}) => {
+  test.setTimeout(90000);
+  await page.goto('/');
+  if(process.env.AUTO_REVIEW_UPLOAD_PDF) await page.locator('input[type=file]').setInputFiles(process.env.AUTO_REVIEW_UPLOAD_PDF);
+  await page.getByRole('button', {name:'完整AI审稿',exact:true}).click();
+  await expect(page.getByRole('heading', {name:'完整AI审稿',exact:true})).toBeVisible();
+  await page.getByRole('button', {name:'创建待启动任务'}).click();
+  await expect(page.getByTestId('auto-task-status')).toHaveText('pending');
+  await expect(page.getByRole('button',{name:'确认预算并开始完整审稿'})).toBeDisabled();
+  await page.getByRole('checkbox',{name:/我确认总预算和各阶段限额/}).check();
+  await page.getByRole('button',{name:'确认预算并开始完整审稿'}).click();
+  await expect(page.getByTestId('auto-task-status')).toHaveText('completed',{timeout:60000});
+  await expect(page.locator('.draft-preview .markdown-body')).toContainText('方法适用范围的澄清');
+  await page.locator('.analysis').evaluate(el=>{el.scrollTop=0;});
+  if(process.env.AUTO_REVIEW_SCREENSHOT) await page.screenshot({path:process.env.AUTO_REVIEW_SCREENSHOT.replace('.png','-progress.png'),fullPage:true});
+  const requests = await page.getByTestId('auto-request-count').textContent();
+  await page.reload();
+  await page.getByRole('button', {name:'完整AI审稿',exact:true}).click();
+  await expect(page.getByTestId('auto-task-status')).toHaveText('completed');
+  await expect(page.getByTestId('auto-request-count')).toHaveText(requests!);
+  await page.getByText('技术核验与人工复核').click();
+  await page.getByRole('button',{name:/原文第 1 页/}).first().click();
+  await expect(page.getByTestId('evidence-highlight')).toBeVisible();
+  const mdEvent=page.waitForEvent('download');
+  await page.getByRole('link',{name:'MD',exact:true}).click();
+  expect((await readFile((await (await mdEvent).path())!)).toString()).toContain('DRAFT');
+  const pdfEvent=page.waitForEvent('download');
+  await page.getByRole('link',{name:'PDF',exact:true}).click();
+  expect((await readFile((await (await pdfEvent).path())!)).subarray(0,5).toString()).toBe('%PDF-');
+  await page.screenshot({path:process.env.AUTO_REVIEW_SCREENSHOT || '/tmp/auto-review-completed.png',fullPage:true});
+});

@@ -59,8 +59,8 @@ const statusName: Record<string, string> = {
 const blankVisual = (): VisualForm => ({checked_rows_columns: '', checked_values_and_labels: '',
   metric_names_and_order: '', unresolved_configurations: '', reviewer_note: ''});
 
-export default function P4ReportPane({documentId, onEvidence}: {
-  documentId: string; onEvidence: (documentId: string, evidenceId: string) => void;
+export default function P4ReportPane({documentId, onEvidence, initialProjectId, allowGeneration = true}: {
+  documentId: string; initialProjectId?: string; allowGeneration?: boolean; onEvidence: (documentId: string, evidenceId: string) => void;
 }) {
   const [runs, setRuns] = useState<Run[]>([]);
   const [runId, setRunId] = useState('');
@@ -91,10 +91,10 @@ export default function P4ReportPane({documentId, onEvidence}: {
       if (cancelled) return;
       setRuns(nextRuns); setProjects(nextProjects);
       setRunId(nextRuns.find(item => ['completed', 'limited'].includes(item.status))?.id || '');
-      setProjectId(nextProjects[0]?.id || '');
+      setProjectId(nextProjects.find(item => item.id === initialProjectId)?.id || nextProjects[0]?.id || '');
     }).catch(cause => {if (!cancelled) setError(String(cause));});
     return () => {cancelled = true;};
-  }, [documentId]);
+  }, [documentId, initialProjectId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -260,10 +260,10 @@ export default function P4ReportPane({documentId, onEvidence}: {
             {!dirty && (['md', 'docx', 'pdf'] as const).map(format => <a key={format} href={`/api/review-report-drafts/${draft.id}/export?format=${format}${draft.approval_status === 'approved' ? '&final=true' : ''}`} download>{format.toUpperCase()}</a>)}</div>
           <small className="draft-usage">P4 模型调用 {draft.model_calls.length} 次 · 已知输入 {draft.model_calls.reduce((sum, call) => sum + (call.input_tokens ?? 0), 0)} Token · 已知输出 {draft.model_calls.reduce((sum, call) => sum + (call.output_tokens ?? 0), 0)} Token{unknownUsage > 0 && ` · ${unknownUsage} 次 Usage 未知，费用不完整`}</small>
         </div>}
-        <div className="p4-controls"><label>报告类型<select aria-label="P4 报告类型" value={kind} onChange={event => setKind(event.target.value as typeof kind)}>
+        {allowGeneration && <div className="p4-controls"><label>报告类型<select aria-label="P4 报告类型" value={kind} onChange={event => setKind(event.target.value as typeof kind)}>
           <option value="author">作者意见草稿</option><option value="internal">内部完整报告</option><option value="editor">编辑保密说明</option></select></label>
           <label>语言<select aria-label="P4 报告语言" value={language} onChange={event => setLanguage(event.target.value as typeof language)}><option value="zh">中文</option><option value="en">English</option></select></label>
-          <button disabled={busy} onClick={createDraft}>明确生成新草稿</button></div>
+          <button disabled={busy} onClick={createDraft}>明确生成新草稿</button></div>}
         {project.drafts.length > 0 && <div className="p4-drafts"><strong>打开已有草稿</strong>{project.drafts.map(item => <button key={item.id} onClick={() => openDraft(item.id)}>
           {item.kind} · {item.language} · 修订 {item.revision_number} · {item.approval_status}</button>)}</div>}
       </section>

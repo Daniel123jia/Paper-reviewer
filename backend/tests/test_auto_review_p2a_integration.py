@@ -1,6 +1,7 @@
 import io
 import sqlite3
 from types import SimpleNamespace
+import pytest
 
 from fastapi.testclient import TestClient
 
@@ -79,7 +80,7 @@ def test_real_p2a_engine_with_fake_sdk_and_persistent_ledger(tmp_path, monkeypat
         assert db.execute('select count(*) from auto_review_calls where task_id=? and status=?', (task['id'], 'usage_valid')).fetchone()[0] == 4
         assert db.execute('select p2a_run_id,status from auto_review_tasks where id=?', (task['id'],)).fetchone() == (detail['p2a_run_id'], 'completed')
     assert all(call['max_tokens'] == 500 and call['stream'] for call in calls)
-    assert client.post(f"/api/auto-review-tasks/{task['id']}/start", json={'confirm_budget': True}).status_code == 409
+    assert client.post(f"/api/auto-review-tasks/{task['id']}/start", json={'confirm_budget': True}).status_code == 202
     assert len(calls) == 4
 
 
@@ -127,7 +128,7 @@ def test_restart_reconciles_dispatched_request_without_replaying(tmp_path, monke
     assert detail['status'] == 'unknown_usage' and detail['unknown_usage_calls'] == 1
     assert detail['known_input_tokens'] == detail['known_output_tokens'] == 0
     assert restarted.get(f'/api/understanding-runs/{run_id}').json()['status'] == 'failed'
-    assert restarted.post(f'/api/auto-review-tasks/{task_id}/start', json={'confirm_budget': True}).status_code == 409
+    assert restarted.post(f'/api/auto-review-tasks/{task_id}/start', json={'confirm_budget': True}).status_code == 202
     assert not calls
 
 
@@ -188,3 +189,61 @@ def test_changed_pdf_is_blocked_before_dispatch(tmp_path, monkeypatch):
     response = client.post(f"/api/auto-review-tasks/{task['id']}/start", json={'confirm_budget': True})
     assert response.status_code == 409 and not calls
     assert client.get(f"/api/auto-review-tasks/{task['id']}").json()['status'] == 'pending'
+
+
+@pytest.mark.parametrize('through_p3', [False, True, 'p4'])
+def test_p2b_automatically_runs_through_real_engine_with_shared_budget(tmp_path, monkeypatch, through_p3):
+    from backend.tests.test_p2a_api import _fake_completion
+    import json
+    configure_test_model(monkeypatch, key='fake', model='actual-model')
+    calls = []
+    class FakeOpenAI:
+        def __init__(self, **kwargs):
+            assert kwargs['max_retries'] == 0
+        @property
+        def chat(self):
+            def create(**kwargs):
+                calls.append(kwargs)
+                if any(name in kwargs['messages'][0]['content'] for name in ('paper-type-planner/', 'paper-understanding/', 'contribution-evidence-mapper/', 'contribution-normalizer/')):
+                    chunks = _fake_completion(kwargs['messages'])
+                    chunks[-1].usage.total_tokens = 100
+                    return iter(chunks)
+                content = json.dumps({'inspection_focus': [], 'inspected_claim_ids': [],
+                    'inspected_source_refs': [], 'limitations': [], 'candidates': [],
+                    'no_issue_explanation': 'No concern in available evidence.'})
+                return iter([SimpleNamespace(model='actual-model', choices=[SimpleNamespace(delta=SimpleNamespace(content=content))], usage=None),
+                             SimpleNamespace(model='actual-model', choices=[], usage=SimpleNamespace(prompt_tokens=80, completion_tokens=20, total_tokens=100))])
+            return SimpleNamespace(completions=SimpleNamespace(create=create))
+    monkeypatch.setattr('backend.app.OpenAI', FakeOpenAI)
+    client = TestClient(create_app(tmp_path))
+    doc = client.post('/api/documents', files={'file': ('paper.pdf', io.BytesIO(_pdf()), 'application/pdf')}).json()
+    payload = {'document_id': doc['id'], 'total_budget': budget(max_calls=30, max_output_tokens=20000),
+               'p2a_budget': budget(), 'p2b_budget': budget()}
+    if through_p3:
+        payload.update({'p2c_budget': budget(), 'p3_budget': budget()})
+    if through_p3 == 'p4':
+        payload['p4_budget'] = budget()
+    task = client.post('/api/auto-review-tasks', json=payload).json()
+    assert not calls
+    client.post(f"/api/auto-review-tasks/{task['id']}/start", json={'confirm_budget': True})
+    detail = client.get(f"/api/auto-review-tasks/{task['id']}").json()
+    assert detail['p2b_run_id'], detail
+    p2b = client.get(f"/api/professional-review-runs/{detail['p2b_run_id']}").json()
+    assert p2b['status'] in ('completed', 'limited') and len(p2b['dimensions']) == 6
+    assert detail['request_count'] == len(calls) and all(call['max_tokens'] == 500 for call in calls)
+    assert any(call['stage'] == 'p2b' for call in detail['calls'])
+    if through_p3:
+        assert detail['p2c_run_id'] and detail['p3_run_id'], detail
+        p2c = client.get(f"/api/candidate-consolidation-runs/{detail['p2c_run_id']}").json()
+        p3 = client.get(f"/api/evidence-verification-runs/{detail['p3_run_id']}").json()
+        assert p2c['status'] in ('completed', 'limited') and p2c['result']
+        assert p3['status'] in ('completed', 'limited') and p3['result']
+
+    if through_p3 == 'p4':
+        assert detail['status'] == 'completed', detail
+        assert detail['p4_project_id'] and detail['p4_draft_id'], detail
+        draft = client.get(f"/api/review-report-drafts/{detail['p4_draft_id']}").json()
+        assert draft['kind'] == 'internal' and draft['language'] == 'zh'
+        assert draft['approval_status'] == 'pending' and draft['body']
+        exported = client.get(f"/api/review-report-drafts/{detail['p4_draft_id']}/export?format=md&mode=draft")
+        assert exported.status_code == 200, exported.text
