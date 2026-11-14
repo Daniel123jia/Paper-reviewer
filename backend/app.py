@@ -5,6 +5,8 @@ import re
 import sqlite3
 import time
 import uuid
+import fcntl
+from decimal import Decimal, InvalidOperation
 from dataclasses import replace
 from pathlib import Path
 
@@ -14,7 +16,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from dotenv import dotenv_values
 from openai import OpenAI
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StrictBool
+from backend.auto_review_budget import AutoReviewBudget, AutoReviewLedger, BudgetBlocked
 from typing import Literal
 
 from backend.review import parse_model_json, pick_review_evidence, retrieve_counterevidence, screen_candidates, suggest_formula_links
@@ -53,7 +56,7 @@ from backend.model_runtime import (REQUIRED_MODEL_ENV_KEYS,
                                    require_model_runtime_config,
                                    validate_model_session_configuration)
 from backend.p5c_runtime import C1Runtime
-from scripts.p5c.stage_control import C1ControlError, GuardedChatClient
+from scripts.p5c.stage_control import C1ActualBudgetExceeded, C1ControlError, GuardedChatClient
 
 
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024
@@ -94,6 +97,16 @@ class ReviewCaseRequest(BaseModel):
 class UnderstandingRunRequest(BaseModel):
     target_journal: str | None = Field(default=None, max_length=200)
     special_requirements: str | None = Field(default=None, max_length=2000)
+
+
+class AutoReviewCreateRequest(UnderstandingRunRequest):
+    document_id: str
+    total_budget: dict
+    p2a_budget: dict
+
+
+class AutoReviewStartRequest(BaseModel):
+    confirm_budget: StrictBool
 
 
 class ProfessionalReviewRunRequest(BaseModel):
@@ -490,6 +503,30 @@ def create_app(data_dir: Path) -> FastAPI:
             if completed and completed[column] in {"completed", "limited"}:
                 c1.store.recover_verified_completion(stage_row["run_id"])
 
+    auto_ledger = None
+    auto_lock_path = data_dir / 'auto-review-worker.lock'
+    if not c1:
+        auto_ledger = AutoReviewLedger(database)
+        with connect() as db:
+            db.execute('''CREATE TABLE IF NOT EXISTS auto_review_tasks (
+                id TEXT PRIMARY KEY, document_id TEXT NOT NULL, pdf_sha256 TEXT NOT NULL,
+                config_fingerprint TEXT NOT NULL, target_journal TEXT, special_requirements TEXT,
+                status TEXT NOT NULL, p2a_run_id TEXT, error TEXT,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)''')
+        recovery_fd = os.open(auto_lock_path, os.O_CREAT | os.O_RDWR, 0o600)
+        try:
+            try:
+                fcntl.flock(recovery_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                pass
+            else:
+                auto_ledger.recover_interrupted()
+                with connect() as db:
+                    db.execute("UPDATE auto_review_tasks SET status=CASE WHEN id IN (SELECT id FROM auto_review_budget_tasks WHERE status='unknown_usage') THEN 'unknown_usage' ELSE 'interrupted' END, updated_at=CURRENT_TIMESTAMP WHERE status='running'")
+                    db.execute("UPDATE paper_understanding_runs SET status='failed',error='auto_review_interrupted',finished_at=datetime('now') WHERE status IN ('queued','running') AND id IN (SELECT p2a_run_id FROM auto_review_tasks WHERE status IN ('unknown_usage','interrupted'))")
+        finally:
+            os.close(recovery_fd)
     app = FastAPI(title="AI 论文深度审稿工作台")
     app.add_middleware(
         CORSMiddleware,
@@ -750,24 +787,39 @@ def create_app(data_dir: Path) -> FastAPI:
             max_duration_ms=int(os.environ.get("P2A_MAX_DURATION_MS", "1800000")),
         )
 
-    def streamed_understanding_call(session, model, stage, system, user):
+    def streamed_understanding_call(session, model, stage, system, user, auto_task_id=None, output_limit=None):
         started = time.perf_counter()
-        stream = model_completion(
-            session,
-            model=model,
-            messages=[{"role": "system", "content": system},
-                      {"role": "user", "content": user}],
-            stream=True,
-            stream_options={"include_usage": True},
-        )
+        messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+        call_id = None
+        if auto_task_id:
+            validate_model_session_configuration(session, MODEL_ENVIRONMENT_FILE, requested_model=model)
+            try:
+                call_id = auto_ledger.reserve(auto_task_id, 'p2a', input_estimate=sum(len(m['content'].encode('utf-8')) for m in messages), output_reservation=output_limit)
+            except BudgetBlocked:
+                auto_ledger.mark_budget_exhausted(auto_task_id)
+                raise ModelConfigurationError(['auto_review_budget_exhausted']) from None
+            auto_ledger.mark_dispatched(call_id)
         pieces = []
         actual_model = None
         usage = None
-        for chunk in stream:
-            actual_model = chunk.model or actual_model
-            usage = chunk.usage or usage
-            if chunk.choices and chunk.choices[0].delta.content:
-                pieces.append(chunk.choices[0].delta.content)
+        try:
+            kwargs = dict(model=model, messages=messages, stream=True, stream_options={"include_usage": True})
+            if auto_task_id:
+                kwargs['max_tokens'] = output_limit
+            stream = model_completion(session, **kwargs)
+            for chunk in stream:
+                actual_model = chunk.model or actual_model
+                usage = chunk.usage or usage
+                if chunk.choices and chunk.choices[0].delta.content:
+                    pieces.append(chunk.choices[0].delta.content)
+            if auto_task_id:
+                auto_ledger.settle(call_id, input_tokens=getattr(usage, 'prompt_tokens', None), output_tokens=getattr(usage, 'completion_tokens', None), total_tokens=getattr(usage, 'total_tokens', None), actual_model=actual_model)
+                if auto_ledger.task_status(auto_task_id) != 'running':
+                    raise C1ActualBudgetExceeded(usage.prompt_tokens, usage.completion_tokens, actual_model)
+        except Exception:
+            if auto_task_id and auto_ledger.task_status(auto_task_id) == 'running':
+                auto_ledger.mark_unknown(call_id)
+            raise
         return {
             "content": "".join(pieces),
             "model_identifier": actual_model,
@@ -972,10 +1024,18 @@ def create_app(data_dir: Path) -> FastAPI:
             checkpoints.append(validate_checkpoint_chain(db, row, descriptor, bundle))
         return checkpoints
 
-    def run_understanding(document_id: str, run_id: str, request: UnderstandingRunRequest):
+    def auto_config_fingerprint(config):
+        return hashlib.sha256(json.dumps([config.api_key, config.base_url, config.model], ensure_ascii=True).encode()).hexdigest()
+
+    def run_understanding(document_id: str, run_id: str, request: UnderstandingRunRequest, auto_task_id=None):
+        auto_row = None
         try:
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET status = 'running' WHERE id = ?", (run_id,))
+                if auto_task_id:
+                    auto_row = db.execute('SELECT * FROM auto_review_tasks WHERE id=? AND p2a_run_id=? AND status=?', (auto_task_id, run_id, 'running')).fetchone()
+                    if not auto_row:
+                        raise ModelConfigurationError(['auto_review_task_not_dispatchable'])
             bundle = source_bundle_for_document(document_id)
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET source_bundle_id = ?, source_bundle_json = ? "
@@ -983,8 +1043,17 @@ def create_app(data_dir: Path) -> FastAPI:
             session = model_session(timeout=180, max_retries=0, c1_run_id=run_id if c1 else None)
             model = session.configuration.model
 
+            if auto_row and auto_row['config_fingerprint'] != auto_config_fingerprint(session.configuration):
+                raise ModelConfigurationError(['model_configuration_changed'])
+            auto_budget = None
+            if auto_row:
+                with auto_ledger.connect() as db:
+                    auto_budget = AutoReviewBudget.decode(db.execute("SELECT budget FROM auto_review_stage_budgets WHERE task_id=? AND stage='p2a'", (auto_row['id'],)).fetchone()[0])
+
             def model_call(stage, system, user):
-                return streamed_understanding_call(session, model, stage, system, user)
+                return streamed_understanding_call(session, model, stage, system, user,
+                    auto_row['id'] if auto_row else None,
+                    auto_budget.max_output_tokens_per_request if auto_budget else None)
 
             def persist_result(column, result):
                 if column not in {"review_plan", "paper_profile", "claim_evidence_map"}:
@@ -993,13 +1062,15 @@ def create_app(data_dir: Path) -> FastAPI:
                     db.execute(f"UPDATE paper_understanding_runs SET {column} = ? WHERE id = ?",
                                (result.model_dump_json(), run_id))
 
-            run_p2a(
+            plan, profile, mapping, _ = run_p2a(
                 bundle, run_id, model_call, model, request.target_journal,
                 request.special_requirements, on_result=persist_result,
                 on_trace=lambda trace: persist_understanding_trace(run_id, trace),
                 on_n3_checkpoint=lambda checkpoint: persist_n3_checkpoint(
                     run_id, bundle, checkpoint),
-                budget=c1.p2_budget(run_id) if c1 else p2a_budget())
+                budget=c1.p2_budget(run_id) if c1 else (RunBudget(max_calls=auto_budget.max_calls, max_input_tokens=auto_budget.max_input_tokens, max_output_tokens=auto_budget.max_output_tokens) if auto_budget else p2a_budget()))
+            if auto_row:
+                validate_understanding_snapshot(bundle, plan, profile, mapping, run_id, 'completed')
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET status = 'completed', "
                            "finished_at = datetime('now') WHERE id = ?", (run_id,))
@@ -1012,13 +1083,22 @@ def create_app(data_dir: Path) -> FastAPI:
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET status = 'failed', error = ?, "
                            "finished_at = datetime('now') WHERE id = ?",
-                           (f"{exc.stage}:{type(exc).__name__}" if c1 else str(exc), run_id))
+                           (f"{exc.stage}:{type(exc).__name__}" if c1 or auto_row else str(exc), run_id))
         except Exception as exc:
             with connect() as db:
                 db.execute("UPDATE paper_understanding_runs SET status = 'failed', error = ?, "
                            "finished_at = datetime('now') WHERE id = ?",
                            (f"source: {type(exc).__name__}", run_id))
         finally:
+            if auto_row:
+                with connect() as db:
+                    state = db.execute('SELECT status,error FROM paper_understanding_runs WHERE id=?', (run_id,)).fetchone()
+                    budget_state = auto_ledger.task_status(auto_row['id'])
+                    if auto_ledger.summary(auto_row['id'])['unknown_usage_calls']:
+                        budget_state = 'unknown_usage'
+                    final = budget_state if budget_state in ('unknown_usage', 'budget_exhausted') else state['status']
+                    db.execute('UPDATE auto_review_tasks SET status=?,error=?,updated_at=CURRENT_TIMESTAMP WHERE id=?', (final, state['error'], auto_row['id']))
+                    db.execute("UPDATE auto_review_budget_tasks SET status=? WHERE id=? AND status='running'", (final, auto_row['id']))
             if c1:
                 with connect() as db:
                     state = db.execute("SELECT status FROM paper_understanding_runs WHERE id=?",
@@ -1107,6 +1187,116 @@ def create_app(data_dir: Path) -> FastAPI:
                     "finished_at = datetime('now') WHERE id = ?",
                     (f"resume: {type(exc).__name__}", run_id),
                 )
+
+    @app.post('/api/auto-review-tasks', status_code=201)
+    def create_auto_review_task(payload: AutoReviewCreateRequest):
+        if c1:
+            raise HTTPException(409, detail={'code': 'auto_review_not_available_in_c1'})
+        try:
+            def parse_budget(raw):
+                values = dict(raw)
+                for name in ('max_cost_usd', 'input_usd_per_million', 'output_usd_per_million'):
+                    values[name] = Decimal(values[name])
+                return AutoReviewBudget(**values)
+            total = parse_budget(payload.total_budget)
+            stage = parse_budget(payload.p2a_budget)
+        except (ValueError, TypeError, KeyError, InvalidOperation):
+            raise HTTPException(422, detail={'code': 'auto_review_budget_invalid'}) from None
+        config = model_configuration_or_503()
+        task_id = uuid.uuid4().hex
+        with connect() as db:
+            document = document_or_404(db, payload.document_id)
+        if (total.input_usd_per_million, total.output_usd_per_million) != (stage.input_usd_per_million, stage.output_usd_per_million):
+            raise HTTPException(422, detail={'code': 'auto_review_budget_invalid'}) from None
+        with connect() as db:
+            db.execute('INSERT INTO auto_review_budget_tasks VALUES (?,?,?,?)', (task_id,total.encode(),'pending',config.model))
+            db.execute('INSERT INTO auto_review_stage_budgets VALUES (?,?,?)', (task_id,'p2a',stage.encode()))
+            db.execute('INSERT INTO auto_review_tasks (id,document_id,pdf_sha256,config_fingerprint,target_journal,special_requirements,status) VALUES (?,?,?,?,?,?,?)',
+                       (task_id,payload.document_id,document['sha256'],auto_config_fingerprint(config),payload.target_journal,payload.special_requirements,'pending'))
+        return {'id': task_id, 'status': 'pending'}
+
+    @app.post('/api/auto-review-tasks/{task_id}/start', status_code=202)
+    def start_auto_review_task(task_id: str, payload: AutoReviewStartRequest, background_tasks: BackgroundTasks):
+        if c1:
+            raise HTTPException(409, detail={'code': 'auto_review_not_available_in_c1'})
+        if not payload.confirm_budget:
+            raise HTTPException(409, detail={'code': 'budget_confirmation_required'})
+        config = model_configuration_or_503()
+        run_id = uuid.uuid4().hex
+        lock_fd = os.open(auto_lock_path, os.O_CREAT | os.O_RDWR, 0o600)
+        try:
+            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            os.close(lock_fd)
+            raise HTTPException(409, detail={'code': 'auto_review_worker_busy'}) from None
+        try:
+            with connect() as db:
+                db.execute('BEGIN IMMEDIATE')
+                row = db.execute('SELECT * FROM auto_review_tasks WHERE id=?', (task_id,)).fetchone()
+                if not row:
+                    raise HTTPException(404, detail={'code': 'auto_review_not_found'})
+                if row['status'] != 'pending':
+                    raise HTTPException(409, detail={'code': 'auto_review_not_pending'})
+                if row['config_fingerprint'] != auto_config_fingerprint(config):
+                    raise HTTPException(409, detail={'code': 'model_configuration_changed'})
+                document = document_or_404(db, row['document_id'])
+                if document['sha256'] != row['pdf_sha256']:
+                    raise HTTPException(409, detail={'code': 'document_changed'})
+                try:
+                    with (files_dir / f"{row['document_id']}.pdf").open('rb') as pdf:
+                        digest = hashlib.file_digest(pdf, 'sha256').hexdigest()
+                except OSError:
+                    raise HTTPException(409, detail={'code': 'document_unavailable'}) from None
+                if digest != row['pdf_sha256']:
+                    raise HTTPException(409, detail={'code': 'document_changed'})
+                try:
+                    db.execute("INSERT INTO paper_understanding_runs (id,document_id,status,target_journal,special_requirements,created_at) VALUES (?,?,'queued',?,?,datetime('now'))", (run_id,row['document_id'],row['target_journal'],row['special_requirements']))
+                except sqlite3.IntegrityError:
+                    raise HTTPException(409, detail={'code': 'understanding_run_active'}) from None
+                db.execute("UPDATE auto_review_budget_tasks SET status='running' WHERE id=? AND status='pending'", (task_id,))
+                db.execute("UPDATE auto_review_tasks SET status='running',p2a_run_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=?", (run_id,task_id))
+        except Exception:
+            os.close(lock_fd)
+            raise
+        def execute():
+            try:
+                run_understanding(row['document_id'], run_id, UnderstandingRunRequest(target_journal=row['target_journal'], special_requirements=row['special_requirements']), auto_task_id=task_id)
+            finally:
+                os.close(lock_fd)
+        background_tasks.add_task(execute)
+        return {'id': task_id, 'p2a_run_id': run_id, 'status': 'running'}
+
+    @app.get('/api/auto-review-tasks/{task_id}')
+    def get_auto_review_task(task_id: str):
+        if c1:
+            raise HTTPException(409, detail={'code': 'auto_review_not_available_in_c1'})
+        with connect() as db:
+            row = db.execute('SELECT * FROM auto_review_tasks WHERE id=?', (task_id,)).fetchone()
+            if not row:
+                raise HTTPException(404, detail={'code': 'auto_review_not_found'})
+            budget = db.execute('SELECT budget,requested_model FROM auto_review_budget_tasks WHERE id=?', (task_id,)).fetchone()
+            stage = db.execute("SELECT budget FROM auto_review_stage_budgets WHERE task_id=? AND stage='p2a'", (task_id,)).fetchone()
+            progress = db.execute('SELECT stage FROM paper_understanding_model_calls WHERE run_id=? ORDER BY rowid DESC LIMIT 1', (row['p2a_run_id'],)).fetchone() if row['p2a_run_id'] else None
+        result = {key: row[key] for key in ('id','document_id','pdf_sha256','target_journal','special_requirements','status','p2a_run_id','error','created_at','updated_at')}
+        result.update(auto_ledger.summary(task_id))
+        result.update({'total_budget': json.loads(budget[0]), 'p2a_budget': json.loads(stage[0]),
+                       'requested_model': budget['requested_model'],
+                       'model_configuration_id': row['config_fingerprint'][:16],
+                       'pricing_status': 'estimated_unverified',
+                       'current_phase': 'p2a' if row['p2a_run_id'] else None,
+                       'current_stage': progress['stage'] if progress else None,
+                       'p2a_result_url': f"/api/understanding-runs/{row['p2a_run_id']}" if row['p2a_run_id'] else None})
+        if result['unknown_usage_calls']:
+            result['budget_remaining'] = None
+        else:
+            limits = result['total_budget']
+            result['budget_remaining'] = {
+                'calls': max(0, limits['max_calls'] - result['request_count'] - result['reserved_not_sent_calls']),
+                'input_tokens': max(0, limits['max_input_tokens'] - result['known_input_tokens']),
+                'output_tokens': max(0, limits['max_output_tokens'] - result['known_output_tokens']),
+                'estimated_cost_usd': str(max(Decimal(0), Decimal(limits['max_cost_usd']) - Decimal(result['known_cost_usd']))),
+                'note': 'known usage only; in-flight reservations are not deducted from token or cost values'}
+        return result
 
     @app.post("/api/documents/{document_id}/understanding-runs", status_code=202)
     def create_understanding_run(document_id: str, payload: UnderstandingRunRequest,

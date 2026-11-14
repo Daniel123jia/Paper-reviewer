@@ -167,3 +167,22 @@ class AutoReviewLedger:
         with self.connect() as db:
             row = db.execute('SELECT status FROM auto_review_budget_tasks WHERE id=?', (task_id,)).fetchone()
             return row['status'] if row else None
+
+    def summary(self, task_id):
+        with self.connect() as db:
+            rows = db.execute('SELECT * FROM auto_review_calls WHERE task_id=? ORDER BY rowid', (task_id,)).fetchall()
+        return {'request_count': sum(r['status'] != 'reserved' for r in rows),
+                'reserved_not_sent_calls': sum(r['status'] == 'reserved' for r in rows),
+                'known_input_tokens': sum(r['input_tokens'] for r in rows if r['input_tokens'] is not None),
+                'known_output_tokens': sum(r['output_tokens'] for r in rows if r['output_tokens'] is not None),
+                'known_cost_usd': str(sum((Decimal(r['known_cost']) for r in rows if r['known_cost'] is not None), Decimal(0))),
+                'unknown_usage_calls': sum(r['status'] in ('unknown_usage', 'dispatch_pending') for r in rows),
+                'calls': [{'id': r['id'], 'stage': r['stage'], 'status': r['status'],
+                           'input_tokens': r['input_tokens'], 'output_tokens': r['output_tokens'],
+                           'actual_model': r['actual_model'], 'known_cost_usd': r['known_cost']}
+                          for r in rows],
+                'provider_billed_cost_usd': None}
+
+    def mark_budget_exhausted(self, task_id):
+        with self.connect() as db:
+            db.execute("UPDATE auto_review_budget_tasks SET status='budget_exhausted' WHERE id=? AND status='running'", (task_id,))
