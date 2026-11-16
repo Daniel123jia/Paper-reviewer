@@ -42,11 +42,11 @@ def test_nonempty_real_business_chain_through_sdk_only(tmp_path, monkeypatch,int
     assert task['request_count'] == len(AutoReviewFakeSDK.calls)
     assert {c['stage'] for c in task['calls']} >= {'p2a','p2b','p2c','p3','p4'}
     draft = client.get(f"/api/review-report-drafts/{task['p4_draft_id']}").json()
-    assert draft['writing']['comments'] and '内部' in draft['body']
+    assert len(draft['writing']['comments']) == 2 and '内部' in draft['body']
     assert draft['approval_status'] == 'pending'
     with sqlite3.connect(tmp_path/'review.db') as db:
-        assert db.execute('SELECT count(*) FROM p4_model_calls').fetchone()[0] == 4
-        assert db.execute("SELECT count(*) FROM auto_review_calls WHERE stage='p4' AND status='usage_valid'").fetchone()[0] == 4
+        assert db.execute('SELECT count(*) FROM p4_model_calls').fetchone()[0] == 2
+        assert db.execute("SELECT count(*) FROM auto_review_calls WHERE stage='p4' AND status='usage_valid'").fetchone()[0] == 2
     export = client.get(f"/api/review-report-drafts/{task['p4_draft_id']}/export?format=md&mode=draft")
     assert export.status_code == 200 and 'DRAFT' in export.text
 
@@ -207,3 +207,20 @@ def test_settlement_db_failure_preserves_unknown_and_blocks_next_sdk(tmp_path,mo
     result=client.get(f"/api/auto-review-tasks/{task['id']}").json()
     assert len(calls)==1 and result['status']=='unknown_usage'
     assert result['unknown_usage_calls']==1 and 'private db detail' not in str(result)
+
+def test_short_budget_suggestion_is_offline_and_adapts_to_source(tmp_path, monkeypatch):
+    import pymupdf
+
+    client, doc, _ = full_chain_setup(tmp_path, monkeypatch)
+    path = f"/api/documents/{doc['id']}/auto-review-budget-suggestion"
+    reply = client.get(path)
+    assert reply.status_code == 200
+    assert reply.json()['profile'] == 'short'
+    assert reply.json()['budgets']['total_budget']['max_calls'] < 111
+    pdf = pymupdf.open()
+    for _ in range(14):
+        pdf.new_page().insert_text((80, 80), 'An example paragraph of paper text.')
+    long_doc = client.post('/api/documents', files={'file':('long.pdf',pdf.tobytes(),'application/pdf')}).json()
+    reply = client.get(f"/api/documents/{long_doc['id']}/auto-review-budget-suggestion")
+    assert reply.json() == {'profile':'standard','budgets':None}
+    assert not AutoReviewFakeSDK.calls

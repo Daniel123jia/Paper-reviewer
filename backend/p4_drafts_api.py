@@ -19,7 +19,7 @@ from backend.p4_planner import build_report_plan
 from backend.p4_report_schema import ReportEvidencePack, ReportPlan, ReportWritingResult
 from backend.p4_validator import (numeric_claims, validate_author_body,
                                   validate_bilingual_pair)
-from backend.p4_writer import render_markdown, write_report, WRITING_VERSIONS
+from backend.p4_writer import render_markdown, report_group_batches, write_report, WRITING_VERSIONS
 from scripts.p5c.stage_control import C1ControlError
 
 
@@ -260,6 +260,7 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
 
         try:
             controller = session = None
+            compact_internal = False
             if (c1_control or auto_context) and not plan.groups:
                 budget_configuration = auto_context.configuration if auto_context else budget_configuration_factory()
                 if c1_control:
@@ -295,7 +296,8 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                 )
                 controller = P4BudgetController(budget_configuration)
                 try:
-                    batch_count = (1 if payload.kind == "author" else len(plan.groups))
+                    compact_internal = auto_context is not None and budget_configuration.max_output_tokens_per_request >= 2000
+                    batch_count = len(report_group_batches(plan, pack, compact_internal=compact_internal))
                     controller.ensure_minimum_success_path(batch_count)
                 except P4BudgetExceededError as exc:
                     store.fail_run(generation_run_id, "budget_exhausted", exc.blocker)
@@ -327,6 +329,7 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                 plan, pack, model_call, counterpart,
                 (lambda partial: store.save_validated_partial(
                     generation_run_id, partial)) if plan.groups else None,
+                compact_internal=compact_internal,
             )
             if auto_context:
                 auto_context.ensure_reconciled()

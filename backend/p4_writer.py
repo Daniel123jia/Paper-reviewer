@@ -70,9 +70,21 @@ def _model_chunk(plan, pack, groups):
     return chunk_plan, chunk_pack
 
 
+def report_group_batches(plan, pack, *, compact_internal=False):
+    if plan.report_kind == "author":
+        return [plan.groups] if plan.groups else []
+    if compact_internal and plan.report_kind == "internal" and len(plan.groups) == 2:
+        chunk_plan, chunk_pack = _model_chunk(plan, pack, plan.groups)
+        context_bytes = sum(len(item.model_dump_json().encode("utf-8"))
+                            for item in (chunk_plan, chunk_pack))
+        if context_bytes <= 16_000:
+            return [plan.groups]
+    return [[group] for group in plan.groups]
+
+
 def write_report(plan: ReportPlan, pack: ReportEvidencePack, model_call,
                  bilingual_reference: ReportWritingResult | None = None,
-                 validated_partial_callback=None):
+                 validated_partial_callback=None, *, compact_internal=False):
     version = WRITING_VERSIONS[plan.language]
     if not plan.groups:
         return ReportWritingResult(prompt_version=version, language=plan.language,
@@ -81,8 +93,7 @@ def write_report(plan: ReportPlan, pack: ReportEvidencePack, model_call,
              _prompt(WRITING_PROMPT_FILES[plan.language])
     reference = {item.report_comment_id: item for item in bilingual_reference.comments} \
         if bilingual_reference else {}
-    group_batches = ([[group] for group in plan.groups] if plan.report_kind != "author"
-                     else [plan.groups])
+    group_batches = report_group_batches(plan, pack, compact_internal=compact_internal)
     comments = []
     general = ""
     for number, groups in enumerate(group_batches, 1):

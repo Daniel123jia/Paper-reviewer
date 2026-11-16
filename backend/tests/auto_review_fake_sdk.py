@@ -2,6 +2,7 @@
 import json
 import re
 from types import SimpleNamespace as NS
+from threading import Lock
 
 from backend.tests.test_p2a_api import _fake_completion
 from backend.tests.test_p2b_engine import candidate
@@ -13,6 +14,7 @@ class AutoReviewFakeSDK:
     fail_stage = None
     fail_at = None
     dimension_count = 0
+    _lock = Lock()
 
     def __init__(self, **kwargs):
         assert kwargs['max_retries'] == 0
@@ -20,6 +22,11 @@ class AutoReviewFakeSDK:
 
     @classmethod
     def create(cls, **kwargs):
+        with cls._lock:
+            return cls._create(**kwargs)
+
+    @classmethod
+    def _create(cls, **kwargs):
         cls.calls.append(kwargs)
         if cls.fail_at == len(cls.calls):
             if not kwargs.get('stream'):
@@ -69,7 +76,6 @@ class AutoReviewFakeSDK:
             result = {'acceptable': True, 'unsupported_facts': [], 'state_promotions': [],
                       'refuted_accusations': [], 'language_or_scope_changes': []}
         elif 'evidence_pack' in data and 'plan' in data:
-            group = data['plan']['groups'][0]
             result = {'schema_version': '1.0', 'prompt_version': 'review-comment-writing-zh/v2',
                 'language': 'zh', 'report_kind': 'internal',
                 'general_assessment': '本文提出一种方法，以下内容为待人工复核的内部疑问。',
@@ -79,7 +85,8 @@ class AutoReviewFakeSDK:
                     'comment_body': '建议作者澄清该方法主张的适用范围及相应实验依据。现有材料尚不足以确认是否存在问题，需要人工复核原文中的作者主张、实验范围以及可能的反证，不能据此认定作者存在错误。',
                     'scientific_question': group['scientific_question'], 'evidence_refs': [],
                     'author_action_requested': '请说明主张范围及相应依据。',
-                    'comment_category': group['category'], 'uncertainty_qualification': '尚无定论；仅供内部复核。'}]}
+                    'comment_category': group['category'], 'uncertainty_qualification': '尚无定论；仅供内部复核。'}
+                    for group in data['plan']['groups']]}
         elif 'writing' in data or 'result' in data:
             result = {'acceptable': True, 'unsupported_facts': [], 'state_promotions': [],
                       'refuted_accusations': [], 'language_or_scope_changes': []}

@@ -99,8 +99,12 @@ class UnderstandingRunRequest(BaseModel):
     special_requirements: str | None = Field(default=None, max_length=2000)
 
 
+from backend.auto_review_performance import ExecutionPolicy, ConcurrentRunBudget
+
+
 class AutoReviewCreateRequest(UnderstandingRunRequest):
     document_id: str
+    execution_policy: ExecutionPolicy = Field(default_factory=ExecutionPolicy)
     total_budget: dict
     p2a_budget: dict
     p2b_budget: dict | None = None
@@ -843,11 +847,15 @@ def create_app(data_dir: Path) -> FastAPI:
             validate_model_session_configuration(session, MODEL_ENVIRONMENT_FILE, requested_model=model)
             validate_auto_source(auto_task_id)
             try:
-                call_id = auto_ledger.reserve(auto_task_id, budget_stage, input_estimate=sum(len(m['content'].encode('utf-8')) for m in messages), output_reservation=output_limit)
+                call_id = auto_ledger.reserve(auto_task_id, budget_stage, input_estimate=sum(len(m['content'].encode('utf-8')) for m in messages), output_reservation=output_limit, operation=stage, input_sha256=hashlib.sha256(json.dumps(messages,ensure_ascii=False,separators=(',',':')).encode()).hexdigest(), system_sha256=hashlib.sha256(system.encode()).hexdigest(), system_bytes=len(system.encode()))
             except BudgetBlocked:
                 auto_ledger.mark_budget_exhausted(auto_task_id)
                 raise ModelConfigurationError(['auto_review_budget_exhausted']) from None
-            auto_ledger.mark_dispatched(call_id)
+            try:
+                auto_ledger.mark_dispatched(call_id)
+            except BudgetBlocked:
+                auto_ledger.mark_budget_exhausted(auto_task_id)
+                raise ModelConfigurationError(['auto_review_dispatch_blocked']) from None
         pieces = []
         actual_model = None
         usage = None
@@ -868,8 +876,12 @@ def create_app(data_dir: Path) -> FastAPI:
                 if auto_ledger.task_status(auto_task_id) != 'running':
                     raise C1ActualBudgetExceeded(usage.prompt_tokens, usage.completion_tokens, actual_model)
         except Exception:
-            if auto_task_id and auto_ledger.task_status(auto_task_id) == 'running':
-                auto_ledger.mark_unknown(call_id)
+            if auto_task_id:
+                auto_ledger.block_dispatch(auto_task_id)
+                with auto_ledger.connect() as db:
+                    pending = db.execute("SELECT 1 FROM auto_review_calls WHERE id=? AND status='dispatch_pending'", (call_id,)).fetchone()
+                if pending:
+                    auto_ledger.mark_unknown(call_id)
             raise
         return {
             "content": "".join(pieces),
@@ -1116,10 +1128,12 @@ def create_app(data_dir: Path) -> FastAPI:
             plan, profile, mapping, _ = run_p2a(
                 bundle, run_id, model_call, model, request.target_journal,
                 request.special_requirements, on_result=persist_result,
+                profile_chunk_chars=18_000 if auto_row and 1 <= bundle["document"]["page_count"] <= 15 else None,
+                max_workers=auto_ledger.execution_policy(auto_task_id).max_concurrency if auto_row else 1,
                 on_trace=lambda trace: persist_understanding_trace(run_id, trace),
                 on_n3_checkpoint=lambda checkpoint: persist_n3_checkpoint(
                     run_id, bundle, checkpoint),
-                budget=c1.p2_budget(run_id) if c1 else (RunBudget(max_calls=auto_budget.max_calls, max_input_tokens=auto_budget.max_input_tokens, max_output_tokens=auto_budget.max_output_tokens, max_duration_ms=auto_budget.max_duration_seconds*1000) if auto_budget else p2a_budget()))
+                budget=c1.p2_budget(run_id) if c1 else (ConcurrentRunBudget(max_calls=auto_budget.max_calls, max_input_tokens=auto_budget.max_input_tokens, max_output_tokens=auto_budget.max_output_tokens, max_duration_ms=auto_budget.max_duration_seconds*1000) if auto_budget else p2a_budget()))
             if auto_row:
                 validate_understanding_snapshot(bundle, plan, profile, mapping, run_id, 'completed')
             with connect() as db:
@@ -1243,6 +1257,36 @@ def create_app(data_dir: Path) -> FastAPI:
                     (f"resume: {type(exc).__name__}", run_id),
                 )
 
+    def short_auto_review_source(bundle):
+        units = bundle["reading_units"]
+        return (1 <= bundle["document"]["page_count"] <= 8
+                and 0 < len(units) <= 350
+                and sum(len(unit["text"].encode("utf-8")) for unit in units) <= 40_000)
+
+    @app.get("/api/documents/{document_id}/auto-review-budget-suggestion")
+    def suggest_auto_review_budget(document_id: str):
+        if c1:
+            raise HTTPException(409, detail={"code": "auto_review_not_available_in_c1"})
+        with connect() as db:
+            document = document_or_404(db, document_id)
+        if document["page_count"] > 8 or not short_auto_review_source(source_bundle_for_document(document_id)):
+            return {"profile": "standard", "budgets": None}
+        # Limits include repair and verification headroom. They are not a usage forecast.
+        limits = {
+            "total": (60, 900_000, 162_000, 6_000, 14_400, "1.45"),
+            "p2a": (24, 280_000, 66_000, 6_000, 5_400, "0.50"),
+            "p2b": (10, 300_000, 32_000, 6_000, 1_800, "0.40"),
+            "p2c": (4, 90_000, 16_000, 6_000, 1_800, "0.14"),
+            "p3": (14, 180_000, 32_000, 6_000, 2_700, "0.30"),
+            "p4": (8, 100_000, 16_000, 2_000, 1_800, "0.16"),
+        }
+        return {"profile": "short", "budgets": {
+            f"{stage}_budget": json.loads(AutoReviewBudget(
+                calls, inputs, outputs, per_request, Decimal(cost),
+                Decimal("0.80"), Decimal("4.00"), seconds).encode())
+            for stage, (calls, inputs, outputs, per_request, seconds, cost) in limits.items()
+        }}
+
     @app.post('/api/auto-review-tasks', status_code=201)
     def create_auto_review_task(payload: AutoReviewCreateRequest):
         if c1:
@@ -1274,7 +1318,7 @@ def create_app(data_dir: Path) -> FastAPI:
         if (p2c_stage and not p2b_stage) or (p3_stage and not p2c_stage) or (p4_stage and not p3_stage):
             raise HTTPException(422, detail={'code': 'auto_review_stage_budget_missing'})
         with connect() as db:
-            db.execute('INSERT INTO auto_review_budget_tasks (id,budget,status,requested_model) VALUES (?,?,?,?)', (task_id,total.encode(),'pending',config.model))
+            db.execute('INSERT INTO auto_review_budget_tasks (id,budget,status,requested_model,execution_policy) VALUES (?,?,?,?,?)', (task_id,total.encode(),'pending',config.model,payload.execution_policy.model_dump_json()))
             db.execute('INSERT INTO auto_review_stage_budgets (task_id,stage,budget) VALUES (?,?,?)', (task_id,'p2a',stage.encode()))
             if p2b_stage:
                 db.execute('INSERT INTO auto_review_stage_budgets (task_id,stage,budget) VALUES (?,?,?)', (task_id,'p2b',p2b_stage.encode()))
@@ -1342,7 +1386,8 @@ def create_app(data_dir: Path) -> FastAPI:
             raise
         def execute():
             try:
-                run_understanding(row['document_id'], run_id, UnderstandingRunRequest(target_journal=row['target_journal'], special_requirements=row['special_requirements']), auto_task_id=task_id)
+                with auto_ledger.measure_stage(task_id, 'p2a'):
+                    run_understanding(row['document_id'], run_id, UnderstandingRunRequest(target_journal=row['target_journal'], special_requirements=row['special_requirements']), auto_task_id=task_id)
                 with connect() as db:
                     job = db.execute('SELECT status FROM auto_review_tasks WHERE id=?', (task_id,)).fetchone()
                     has_p2b = db.execute("SELECT 1 FROM auto_review_stage_budgets WHERE task_id=? AND stage='p2b'", (task_id,)).fetchone()
@@ -1374,6 +1419,8 @@ def create_app(data_dir: Path) -> FastAPI:
             progress = db.execute('SELECT stage FROM paper_understanding_model_calls WHERE run_id=? ORDER BY rowid DESC LIMIT 1', (row['p2a_run_id'],)).fetchone() if row['p2a_run_id'] else None
         result = {key: row[key] for key in ('id','document_id','pdf_sha256','target_journal','special_requirements','review_requirements','status','p2a_run_id','p2b_run_id','p2c_run_id','p3_run_id','p4_project_id','p4_draft_id','error','created_at','updated_at')}
         result.update(auto_ledger.summary(task_id))
+        result['execution_policy'] = auto_ledger.execution_policy(task_id).model_dump()
+        result['performance'] = auto_ledger.performance(task_id)
         stages = [{'stage': 'p1', 'status': 'completed', 'run_id': row['document_id']}]
         with connect() as db:
             for name, table in (('p2a','paper_understanding_runs'),('p2b','professional_review_runs'),('p2c','candidate_consolidation_runs'),('p3','evidence_verification_runs')):
@@ -1644,12 +1691,13 @@ def create_app(data_dir: Path) -> FastAPI:
 
             result = run_p2b(bundle, plan, profile, mapping, understanding_run_id, run_id,
                 model_call, model, row["target_journal"], review_run["review_requirements"],
-                budget=c1.p2_budget(run_id) if c1 else (RunBudget(max_calls=auto_budget.max_calls, max_input_tokens=auto_budget.max_input_tokens, max_output_tokens=auto_budget.max_output_tokens, max_duration_ms=auto_budget.max_duration_seconds*1000) if auto_budget else RunBudget(
+                budget=c1.p2_budget(run_id) if c1 else (ConcurrentRunBudget(max_calls=auto_budget.max_calls, max_input_tokens=auto_budget.max_input_tokens, max_output_tokens=auto_budget.max_output_tokens, max_duration_ms=auto_budget.max_duration_seconds*1000) if auto_budget else RunBudget(
                     max_calls=int(os.environ.get("P2B_MAX_CALLS", "18")),
                     max_input_tokens=int(os.environ.get("P2B_MAX_INPUT_TOKENS", "180000")),
                     max_output_tokens=int(os.environ.get("P2B_MAX_OUTPUT_TOKENS", "50000")),
                     max_duration_ms=int(os.environ.get("P2B_MAX_DURATION_MS", "1800000")))),
-                on_dimension=persist_dimension, on_trace=persist_trace)
+                on_dimension=persist_dimension, on_trace=persist_trace,
+                max_workers=auto_ledger.execution_policy(auto_task_id).max_concurrency if auto_task_id else 1)
             with connect() as db:
                 db.execute("UPDATE professional_review_runs SET status = ?, result_json = ?, "
                            "finished_at = datetime('now') WHERE id = ?",
@@ -1696,7 +1744,8 @@ def create_app(data_dir: Path) -> FastAPI:
                     raise ValueError('auto_review_source_invalid')
                 db.execute("INSERT INTO professional_review_runs (id,understanding_run_id,document_id,source_bundle_id,review_requirements,status,created_at) VALUES (?,?,?,?,?,'queued',datetime('now'))", (new_id,understanding_id,source['document_id'],bundle['bundle_id'],job['review_requirements']))
                 db.execute('UPDATE auto_review_tasks SET p2b_run_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=?', (new_id,task_id))
-            run_professional_review(understanding_id, new_id, auto_task_id=task_id)
+            with auto_ledger.measure_stage(task_id, 'p2b'):
+                run_professional_review(understanding_id, new_id, auto_task_id=task_id)
             with connect() as db:
                 job = db.execute('SELECT status FROM auto_review_tasks WHERE id=?', (task_id,)).fetchone()
             if job and job['status'] == 'running':
@@ -1840,7 +1889,7 @@ def create_app(data_dir: Path) -> FastAPI:
             result = run_p2c(bundle, plan, profile, mapping, review,
                 source["understanding_run_id"], professional_review_run_id,
                 run_id, model_call, model, p2b_status=source["status"],
-                budget=c1.p2_budget(run_id) if c1 else (RunBudget(max_calls=auto_budget.max_calls, max_input_tokens=auto_budget.max_input_tokens, max_output_tokens=auto_budget.max_output_tokens, max_duration_ms=auto_budget.max_duration_seconds*1000) if auto_budget else RunBudget(
+                budget=c1.p2_budget(run_id) if c1 else (ConcurrentRunBudget(max_calls=auto_budget.max_calls, max_input_tokens=auto_budget.max_input_tokens, max_output_tokens=auto_budget.max_output_tokens, max_duration_ms=auto_budget.max_duration_seconds*1000) if auto_budget else RunBudget(
                     max_calls=int(os.environ.get("P2C_MAX_CALLS", "16")),
                     max_input_tokens=int(os.environ.get("P2C_MAX_INPUT_TOKENS", "200000")),
                     max_output_tokens=int(os.environ.get("P2C_MAX_OUTPUT_TOKENS", "50000")),
@@ -1892,7 +1941,8 @@ def create_app(data_dir: Path) -> FastAPI:
                     raise ValueError('auto_review_source_invalid')
                 db.execute("INSERT INTO candidate_consolidation_runs (id,professional_review_run_id,understanding_run_id,document_id,source_bundle_id,status,created_at) VALUES (?,?,?,?,?,'queued',datetime('now'))", (new_id,professional_id,source['understanding_run_id'],source['document_id'],bundle['bundle_id']))
                 db.execute('UPDATE auto_review_tasks SET p2c_run_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=?', (new_id,task_id))
-            run_candidate_consolidation(professional_id, new_id, auto_task_id=task_id)
+            with auto_ledger.measure_stage(task_id, 'p2c'):
+                run_candidate_consolidation(professional_id, new_id, auto_task_id=task_id)
             with connect() as db:
                 job = db.execute('SELECT status FROM auto_review_tasks WHERE id=?', (task_id,)).fetchone()
             if job and job['status'] == 'running':
@@ -2042,13 +2092,14 @@ def create_app(data_dir: Path) -> FastAPI:
 
             result = run_p3(bundle, plan, profile, mapping, review, consolidation,
                 pdf_path, run_id, model_call, model,
-                budget=c1.p2_budget(run_id) if c1 else (RunBudget(max_calls=auto_budget.max_calls, max_input_tokens=auto_budget.max_input_tokens, max_output_tokens=auto_budget.max_output_tokens, max_duration_ms=auto_budget.max_duration_seconds*1000) if auto_budget else RunBudget(
+                budget=c1.p2_budget(run_id) if c1 else (ConcurrentRunBudget(max_calls=auto_budget.max_calls, max_input_tokens=auto_budget.max_input_tokens, max_output_tokens=auto_budget.max_output_tokens, max_duration_ms=auto_budget.max_duration_seconds*1000) if auto_budget else RunBudget(
                     max_calls=int(os.environ.get("P3_MAX_CALLS", "48")),
                     max_input_tokens=int(os.environ.get("P3_MAX_INPUT_TOKENS", "450000")),
                     max_output_tokens=int(os.environ.get("P3_MAX_OUTPUT_TOKENS", "100000")),
                     max_duration_ms=int(os.environ.get("P3_MAX_DURATION_MS", "2700000")))),
                 region_dir=data_dir / "p3-regions" / run_id,
-                on_trace=persist_trace, on_task=persist_task, on_tool=persist_tool)
+                on_trace=persist_trace, on_task=persist_task, on_tool=persist_tool,
+                max_workers=auto_ledger.execution_policy(auto_task_id).max_concurrency if auto_task_id else 1)
             with connect() as db:
                 db.execute("UPDATE evidence_verification_runs SET status = ?, result_json = ?, "
                            "finished_at = datetime('now') WHERE id = ?",
@@ -2095,7 +2146,8 @@ def create_app(data_dir: Path) -> FastAPI:
                     raise ValueError('auto_review_source_invalid')
                 db.execute("INSERT INTO evidence_verification_runs (id,consolidation_run_id,professional_review_run_id,understanding_run_id,document_id,source_bundle_id,status,created_at) VALUES (?,?,?,?,?,?,'queued',datetime('now'))", (new_id,consolidation_id,source['professional_review_run_id'],source['understanding_run_id'],source['document_id'],bundle['bundle_id']))
                 db.execute('UPDATE auto_review_tasks SET p3_run_id=?,updated_at=CURRENT_TIMESTAMP WHERE id=?', (new_id,task_id))
-            run_evidence_verification(consolidation_id, new_id, auto_task_id=task_id)
+            with auto_ledger.measure_stage(task_id, 'p3'):
+                run_evidence_verification(consolidation_id, new_id, auto_task_id=task_id)
             with connect() as db:
                 job = db.execute('SELECT status FROM auto_review_tasks WHERE id=?', (task_id,)).fetchone()
             if job and job['status'] == 'running':
@@ -2865,6 +2917,10 @@ def create_app(data_dir: Path) -> FastAPI:
         return Response(data, media_type=media, headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
     def execute_auto_p4(task_id, verification_id):
+        with auto_ledger.measure_stage(task_id, 'p4'):
+            run_auto_p4(task_id, verification_id)
+
+    def run_auto_p4(task_id, verification_id):
         from backend.auto_review_p4 import AutoP4Bridge
         from backend.p4_drafts_api import CreateDraftInput
         try:

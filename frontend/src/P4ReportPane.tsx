@@ -33,6 +33,8 @@ type Project = {id: string; document_id: string; source_p3_run_id: string; execu
   drafts: DraftSummary[]};
 type Draft = {id: string; kind: string; language: string; body: string; revision_number: number;
   approval_status: string; selected_issue_ids: string[];
+  plan?: {groups: {group_id:string;category:string}[]};
+  writing?: {comments: {report_comment_id:string;title_zh:string;source_issue_ids:string[]}[]};
   model_calls: {input_tokens: number | null; output_tokens: number | null; status: string}[];
   revisions: {revision_number: number; approval_status: string}[]};
 type VisualForm = {checked_rows_columns: string; checked_values_and_labels: string;
@@ -59,13 +61,13 @@ const statusName: Record<string, string> = {
 const blankVisual = (): VisualForm => ({checked_rows_columns: '', checked_values_and_labels: '',
   metric_names_and_order: '', unresolved_configurations: '', reviewer_note: ''});
 
-export default function P4ReportPane({documentId, onEvidence, initialProjectId, allowGeneration = true}: {
-  documentId: string; initialProjectId?: string; allowGeneration?: boolean; onEvidence: (documentId: string, evidenceId: string) => void;
+export default function P4ReportPane({documentId, onEvidence, initialProjectId, initialDraftId, allowGeneration = true}: {
+  documentId: string; initialProjectId?: string; initialDraftId?: string; allowGeneration?: boolean; onEvidence: (documentId: string, evidenceId: string) => void;
 }) {
   const [runs, setRuns] = useState<Run[]>([]);
   const [runId, setRunId] = useState('');
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
-  const [projectId, setProjectId] = useState('');
+  const [projectId, setProjectId] = useState(initialProjectId ?? '');
   const [project, setProject] = useState<Project | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [body, setBody] = useState('');
@@ -83,6 +85,7 @@ export default function P4ReportPane({documentId, onEvidence, initialProjectId, 
   const [notice, setNotice] = useState('');
 
   useEffect(() => {
+    if (initialDraftId) return;
     let cancelled = false;
     Promise.all([
       api<Run[]>(`/api/documents/${documentId}/evidence-verification-runs`),
@@ -91,10 +94,10 @@ export default function P4ReportPane({documentId, onEvidence, initialProjectId, 
       if (cancelled) return;
       setRuns(nextRuns); setProjects(nextProjects);
       setRunId(nextRuns.find(item => ['completed', 'limited'].includes(item.status))?.id || '');
-      setProjectId(nextProjects.find(item => item.id === initialProjectId)?.id || nextProjects[0]?.id || '');
+      setProjectId(initialProjectId ?? nextProjects[0]?.id ?? '');
     }).catch(cause => {if (!cancelled) setError(String(cause));});
     return () => {cancelled = true;};
-  }, [documentId, initialProjectId]);
+  }, [documentId, initialProjectId, initialDraftId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -105,13 +108,16 @@ export default function P4ReportPane({documentId, onEvidence, initialProjectId, 
     if (projectId) api<Project>(`/api/review-report-projects/${projectId}`).then(async value => {
       if (cancelled || value.document_id !== documentId) return;
       setProject(value);
+      if (initialDraftId && !value.drafts.some(item => item.id === initialDraftId)) {
+        throw new Error('找不到此任务对应的报告草稿');
+      }
       if (value.drafts.length) {
-        const latest = await api<Draft>(`/api/review-report-drafts/${value.drafts[0].id}`);
+        const latest = await api<Draft>(`/api/review-report-drafts/${initialDraftId ?? value.drafts[0].id}`);
         if (!cancelled) {setDraft(latest); setBody(latest.body);}
       }
     }).catch(cause => {if (!cancelled) setError(String(cause));});
     return () => {cancelled = true;};
-  }, [projectId, documentId]);
+  }, [projectId, documentId, initialDraftId]);
 
   async function act(work: () => Promise<void>) {
     setBusy(true); setError(''); setNotice('');
@@ -226,7 +232,37 @@ export default function P4ReportPane({documentId, onEvidence, initialProjectId, 
   const sourceById = new Map(project?.sources.map(item => [item.source_id, item]) || []);
   const dirty = Boolean(draft && draft.body !== body);
   const unknownUsage = draft?.model_calls.filter(call => call.input_tokens === null || call.output_tokens === null).length || 0;
+  const focused = Boolean(initialDraftId);
+  // Only attach links to generated headings when reading the original stored text.
+  // After editing, issue titles and order may change, so keep links in the audit.
+  const headingSources = new Map<number, Source[]>();
+  if (focused && draft?.revision_number === 1 && !dirty && project) {
+    const byId = new Map(draft.writing?.comments.map(comment => [comment.report_comment_id, comment]));
+    const groups = draft.plan?.groups ?? [];
+    const comments = ['major', 'clarification', 'minor'].flatMap(category => groups.filter(group => group.category === category).map(group => byId.get(group.group_id)));
+    let next = 0;
+    body.split('\n').forEach((line,index) => {
+      const heading = line.match(/^### \d+\. (.+)$/);
+      if (!heading) return;
+      const comment = comments[next];
+      if (comment?.title_zh !== heading[1]) return;
+      next++;
+      const ids = project.issues.filter(issue => comment.source_issue_ids.includes(issue.consolidated_issue_id))
+        .flatMap(issue => issue.source_refs);
+      headingSources.set(index+1, [...new Set(ids)].flatMap(id => {
+        const source = sourceById.get(id);
+        return source?.evidence_ids.length && source.page_index !== null ? [source] : [];
+      }));
+    });
+  }
+  const downloads = draft && <div className="draft-export">
+    {(!focused || dirty) && <span>{dirty ? '请先保存修改' : draft.approval_status === 'approved' ? '正式版本：' : '待审核草稿（带 Draft 标识）：'}</span>}
+    {!dirty && (focused ? ['pdf', 'md'] : ['md', 'docx', 'pdf']).map(format => <a key={format}
+      href={`/api/review-report-drafts/${draft.id}/export?format=${format}${draft.approval_status === 'approved' ? '&final=true' : ''}`}
+      download>{focused ? (format === 'md' ? '下载 Markdown' : '下载 PDF') : format.toUpperCase()}</a>)}
+  </div>;
   return <div className="p4-pane draft-pane">
+    {!focused && <>
     <div className="eyebrow">专业同行评审报告 · P4</div>
     <h2>从已核验的问题形成审稿意见</h2>
     <p className="draft-intro">P3 判定、报告准入与人工批准分别记录。未审核稿下载时带 Draft 标识；正式导出只针对已批准的确切版本。</p>
@@ -241,12 +277,28 @@ export default function P4ReportPane({documentId, onEvidence, initialProjectId, 
       </select></label>
       {project && <p className="p4-meta">P3 {project.source_p3_run_id.slice(0, 8)} · {project.execution_status} · 来源模式 {project.source.p3_execution_mode} · PDF {project.source.pdf_sha256.slice(0, 12)}…</p>}
       {!runs.length && <p className="draft-intro">当前论文还没有可用的 P3 核验运行。</p>}
-    </section>
+    </section></>}
     {project && <>
-      <section className="p4-card p4-report"><h3>报告正文与导出</h3>
+      <section className="p4-card p4-report">{!focused && <h3>报告正文与导出</h3>}
         {project.drafts.length === 0 && <p className="draft-intro">当前项目尚无已保存报告。可在下方选择报告类型并明确生成新草稿。</p>}
-        {draft && <div className="draft-editor"><div className="draft-editor-head"><strong>{draft.kind} · {draft.language} · 修订 {draft.revision_number} · {draft.approval_status} · {draft.revision_number > 1 ? '含人工修订' : '保存的报告草稿'}</strong></div>
-          <div className="draft-preview"><strong>报告阅读视图</strong><div className="markdown-body"><ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{body}</ReactMarkdown></div></div>
+        {draft && <div className="draft-editor">
+          {focused ? <div className="auto-report-tools">
+            <strong>{draft.approval_status === 'approved' ? '已批准版本' : '内部草稿 · 待人工复核'}</strong>
+            {downloads}
+          </div> : <div className="draft-editor-head"><strong>{draft.kind} · {draft.language} · 修订 {draft.revision_number} · {draft.approval_status} · {draft.revision_number > 1 ? '含人工修订' : '保存的报告草稿'}</strong></div>}
+          <div className="draft-preview">{!focused && <strong>报告阅读视图</strong>}
+            <div className="markdown-body"><ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}
+              components={focused ? {h1: ({node,children}) =>
+                node?.position?.start.line === 1 && children === '内部完整审稿报告' ? null : <h1>{children}</h1>, h3: ({node,children}) => {
+                const sources = headingSources.get(node?.position?.start.line ?? 0);
+                return <><h3>{children}</h3>{sources?.length ? <div className="auto-evidence-links">
+                  {sources.map(source => <button key={source.source_id} title={source.source_id}
+                    onClick={() => onEvidence(documentId,source.evidence_ids[0])}>
+                    原文第 {source.page_index!+1} 页 · {({table:'表格',figure:'图',formula:'公式'} as Record<string,string>)[source.source_type] ?? '原文证据'}
+                  </button>)}
+                </div> : null}</>;
+              }} : undefined}>{body}</ReactMarkdown></div>
+          </div>
           {draft.kind === 'author' && draft.selected_issue_ids.length === 0 && <p className="draft-intro">当前没有可进入作者意见的问题。请先新增并审核有依据的人工意见，再生成新草稿。</p>}
           <details className="p4-edit"><summary>编辑正文</summary>
             <textarea aria-label="P4 报告正文" rows={20} value={body} readOnly={draft.kind === 'author' && draft.selected_issue_ids.length === 0}
@@ -256,15 +308,14 @@ export default function P4ReportPane({documentId, onEvidence, initialProjectId, 
           <p className="p4-meta">历史版本：{draft.revisions.map(item => `${item.revision_number} (${item.approval_status})`).join('、')}</p>
           <label className="p4-confirm"><input type="checkbox" checked={confirmContent} onChange={event => setConfirmContent(event.target.checked)} />我已审核当前确切版本的正文；这不等于独立确认所有科学事实。</label>
           <button disabled={busy || dirty || !confirmContent} onClick={approveDraft}>批准当前版本</button>
-          <div className="draft-export"><span>{dirty ? '请先保存修改' : draft.approval_status === 'approved' ? '正式版本：' : '待审核草稿（带 Draft 标识）：'}</span>
-            {!dirty && (['md', 'docx', 'pdf'] as const).map(format => <a key={format} href={`/api/review-report-drafts/${draft.id}/export?format=${format}${draft.approval_status === 'approved' ? '&final=true' : ''}`} download>{format.toUpperCase()}</a>)}</div>
+          {!focused && downloads}
           <small className="draft-usage">P4 模型调用 {draft.model_calls.length} 次 · 已知输入 {draft.model_calls.reduce((sum, call) => sum + (call.input_tokens ?? 0), 0)} Token · 已知输出 {draft.model_calls.reduce((sum, call) => sum + (call.output_tokens ?? 0), 0)} Token{unknownUsage > 0 && ` · ${unknownUsage} 次 Usage 未知，费用不完整`}</small>
         </div>}
         {allowGeneration && <div className="p4-controls"><label>报告类型<select aria-label="P4 报告类型" value={kind} onChange={event => setKind(event.target.value as typeof kind)}>
           <option value="author">作者意见草稿</option><option value="internal">内部完整报告</option><option value="editor">编辑保密说明</option></select></label>
           <label>语言<select aria-label="P4 报告语言" value={language} onChange={event => setLanguage(event.target.value as typeof language)}><option value="zh">中文</option><option value="en">English</option></select></label>
           <button disabled={busy} onClick={createDraft}>明确生成新草稿</button></div>}
-        {project.drafts.length > 0 && <div className="p4-drafts"><strong>打开已有草稿</strong>{project.drafts.map(item => <button key={item.id} onClick={() => openDraft(item.id)}>
+        {!focused && project.drafts.length > 0 && <div className="p4-drafts"><strong>打开已有草稿</strong>{project.drafts.map(item => <button key={item.id} onClick={() => openDraft(item.id)}>
           {item.kind} · {item.language} · 修订 {item.revision_number} · {item.approval_status}</button>)}</div>}
       </section>
       <details className="p4-card p4-audit"><summary>技术核验与人工复核 · {project.issues.length} 项问题 · {project.coverage_gaps.length} 项覆盖缺口</summary>

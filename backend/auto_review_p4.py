@@ -4,6 +4,8 @@ Both ledgers use the same request ID. Only the task ledger contributes to whole
 review totals: the P4 ledger remains the report-local safety/audit authority.
 Writes are conservative: either ledger failing stops the task; neither replays.
 """
+import hashlib
+import json
 from decimal import Decimal
 
 from backend.auto_review_budget import BudgetBlocked
@@ -55,7 +57,10 @@ class AutoP4Bridge:
             try:
                 call_id = self.ledger.reserve(self.task_id, 'p4',
                     input_estimate=sum(len(m['content'].encode('utf-8')) for m in kwargs['messages']),
-                    output_reservation=reservation.max_tokens, call_id=reservation.model_call_id)
+                    output_reservation=reservation.max_tokens, call_id=reservation.model_call_id,
+                    operation='report', input_sha256=hashlib.sha256(json.dumps(kwargs['messages'],ensure_ascii=False,separators=(',',':')).encode()).hexdigest(),
+                    system_sha256=hashlib.sha256(kwargs['messages'][0]['content'].encode()).hexdigest(),
+                    system_bytes=len(kwargs['messages'][0]['content'].encode()))
             except BudgetBlocked:
                 self.ledger.mark_budget_exhausted(self.task_id)
                 raise ModelConfigurationError(['auto_review_budget_exhausted']) from None

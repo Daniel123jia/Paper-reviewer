@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises';
 
 test('P4 report opens saved draft, locates PDF evidence, edits, reloads and downloads', async ({page}) => {
   test.setTimeout(90000);
-  await page.goto('http://127.0.0.1:5173/');
+  await page.goto('/');
   await page.getByRole('button', {name: '审稿文档'}).click();
   await expect(page.getByRole('heading', {name: '从已核验的问题形成审稿意见'})).toBeVisible();
   await expect(page.getByLabel('已有 P4 报告项目')).not.toHaveValue('');
@@ -49,7 +49,7 @@ test('P4 report opens saved draft, locates PDF evidence, edits, reloads and down
   await page.getByRole('button', {name: '保存人工问题'}).dblclick();
   await expect(page.locator('.p4-issue').filter({hasText: '人工补充 · Could the method scope be specified?'})).toHaveCount(1);
   const projectId = await page.getByLabel('已有 P4 报告项目').inputValue();
-  const retry = await page.request.post(`http://127.0.0.1:8000/api/review-report-projects/${projectId}/reviewer-issues`, {
+  const retry = await page.request.post(`/api/review-report-projects/${projectId}/reviewer-issues`, {
     data: {scientific_question: 'Could the method scope be specified?',
       evidence_basis: 'Reviewer inspected the cited PDF source.', source_refs: ['ru1'],
       comment_body: '', category: 'clarification'},
@@ -65,18 +65,18 @@ test('P4 report opens saved draft, locates PDF evidence, edits, reloads and down
 });
 
 test('switching projects clears unsubmitted approval and review forms', async ({page}) => {
-  const projectsResponse = await page.request.get('http://127.0.0.1:8000/api/documents/doc1/review-report-projects');
+  const projectsResponse = await page.request.get('/api/documents/doc1/review-report-projects');
   const projects = await projectsResponse.json() as {id: string}[];
   expect(projects).toHaveLength(2);
   const [projectB, projectA] = projects;
-  const projectBResponse = await page.request.get(`http://127.0.0.1:8000/api/review-report-projects/${projectB.id}`);
+  const projectBResponse = await page.request.get(`/api/review-report-projects/${projectB.id}`);
   const projectBView = await projectBResponse.json();
   const projectBDraftId = projectBView.drafts[0].id as string;
   const projectAView = await (await page.request.get(
-    `http://127.0.0.1:8000/api/review-report-projects/${projectA.id}`)).json();
+    `/api/review-report-projects/${projectA.id}`)).json();
   expect(projectAView.issues[0].consolidated_issue_id).toBe(projectBView.issues[0].consolidated_issue_id);
 
-  await page.goto('http://127.0.0.1:5173/');
+  await page.goto('/');
   await page.getByRole('button', {name: '审稿文档'}).click();
   const projectPicker = page.getByLabel('已有 P4 报告项目');
   await expect(projectPicker).not.toHaveValue('');
@@ -124,7 +124,7 @@ test('switching projects clears unsubmitted approval and review forms', async ({
   await confirmation.check();
   await page.getByRole('button', {name: '批准当前版本'}).click();
   await expect(page.getByRole('alert')).toBeVisible();
-  const currentB = await page.request.get(`http://127.0.0.1:8000/api/review-report-drafts/${projectBDraftId}`);
+  const currentB = await page.request.get(`/api/review-report-drafts/${projectBDraftId}`);
   expect((await currentB.json()).approval_status).toBe('pending');
 
   await page.getByRole('button', {name: '从所选 P3 运行建立新报告项目'}).click();

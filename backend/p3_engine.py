@@ -3,6 +3,9 @@
 import json
 import re
 import time
+from threading import Lock
+from contextlib import ExitStack
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -121,14 +124,19 @@ def validate_p3_result(result, consolidation, bundle):
 def run_p3(bundle, plan, profile, mapping, review, consolidation, pdf_path,
            evidence_verification_run_id, model_call, requested_model,
            budget: RunBudget | None = None, region_dir=None, on_trace=None,
-           on_task=None, on_tool=None):
+           on_task=None, on_tool=None, max_workers=1):
     identity = validate_p3_inputs(bundle, plan, profile, mapping, review,
                                   consolidation, pdf_path)
     pdf_available = identity == "sha256_matched"
     budget = budget or RunBudget(max_calls=48, max_input_tokens=450000,
         max_output_tokens=100000, max_duration_ms=2700000)
+    if max_workers != 1:
+        from backend.auto_review_performance import ConcurrentRunBudget
+        if max_workers != 2 or not isinstance(budget, ConcurrentRunBudget):
+            raise ValueError('parallel_execution_requires_concurrent_budget')
     traces = []
     retries = 0
+    counter_lock = Lock()
     exhausted = False
     started = time.perf_counter()
     source_prompt = (PROMPTS / "source-observation-check.v1.txt").read_text(encoding="utf-8")
@@ -141,7 +149,8 @@ def run_p3(bundle, plan, profile, mapping, review, consolidation, pdf_path,
         user = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
         for attempt in range(2):
             if attempt:
-                retries += 1
+                with counter_lock:
+                    retries += 1
             begun = time.perf_counter()
             reply = None
             try:
@@ -189,8 +198,21 @@ def run_p3(bundle, plan, profile, mapping, review, consolidation, pdf_path,
     all_tools = []
     adjudications = []
     uncovered = []
-    with EvidenceVerifier(bundle, pdf_path if pdf_available else None, region_dir) as verifier:
-        for task in consolidation.verification_tasks:
+    with ExitStack() as stack:
+        # A single PDF owner thread creates, reads, renders and closes its handle.
+        # Only SDK waits overlap; a fitz.Document is never shared across workers.
+        pdf_worker = stack.enter_context(ThreadPoolExecutor(max_workers=1)) if max_workers > 1 else None
+        if pdf_worker:
+            verifier = pdf_worker.submit(EvidenceVerifier, bundle, pdf_path if pdf_available else None, region_dir).result()
+            stack.callback(lambda: pdf_worker.submit(verifier.close).result())
+        else:
+            verifier = stack.enter_context(EvidenceVerifier(bundle, pdf_path if pdf_available else None, region_dir))
+        def source_snapshot():
+            read = lambda: list(verifier.sources.values())
+            return pdf_worker.submit(read).result() if pdf_worker else read()
+        def observe_source(source_id, task_id):
+            return pdf_worker.submit(verifier.observe, source_id, task_id).result() if pdf_worker else verifier.observe(source_id, task_id)
+        def verify_task(task):
             issue = issue_index[task.consolidated_issue_id]
             pack = retriever.retrieve(task, issue)
             observations = []
@@ -198,7 +220,7 @@ def run_p3(bundle, plan, profile, mapping, review, consolidation, pdf_path,
                 existing = {ref_id for item in observations for ref_id in item.related_source_ref_ids}
                 for source_id in dict.fromkeys(source_ids):
                     if source_id not in existing:
-                        _, observation = verifier.observe(source_id, task.verification_task_id)
+                        _, observation = observe_source(source_id, task.verification_task_id)
                         observations.append(observation)
                         all_observations.append(observation)
                         existing.add(source_id)
@@ -247,7 +269,7 @@ def run_p3(bundle, plan, profile, mapping, review, consolidation, pdf_path,
                 checks = run_technical_checks(task,
                     technical or TechnicalEvidenceProposal(metric_records=[],
                         scalar_formula_checks=[], unavailable_checks=[]),
-                    list(verifier.sources.values()), observations)
+                    source_snapshot(), observations)
                 all_tools.extend(checks)
                 if on_tool:
                     for check in checks:
@@ -278,12 +300,18 @@ def run_p3(bundle, plan, profile, mapping, review, consolidation, pdf_path,
                         uncovered.append(task.verification_task_id)
                     else:
                         adjudication = adjudicate(task, issue, proposal, facts, challenge,
-                            pack.search, observations, list(verifier.sources.values()),
+                            pack.search, observations, source_snapshot(),
                             checks, pdf_available)
             adjudications.append(adjudication)
             if on_task:
                 on_task(adjudication)
-        sources = list(verifier.sources.values())
+        from backend.auto_review_performance import bounded_map
+        bounded_map(verify_task, consolidation.verification_tasks, max_workers=max_workers)
+        task_order = {t.verification_task_id:i for i,t in enumerate(consolidation.verification_tasks)}
+        adjudications.sort(key=lambda item: task_order[item.verification_task_id])
+        all_observations.sort(key=lambda item: (task_order[item.verification_task_id],item.observation_id))
+        all_tools.sort(key=lambda item: (task_order[item.verification_task_id],item.tool_result_id))
+        sources = source_snapshot()
     known_in = [item.input_tokens for item in traces if item.input_tokens is not None]
     known_out = [item.output_tokens for item in traces if item.output_tokens is not None]
     status = ("budget_exceeded" if exhausted else "limited" if
