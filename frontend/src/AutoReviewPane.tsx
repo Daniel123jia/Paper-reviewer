@@ -4,6 +4,7 @@ import P4ReportPane from './P4ReportPane';
 type ExecutionPolicy = {max_concurrency:number;requests_per_minute:number;input_reservation_per_minute:number};
 type PerformanceStage = {stage_wall_ms?:number|null; wall_span_ms:number|null; model_wait_sum_ms:number|null; peak_concurrency:number|null; timing_complete:boolean; input_bytes:number};
 type Task = {execution_policy?:ExecutionPolicy; performance?:{stages:Record<string, PerformanceStage>}; id:string; status:string; error:string|null; request_count:number;
+  document_id:string; target_journal:string|null; special_requirements:string|null; review_requirements:string|null;
   known_input_tokens:number; known_output_tokens:number; known_cost_usd:string;
   unknown_usage_calls:number; calls:{status:string}[]; p4_project_id:string|null; p4_draft_id:string|null;
   total_budget:Budget;stage_budgets:Record<string, Budget>;
@@ -55,6 +56,16 @@ async function api<T>(url:string, body?:unknown):Promise<T>{
   return value;
 }
 
+function configurationMatches(expected: Record<string, any>, saved: Task): boolean {
+  if (['document_id','target_journal','special_requirements','review_requirements'].some(k => expected[k] !== (saved as any)[k])) return false;
+  if (!saved.execution_policy || Object.keys(expected.execution_policy).some(k => expected.execution_policy[k] !== (saved.execution_policy as any)[k])) return false;
+  return ['total','p2a','p2b','p2c','p3','p4'].every(stage => {
+    const a = expected[`${stage}_budget`];
+    const b = stage === 'total' ? saved.total_budget : saved.stage_budgets?.[stage];
+    return a && b && Object.keys(a).length === Object.keys(b).length && Object.keys(a).every(k => Number.isFinite(Number((b as any)[k])) && Number(a[k]) === Number((b as any)[k]));
+  });
+}
+
 export default function AutoReviewPane({document, onEvidence, onUpload, uploadBusy, uploadError, onShowSource, sourceOpen}: {
   document:Paper|null; onEvidence:(doc:string,ref:string)=>void;
   onUpload:(file?:File)=>Promise<void>; uploadBusy:boolean; uploadError:string;
@@ -63,6 +74,7 @@ export default function AutoReviewPane({document, onEvidence, onUpload, uploadBu
   const documentId = document?.id;
   const fileInput = useRef<HTMLInputElement>(null);
   const [target,setTarget]=useState('');
+  const [specialRequirements,setSpecialRequirements]=useState('');
   const [requirements,setRequirements]=useState('');
   const [limits,setLimits]=useState(defaults);
   const [shortLimits,setShortLimits]=useState<ReturnType<typeof defaults>|null>(null);
@@ -71,6 +83,7 @@ export default function AutoReviewPane({document, onEvidence, onUpload, uploadBu
   const [task,setTask]=useState<Task|null>(null);
   const [history,setHistory]=useState<History[]>([]);
   const [confirmed,setConfirmed]=useState(false);
+  const [configurationValid,setConfigurationValid]=useState(true);
   const [busy,setBusy]=useState(false);
   const [loading,setLoading]=useState(Boolean(documentId));
   const [error,setError]=useState('');
@@ -83,7 +96,14 @@ export default function AutoReviewPane({document, onEvidence, onUpload, uploadBu
       setHistory(list);
       if(list[0]){
         const next=await api<Task>(`/api/auto-review-tasks/${list[0].id}`);
-        if(!cancelled)setTask(next);
+        if(!cancelled){
+          const expected = sessionStorage.getItem(`auto-review-config:${next.id}`);
+          if(expected) {
+            try { setConfigurationValid(configurationMatches(JSON.parse(expected), next)); }
+            catch { setConfigurationValid(false); }
+          }
+          setTask(next);
+        }
       } else if (document && document.page_count <= 8) {
         const suggestion = await api<{budgets:ReturnType<typeof defaults>|null}>(
           `/api/documents/${documentId}/auto-review-budget-suggestion`).catch(() => null);
@@ -116,16 +136,23 @@ export default function AutoReviewPane({document, onEvidence, onUpload, uploadBu
   async function create(){
     setBusy(true);setError('');setConfirmed(false);
     try{
-      const next=await api<{id:string}>('/api/auto-review-tasks',{...limits,execution_policy:executionPolicy,document_id:documentId,target_journal:target || null,review_requirements:requirements || null});
+      const expected={...limits,execution_policy:executionPolicy,document_id:documentId,target_journal:target || null,special_requirements:specialRequirements || null,review_requirements:requirements || null};
+      const next=await api<{id:string}>('/api/auto-review-tasks',expected);
+      sessionStorage.setItem(`auto-review-config:${next.id}`,JSON.stringify(expected));
       const saved=await api<Task>(`/api/auto-review-tasks/${next.id}`);
+      setConfigurationValid(configurationMatches(expected,saved));
       setTask(saved);
       setHistory(previous=>[{id:saved.id,status:saved.status,created_at:new Date().toISOString()},...previous]);
     }catch(e){setError(String(e));}finally{setBusy(false);}
   }
   async function start(){
-    if(!task || !confirmed)return;
+    if(!task || !confirmed || !configurationValid)return;
     setBusy(true);setError('');
     try{
+      const expected=sessionStorage.getItem(`auto-review-config:${task.id}`);
+      if(expected && !configurationMatches(JSON.parse(expected),await api<Task>(`/api/auto-review-tasks/${task.id}`))) {
+        setConfigurationValid(false);setConfirmed(false);setError('保存的任务配置与提交内容不一致，已阻止启动。');return;
+      }
       await api(`/api/auto-review-tasks/${task.id}/start`,{confirm_budget:true});
       setTask(await api<Task>(`/api/auto-review-tasks/${task.id}`));
     }catch(e){setError(String(e));}finally{setBusy(false);setConfirmed(false);}
@@ -183,6 +210,7 @@ export default function AutoReviewPane({document, onEvidence, onUpload, uploadBu
         <summary>审稿要求与预算设置</summary>
         <div className="auto-fields">
           <label>目标期刊（可选）<input value={target} maxLength={200} onChange={e=>setTarget(e.target.value)}/></label>
+          <label>论文理解特殊要求（P2-A）<textarea maxLength={2000} value={specialRequirements} onChange={e=>setSpecialRequirements(e.target.value)}/></label>
           <label>审稿要求（可选）<textarea placeholder="例如：重点关注实验设计与可复现性" value={requirements} maxLength={2000} onChange={e=>setRequirements(e.target.value)}/></label>
         </div>
         {shortLimits && <div className="auto-fields"><label>预算配置
@@ -223,6 +251,7 @@ export default function AutoReviewPane({document, onEvidence, onUpload, uploadBu
         {report?'报告已生成':task.status==='pending'?'待确认启动':statusNames[task.status] ?? task.status}
       </p>
       {task.status==='pending' && <div className="auto-start-card">
+        {!configurationValid && <p className="auto-alert" role="alert">保存的任务配置与提交内容不一致，已阻止启动。</p>}
         <BudgetSummary value={task.total_budget}/>
         <details className="auto-frozen"><summary>查看预算明细</summary>
           {[['总预算',task.total_budget] as const,...Object.entries(task.stage_budgets).map(([key,value])=>[names[key],value] as const)].map(([label,value])=>
@@ -231,7 +260,7 @@ export default function AutoReviewPane({document, onEvidence, onUpload, uploadBu
         </details>
         <label className="auto-confirm"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>
           我确认总预算和各阶段限额，并同意启动审稿</label>
-        <button className="auto-primary" disabled={!confirmed || busy || uploadBusy} onClick={start}>{busy?'正在启动…':'确认预算并开始完整审稿'}</button>
+        <button className="auto-primary" disabled={!confirmed || !configurationValid || busy || uploadBusy} onClick={start}>{busy?'正在启动…':'确认预算并开始完整审稿'}</button>
       </div>}
       {progress && <ol className="auto-timeline" aria-label="完整审稿阶段进度">
         {task.stages.map(stage=><li key={stage.stage} className={`state-${stage.status}`}>

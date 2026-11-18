@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from dotenv import dotenv_values
 from openai import OpenAI
-from pydantic import BaseModel, Field, StrictBool
+from pydantic import BaseModel, ConfigDict, Field, StrictBool
 from backend.auto_review_budget import AutoReviewBudget, AutoReviewLedger, BudgetBlocked
 from typing import Literal
 
@@ -103,6 +103,7 @@ from backend.auto_review_performance import ExecutionPolicy, ConcurrentRunBudget
 
 
 class AutoReviewCreateRequest(UnderstandingRunRequest):
+    model_config = ConfigDict(extra="forbid")
     document_id: str
     execution_policy: ExecutionPolicy = Field(default_factory=ExecutionPolicy)
     total_budget: dict
