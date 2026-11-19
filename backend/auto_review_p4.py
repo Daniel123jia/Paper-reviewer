@@ -6,9 +6,11 @@ Writes are conservative: either ledger failing stops the task; neither replays.
 """
 import hashlib
 import json
+import time
 from decimal import Decimal
 
 from backend.auto_review_budget import BudgetBlocked
+from backend.auto_review_diagnostics import CallObservation
 from backend.model_runtime import ModelConfigurationError
 from backend.p4_budget import P4BudgetConfiguration
 
@@ -58,25 +60,35 @@ class AutoP4Bridge:
                 call_id = self.ledger.reserve(self.task_id, 'p4',
                     input_estimate=sum(len(m['content'].encode('utf-8')) for m in kwargs['messages']),
                     output_reservation=reservation.max_tokens, call_id=reservation.model_call_id,
-                    operation='report', input_sha256=hashlib.sha256(json.dumps(kwargs['messages'],ensure_ascii=False,separators=(',',':')).encode()).hexdigest(),
+                    operation=reservation.stage, input_sha256=hashlib.sha256(json.dumps(kwargs['messages'],ensure_ascii=False,separators=(',',':')).encode()).hexdigest(),
                     system_sha256=hashlib.sha256(kwargs['messages'][0]['content'].encode()).hexdigest(),
                     system_bytes=len(kwargs['messages'][0]['content'].encode()))
             except BudgetBlocked:
                 self.ledger.mark_budget_exhausted(self.task_id)
                 raise ModelConfigurationError(['auto_review_budget_exhausted']) from None
+            observation = CallObservation(streaming=False)
             self.ledger.mark_dispatched(call_id)
             try:
                 response = completion(session, **kwargs)
+                observation.observe_id(response)
+                observation.phase = 'usage_validation'
                 usage = response.usage
+                observation.observe_usage(usage)
+                if observation.valid_usage:
+                    observation.phase = 'settlement'
                 self.ledger.settle(call_id,
                     input_tokens=getattr(usage, 'prompt_tokens', None),
                     output_tokens=getattr(usage, 'completion_tokens', None),
                     total_tokens=getattr(usage, 'total_tokens', None),
                     actual_model=response.model)
-            except BaseException:
+            except BaseException as exc:
+                failed_at = time.time()
                 if self.ledger.task_status(self.task_id) == 'running':
                     self.ledger.mark_unknown(call_id)
+                observation.persist(self.ledger, call_id, exc, failed_at)
                 raise
+            observation.phase = 'completed'
+            observation.persist(self.ledger, call_id)
             if self.ledger.task_status(self.task_id) != 'running':
                 raise BudgetBlocked('actual_budget_exceeded')
             return response

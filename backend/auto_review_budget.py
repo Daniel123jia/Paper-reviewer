@@ -73,7 +73,8 @@ class AutoReviewLedger:
             ''')
             for name, kind in (('reserved_at','REAL'), ('dispatched_at','REAL'),
                                ('finished_at','REAL'), ('operation','TEXT'),
-                               ('input_sha256','TEXT'), ('system_sha256','TEXT'), ('system_bytes','INTEGER')):
+                               ('input_sha256','TEXT'), ('system_sha256','TEXT'), ('system_bytes','INTEGER'),
+                               ('diagnostic_json','TEXT')):
                 columns = {r['name'] for r in db.execute('PRAGMA table_info(auto_review_calls)')}
                 if name not in columns:
                     db.execute(f'ALTER TABLE auto_review_calls ADD COLUMN {name} {kind}')
@@ -253,6 +254,11 @@ class AutoReviewLedger:
             row = db.execute('SELECT status FROM auto_review_budget_tasks WHERE id=?', (task_id,)).fetchone()
             return row['status'] if row else None
 
+    def save_diagnostic(self, call_id, observation):
+        with self.connect() as db:
+            db.execute('UPDATE auto_review_calls SET diagnostic_json=? WHERE id=?',
+                       (json.dumps(observation), call_id))
+
     def summary(self, task_id):
         with self.connect() as db:
             rows = db.execute('SELECT * FROM auto_review_calls WHERE task_id=? ORDER BY rowid', (task_id,)).fetchall()
@@ -265,6 +271,7 @@ class AutoReviewLedger:
                 'calls': [{'id': r['id'], 'stage': r['stage'], 'status': r['status'],
                            'input_tokens': r['input_tokens'], 'output_tokens': r['output_tokens'],
                            'actual_model': r['actual_model'], 'known_cost_usd': r['known_cost'],
+                           'diagnostic': json.loads(r['diagnostic_json']) if r['diagnostic_json'] else None,
                            'operation': r['operation'], 'input_bytes': r['input_estimate'],
                            'reserved_at': r['reserved_at'], 'dispatched_at': r['dispatched_at'],
                            'finished_at': r['finished_at'],

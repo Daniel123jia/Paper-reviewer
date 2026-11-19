@@ -99,6 +99,7 @@ class UnderstandingRunRequest(BaseModel):
     special_requirements: str | None = Field(default=None, max_length=2000)
 
 
+from backend.auto_review_diagnostics import CallObservation
 from backend.auto_review_performance import ExecutionPolicy, ConcurrentRunBudget
 
 
@@ -857,6 +858,7 @@ def create_app(data_dir: Path) -> FastAPI:
             except BudgetBlocked:
                 auto_ledger.mark_budget_exhausted(auto_task_id)
                 raise ModelConfigurationError(['auto_review_dispatch_blocked']) from None
+        observation = CallObservation(streaming=True) if auto_task_id else None
         pieces = []
         actual_model = None
         usage = None
@@ -865,25 +867,42 @@ def create_app(data_dir: Path) -> FastAPI:
             if auto_task_id:
                 kwargs['max_tokens'] = output_limit
             stream = model_completion(session, **kwargs)
+            if observation:
+                observation.stream_established = True
+                observation.phase = 'await_first_chunk'
+                observation.observe_id(stream, streaming=True)
             for chunk in stream:
+                if observation:
+                    observation.chunk()
                 actual_model = chunk.model or actual_model
                 if auto_task_id and actual_model and actual_model != model:
                     raise ModelConfigurationError(['auto_review_response_model_mismatch'])
-                usage = chunk.usage or usage
+                chunk_usage = chunk.usage
+                usage = chunk_usage or usage
+                if observation and chunk_usage is not None:
+                    observation.observe_usage(chunk_usage)
                 if chunk.choices and chunk.choices[0].delta.content:
                     pieces.append(chunk.choices[0].delta.content)
+                if observation:
+                    observation.phase = 'stream_read'
             if auto_task_id:
+                observation.phase = 'usage_validation' if not observation.valid_usage else 'settlement'
                 auto_ledger.settle(call_id, input_tokens=getattr(usage, 'prompt_tokens', None), output_tokens=getattr(usage, 'completion_tokens', None), total_tokens=getattr(usage, 'total_tokens', None), actual_model=actual_model)
                 if auto_ledger.task_status(auto_task_id) != 'running':
                     raise C1ActualBudgetExceeded(usage.prompt_tokens, usage.completion_tokens, actual_model)
-        except Exception:
+        except Exception as exc:
             if auto_task_id:
+                failed_at = time.time()
                 auto_ledger.block_dispatch(auto_task_id)
                 with auto_ledger.connect() as db:
                     pending = db.execute("SELECT 1 FROM auto_review_calls WHERE id=? AND status='dispatch_pending'", (call_id,)).fetchone()
                 if pending:
                     auto_ledger.mark_unknown(call_id)
+                observation.persist(auto_ledger, call_id, exc, failed_at)
             raise
+        if observation:
+            observation.phase = 'completed'
+            observation.persist(auto_ledger, call_id)
         return {
             "content": "".join(pieces),
             "model_identifier": actual_model,

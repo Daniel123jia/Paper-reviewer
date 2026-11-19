@@ -41,6 +41,14 @@ def test_nonempty_real_business_chain_through_sdk_only(tmp_path, monkeypatch,int
     assert all(task[key] for key in ('p2a_run_id','p2b_run_id','p2c_run_id','p3_run_id','p4_project_id','p4_draft_id'))
     assert task['request_count'] == len(AutoReviewFakeSDK.calls)
     assert {c['stage'] for c in task['calls']} >= {'p2a','p2b','p2c','p3','p4'}
+    for call in task['calls']:
+        diag = call['diagnostic']
+        assert diag['phase'] == 'completed' and diag['valid_usage_received']
+        if call['stage'] == 'p4':
+            assert diag['stream_established'] is None and diag['first_chunk_ms'] is None
+        else:
+            assert diag['stream_established'] and diag['chunk_count'] >= 1
+            assert diag['first_chunk_ms'] >= 0
     draft = client.get(f"/api/review-report-drafts/{task['p4_draft_id']}").json()
     assert len(draft['writing']['comments']) == 2 and '内部' in draft['body']
     assert draft['approval_status'] == 'pending'
