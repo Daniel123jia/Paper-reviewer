@@ -19,7 +19,7 @@ from backend.p4_planner import build_report_plan
 from backend.p4_report_schema import ReportEvidencePack, ReportPlan, ReportWritingResult
 from backend.p4_validator import (numeric_claims, validate_author_body,
                                   validate_bilingual_pair)
-from backend.p4_writer import render_markdown, write_report, WRITING_VERSIONS
+from backend.p4_writer import render_markdown, report_group_batches, write_report, WRITING_VERSIONS
 from scripts.p5c.stage_control import C1ControlError
 
 
@@ -70,7 +70,7 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
             "WHERE draft_id = ? ORDER BY rowid", (row["id"],))]
         return result
 
-    def call_model(project_id, draft_id, generation_run_id, session, controller, store):
+    def call_model(project_id, draft_id, generation_run_id, session, controller, store, auto_context=None):
         def invoke(stage, version, system, user):
             requested = session.configuration.model
             messages = [{"role": "system", "content": system},
@@ -84,6 +84,8 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                 store.fail_run(generation_run_id, "configuration_changed",
                                "model_configuration_changed")
                 raise
+            if auto_context:
+                auto_context.ensure_reconciled()
             model_call_id = uuid.uuid4().hex
             try:
                 reservation = controller.plan_request(
@@ -99,7 +101,8 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
             store.mark_dispatch_pending(generation_run_id, model_call_id)
             started = time.perf_counter()
             try:
-                response = model_completion(
+                completion = auto_context.completion(reservation, model_completion) if auto_context else model_completion
+                response = completion(
                     session,
                     model=requested,
                     messages=messages,
@@ -206,6 +209,9 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
     @app.post("/api/review-report-projects/{project_id}/drafts", status_code=201)
     def create_p4_draft(project_id: str, payload: CreateDraftInput,
                         http_request: Request):
+        return create_draft(project_id, payload, http_request)
+
+    def create_draft(project_id, payload, http_request=None, auto_context=None):
         c1_claimed = None
         if c1_control:
             if (payload.kind, payload.language) != ("internal", "zh"):
@@ -245,7 +251,7 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
         store = P4BudgetStore(connect, now)
 
         def terminate_run_safely(reason):
-            if not plan.groups and not c1_control:
+            if not plan.groups and not c1_control and not auto_context:
                 return
             try:
                 store.fail_run(generation_run_id, "interrupted", reason)
@@ -254,15 +260,17 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
 
         try:
             controller = session = None
-            if c1_control and not plan.groups:
-                budget_configuration = budget_configuration_factory()
-                c1_control.check_p4_budget(generation_run_id, budget_configuration)
+            compact_internal = False
+            if (c1_control or auto_context) and not plan.groups:
+                budget_configuration = auto_context.configuration if auto_context else budget_configuration_factory()
+                if c1_control:
+                    c1_control.check_p4_budget(generation_run_id, budget_configuration)
                 store.create_run(generation_run_id, draft_id, project_id,
                                  payload.kind, payload.language, budget_configuration)
             if plan.groups:
                 try:
                     model_preflight()
-                    budget_configuration = budget_configuration_factory()
+                    budget_configuration = auto_context.configuration if auto_context else budget_configuration_factory()
                     if c1_control:
                         c1_control.check_p4_budget(generation_run_id, budget_configuration)
                 except HTTPException as exc:
@@ -288,7 +296,8 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                 )
                 controller = P4BudgetController(budget_configuration)
                 try:
-                    batch_count = (1 if payload.kind == "author" else len(plan.groups))
+                    compact_internal = auto_context is not None and budget_configuration.max_output_tokens_per_request >= 2000
+                    batch_count = len(report_group_batches(plan, pack, compact_internal=compact_internal))
                     controller.ensure_minimum_success_path(batch_count)
                 except P4BudgetExceededError as exc:
                     store.fail_run(generation_run_id, "budget_exhausted", exc.blocker)
@@ -314,13 +323,16 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
             counterpart = (ReportWritingResult.model_validate_json(other["writing_json"])
                            if other and other["writing_json"] else None)
             model_call = (call_model(project_id, draft_id, generation_run_id,
-                                     session, controller, store)
+                                     session, controller, store, auto_context)
                           if plan.groups else None)
             writing = write_report(
                 plan, pack, model_call, counterpart,
                 (lambda partial: store.save_validated_partial(
                     generation_run_id, partial)) if plan.groups else None,
+                compact_internal=compact_internal,
             )
+            if auto_context:
+                auto_context.ensure_reconciled()
             body = render_markdown(plan, pack, writing)
             if payload.kind == "author":
                 validate_author_body(body, pack)
@@ -345,10 +357,10 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
                     writing.prompt_version, stamp, stamp))
                 db.execute("INSERT INTO p4_draft_revisions VALUES (?, 1, ?, ?, 'pending', ?)",
                            (draft_id, body, digest(body), stamp))
-                if plan.groups or c1_control:
+                if plan.groups or c1_control or auto_context:
                     store.complete_run_in_transaction(db, generation_run_id)
                 result = draft_view(db, draft_or_404(db, draft_id))
-                if c1_control:
+                if c1_control or auto_context:
                     result["generation_run_id"] = generation_run_id
             return result
         except P4BudgetConfigurationError as exc:
@@ -377,7 +389,7 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
             raise
         except (ValueError, KeyError, TypeError) as exc:
             terminate_run_safely("report_content_validation_failed")
-            if c1_control:
+            if c1_control or auto_context:
                 raise HTTPException(422, detail={"code": "report_content_validation_failed",
                                                   "generation_run_id": generation_run_id}) from None
             raise HTTPException(422, f"P4 写作校验失败：{type(exc).__name__}: {exc}") from None
@@ -501,3 +513,5 @@ def register_p4_draft_routes(app, connect, model_session_factory, model_completi
         name = f'p4_{row["kind"]}_{row["language"]}_{"final" if final else "draft"}.{format}'
         return Response(data, media_type=media,
                         headers={"Content-Disposition": f'attachment; filename="{name}"'})
+
+    return create_draft

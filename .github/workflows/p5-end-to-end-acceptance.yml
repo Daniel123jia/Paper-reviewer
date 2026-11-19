@@ -86,6 +86,34 @@ jobs:
           cd frontend
           npx playwright test tests/p4-report.spec.ts --workers=1
 
+      - name: Automatic review through real engines with Fake SDK only
+        env:
+          AUTO_REVIEW_TEST_DATA: ${{ runner.temp }}/automatic-review-browser-data
+          VITE_API_TARGET: http://127.0.0.1:8139
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:5199
+          AUTO_REVIEW_SCREENSHOT: ${{ runner.temp }}/auto-review-completed.png
+        run: |
+          python -m uvicorn backend.tests.serve_auto_review_fake:build_app --factory --host 127.0.0.1 --port 8139 > "$RUNNER_TEMP/auto-review-backend.log" 2>&1 &
+          backend_pid=$!
+          (cd frontend && npm run dev -- --port 5199) > "$RUNNER_TEMP/auto-review-frontend.log" 2>&1 &
+          frontend_pid=$!
+          trap 'kill "$backend_pid" "$frontend_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8139/api/auth/status > /dev/null &&
+               curl -fsS http://127.0.0.1:5199/ > /dev/null; then break; fi
+            sleep 1
+          done
+          cd frontend
+          npx playwright test tests/auto-review.spec.ts --workers=1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: auto-review-fake-sdk-browser-evidence
+          path: |
+            ${{ runner.temp }}/auto-review-completed.png
+            ${{ runner.temp }}/auto-review-backend.log
+            frontend/test-results
+
   fresh-model-run:
     if: ${{ false }}
     runs-on: ubuntu-latest

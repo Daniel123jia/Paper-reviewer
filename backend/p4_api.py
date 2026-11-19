@@ -547,7 +547,7 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs,
                        (project_id, fingerprint, item.issue_id))
             return item.model_dump()
 
-    register_p4_draft_routes(app, connect, model_session_factory, model_completion,
+    generate_draft = register_p4_draft_routes(app, connect, model_session_factory, model_completion,
                              model_preflight, model_session_preflight,
                              budget_configuration_factory, {
         "project_or_404": project_or_404, "snapshot_of": snapshot_of,
@@ -555,3 +555,5 @@ def register_p4_routes(app, connect, files_dir, load_p3_inputs,
         "external_evidence_records": external_evidence_records,
         "reviewer_issues": reviewer_issues, "now": now, "digest": digest},
                              c1_control=c1_control)
+
+    return create_report_project, generate_draft

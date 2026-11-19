@@ -183,7 +183,7 @@ def _source_text(units):
 
 
 def _content_json(result):
-    return json.dumps(result.model_dump(exclude=RESULT_METADATA), ensure_ascii=False)
+    return json.dumps(result.model_dump(exclude=RESULT_METADATA), ensure_ascii=False, separators=(",", ":"))
 
 
 def _object_catalog(bundle):
@@ -307,7 +307,7 @@ def _aux_json(stage, payload, requested_model, model_call, traces, on_trace):
         started = time.perf_counter()
         reply = None
         try:
-            reply = model_call(stage, system, json.dumps(payload, ensure_ascii=False))
+            reply = model_call(stage, system, json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
             result = parse_model_json(reply["content"])
             if not isinstance(result, dict) or not reply.get("model_identifier"):
                 raise ValueError("auxiliary response is not a JSON object with model identifier")
@@ -388,7 +388,7 @@ def _global_profile(partials, context, bundle, run_id, quality, requested_model,
             "\nGlobal synthesis of all parts. Reconcile only the first four scalar facts "
             "and unresolved source gaps. Remove gaps caused only by chunk partitioning. "
             "Return empty arrays for fact lists; the server preserves all part-level facts. "
-            "Cite the provided source IDs.\n" + json.dumps(summaries, ensure_ascii=False),
+            "Cite the provided source IDs.\n" + json.dumps(summaries, ensure_ascii=False, separators=(",", ":")),
             bundle, run_id, bundle["reading_units"], quality, requested_model,
             model_call, traces, PaperProfile, on_trace)
     except UnknownUsageError:
@@ -634,14 +634,15 @@ def _profile_context_for_part(profile, part):
     for field in LIST_FACTS:
         payload[field] = [fact.model_dump() for fact in getattr(profile, field)
                           if field == "author_claimed_contributions" or local(fact)]
-    return json.dumps(payload, ensure_ascii=False)
+    return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
 
 
 def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: str,
             target_journal: str | None = None, special_requirements: str | None = None,
             chunk_chars: int = 12000, on_result: Callable | None = None,
             on_trace: Callable | None = None, budget: RunBudget | None = None,
-            on_n3_checkpoint: Callable | None = None):
+            on_n3_checkpoint: Callable | None = None,
+            *, profile_chunk_chars: int | None = None, max_workers: int = 1):
     """Run N1–N3; caller persists results and trace metadata in private storage."""
     units = bundle["reading_units"]
     if not units:
@@ -650,6 +651,10 @@ def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: st
     if quality["status"] == "blocked":
         raise P2AError("source", "required source scope is blocked", [])
     budget = budget or RunBudget()
+    if max_workers != 1:
+        from backend.auto_review_performance import ConcurrentRunBudget
+        if max_workers != 2 or not isinstance(budget, ConcurrentRunBudget):
+            raise ValueError('parallel_execution_requires_concurrent_budget')
     raw_model_call = model_call
     model_call = lambda stage, system, user: budget.call(stage, system, user, raw_model_call)
     chunks = chunk_reading_units(units, chunk_chars)
@@ -681,8 +686,11 @@ def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: st
             _source_text(part), bundle, run_id, part, quality, requested_model,
             model_call, traces, PaperProfile, on_trace)]
 
-    for index, part in enumerate(chunks):
-        partial_profiles.extend(profile_part(part, f"{index + 1}/{len(chunks)}"))
+    profile_chunks = chunk_reading_units(units, profile_chunk_chars) if profile_chunk_chars else chunks
+    from backend.auto_review_performance import bounded_map
+    partial_profiles = [profile for result in bounded_map(
+        lambda indexed: profile_part(indexed[1], f"{indexed[0]+1}/{len(profile_chunks)}"),
+        enumerate(profile_chunks), max_workers=max_workers) for profile in result]
     profile = _global_profile(partial_profiles, profile_context, bundle, run_id, quality,
                               requested_model, model_call, traces, on_trace)
     profile = _check_source_conflicts(profile, bundle, requested_model, model_call, traces, on_trace)
@@ -701,6 +709,7 @@ def run_p2a(bundle: dict, run_id: str, model_call: Callable, requested_model: st
         special_requirements,
         chunk_chars=chunk_chars,
         budget=budget,
+        max_workers=max_workers,
         on_checkpoint=on_n3_checkpoint,
         on_result=on_result,
         on_trace=on_trace,
