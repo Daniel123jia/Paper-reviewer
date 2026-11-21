@@ -25,6 +25,7 @@ from backend.mathcheck import source_number_matches, verify_equation_pair
 from backend.experiment import audit_paired_bleu_table
 from backend.algorithmcheck import check_matmul_description
 from backend.drafts import compose_draft
+from backend.compact_review_api import register_compact_review
 from backend.exporter import render_export
 from backend.access import AccessPolicy, COOKIE_NAME, SESSION_SECONDS
 from backend.source_bundle import build_source_bundle
@@ -841,13 +842,13 @@ def create_app(data_dir: Path) -> FastAPI:
         if not document or document['sha256'] != job['pdf_sha256'] or hashlib.sha256((files_dir / f"{job['document_id']}.pdf").read_bytes()).hexdigest() != job['pdf_sha256']:
             raise ModelConfigurationError(['auto_review_source_changed'])
 
-    def streamed_understanding_call(session, model, stage, system, user, auto_task_id=None, output_limit=None, budget_stage='p2a'):
+    def streamed_understanding_call(session, model, stage, system, user, auto_task_id=None, output_limit=None, budget_stage='p2a', *, source_check=validate_auto_source):
         started = time.perf_counter()
         messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
         call_id = None
         if auto_task_id:
             validate_model_session_configuration(session, MODEL_ENVIRONMENT_FILE, requested_model=model)
-            validate_auto_source(auto_task_id)
+            source_check(auto_task_id)
             try:
                 call_id = auto_ledger.reserve(auto_task_id, budget_stage, input_estimate=sum(len(m['content'].encode('utf-8')) for m in messages), output_reservation=output_limit, operation=stage, input_sha256=hashlib.sha256(json.dumps(messages,ensure_ascii=False,separators=(',',':')).encode()).hexdigest(), system_sha256=hashlib.sha256(system.encode()).hexdigest(), system_bytes=len(system.encode()))
             except BudgetBlocked:
@@ -910,6 +911,11 @@ def create_app(data_dir: Path) -> FastAPI:
             "output_tokens": getattr(usage, "completion_tokens", None),
             "duration_ms": round((time.perf_counter() - started) * 1000),
         }
+
+    if auto_ledger is not None:
+        register_compact_review(app, connect=connect, ledger=auto_ledger, lock_path=auto_lock_path,
+                                files_dir=files_dir, bundle_for=source_bundle_for_document,
+                                session_for=model_session_or_503, call=streamed_understanding_call)
 
     def persist_understanding_trace(run_id, trace):
         with connect() as db:
