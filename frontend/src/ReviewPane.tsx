@@ -44,7 +44,9 @@ export default function ReviewPane({current, documents, onEvidence}: {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api<ReviewCase[]>('/api/review-cases').then(setCases)
+    api<ReviewCase[]>('/api/review-cases').then(loaded => setCases(previous => [
+      ...previous, ...loaded.filter(item => !previous.some(existing => existing.id === item.id)),
+    ]))
       .catch(cause => setError(cause instanceof Error ? cause.message : '任务加载失败'));
   }, []);
 
@@ -69,7 +71,7 @@ export default function ReviewPane({current, documents, onEvidence}: {
       const created = await api<ReviewCase>('/api/review-cases', {
         method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload),
       });
-      setCases(previous => [created, ...previous]);
+      setCases(previous => [created, ...previous.filter(item => item.id !== created.id)]);
       setActive(created);
     } catch (cause) {setError(cause instanceof Error ? cause.message : '创建审稿任务失败');}
     finally {setBusy(false);}

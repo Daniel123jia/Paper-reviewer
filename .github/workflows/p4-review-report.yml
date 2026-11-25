@@ -69,7 +69,7 @@ jobs:
             sleep 1
           done
           cd frontend
-          npx playwright test tests/real-pdf.spec.ts tests/cross-formula.spec.ts tests/review-modes.spec.ts --workers=1
+          npx playwright test tests/real-pdf.spec.ts tests/cross-formula.spec.ts tests/review-modes.spec.ts tests/review-history-race.spec.ts --workers=1
       - name: P4 report browser editing and actual downloads
         env:
           PAPER_REVIEW_DATA_DIR: ${{ runner.temp }}/p4-report-browser-data
