@@ -298,6 +298,7 @@ def run_p2a_n3(
     *,
     chunk_chars: int = 12000,
     budget: RunBudget | None = None,
+    max_workers: int = 1,
     checkpoint_loader: Callable[[N3PartitionDescriptor], StoredN3Checkpoint | None] | None = None,
     on_checkpoint: Callable[[StoredN3Checkpoint], None] | None = None,
     on_result: Callable[[str, ClaimEvidenceMap], None] | None = None,
@@ -315,6 +316,10 @@ def run_p2a_n3(
     validate_source_references(profile, bundle)
 
     budget = budget or RunBudget()
+    if max_workers != 1:
+        from backend.auto_review_performance import ConcurrentRunBudget
+        if max_workers != 2 or not isinstance(budget, ConcurrentRunBudget):
+            raise ValueError('parallel_execution_requires_concurrent_budget')
     raw_model_call = model_call
     budgeted_call = lambda stage, system, user: budget.call(stage, system, user, raw_model_call)
     descriptors = build_n3_partition_descriptors(
@@ -327,7 +332,7 @@ def run_p2a_n3(
     units_by_id = {item["id"]: item for item in units}
     traces: list[CallTrace] = []
     partials: list[ClaimEvidenceMap] = []
-    for descriptor in descriptors:
+    def map_partition(descriptor):
         stored = checkpoint_loader(descriptor) if checkpoint_loader else None
         if stored is not None:
             persisted = inherit_n3_checkpoint(stored, descriptor, bundle, run_id)
@@ -352,8 +357,10 @@ def run_p2a_n3(
             )
         if on_checkpoint:
             on_checkpoint(persisted)
-        partials.append(result)
+        return result
 
+    from backend.auto_review_performance import bounded_map
+    partials = bounded_map(map_partition, descriptors, max_workers=max_workers)
     mapping = _merge_claim_maps(
         partials,
         profile,

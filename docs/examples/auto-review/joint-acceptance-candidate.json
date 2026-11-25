@@ -1,0 +1,115 @@
+{
+  "schema_version": "joint-acceptance-candidate/1.0",
+  "status": "NOT_AUTHORIZED",
+  "purpose": "one new ordinary-user automatic review, one zh internal draft; not C1 or full four-report P5",
+  "paper": {
+    "title": "Convolutional Neural Networks for Sentence Classification",
+    "author": "Yoon Kim",
+    "venue": "EMNLP 2014",
+    "doi": "10.3115/v1/D14-1181",
+    "source_url": "https://aclanthology.org/D14-1181.pdf",
+    "sha256": "a996da85e0abf6bb1a16cebbb82137af5ca8c16cadc81bc41358829a3687a6cf",
+    "pages": 6,
+    "bytes": 180570,
+    "prior_debug_match": false,
+    "scope": "new-to-local-system, not claimed absent from model pretraining"
+  },
+  "scientific_code_baseline_commit": "238cf89038e10e71128f6f3da031c571c25368f3",
+  "execution_identity": "Bind final preparation HEAD/Tree and all prompt hashes in a repository-external execution-snapshot.json after commit; no self-referencing in-repository final commit",
+  "model": "gpt-6.1-sol",
+  "pricing_status": "estimated_unverified",
+  "sdk_max_retries": 0,
+  "local_proposal_not_applied": true,
+  "create_payload": {
+    "document_id": "a996da85e0abf6bb1a16cebbb82137af5ca8c16cadc81bc41358829a3687a6cf",
+    "target_journal": "EMNLP（以2014年原论文发表语境开展模拟审稿）",
+    "special_requirements": "准确重建研究问题、方法、实验与作者结论；完整阅读来源，保留解析与证据限制，不将未核验对象视为已确认事实。",
+    "review_requirements": "独立完成系统既有六维专业审稿。意见须具体、可操作、有原文定位，核对作者已有解释与反证；区分实质问题、作者澄清事项和系统来源不足。按2014年发表语境评价，不强制套用后来的规范，不预设问题数量或结论。",
+    "execution_policy": {
+      "max_concurrency": 2,
+      "requests_per_minute": 30,
+      "input_reservation_per_minute": 500000
+    },
+    "total_budget": {
+      "max_calls": 78,
+      "max_input_tokens": 1170000,
+      "max_output_tokens": 206000,
+      "max_output_tokens_per_request": 6000,
+      "max_duration_seconds": 3600,
+      "max_cost_usd": "1.85",
+      "input_usd_per_million": "0.80",
+      "output_usd_per_million": "4.00"
+    },
+    "p2a_budget": {
+      "max_calls": 24,
+      "max_input_tokens": 280000,
+      "max_output_tokens": 66000,
+      "max_output_tokens_per_request": 6000,
+      "max_duration_seconds": 1800,
+      "max_cost_usd": "0.50",
+      "input_usd_per_million": "0.80",
+      "output_usd_per_million": "4.00"
+    },
+    "p2b_budget": {
+      "max_calls": 10,
+      "max_input_tokens": 300000,
+      "max_output_tokens": 32000,
+      "max_output_tokens_per_request": 6000,
+      "max_duration_seconds": 900,
+      "max_cost_usd": "0.40",
+      "input_usd_per_million": "0.80",
+      "output_usd_per_million": "4.00"
+    },
+    "p2c_budget": {
+      "max_calls": 4,
+      "max_input_tokens": 90000,
+      "max_output_tokens": 16000,
+      "max_output_tokens_per_request": 6000,
+      "max_duration_seconds": 600,
+      "max_cost_usd": "0.14",
+      "input_usd_per_million": "0.80",
+      "output_usd_per_million": "4.00"
+    },
+    "p3_budget": {
+      "max_calls": 24,
+      "max_input_tokens": 300000,
+      "max_output_tokens": 60000,
+      "max_output_tokens_per_request": 6000,
+      "max_duration_seconds": 900,
+      "max_cost_usd": "0.50",
+      "input_usd_per_million": "0.80",
+      "output_usd_per_million": "4.00"
+    },
+    "p4_budget": {
+      "max_calls": 16,
+      "max_input_tokens": 200000,
+      "max_output_tokens": 32000,
+      "max_output_tokens_per_request": 2000,
+      "max_duration_seconds": 600,
+      "max_cost_usd": "0.30",
+      "input_usd_per_million": "0.80",
+      "output_usd_per_million": "4.00"
+    }
+  },
+  "paper_readiness": {
+    "units": 174,
+    "n2_parts": 3,
+    "n3_parts": 5,
+    "p2a_normal_path_calls": 12,
+    "quality": "needs_review; technical-object scopes blocked until independently verified"
+  },
+  "provider_conditions": {
+    "actual_rates": "unverified",
+    "concurrency_2_permission": "unverified",
+    "RPM": "unverified",
+    "TPM_and_scope": "unverified",
+    "stream_usage_current_contract": "unverified; one historical short request succeeded",
+    "balance": "unverified",
+    "hard_spending_limit": "unverified"
+  },
+  "authorization_requirement": "Separate explicit approval of this PDF, final execution snapshot, full single-paper pipeline, two-worker/rate policy, budget and unknown billing exposure; then one normal start with confirm_budget=true. No request authorized by this file.",
+  "start_route_template": "POST /api/auto-review-tasks/{new_task_id}/start",
+  "start_payload_after_authorization_only": {
+    "confirm_budget": true
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "role": "development_regression_not_blind_holdout",
+  "papers": [
+    {"id": "short6", "title": "Few-Shot SAR Target Classification Combining Both Spatial and Frequency Information", "pages": 6, "sha256": "5630f2e0cd00e5a2dd477bbf962c34494726d84f0c9915020addd2ec26b4524c"},
+    {"id": "regular14", "title": "Metric Network for Few-Shot SAR Target Classification", "pages": 14, "sha256": "0d92334d155f715c0ab6ab583f53abd031f7ecb01bfee16c07b8c436f892da36"}
+  ],
+  "references": "No blind reference questions are read by the runner or provided to models. Independent human scoring occurs only after outputs are sealed."
+}

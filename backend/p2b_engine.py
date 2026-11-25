@@ -151,10 +151,15 @@ def run_p2b(bundle: dict, plan: ReviewPlan, profile: PaperProfile, mapping: Clai
             understanding_run_id: str, run_id: str, model_call: Callable, requested_model: str,
             target_journal: str | None = None, review_requirements: str | None = None,
             budget: RunBudget | None = None, on_dimension: Callable | None = None,
-            on_trace: Callable | None = None, max_context_chars: int = 28000):
+            on_trace: Callable | None = None, max_context_chars: int = 28000,
+            max_workers: int = 1):
     validate_understanding_snapshot(bundle, plan, profile, mapping, understanding_run_id, "completed")
     budget = budget or RunBudget(max_calls=18, max_input_tokens=180000,
                                  max_output_tokens=50000, max_duration_ms=1800000)
+    if max_workers != 1:
+        from backend.auto_review_performance import ConcurrentRunBudget
+        if max_workers != 2 or not isinstance(budget, ConcurrentRunBudget):
+            raise ValueError('parallel_execution_requires_concurrent_budget')
     config_name, domain_limits = configuration(plan)
     input_limits = list(dict.fromkeys(domain_limits + bundle.get("limitations", []) +
                                       profile.unresolved_source_gaps +
@@ -172,14 +177,15 @@ def run_p2b(bundle: dict, plan: ReviewPlan, profile: PaperProfile, mapping: Clai
         if on_dimension:
             on_dimension(dimension)
 
-    for rule in DIMENSIONS:
+    def review_dimension(rule):
+        nonlocal budget_exhausted
         status, reason = applicability(rule, plan)
         system, version = _prompt(rule, config_name)
         if status == "not_applicable":
             record(_dimension_record(rule, bundle, understanding_run_id, run_id, version,
                 None, status, reason, "blocked", input_limits, "skipped",
                 {"no_issue_explanation": reason}))
-            continue
+            return
         pack = assemble_context(rule.id, bundle, plan, profile, mapping, max_context_chars)
         limits = list(dict.fromkeys(input_limits + pack.limitations))
         if budget_exhausted or pack.coverage_status == "blocked":
@@ -188,7 +194,7 @@ def run_p2b(bundle: dict, plan: ReviewPlan, profile: PaperProfile, mapping: Clai
                 None, status, reason, pack.coverage_status, limits, state,
                 {"no_issue_explanation": "Review not performed: budget exhausted" if budget_exhausted
                  else "Review not performed: source material blocked"}))
-            continue
+            return
         user = json.dumps({"configuration": config_name,
             **_project_input(rule, pack, plan, profile, mapping),
             "target_journal": target_journal, "review_requirements": review_requirements,
@@ -245,6 +251,10 @@ def run_p2b(bundle: dict, plan: ReviewPlan, profile: PaperProfile, mapping: Clai
                 None, status, reason, pack.coverage_status, limits + ([last_error] if last_error else []),
                 "budget_exceeded" if budget_exhausted else "failed")
         record(result)
+    from backend.auto_review_performance import bounded_map
+    bounded_map(review_dimension, DIMENSIONS, max_workers=max_workers)
+    dimensions.sort(key=lambda item: item.dimension_id)
+    traces.sort(key=lambda item: item.dimension_id)
     failures = [item for item in dimensions if item.execution_status == "failed"]
     if budget_exhausted:
         overall = "budget_exceeded"
