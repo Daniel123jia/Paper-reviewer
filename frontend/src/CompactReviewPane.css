@@ -1,0 +1,15 @@
+.compact-pane {max-width:860px;margin:0 auto;color:#14213a;padding-bottom:40px}
+.compact-pane header h1 {font-size:32px;letter-spacing:-.04em;margin:8px 0}
+.compact-pane p,.compact-pane small {line-height:1.7}
+.compact-pane header p,.compact-cost,.compact-file small {color:#485972}
+.compact-file,.compact-card,.compact-report {background:white;border:1px solid #d7e0eb;border-radius:12px;padding:clamp(18px,3vw,32px);margin:18px 0}
+.compact-file,.compact-exports {display:flex;align-items:center;justify-content:space-between;gap:12px}
+.compact-file strong {overflow-wrap:anywhere}.compact-file small {display:block}
+.compact-picker {position:relative;color:#164f99;white-space:nowrap;cursor:pointer}
+.compact-picker input {position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+.compact-picker:focus-within {outline:2px solid}
+.compact-start {background:#1559ba;color:white;border:0;border-radius:7px;padding:11px 18px;cursor:pointer}
+.compact-exports {justify-content:flex-end}.compact-exports a,.compact-ref {color:#164f99}
+.compact-ref {border:0;background:#edf4ff;overflow-wrap:anywhere;cursor:pointer;border-radius:4px}
+.compact-report h2 {margin-top:1.6em;border-top:1px solid #e4eaf1;padding-top:1em}
+.compact-report p {line-height:1.85}.compact-report {overflow-wrap:anywhere}
